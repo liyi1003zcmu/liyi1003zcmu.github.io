@@ -1,0 +1,282 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>计算机图形学--图形系统和模型</title>
+        <meta name="description" content="认识图形系统和图形学计算模型概述">
+        <meta name="author" content="Liyi">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        
+        <link rel="stylesheet" href="../dist/reset.css">
+        <link rel="stylesheet" href="../dist/reveal.css">
+        <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>计算机图形学</h1>
+                    <H2>第一章 图形系统和模型(1)</H2>
+                    <h3>概述</h3>
+                    
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section>
+                <section>
+                    <section id="whatiscg">
+                        <h2>认识计算机图形学</h2>
+                        <blockquote style="font-size:100%; text-align:left">计算机图形学，即研究如何利用计算机生成<strong style="color:red">图像</strong>，其中涵盖了所需的硬件、软件和应用等</blockquote>
+                        <p><strong style="color:red">一切皆是像素</strong></p>
+                        <img src="../images/ch1-bunnystory.png" alt="bunny" style="position:relative;bottom:0px;width:100%;border:0;">
+                        <p style="text-align:center"><a href="https://www.cc.gatech.edu/~turk/bunny/bunny.html">Bunny的故事</a></p>
+                    </section>
+                    <section id="systemquest">
+                        <h2>Bunny怎么来？</h2>
+                        <img src="../images/ch1-bunnystory.png" alt="bunny" style="position:relative;bottom:0px;width:100%;border:0;">
+                        <p style="text-align:left">请思考，要生成这些效果图，需要哪些硬件设备和软件系统？</p>
+                    </section>
+                    <section id="explain">
+                        <h2>如何生成图</h2>
+                        <ol>
+                            <li style="font-size:100%">硬件，<strong style="color:red">三维扫描仪</strong>，将实体模型转换为点云数据，用于模型数据获取</li>
+                            <li style="font-size:100%">软件，利用<strong style="color:red">算法</strong>实现从点云数据到模型的重构，并基于<strong style="color:red">OpenGL</strong>的方法实现模型的渲染</li>
+                            <li style="font-size:100%">硬件，显卡，带<strong style="color:red">图形处理单元(GPU)</strong>，并结合软件实现对各种高级渲染效果的计算及效果图的生成</li>
+                            <li style="font-size:100%">硬件，<strong style="color:red">显示器</strong>，将显卡生成的效果图绘制输出</li>
+                        </ol>
+                    </section>
+                </section>
+                <section id="basic-sys">
+                    <h2>基本图形系统</h2>
+                    <img src="../images/ch01-gsys.png" alt="Basic Graphics System" style="width:100%; border:0">
+                </section>
+                <section>
+                    <section id="course-sys">
+                        <h2>课程内容体系</h2>
+                        <img src="../images/ch01-mindmap.png" alt="Mindmap of Course Content" style="width:100%; border:0">
+                    </section>
+                    <section id="course-sys-a">
+                        <h2>课程内容体系</h2>
+                        <h3>基础模块</h3>
+                        <ul>
+                            <li style="text-align:left">图形系统和模型的基础概念，认识图形学的实质，所要解决的问题等</li>
+                            <li style="text-align:left">图形学理论和概念所涉及的各种数学基础，包括向量、矩阵、齐次坐标等</li>
+                            <li style="text-align:left">图形学编程基础知识，包括常见的图形API，OpenGL编程基础知识，WebGL编程基础</li>
+                            <li style="text-align:left">几何对象的表示，二维和三维空间变换规则及相应的计算过程，这是图形学后续各种计算的基础</li>
+                        </ul>
+                    </section>
+                    <section id="course-sys-b">
+                        <h2>课程内容体系</h2>
+                        <h3>建模与表示</h3>
+                        <ul>
+                            <li style="text-align:left">建模，即在计算机中以图形的方式表示真实世界或虚拟世界中的各种对象与信息</li>
+                            <li style="text-align:left">表示，对模型而言，以点、线、面、体等各种几何元素通过不同组合进行表示，在计算机内部，这种表示形式可以有多种不同的格式，其实质是需要记录对象的坐标、几何元素的连接关系所对应的几何与拓扑信息等</li>
+                            <ul>
+                                <li style="text-align:left">简单形体和复杂场景的构建</li>
+                                <li style="text-align:left">AutoCAD、3DsMax，Maya，Blender等建模软件</li>
+                                <li style="text-align:left">如汽车、飞机、火箭等的设计制作</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="course-sys-c">
+                        <h2>课程内容体系</h2>
+                        <h3>绘制</h3>
+                        <ul>
+                            <li style="text-align:left">绘制，即将计算机中对象的数字几何模型转换为直观形象的图形或图像形式，在显示设备上，即数字几何模型的视觉可视化</li>
+                            <li style="text-align:left">绘制，是图形计算的核心和关键，需要考虑的因素众多，绘制效果越复杂，计算量越大</li>
+                            <li style="text-align:left">绘制过程</li>
+                            <ul>
+                                <li style="text-align:left">应用程序</li>
+                                <li style="text-align:left">几何处理</li>
+                                <li style="text-align:left">像素处理</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="course-sys-i">
+                        <h2>课程内容体系</h2>
+                        <h3>交互技术</h3>
+                        <ul>
+                            <li>交互, 即针对图形和图像，研究合适的输入方法和操作方法，实现友好的人机界面</li>
+                            <li>交互技术包括</li>
+                            <ul>
+                                <li>定位技术, 菜单技术, 拾取技术, 定值技术, 橡皮筋技术,拖拽技术, 网格与捕捉技术等输入技术</li>
+                                <li>图形用户界面设计技术</li>
+                            </ul>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section id="imag&grap">
+                        <h2>图形与图像</h2>
+                        <h3>名词辨析</h3>
+                        <dl>
+                            <dt style="color:red;font-weight:bold;">图形(Graphics)</dt>
+                            <dd>
+                                指的是由点、线、面等元素构成，具有拓扑结构信息的元素，可以在二维平面或三维空间中表达
+                            </dd>
+                            <dt style="color:red;font-weight:bold">图像(Image)</dt>
+                            <dd>
+                                指由像素阵列构成的二维画面，一般可通过绘画或拍照获得，
+                            </dd>
+                        </dl>
+                    </section>
+                    <section id="diff">
+                        <h2>图形与图像</h2>
+                        <h3>图形和图像的关系</h3>
+                        <dl>
+                            <dt style="color:red;font-weight:bold">计算机图形学(Computer Graphics)</dt>
+                            <dd>Graphics &rarr; Image, Graphics &rarr; Graphics</dd>
+                            <dt style="color:red;font-weight:bold;">图像处理(Image Processing)</dt>
+                            <dd>Image &rarr; Image, Image &rarr; Region</dd>
+                            <dt style="color:red;font-weight:bold;">模式识别(Pattern Recognition)</dt>
+                            <dd>Image &rarr; Symbolic Description</dd>
+                            <dt style="color:red;font-weight:bold;">计算机视觉(Computer Vision)</dt>
+                            <dd>Image &rarr; Graphics</dd>
+                        </dl>
+                    </section>
+                    <section id="diff-des">
+                        <h2>图形与图像</h2>
+                        <h3>图形与图像的关系</h3>
+                        <p style="text-align:left">假如你有一只猫......</p>
+                        <img src="../images/ch01-cat.jpg" style="width:100%; border:0">
+                    </section>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 900,
+                height: 900,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+            })
+        </script>
+    </body>
+</html>
