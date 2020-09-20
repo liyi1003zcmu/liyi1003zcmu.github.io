@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>计算机图形学--图形系统和模型</title>
+        <meta name="description" content="认识图形系统和图形学计算模型概述">
+        <meta name="author" content="Liyi">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+        <link rel="stylesheet" href="../dist/reset.css">
+        <link rel="stylesheet" href="../dist/reveal.css">
+        <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+        <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>计算机图形学</h1>
+                    <H2>第一章 图形系统和模型(3)</H2>
+                    <h3>成像系统</h3>
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                    </script>
+                </section>
+                <section>
+                    <section id="imagesys">
+                        <h2>成像系统</h2>
+                        <h3>什么是成像</h3>
+                        <blockquote style="font-size:100%; text-align:left">在计算机图形学中，在二维平面上成像，采用的过程和方法与现实世界中的成像方法类似，模拟的是如相机、望远镜、显微镜、人类视觉成像系统等的成像系统</blockquote>
+                    </section>
+                    <section id="imagesysele">
+                        <h2>成像系统</h2>
+                        <h3>成像三要素</h3>
+                        <div class="row">
+                            <div class="columnleft">
+                                <ul>
+                                    <li>成像对象</li>
+                                    <li>观察者</li>
+                                    <li>光</li>
+                                </ul>
+                                <p style="text-align:left">此三种要素决定了光照如何影响场景中的各要素最终的成像效果，且这三种要素之间相互依赖</p>
+                            </div>
+                            <div class="columnright">
+                                <img src="../images/ch01-objview.png" style="position:relative;float;right;border:0;">     
+                            </div>
+                        </div>
+                    </section>
+                </section>
+                <section>
+                    <section id="light">
+                        <h2>成像系统</h2>
+                        <h3>光</h3>
+                        <p style="text-align:left">光是一种电磁波，我们能够”看见“，是因为视觉系统受到光线的刺激所诱发的一系列过程所致</p>
+                        <img src="../images/ch01-lightray.png" style="height:500px;border:0">
+                    </section>
+                    <section id="lightimg">
+                        <h2>成像系统</h2>
+                        <h3>光成像</h3>
+                        <div class="row">
+                            <div class="columnleft">
+                                <p style="text-align:left;"><strong style="color:red">几何光学</strong>和<strong style="color:red">光线跟踪</strong>是计算机成像的基础;但因为一条光线会与多个物体产生交互作用，其计算相对复杂</p>
+                            </div>
+                            <div class="columnright">
+                                <img src="../images/ch01-raytracing.png" style="position:relative;float;right;border:0;">
+                            </div>
+                        </div>
+                    </section>
+                </section>
+                <section>
+                    <section id="colormodel">
+                        <h2>成像系统</h2>
+                        <h3>灰度图和彩色图</h3>
+                        <dl>
+                            <dt style="color:red;font-weight:bold;">灰度图(Luminance Image)</dt>
+                            <dd>
+                                单色图，各像素的值代表颜色的灰度值，类似于黑白电视的效果
+                            </dd>
+                            <dt style="color:red;font-weight:bold">彩色图(Color Image)</dt>
+                            <dd>
+                                彩色图，可明确感受到颜色的明度、饱和度和色调，与人的视觉认知系统紧密联系。但无需表现出所有人类可感知的色彩
+                            </dd>
+                        </dl>
+                    </section>
+                    <section id="humanvis">
+                        <h2>成像系统</h2>
+                        <h3>人类视觉感知</h3>
+                        <img src="../images/ch01-rod_cone.png" style="width:100%;border:0">
+                    </section>
+                    <section id="humanvis1">
+                        <h2>成像系统</h2>
+                        <h3>人类颜色感知</h3>
+                            <dl>
+                                <dt style="font-weight:bold;">视杆细胞(Rod Cells)</dt>
+                                <dd>
+                                    分布于视网膜的周围，仅有一种光敏色素，对光线强度比视锥细胞更敏感，主要用于夜视感知，人类视网膜上平均有1亿2500万视杆细胞
+                                </dd>
+                                <dt style="font-weight:bold">视锥细胞(Cone Cells)</dt>
+                                <dd>
+                                    分布于视网膜黄斑区附近，有三种，分别对波长564, 534和420nm的波长敏感，即黄绿色、绿色和蓝紫色，将视觉信号混合即形成人类的颜色感知，人类视网膜上约有600至700万视锥细胞
+                                </dd>
+                            </dl>
+                    </section>
+                    <section>
+                        <h2>成像系统</h2>
+                        <h3>颜色模型</h3>
+                        <p>加色系统(RGB) VS 减色系统(CMY)</p>
+                        <table class="image" style="position:absolute;left:0px;top:250px">
+                            <caption align="bottom" style="font-size:large">RGB,将三种颜色加和用于显示器,投影系统等</caption>
+                            <tr>
+                                <td><img src="../images/ch01-RGB.png" style="width:300px;border:0"></td>
+                            </tr>
+                        </table>
+                        <table class="image" style="position:absolute;right:0px;top:250px">
+                            <caption align="bottom" style="font-size:large">CMY，从白光中滤去三种颜色，主要用于印刷出版行业</caption>
+                            <tr>
+                                <td><img src="../images/ch01-CMYK.png" style="width:300px;border:0"></td>
+                            </tr>
+                        </table>
+                    </section>
+                </section>
+                <section>
+                    <section id="camera">
+                        <h2>成像系统</h2>
+                        <h3>相机模型</h3>
+                        <p style="text-align:left">小孔成像</p>
+                        <img src="../images/ch01-pinholecamera.png" style="width:70%">
+                        <p style="text-align:left;">
+                        $x_p=-x*d/z$, &nbsp; &nbsp; $y_p=-y*d/z$, &nbsp; &nbsp; $z_p=d$
+                        </p>
+                    </section>
+                    <section id="syncam">
+                        <h2>成像系统</h2>
+                        <h3>合成相机模型</h3>
+                        <img src="../images/ch01-syncam.png" style="width:80%">
+                    </section>
+                    <section id="syncamadv">
+                        <h2>成像系统</h2>
+                        <h3>合成相机模型的优点</h3>
+                        <ul>
+                            <li style="text-align:left;">对象、观察者、光源位置三者互相独立</li>
+                            <li style="text-align:left;">可将二维图形视作是三维图形在某个方向上的投影</li>
+                            <li style="text-align:left;">有助于简化API的设计，包括物体、相机、光源等的属性设置，通过简单的几何计算就能得到结果图像</li>
+                            <li style="text-align:left;">利于硬件快速高效实现</li>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section id="raytrace">
+                        <h2>成像系统</h2>
+                        <h3>光线跟踪和几何光学</h3>
+                        <img src="../images/ch01-raytracing.png" style="width:50%">
+                        <p style="text-align:left; font-size:xx-large">物体会同时受到全局光照和局部光照的影响。部分物体会阻挡光通过，形成阴影；光在通过部分物体时还会发生反射、折射等，使物体会不止受到一个光源的照射影响，也就无法为每个物体独立计算颜色、阴影等光照效果</p>
+                    </section>
+                    <section id="raytracee">
+                        <h2>成像系统</h2>
+                        <h3>光线跟踪的特点</h3>
+                        <ul>
+                            <li style="text-align:left">光线跟踪基于物理的计算，更接近真实的光照效果</li>
+                            <li style="text-align:left">对如多边形构成的简单物体或者简单的点光源，计算简单</li>
+                            <li style="text-align:left">光线跟踪能够更好地处理全局光照，如各种阴影效果和多重反射</li>
+                            <li style="text-align:left">光线跟踪的计算量较大，在硬件计算能力有限的条件下，不适用于实时交互应用，但是在利用GPU进行加速计算后，速度已能接近于实时</li>
+                        </ul>
+                    </section>
+                </section>
+                <section id="imgpro">
+                    <h2>成像系统</h2>
+                    <h3>成像过程</h3>
+                    <p>应用程序&rarr;几何处理&rarr;像素处理(光栅化)</p>
+                    <ul>
+                        <li style="font-size:100%">应用程序，提供图元，即用于描述三维物体的点、线、多边形等信息，及用于表面纹理映射的图案或位图</li>
+                        <li style="font-size:100%">几何处理，是将三维坐标变换为二维屏幕坐标的过程，包括了模型与视点变换，光照计算，投影计算，裁剪，屏幕投射等几个过程的计算</li>
+                        <li style="font-size:100%">光栅化，将屏幕对象先传送到像素处理器进行光栅化，后再对每个像素进行着色，再输出到帧缓冲器中，最后再输出到显示器</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/math/math.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+                // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 900,
+                height: 900,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5,
+
+                math: {
+                    mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',
+                    // pass other options into `MathJax.Hub.Config()`
+                    TeX: { Macros: { RR: "{\\bf R}" } }
+                },
+                plugins: [RevealMath]
+            });
+        </script>
+    </body>
+</html>
