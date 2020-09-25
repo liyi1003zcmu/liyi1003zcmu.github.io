@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec3 } = glMatrix;
+
 var gl;
 var canvas;
 
@@ -30,16 +32,16 @@ window.onload = function init() {
 
     // var t = vec3.create();
     // vec3.set(t, vertices[0], vertices[1], vertices[2]);
-    var t = glMatrix.vec3.fromValues( vertices[0], vertices[1], vertices[2] );
+    var t = vec3.fromValues( vertices[0], vertices[1], vertices[2] );
     // var u = vec3.create();
     // vec3.set(u, vertices[3], vertices[4], vertices[5]);
-    var u = glMatrix.vec3.fromValues( vertices[3], vertices[4], vertices[5] );
+    var u = vec3.fromValues( vertices[3], vertices[4], vertices[5] );
     // var v = vec3.create();
     // vec3.set(v, vertices[6], vertices[7], vertices[8]);
-    var v = glMatrix.vec3.fromValues( vertices[6], vertices[7], vertices[8] );
+    var v = vec3.fromValues( vertices[6], vertices[7], vertices[8] );
     // var w = vec3.create();
     // vec3.set(w, vertices[9], vertices[10], vertices[11]);
-    var w = glMatrix.vec3.fromValues( vertices[9], vertices[10], vertices[11] );
+    var w = vec3.fromValues( vertices[9], vertices[10], vertices[11] );
 
     divideTetra(t, u, v, w, numTimesToSubdivide);
 
@@ -116,18 +118,18 @@ function divideTetra(a, b, c, d, count) {
     if (count == 0) {
         tetra(a, b, c, d);
     } else {
-        var ab = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(ab, a, b, 0.5);
-        var ac = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(ac, a, c, 0.5);
-        var ad = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(ad, a, d, 0.5);
-        var bc = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(bc, b, c, 0.5);
-        var bd = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(bd, b, d, 0.5);
-        var cd = glMatrix.vec3.create();
-        glMatrix.vec3.lerp(cd, c, d, 0.5);
+        var ab = vec3.create();
+        vec3.lerp(ab, a, b, 0.5);
+        var ac = vec3.create();
+        vec3.lerp(ac, a, c, 0.5);
+        var ad = vec3.create();
+        vec3.lerp(ad, a, d, 0.5);
+        var bc = vec3.create();
+        vec3.lerp(bc, b, c, 0.5);
+        var bd = vec3.create();
+        vec3.lerp(bd, b, d, 0.5);
+        var cd = vec3.create();
+        vec3.lerp(cd, c, d, 0.5);
 
         --count;
 
