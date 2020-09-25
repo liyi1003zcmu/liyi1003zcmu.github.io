@@ -5,8 +5,8 @@
 ### 第0章
 |    |    |    |    |
 |----|----|----|----|
-|[第0章](./CourseWare/chapter-0.html)|  |  |  |
-| [Lab0](./CourseWare/Chapter-1-lab0.md)|  |  |  |
+|[第0章](./CourseWare/chapter-0.html)| & | & | & |
+| [Lab0](./CourseWare/Chapter-1-lab0.md)| & | & | & |
 
 ### 第1章
 |  |  |  |   |
