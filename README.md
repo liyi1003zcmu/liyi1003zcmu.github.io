@@ -13,7 +13,24 @@
 * [第1章-4](./CourseWare/Chapter1/chapter-1-4.html)
 * [Lab1](./CourseWare/Chapter1/Chapter-1-lab1.md)
 
+### 第2章
+* [第2章-1](./CourseWare/Chapter2/chapter-2-1.html)
+* [第2章-2](./CourseWare/Chapter2/chapter-2-2.html)
+* [第2章-3](./CourseWare/Chapter2/chapter-2-3.html)
+* [第2章-4](./CourseWare/Chapter2/chapter-2-4.html)
+* [第2章-5](./CourseWare/Chapter2/chapter-2-5.html)
+* [第2章-6](./CourseWare/Chapter2/chapter-2-6.html)
+* [第2章-7](./CourseWare/Chapter2/chapter-2-7.html)
+* [第2章-8](./CourseWare/Chapter2/chapter-2-8.html)
+
+
 ## Demos
 ### 第1章
 * [demo-1-1](./demos/chap1-demo-1.html)
+
+### 第2章
+* [demo-2-1](./demos/chap2-demo-1.html)
+* [demo-2-2](./demos/chap2-demo-2.html)
+* [demo-2-3](./demos/chap2-demo-3.html)
+* [demo-2-4](./demos/chap2-demo-4.html)
 
