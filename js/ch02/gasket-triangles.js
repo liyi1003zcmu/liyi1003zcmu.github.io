@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec3 } = glMatrix;
+
 var canvas;
 var gl;
 
@@ -26,13 +28,13 @@ window.onload = function initTriangles(){
 
 	// var u = vec3.create();
 	// vec3.set( u, -1, -1, 0 );
-	var u = glMatrix.vec3.fromValues( vertices[0], vertices[1], vertices[2] );
+	var u = vec3.fromValues( vertices[0], vertices[1], vertices[2] );
 	// var v = vec3.create();
 	// vec3.set( v, 0, 1, 0 );
-	var v = glMatrix.vec3.fromValues( vertices[3], vertices[4], vertices[5] );
+	var v = vec3.fromValues( vertices[3], vertices[4], vertices[5] );
 	// var w = vec3.create();
 	// vec3.set( w, 1, -1, 0 );
-	var w = glMatrix.vec3.fromValues( vertices[6], vertices[7], vertices[8] );
+	var w = vec3.fromValues( vertices[6], vertices[7], vertices[8] );
 
 	divideTriangle( u, v, w, numTimesToSubdivide );
 
@@ -75,12 +77,12 @@ function divideTriangle( a, b, c, count ){
 	if( count == 0 ){
 		triangle( a, b, c );
 	}else{
-		var ab = glMatrix.vec3.create();
-		glMatrix.vec3.lerp( ab, a, b, 0.5 );
-		var bc = glMatrix.vec3.create();
-		glMatrix.vec3.lerp( bc, b, c, 0.5 );
-		var ca = glMatrix.vec3.create();
-		glMatrix.vec3.lerp( ca, c, a, 0.5 );
+		var ab = vec3.create();
+		vec3.lerp( ab, a, b, 0.5 );
+		var bc = vec3.create();
+		vec3.lerp( bc, b, c, 0.5 );
+		var ca = vec3.create();
+		vec3.lerp( ca, c, a, 0.5 );
 
 		--count;
 
