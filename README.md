@@ -20,6 +20,7 @@
 |----|---- |---- |---- |----|
 |[第2章-1](./CourseWare/Chapter2/chapter-2-1.html)| [第2章-2](./CourseWare/Chapter2/chapter-2-2.html)|[第2章-3](./CourseWare/Chapter2/chapter-2-3.html)|[第2章-4](./CourseWare/Chapter2/chapter-2-4.html)|
 | [第2章-5](./CourseWare/Chapter2/chapter-2-5.html)|[第2章-6](./CourseWare/Chapter2/chapter-2-6.html)|[第2章-7](./CourseWare/Chapter2/chapter-2-7.html)|[第2章-8](./CourseWare/Chapter2/chapter-2-8.html)|
+| [Lab2](./CourseWare/Chapter2/Chapter-2-lab2.md)|
 
 ## Demos
 ### 第1章
