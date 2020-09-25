@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec3 } = glMatrix;
+
 var gl;
 var points;
 
@@ -26,23 +28,23 @@ window.onload = function initPoints(){
 	// p must lie inside any set of three vertices
 	//var u1 = vec3.create();
 	//vec3.set(u1, vertices[0], vertices[1], vertices[2] );
-	var u1 = glMatrix.vec3.fromValues( vertices[0], vertices[1], vertices[2] );
+	var u1 = vec3.fromValues( vertices[0], vertices[1], vertices[2] );
 
 	//var u2 = vec3.create();
 	//vec3.set(u2, vertices[3], vertices[4], vertices[5] );
-	var u2 = glMatrix.vec3.fromValues( vertices[3], vertices[4], vertices[5] );
+	var u2 = vec3.fromValues( vertices[3], vertices[4], vertices[5] );
 	//var u3 = vec3.create();
 	//vec3.set( u3, vertices[6], vertices[7], vertices[8] );
-	var u3 = glMatrix.vec3.fromValues( vertices[6], vertices[7], vertices[8] );
+	var u3 = vec3.fromValues( vertices[6], vertices[7], vertices[8] );
 
-	var u = glMatrix.vec3.create();
-	glMatrix.vec3.add( u, u1, u2);
-	var v = glMatrix.vec3.create();
-	glMatrix.vec3.add( v, u1, u3);
+	var u = vec3.create();
+	vec3.add( u, u1, u2);
+	var v = vec3.create();
+	vec3.add( v, u1, u3);
 
-	var p = glMatrix.vec3.create();
-	glMatrix.vec3.add( p, u, v );
-	glMatrix.vec3.scale( p, p, 0.25 );
+	var p = vec3.create();
+	vec3.add( p, u, v );
+	vec3.scale( p, p, 0.25 );
 	
 	//console.log(p);
 	// add initial point into array of points
@@ -57,13 +59,13 @@ window.onload = function initPoints(){
 		var j = Math.floor( Math.random() * 3 );
 		// jth from vertices
 		
-		glMatrix.vec3.set( u, vertices[j*3], vertices[j*3+1], vertices[j*3+2] );
+		vec3.set( u, vertices[j*3], vertices[j*3+1], vertices[j*3+2] );
 		// ith point
 		
-		glMatrix.vec3.set( v, points[i*3], points[i*3+1], points[i*3+2]);
+		vec3.set( v, points[i*3], points[i*3+1], points[i*3+2]);
 
-		glMatrix.vec3.add( p, u, v );
-		glMatrix.vec3.scale( p, p, 0.5 );
+		vec3.add( p, u, v );
+		vec3.scale( p, p, 0.5 );
 		//p = vec3.add( points[ i ], vec3.create( vertices[j*3], vertices[j*3+1], vertices[j*3+2]) );
 		//p = vec3.scale( p, 0.5 );
 		for( var k = 0; k < 3; k++ )
