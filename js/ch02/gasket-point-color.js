@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec3 } = glMatrix;
+
 var gl;
 var canvas;
 var points = [];
@@ -23,16 +25,16 @@ window.onload = function initDepth() {
 
     points.push( 0.0, 0.0, 0.0 );
 
-    var u = glMatrix.vec3.create();
-    var v = glMatrix.vec3.create();
-    var w = glMatrix.vec3.create();
-    var p = glMatrix.vec3.create();
+    var u = vec3.create();
+    var v = vec3.create();
+    var w = vec3.create();
+    var p = vec3.create();
     for (var i = 0; points.length < numPoints * 3; i++) {
         var j = Math.floor(Math.random() * 4);
 
-        glMatrix.vec3.set(u, points[i * 3], points[i * 3 + 1], points[i * 3 + 2]);
-        glMatrix.vec3.set(v, vertices[j * 3], vertices[j * 3 + 1], vertices[j * 3 + 2]);
-        glMatrix.vec3.lerp(p, u, v, 0.5);
+        vec3.set(u, points[i * 3], points[i * 3 + 1], points[i * 3 + 2]);
+        vec3.set(v, vertices[j * 3], vertices[j * 3 + 1], vertices[j * 3 + 2]);
+        vec3.lerp(p, u, v, 0.5);
         //for (var k = 0; k < 3; k++)
         //    points.push(p[k]);
         points.push( p[0], p[1], p[2] );
