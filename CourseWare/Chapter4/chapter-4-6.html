@@ -1,0 +1,512 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学-几何与变换</title>
+    <meta name="description" content="WebGL几何形体与变换基础">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第四章 几何和变换</H2>
+                <h3>旋转的立方体</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="rtcube">
+                    <h2>旋转的立方休</h2>
+                    <h3>功能概述</h3>
+                    <p style="text-align:left">旋转的立方体示例</p>
+                    <ul>
+                        <li style="text-align:left">可以用鼠标或按键事件改变旋转方向</li>
+                        <li style="text-align:left">程序初始化功能：中心位于原点位置的立方体，其各边与轴平行</li>
+                    </ul>
+                </section>
+                <section id="rtcubes">
+                    <script id="rtvshader" type="x-shader/x-vertex">
+                    	attribute vec4 vPosition;
+                    	attribute vec4 vColor;
+                    	varying vec4 fColor;
+                    
+                    	uniform vec3 theta;
+                    
+                    	void main()
+                    	{
+                    		//compute the sins and coss of theta for each of the three axis in one computation
+                    		vec3 angles = radians( theta );
+                    		vec3 cost = cos( theta );
+                    		vec3 sint = sin( theta );
+                    
+                    		mat4 rx = mat4(  1.0,  0.0,  0.0, 0.0,
+                    						 0.0,  cost.x,  sint.x, 0.0,
+                    						 0.0,  -sint.x,  cost.x, 0.0,
+                    						 0.0,  0.0,  0.0, 1.0
+                    						 );
+                    
+                    		mat4 ry = mat4(  cost.y,  0.0, -sint.y,  0.0,
+                    						 0.0,  1.0,  0.0,  0.0,
+                    						 sint.y,  0.0,  cost.y,  0.0,
+                    						 0.0,  0.0,  0.0,  1.0
+                    						 );
+                    
+                    		mat4 rz = mat4(  cost.z,  sint.z,  0.0,  0.0,
+                    						 -sint.z,  cost.z,  0.0,  0.0,
+                    						 0.0,  0.0,  1.0,  0.0,
+                    						 0.0,  0.0,  0.0,  1.0
+                    						 );
+                    
+                    		fColor = vColor;
+                    		gl_Position = rz * ry * rx * vPosition;
+                    		gl_Position.z = -gl_Position.z;
+                    	}
+                    </script>
+                    
+                    <script id="rtfshader" type="x-shader/x-fragment">
+                    	precision mediump float;
+                    	varying vec4 fColor;
+                    
+                    	void main()
+                    	{
+                    		gl_FragColor = fColor;
+                    	}
+                    </script>
+                    <script type="text/javascript" src="../../js/common/webgl-utils.js"></script>
+                    <script type="text/javascript" src="../../js/common/initShaders.js"></script>
+                    <script type="text/javascript" src="../../js/common/gl-matrix-min.js"></script>
+
+                    <script type="text/javascript" src="../../js/ch04/rotcube.js"></script>
+                    <h2>旋转的立方体</h2>
+                    <h3>示例</h3>
+                    <canvas id="rtcb-canvas" width="512" height="512">
+                        你的浏览器不支持HTML5 Canvas元素
+                    </canvas>
+                    <button id="xbutton">Rotate X</button>
+                    <button id="ybutton">Rotate Y</button>
+                    <button id="zbutton">Rotate Z</button>
+                </section>
+            </section>
+            <section id="apptrans">
+                <h2>旋转的立方体</h2>
+                <h3>如何应用变换</h3>
+                <p style="text-align:left">和前面旋转的正方形类似，变换是在应用程序中直接加到顶点上？在顶点着色器中直接传送矩阵？在顶点着色器中传送旋转角度？</p>
+                <p style="text-align:left">三角函数计算是在CPU中还是在顶点着色器中对每个顶点计算？
+            </section>
+            <section>
+                <section id="evtlis">
+                    <h2>旋转的立方休</h2>
+                    <h3>按键事件侦听</h3>
+                    <pre><code class="hljs" data-trim>
+document.getElementById("xbutton").onclick = function () {
+axis = xAxis;
+}
+
+document.getElementById("ybutton").onclick = function () {
+axis = yAxis;
+}
+
+document.getElementById("zbutton").onclick = function () {
+axis = zAxis;
+}
+                    </code></pre>
+                </section>
+                <section id="rdfunc">
+                    <h2>旋转的立方体</h2>
+                    <h3>渲染函数</h3>
+                    <pre><code class="hljs" data-trim>
+function render() {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    theta[axis] += 0.1;
+    gl.uniform3fv(thetaLoc, theta);
+
+    gl.drawArrays(gl.TRIANGLES, 0, points.length / 3);
+
+    requestAnimFrame(render);
+}
+                    </code></pre>
+                </section>
+                <section id="vshader">
+                    <h2>旋转的立方体</h2>
+                    <h3>顶点着色器</h3>
+                    <pre><code class="hljs" data-trim>
+attribute vec4 vPosition;
+attribute vec4 vColor;
+varying vec4 fColor;
+
+uniform vec3 theta;
+
+void main()
+{
+    //compute the sins and cos of theta for each of the three axis in one computation
+    vec3 angles = radians( theta );
+    vec3 cost = cos( theta );
+    vec3 sint = sin( theta );
+
+    mat4 rx = mat4( 1.0, 0.0, 0.0, 0.0,
+        0.0, cost.x, sint.x, 0.0,
+        0.0, -sint.x, cost.x, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+
+    mat4 ry = mat4( cost.y, 0.0, -sint.y, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    sint.y, 0.0, cost.y, 0.0,
+    0.0, 0.0, 0.0, 1.0
+    );
+
+    mat4 rz = mat4( cost.z, sint.z, 0.0, 0.0,
+    -sint.z, cost.z, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+    );
+
+    fColor = vColor;
+    gl_Position = rz * ry * rx * vPosition;
+    gl_Position.z = -gl_Position.z;
+}
+                    </code></pre>
+                </section>
+                <section id="fshader">
+                    <h2>旋转的立方体</h2>
+                    <h3>面片着色器</h3>
+                    <pre><code class="hljs" data-trim>
+precision mediump float;
+varying vec4 fColor;
+
+void main()
+{
+    gl_FragColor = fColor;
+}
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="smorot">
+                    <h2>旋转的立方体</h2>
+                    <h3>关于平滑转动</h3>
+                    <p style="text-align:left;font-size:xx-large">从实现的角度来看，每次都需要利用变换矩阵移动物体，并调整物体的角度，即需要找到一系列模型视图矩阵序列，将该矩阵应用于物体时实现的是一组平滑的变换</p>
+                    <p style="text-align:left;font-size:xx-large">对调整方向来说，可以将每次旋转对应于在球面上找一个圆，需要确定其旋转轴及对应的转动角度，这就有两种方法实现：</p>
+                    <ul>
+                        <li style="text-align:left;font-size:xx-large">对一组旋转矩阵$R_0,R_1,\ldots,R_n$，分别找到其对应的欧拉角，有$R_i=R_{iz}R_{iy}R_{ix}$</li>
+                        <li style="text-align:left;font-size:xx-large">可根据最后一次位置变换确定其轴和角度，则其增量对应于角度的变化</li>
+                    </ul>
+                    <p style="text-align:left;font-size:xx-large">但这两种方法效率都不高，可利用四元组(Quaternion)实现更高效的计算</p>
+                </section>
+                <section id="quaternions">
+                    <h2>旋转的立方体</h2>
+                    <h3>四元组(Quaternions)</h3>
+                    <p style="text-align:left">四元组可视作复数从二维扩展到三维，其定义为
+                    $$
+                    q=q_0+q_1\mathbf{i}+q_2\mathbf{j}+q_3\mathbf{k}
+                    $$
+                    四元组中有一个实部和三个虚部分量，其具体内容请参见教材</p>
+                    <p style="text-align:left">
+                    四元组可更好地表示球面上的旋转，四元组与模型视图矩阵之间可相互变换，利用其计算旋转矩阵更为方便，同时利用四元组还能避免用欧拉角度表示旋转时的万向锁(Gimbal Lock)问题</p>
+                </section>
+            </section>
+            <section>
+                <section id="objrep">
+                    <h2>旋转的立方体</h2>
+                    <h3>面片表示</h3>
+                    <div class="columnleft">
+                        <img src="../images/ch04-trimesh.png" style="width:100%">
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left;font-size:xx-large">考虑如图中所示的三角面片，包含总共10个顶点和18条边，共有10个三角形，其中11条边为共享边，每个顶点均有坐标$v_i=\{x_i,y_i,z_i\}$</p>
+                        <p style="text-align:left;font-size:xx-large">每个面片，可用每个顶点的坐标表示，比如由顶点$v_1,v_2,v_9$构成的面片可表示为$Tri_1=\{x_1,y_1,z_1,x_2,y_2,z_2,x_9,y_9,z_9\}$，用WebGL代码表示有</p>
+                        <pre><code class="hljs" data-trim>
+vertex.push(vec3(x1,y1,z1));
+vertex.push(vec3(x2,y2,z2));
+vertex.push(vec3(x9,y9,z9));
+                        </code></pre>
+                        <p style="text-align:left;font-size:xx-large">这样表示的问题是什么？低效，无结构信息</p>
+                    </div>
+                </section>
+                <section id="ioply">
+                    <h2>旋转的立方体</h2>
+                    <h3>面片方向</h3>
+                    <p style="text-align:left;font-size:xx-large">考虑由$v_1,v_2,v_9$三点构成的三角形面片，在WebGL中，顶点顺序$\{v_1,v_9,v_2\}$和$\{v_2,v_1,v_9\}$能得到同样的绘制结果，但如果顺序为$\{v_1,v_2,v_9\}$的结果与前二者不同</p>
+                    <div class="columnleft">
+                        <p style="text-align:left;font-size:xx-large">前两者定义的面片方向指向<strong style="color:red">外</strong>，第三个顺序定义方向指向<strong style="color:red">内</strong></p>
+                        <p style="text-align:left;font-size:xx-large">方向采用右手原则定义，正向对应于逆时针顺序所定义的向外法线方向</p>
+                        <p style="text-align:left;font-size:xx-large">OpenGL对向外和向内面片处理结果不同</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch04-rthandrule.png">
+                    </div>                
+                </section>
+            </section>
+            <section>
+                <section id="tpvsgeo">
+                    <h2>旋转的立方体</h2>
+                    <h3>几何信息vs拓扑信息</h3>
+                    <ul>
+                        <li style="text-align:left;font-size:xx-large">几何信息：保有顶点的位置信息</li>
+                        <li style="text-align:left;font-size:xx-large">拓扑信息：保存顶点和边的结构组织信息</li>
+                    </ul>
+                    <p style="text-align:left;font-size:xx-large">一般需要将几何信息与拓扑信息分离，几何信息的修改不会影响拓扑信息</p>
+                    <p style="text-align:left;font-size:xx-large">如多边形，可看作是一个关于顶点的有序列表，两个连续的顶点定义一条边，最后一个顶点和第一个顶点定义一条边</p>
+                </section>
+                <section id="tplist">
+                    <h2>旋转的立方体</h2>
+                    <h3>顶点列表</h3>
+                    <div class="columnleft">
+                        <img src="../images/ch04-trimesh.png" style="width:100%">
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch04-topgeo.png" style="width:100%">
+                    </div>
+                    <p style="text-align:left;font-size:xx-large">顶点列表绘制时，对两个面片的共享边会绘制两次，为减少不必要的绘制，可采用边表结构</p>
+                </section>
+                <section id="shegs">
+                    <h2>旋转的立方体</h2>
+                    <h3>边表</h3>
+                    <div class="columnleft">
+                        <img src="../images/ch04-trimesh.png" style="width:100%">
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch04-eglist.png" style="width:100%">
+                    </div>
+                </section>
+                <section id="drawcube">
+                    <h2>旋转的立方体</h2>
+                    <h3>表示立方体</h3>
+                    <img src="../images/ch04-drawcube.png">
+                </section>
+            </section>
+            <section>
+                <section id="vertices">
+                    <h2>旋转的立方体</h2>
+                    <h3>立方体顶点</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+var vertices = [
+    vec4( -0.5, -0.5, 0.5, 1.0 ),
+    vec4( -0.5, 0.5, 0.5, 1.0 ),
+    vec4( 0.5, 0.5, 0.5, 1.0 ),
+    vec4( 0.5, -0.5, 0.5, 1.0 ),
+    vec4( -0.5, -0.5, -0.5, 1.0 ),
+    vec4( -0.5, 0.5, -0.5, 1.0 ),
+    vec4( 0.5, 0.5, -0.5, 1.0 ),
+    vec4( 0.5, -0.5, -0.5, 1.0 )
+];
+                    </code></pre>
+                </section>
+                <section id="vertcolor">
+                    <h2>旋转的立方体</h2>
+                    <h3>立方体顶点颜色</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+var vertexColors = [
+    vec4( 0.0, 0.0, 0.0, 1.0 ), // black
+    vec4( 1.0, 0.0, 0.0, 1.0 ), // red
+    vec4( 1.0, 1.0, 0.0, 1.0 ), // yellow
+    vec4( 0.0, 1.0, 0.0, 1.0 ), // green
+    vec4( 0.0, 0.0, 1.0, 1.0 ), // blue
+    vec4( 1.0, 0.0, 1.0, 1.0 ), // magenta
+    vec4( 0.0, 1.0, 1.0, 1.0 ), // cyan
+    vec4( 1.0, 1.0, 1.0, 1.0 ) // white
+];
+                    </code></pre>
+                </section>
+                <section id="cfaces">
+                    <h2>旋转的立方体</h2>
+                    <h3>立方体面定义</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+var faces = [
+    1, 0, 3, 1, 3, 2, //正
+    2, 3, 7, 2, 7, 6, //右
+    3, 0, 4, 3, 4, 7, //底
+    6, 5, 1, 6, 1, 2, //顶
+    4, 5, 6, 4, 6, 7, //背
+    5, 4, 0, 5, 0, 1 //左
+];
+                        </code></pre>
+                </section>
+                <section id="addvc">
+                    <h2>旋转的立方体</h2>
+                    <h3>顶点和颜色输入</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+for( var i = 0; i &lt; faces.length; i++ ){ 
+    points.push( vertices[faces[i]][0], vertices[faces[i]][1],
+    vertices[faces[i]][2] ); 
+    colors.push( vertexColors[Math.floor(i/6)][0], vertexColors 
+    [Math.floor(i/6)][1],vertexColors[Math.floor(i/6)][2], 
+    vertexColors[Math.floor(i/6)][3] ); 
+}
+                    </code></pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../dist/reveal.js"></script>
+    <script src="../plugin/zoom/zoom.js"></script>
+    <script src="../plugin/notes/notes.js"></script>
+    <script src="../plugin/math/math.js"></script>
+    <script src="../plugin/search/search.js"></script>
+    <script src="../plugin/markdown/markdown.js"></script>
+    <script src="../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: { Macros: { RR: "{\\bf R}" } }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
