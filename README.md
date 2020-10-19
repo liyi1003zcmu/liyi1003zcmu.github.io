@@ -32,6 +32,14 @@
 |[第3章-1](./CourseWare/Chapter3/chapter-3-1.html)|[第3章-2](./CourseWare/Chapter3/chapter-3-2.html)|[第3章-3](./CourseWare/Chapter3/chapter-3-3.html)|
 |[Lab3](./CourseWare/Chapter3/Chapter-3-lab3.md)| | | |
 
+### 第四章
+
+|    |    |    |    |
+| ----- | ----- | ---- | ---- |
+|[第4章-1](./CourseWare/Chapter4/chapter-4-1.html)|[第4章-2](./CourseWare/Chapter4/chapter-4-2.html)|[第4章-3](./CourseWare/Chapter4/chapter-4-3.html)|[第4章-4](../CourseWare/Chapter4/chapter-4-4.html)|
+|[第4章-5](./CourseWare/Chapter4/chapter-4-5.html)|[第4章-6](./CourseWare/Chapter4/chapter-4-6.html)| | |
+|[Lab4](./CourseWare/Chapter4/Chapter-4-lab4.md)| | | |
+
 ## Demos
 ### 第1章
 
@@ -53,4 +61,11 @@
 |[demo-3-1](./demos/chap3-demo-1.html)|[demo-3-2](./demos/chap3-demo-2.html)|[demo-3-3](./demos/chap3-demo-3.html)|[demo-3-4](./demos/chap3-demo-4.html)|
 |[demo-3-5](./demos/chap3-demo-5.html)|[demo-3-6](./demos/chap3-demo-6.html)|[demo-3-7](./demos/chap3-demo-7.html)|[demo-3-8](./demos/chap3-demo-8.html)|
 |[demo-3-9](./demos/chap3-demo-9.html)|
+
+### 第四章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[demo-4-1](./demos/chap4-demo-1.html)|[demo-4-2](./demos/chap4-demo-2.html)|[demo-4-3](./demos/chap4-demo-3.html)|[demo-4-4](./demos/chap4-demo-4.html)|
+|[demo-4-5](./demos/chap4-demo-5.html)| | | |
 
