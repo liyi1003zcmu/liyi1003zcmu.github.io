@@ -1,0 +1,614 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学-几何与变换</title>
+    <meta name="description" content="WebGL几何形体与变换基础">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第四章 几何和变换</H2>
+                <h3>几何基础</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="geobas">
+                    <h2>几何基础</h2>
+                    <h3>基本元素</h3>
+                    <p style="text-align:left">几何，研究的是在$n$维空间中物体之间的相对关系。在计算机图形学中，主要关注于三维空间中物体的相对关系。</p>
+                    <p style="text-align:left">构建三维空间中的物体，需要一组基本图元，这些基本图元可以由三种基本元素构成：</p>
+                    <ul>
+                        <li style="text-align:left">标量(Scalars)</li>
+                        <li style="text-align:left">向量(Vectors)</li>
+                        <li style="text-align:left">点(Points)</li>
+                    </ul>
+                </section>
+                <section id="geocoord">
+                    <h2>几何基础</h2>
+                    <h3>几何形体</h3>
+                    <p style="text-align:left">简单几何形体，大部定义在笛卡尔坐标系(Cartesian)中，点可表示为坐标系中的坐标，$p=(x,y,z)$，所有的计算都可通过对坐标进行代数运算得到。</p>
+                    <p style="text-align:left">实际运算中，这种运算并不符合物理实际。实际上，点的存在与任何坐标系的存在无关，几何结果也与坐标系无关。比如，在欧氏几何学中，两个三角形，只要他们的边及对应的夹角都相等，就认为这二者是相同的</p>
+                </section>
+                <section id="scalar">
+                    <h2>几何基础</h2>
+                    <h3>标量(Scalars)</h3>
+                    <p style="text-align:left">几何中的标量，可定义为一组集合中的元素，可以通过加法和乘法连接，同时遵循几种原子运算法则，包括交换性、结合性、可逆性等。比如，我们熟悉的实数、复数就属于标量。标量没有几何属性</p>
+                </section>
+                <section id="vector">
+                    <h2>几何基础</h2>
+                    <h3>向量</h3>
+                    <p style="text-align:left">向量，具有两个属性，方向和长度。典型的向量，包括力、速度、有向线段等。其中，有向线段在图形学中十分重要，还可以映射到其它类型</p>
+                    <div id="d1">
+                        <canvas id="vcan" width="200px" height="200px"></canvas>
+                        <canvas id="vcan2" width="200px" height="200px"></canvas>
+                        <canvas id="vcan3" width="200px" height="200px"></canvas>
+                        <canvas id="vcan4" width="200px" height="200px"></canvas>
+                    </div>
+                    <script>
+                        var c = document.getElementById("vcan");
+                        var ctx = c.getContext("2d");
+                        ctx.beginPath();
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(140, 50);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(150, 60);
+                        ctx.lineTo(150, 50);
+                        ctx.stroke();
+                        ctx.font = "20px Arial";
+                        ctx.fillText("V", 120, 130);
+
+                        c = document.getElementById("vcan2");
+                        ctx = c.getContext("2d");
+                        ctx.beginPath();
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(50, 140);
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(60, 150);
+                        ctx.stroke();
+                        ctx.font = "20px Arial";
+                        ctx.fillText("-V", 120, 130);
+
+                        c = document.getElementById("vcan3");
+                        ctx = c.getContext("2d");
+                        ctx.beginPath();
+                        ctx.moveTo(80, 120);
+                        ctx.lineTo(120, 80);
+                        ctx.moveTo(120, 80);
+                        ctx.lineTo(110, 80);
+                        ctx.moveTo(120, 80);
+                        ctx.lineTo(120, 90);
+                        ctx.stroke();
+                        ctx.font = "20px Arial";
+                        ctx.fillText(String.fromCharCode(945) + "V", 120, 130);
+
+                        c = document.getElementById("vcan4");
+                        ctx = c.getContext("2d");
+                        ctx.beginPath();
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(140, 50);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(150, 60);
+                        ctx.lineTo(150, 50);
+
+                        ctx.moveTo(50, 150);
+                        ctx.lineTo(130, 120);
+                        ctx.moveTo(115, 120);
+                        ctx.lineTo(130, 120);
+                        ctx.moveTo(130, 120);
+                        ctx.lineTo(120, 130);
+
+                        ctx.moveTo(130, 120);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(140, 60);
+                        ctx.lineTo(150, 50);
+                        ctx.moveTo(155, 60);
+                        ctx.lineTo(150, 50);
+                        ctx.stroke();
+
+                        ctx.font = "20px Arial";
+                        ctx.fillText("V", 70, 90);
+                        ctx.fillText("U", 90, 160);
+                        ctx.fillText("W", 150, 110);
+                    </script>
+                </section>
+                <section id="lvs">
+                    <h2>几何基础</h2>
+                    <h3>线性向量空间</h3>
+                    <p style="text-align:left">线性向量空间是向量操作的数学基础，其中的操作包括两类</p>
+                    <ul>
+                        <li style="text-align:left">向量和标量相乘: $u=\alpha v$</li>
+                        <li style="text-align:left">向量和向量相加: $w=u+v$</li>
+                        <li style="text-align:left">如$v=u+2w-3r$，在向量空间中成立</li>
+                    </ul>
+                </section>
+                <section id="idevec">
+                    <h2>几何基础</h2>
+                    <h3>相同向量</h3>
+                    <p style="text-align:left">下图中，所有的向量都相等，因此向量空间用于表示几何形体时还需要配合点进行表示</p>
+                    <img src="../images/ch04-vecident.png" style="width:60%">
+                </section>
+            </section>
+            <section>
+                <section id="pts">
+                    <h2>几何基础</h2>
+                    <h3>点</h3>
+                    <p style="text-align:left">点，表示了空间中的位置</p>
+                    <p style="text-align:left">点与点相减，可得到一个向量，即$v=P-Q$</p>
+                    <p style="text-align:left"></p>点与向量相加，可得到另一个点，即$P=v+Q$</p>
+                    <canvas id="vpts1" width="300px" height="300px"></canvas>
+                    <script>
+                        var c = document.getElementById( "vpts1" );
+                        var ctx = c.getContext( "2d" );
+                        ctx.lineWidth = 5;
+                        ctx.translate(10, 250);
+                        ctx.rotate(-35 * Math.PI / 180);
+                        ctx.beginPath();
+                        ctx.moveTo(0,20);
+                        ctx.lineTo(250,20);
+                        ctx.stroke();
+
+                        ctx.moveTo(250,20);
+                        ctx.lineTo(230,10);
+                        ctx.lineTo(230,30);
+                        ctx.closePath();
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.arc(0, 20, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+
+                        ctx.beginPath();
+                        ctx.arc(250, 20, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+
+                        ctx.translate(0,0);
+                        ctx.rotate(35*Math.PI/180);
+                        ctx.font = "24px Arial";
+                        ctx.fillText("Q", 0,0);
+                        ctx.fillText("P", 220,-140);
+                        ctx.fillText("v", 110,-70);
+                    </script>
+                </section>
+                <section id="affspc">
+                    <h2>几何基础</h2>
+                    <h3>仿射空间</h3>
+                    <dl>
+                        <dt>仿射空间</dt>
+                        <dd>由点和向量构成的空间，其中能够执行的操作包括:向量相加，标量和向量相乘，点和向量相加，标量和标量间运算。且对任意点定义有
+                        </dd>
+                        \[\begin{aligned}
+                            1\cdot\mathbf{P}=\mathbf{P}\\
+                            0\cdot\mathbf{P}=\mathbf{0}
+                        \end{aligned}\]
+                    </dl>
+                </section>
+            </section>
+            <section>
+                <section id="line">
+                    <h2>几何基础</h2>
+                    <h3>线</h3>
+                    <p style="text-align:left">所有的点形如:$P(\alpha)=P_0+\alpha d$，有这些点都位于通过点$P_0$且沿着方向为$d$的射线上</p>
+                    <img src="../images/ch04-lineinaff.png" style="width:60%">
+                </section>
+                <section id="linefunc">
+                    <h2>几何基础</h2>
+                    <h3>线的参数方程</h3>
+                    <p style="text-align:left">直线的这种定义形式称为<strong>直线的参数方程</strong>，与其它形式相比，这种形式更为健壮，容易拓展到曲线和平面上</p>
+                    <p style="text-align:left">在二维平面上定义直线，有以下三种方程形式：</p>
+                    <ul>
+                        <li style="text-align:left">显式定义: $y=mx+b$</li>
+                        <li style="text-align:left">隐式定义: $ax+by+c=0$</li>
+                        <li style="text-align:left">参数形式：
+                        \[\begin{aligned}
+                        x(\alpha)=\alpha x_0+(1-\alpha)x_1\\
+                        y(\alpha)=\alpha y_0+(1-\alpha)y_1
+                        \end{aligned}\]</li>
+                    </ul>
+                </section>
+                <section id="rayline">
+                    <h2>几何基础</h2>
+                    <h3>射线和线段</h3>
+                    <p style="text-align:left">参数形式：$P(\alpha)=\alpha P_0+(1-\alpha)P_0$</p>
+                    <ul>
+                        <li style="text-align:left">若$\alpha\geq 0$，则$P(\alpha)$为沿着$d$方向远离$P_0$的射线，若用两个点$P$和$Q$定义$v$，则有$P(\alpha)=Q+\alpha(R-Q)=Q+\alpha v=\alpha R+(1-\alpha)Q$。此时，对于$0\leq\alpha\leq 1$，定义的则为所有位于线段$RQ$上的点
+                    </ul>
+                    <img src="../images/ch04-rayline.png" style="width:45%">
+                </section>
+            </section>
+            <section>
+                <section id="convex">
+                    <h2>几何基础</h2>
+                    <h3>凸包性</h3>
+                    <p style="text-align:left">一个形体是凸的，当且仅当形体内连接任意两个点的线段都在形体内部时成立</p>
+                    <div class="columnleft">
+                        <canvas id="conv1" width="400px" height="400px"></canvas>
+                        <figurecaption>凸多边形</figurecaption>
+                    </div>
+                    <div class="columnright">
+                        <canvas id="conv2" width="400px" height="400px"></canvas>
+                        <figurecpation>非凸多边形</figurecpation>
+                    </div>
+                    <script>
+                        var canvas = document.getElementById("conv1");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.fillStyle = "#B3D3C0";
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            ctx.moveTo(270,260);
+                            ctx.lineTo(220,70);
+                            ctx.stroke();
+
+                            ctx.fillStyle="black";
+                            ctx.font = "24px Arial";
+                            ctx.fillText("Q", 280, 280 );
+                            ctx.fillText("P", 210,60 );
+                    </script>
+                    <script>
+                        var canvas = document.getElementById("conv2");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(150, 120);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.fillStyle = "#B3D3C0";
+                            ctx.fill();
+                            
+                            ctx.moveTo(270, 260);
+                            ctx.lineTo(220, 70);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = "black";
+                            ctx.font = "24px Arial";
+                            ctx.fillText("Q", 280, 280);
+                            ctx.fillText("P", 210, 60);
+                    </script>
+                </section>
+                <section id="affsum">
+                    <h2>几休基础</h2>
+                    <h3>仿射和</h3>
+                    <p style="text-align:left"><strong>仿射和(Affine Sum)</strong>，其形式为$P=\alpha_1P_1+\alpha_2P_2+\cdots+\alpha_nP_n$，其中$\alpha_1+\alpha_2+\cdots+\alpha_n=1$，称为在点$P_1,P_2,\ldots,P_n$上的仿射和</p>
+                    <p style="text-align:left">如果对所有的点，都有$\alpha_i\geq 0$，则称为点集$P_1,P_2,\ldots,P_n$上的<strong>凸包(Convex Hull)</strong></p>
+                </section>
+                <section id="convhull">
+                    <h2>几何基础</h2>
+                    <h3>凸包</h3>
+                    <p style="text-align:left">点集$P_1,P_2,\ldots,P_n$上的凸包，定义为能够包围点集中所有点的最小的凸形
+                    </p>
+                    <div>
+                    <canvas id="chull" width="500px" height="400px"></canvas>
+                    </div>
+                    <script>
+
+                        var canvas = document.getElementById("chull");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth=3;
+                            ctx.moveTo(70, 100);
+                            ctx.lineTo(180, 30);
+                            ctx.lineTo(480, 60);
+                            ctx.lineTo(430, 320);
+                            ctx.lineTo(290, 380);
+                            ctx.lineTo(90, 290);
+                            ctx.closePath();
+                            ctx.strokeStyle="#69A583";
+                            ctx.stroke();
+
+                            ctx.fillStyle="black";
+                            ctx.beginPath();
+                            ctx.arc(70,100, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(180,30, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(480,60, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(430,320, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(290,380, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(90,290, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+
+                            
+                            ctx.beginPath();
+                            ctx.arc(140,80,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(200,110,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(340,70,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(400,90,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(370,120,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(410,150,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(230,300,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(310,350,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(400,300,10,0,2*Math.PI);
+                            ctx.fill();
+                    </script>
+                </section>
+            </section>
+            <section>
+                <section id="cursuf">
+                    <h2>几何基础</h2>
+                    <h3>曲线和曲面</h3>
+                    <p style="text-align:left">曲线，用方程表示有$P(\alpha)$，其方程表达式为非线性</p>
+                    <p style="text-align:left">曲面，同理，由带两个参数的方程$P(\alpha,\beta)$表示，若方程为线性，则表示为平面和多边形</p>
+                    <div class="columnleft">
+                        <img src="../images/ch04-curve.png" style="width:90%">
+                        <figurecaption>$P(\alpha)$</figurecaption>
+                    </div>
+                    <div class="columnright">
+                        <canvas id="placanvas" width="300px" height="300px"></canvas>
+                        <figurecaption>$P(\alpha,\beta)$</figurecaption>
+                    </div>
+                    <script>
+                        var canvas = document.getElementById("placanvas");
+                        var ctx = canvas.getContext("2d");
+                        ctx.beginPath();
+                        ctx.lineWidth=3;
+                        ctx.moveTo(10, 130);
+                        ctx.lineTo(120,20);
+                        ctx.lineTo(280, 30);
+                        ctx.lineTo(240, 140);
+                        ctx.lineTo(280,200);
+                        ctx.lineTo(190,280);
+                        ctx.closePath();
+                        ctx.stroke();
+                        ctx.fillStyle = "#B3D3C0";
+                        ctx.fill();
+                    </script>
+                </section>
+                <section id="plns">
+                    <h2>几何基础</h2>
+                    <h3>平面</h3>
+                    <p style="text-align:left">平面有两种定义方式：</p>
+                    <div class="columnleft">
+                        <p>一个点和两个向量</p>.
+                        <img src="../images/ch04-plnv1.png" style="width:80%">
+                        <figurecaption style="font-size:xx-large">$P(\alpha,\beta)=R+\alpha u+\beta v$</figurecaption>
+                    </div>
+                    <div class="columnright">
+                        <p>三个点</p>
+                        <img src="../images/ch04-plnv2.png" style="width:80%">
+                        <figurecaption style="font-size:xx-large">$P(\alpha,\beta)=R+\alpha(Q-R)+\beta(P-Q)$</figurecaption>
+                    </div>
+                </section>
+                <section id="tria1">
+                    <h2>几何基础</h2>
+                    <h3>三角形</h3>
+                    <img src="../images/ch04-triangle.png" style="width:90%">
+                    <p style="text-align:left">图中，$S(\alpha)$为$P$和$Q$的仿射和，$T(\alpha,\beta)$为$S(\alpha)$和$R$的仿射和，若$0\leq\alpha,\beta\leq 1$，则所有的点都定义在三角形$PQR$内部</p>
+                </section>
+                <section id="barycoord">
+                    <h2>几何基础</h2>
+                    <h3>重心坐标</h3>
+                    <p style="text-align:left">三角形为凸形，因此所有位于其内部的点均可表示成仿射和的形式
+                    $$P(\alpha_1,\alpha_2,\alpha_3)=\alpha_1P+\alpha_2Q+\alpha_3R$$
+                    有$\alpha_1+\alpha_2+\alpha_3=1, \alpha_i\geq 0$，这种形式就称为$P$的<strong>重心坐标</strong>(Barycentric Coordinate)表示</p>
+                </section>
+                <section id="normal">
+                    <h2>几何基础</h2>
+                    <h3>法线</h3>
+                    <p style="text-align:left">在三维空间中，对每个平面都有一个向量$n$与其垂直，或与其正交，该向量称为<strong>法向量</strong>(normal vector)</p>
+                    <div class="columnleft">
+                    <p style="text-align:left">对由一点和两向量构成的平面$P(\alpha,\beta)=P+\alpha u+\beta v$，可利用叉积(cross product)计算对应的法向量$n=u\times v$，对应于$(P(\alpha,\beta)-P)\cdot n=0$</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch04-normal.png" style="width:100%">
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../dist/reveal.js"></script>
+    <script src="../plugin/zoom/zoom.js"></script>
+    <script src="../plugin/notes/notes.js"></script>
+    <script src="../plugin/math/math.js"></script>
+    <script src="../plugin/search/search.js"></script>
+    <script src="../plugin/markdown/markdown.js"></script>
+    <script src="../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: { Macros: { RR: "{\\bf R}" } }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
