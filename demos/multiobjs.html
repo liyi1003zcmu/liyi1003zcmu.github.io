@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!-- python -m SimpleHTTPServer -->
+<!-- http://localhost:8000/phong.html -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script id="tetra-vshader" type="x-shader/x-vertex">
+    attribute vec3 vPosition;
+    attribute vec4 vColor;
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+
+    varying vec4 fColor;
+	void main(){
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition,1.0);
+		fColor = vColor;
+	}
+	</script>
+
+    <script id="tetra-fshader" type="x-shader/x-fragment">
+	precision mediump float;
+    varying vec4 fColor;
+	void main(){
+		gl_FragColor = fColor;
+	}
+    </script>
+    <script id="rt-vshader" type="x-shader/x-vertex">
+	attribute vec3 vPosition;
+	attribute vec4 vColor;
+    
+    uniform mat4 projectionMatrix;
+	uniform vec3 theta;
+    varying vec4 fColor;
+	void main()
+	{
+		//compute the sins and cos of theta for each of the three axis in one computation
+		vec3 angles = radians( theta );
+		vec3 cost = cos( theta );
+		vec3 sint = sin( theta );
+
+		mat4 rx = mat4(  1.0,  0.0,  0.0, 0.0,
+						 0.0,  cost.x,  sint.x, 0.0,
+						 0.0,  -sint.x,  cost.x, 0.0,
+						 0.0,  0.0,  0.0, 1.0
+						 );
+
+		mat4 ry = mat4(  cost.y,  0.0, -sint.y,  0.0,
+						 0.0,  1.0,  0.0,  0.0,
+						 sint.y,  0.0,  cost.y,  0.0,
+						 0.0,  0.0,  0.0,  1.0
+						 );
+
+		mat4 rz = mat4(  cost.z,  sint.z,  0.0,  0.0,
+						 -sint.z,  cost.z,  0.0,  0.0,
+						 0.0,  0.0,  1.0,  0.0,
+						 0.0,  0.0,  0.0,  1.0
+						 );
+
+		fColor = vColor;
+		gl_Position = projectionMatrix * rz * ry * rx * vec4(vPosition, 1.0);
+		gl_Position.z = -gl_Position.z;
+	}
+	</script>
+
+    <script id="rt-fshader" type="x-shader/x-fragment">
+	precision mediump float;
+    varying vec4 fColor;
+	void main()
+	{
+		gl_FragColor = fColor;
+	}
+	</script>
+    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../js/common/initShaders.js"></script>
+    <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+
+    <script type="text/javascript" src="../js/ch04/multiobjs.js"></script>
+
+</head>
+<body>
+<canvas id="gl-canvas" width="600" height="600">
+        你的浏览器不支持HTML5 canvas元素
+</canvas>
+</body>
+</html>
