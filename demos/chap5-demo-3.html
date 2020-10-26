@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script id="vertex-shader" type="x-shader/x-vertex">
+        	attribute vec4 vPosition;
+        	attribute vec4 vColor;
+        	varying vec4 fColor;
+        
+        	uniform mat4 modelViewMatrix;
+        	uniform mat4 projectionMatrix;
+        
+        	void main()
+        	{
+        		gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        		fColor = vColor;	
+        	}
+        </script>
+        
+        <script id="fragment-shader" type="x-shader/x-fragment">
+        	precision mediump float;
+        
+        	varying vec4 fColor;
+        
+        	void main()
+        	{
+                gl_FragColor = fColor;
+        	}
+        </script>
+        
+        <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../js/common/initShaders.js"></script>
+        <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+        <script type="text/javascript" src="../js/common/objloader.js"></script>
+        <script type="text/javascript" src="../js/ch05/complexobjview.js"></script>
+    </head>
+    <body>
+        <div>
+            <canvas id="gl-canvas" width="800" height="800">
+                你的浏览器不支持HTML5 Canvas元素
+            </canvas>
+        </div>
+        <div style="border:5px red">
+            <label>选择一个OBJ模型文件</label>
+            <input type="file" id="fileInput"><pre id="fileDisplay"></pre>
+        </div>
+        <div>
+            <label>选择投影方式</label>
+            <input type="radio" id="ortho" name="projtype" value="1" checked><label>正交投影</label>
+            &nbsp;
+            <input type="radio" id="persp" name="projtype" value="2"><label>透视投影</label>&nbsp;<label id="projtyperes"></label>
+        </div>
+        <div>
+            <label>选择绘制方式</label>
+            <input type="radio" id="wire" name="drawtype" value="1" checked><label>线框模式</label>
+            &nbsp;
+            <input type="radio" id="solid" name="drawtype" value="2" ><label>实体模式</label>
+
+            <input type="color" id="objcolor" name="objcolor" value="#ff0000">
+        </div>
+        
+        <div>
+            <label>改变对象位置</label><input type="radio" id="objpos" name="posgrp" value="1" checked><label>物体位置</label>
+            &nbsp;
+            <input type="radio" id="campos" name="posgrp" value="2"><label>相机位置</label>&nbsp;<label
+                id="projtyperes"></label>
+            <br>
+            <label>x pos</label><input type="range" id="xpos" name="xpos" min="-5.0" max="5.0" step="0.1"> &nbsp; 
+            <label>x rot</label><input type="range" id="xrot" name="xrot" min="-360" max="360" step="1.0"><br>
+            <label>y pos</label><input type="range" id="ypos" name="ypos" min="-5.0" max="5.0" step="0.1"> &nbsp;
+            <label>y rot</label><input type="range" id="yrot" name="yrot" min="-360" max="360" step="1.0"><br>
+            <label>z pos</label><input type="range" id="zpos" name="zpos" min="-5.0" max="5.0" step="0.1"> &nbsp;
+            <label>z rot</label><input type="range" id="zrot" name="zrot" min="-360" max="360" step="1.0">
+        </div>
+    </body>
+</html>
