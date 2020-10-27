@@ -251,20 +251,11 @@ function handleMouseMove(event) {
     var newY = event.clientY;
 
     var deltaX = (newX - lastMouseX);
-    console.log("x: "+deltaX);
-    //var deltaX = (newX - lastMouseX)%180;
     var d = deltaX;
-    //dyt = parseFloat(dyt) + parseFloat(d);
-    //cx = cx + parseFloat(d);
     theta = theta - parseFloat(d);
     
     var deltaY = (newY - lastMouseY);
-    console.log("y:" + deltaY);
-    //var deltaY = (newY - lastMouseY)%180;
     d = deltaY;
-    //dxt = parseFloat(dxt) + parseFloat(d);
-
-    //cy = cy + parseFloat(d);
     phi = phi - parseFloat(d);
 
     lastMouseX = newX;
