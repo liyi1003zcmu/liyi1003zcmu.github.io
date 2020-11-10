@@ -1,0 +1,496 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--光和着色</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第六章 光和着色</H2>
+                <h3>光照模型</h3>
+                <p style="font-family: courier">
+                    李懿<br>
+                    医学技术学院<br>
+                    浙江中医药大学<br>
+                </p>
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="needsh">
+                <h2>光照模型</h2>
+                <h3>着色</h3>
+                <div class="columnleft">
+                    <img src="../images/ch06-sphflt.png">
+                </div>
+                <div class="columnright">
+                    <img src="../images/ch06-sphnml.png">
+                </div>
+                <p style="text-align:left">光、材质、观察者的位置、物体表面的方向等属性决定了在光照条件下当前物体表面上每个点都会呈现不同的颜色，便利物体看起来更具真实感</p>
+            </section>
+            <section>
+                <section id="ltsct">
+                    <h2>光照模型</h2>
+                    <h3>光的散射</h3>
+                    <img src="../images/ch06-ltsct.png" width="60%">
+                    <p style="text-align:left">当光线入射到A，部分被吸收，部分被散射，散射光线入到到B，又发生部分被吸收，部分被散射，循环往复</p>
+                </section>
+                <section id="renequ">
+                    <h2>光照模型</h2>
+                    <h3>渲染等式</h3>
+                    <div class="columnleft">
+                        
+                    <p style="text-align:left">光线在物体之间无限的吸收、散射过程可以用渲染公式描述，但一般无解，光线跟踪是一种考虑全反射表面的特殊形式<br>
+                    渲染等式计算的是全局光照，其中包含了阴影和物体之间的多重散射</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-gblgt.png">
+                    </div>
+                </section>
+                <section id="lcgbr">
+                    <h2>光照模型</h2>
+                    <h3>局部渲染和全局渲染</h3>
+                    <p style="text-align:left">正确的着色需要考虑包含所有物体对象和光源的全局计算，这不符合当前流水线中对单个多边形分别计算颜色的模式不符<br>
+                    不过，在计算机图形学中，尤其是实时图形学计算，只需要”看起来正确”的结果，因此，可以有很多技术模拟这种效果</p>
+                </section>
+                <section id="ltmt">
+                    <h2>光照模型</h2>
+                    <h3>光线和材质</h3>
+                    <p style="text-align:left">当光线照射到物体时，部分光线会被吸收，部分光线会被反射，其反射光线量取决于物体的颜色和亮度，比如在白光照射下呈现红色的表面，是因为在物体表面红色光线被反射，而其它颜色则被吸收。</p>
+                    <p style="text-align:left">反射光线的散射方向取决于物体表面的光滑度及表面的朝向</p>
+                </section>
+            </section>
+            <section>
+                <section id="ltsrc">
+                    <h2>光照模型</h2>
+                    <h3>光源</h3>
+                    <div class="columnleft">
+                        <img src="../images/ch06-ltsrcpos.png">
+                    </div>
+                    <div class="columnright">
+                    <img src="../images/ch06-ltsrc.png">
+                    </div>
+                </section>
+                <section id="spltsrc">
+                    <h2>光照模型</h2>
+                    <h3>简化光源-点光源</h3>
+                    <p style="text-align:left">点光源，有位置和颜色信息</p>
+                    <div class="columnleft">
+                        <img src="../images/ch06-ptsrc.png">
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-palsrc.png">
+                        <p style="text-align:left">当点光源的距离位于无限远处</p>
+                    </div>
+                </section>
+                <section id="sptlt">
+                    <h2>光照模型</h2>
+                    <h3>简化光源-聚光灯</h3>
+                    <p style="text-align:left">聚光灯将光限制在一个区域中</p>
+                    <img src="../images/ch06-sptlt.png" style="width:50%">
+                </section>
+                <section id="amblt">
+                    <h2>光照模型</h2>
+                    <h3>简化光源-环境光</h3>
+                    <p style="text-align:left">环境中所有位置的光强均相同，可用于模拟环境中多个光源和反射表面的效果</p>
+                </section>
+            </section>
+            <section id="sftype">
+                <h2>光照模型</h2>
+                <h3>表面类型</h3>
+                <img src="../images/ch06-sftype.png">
+                <p style="text-align:left">物体表面越平滑，反射光线越集中在镜面反射方向，而越粗糙的表面往各个方向散射的光线就越多</p>
+            </section>
+            <section>
+                <section id="phongmd">
+                    <h2>光照模型</h2>
+                    <h3>Phong光照模型</h3>
+                    <div class="columnleft">
+                        <p style="text-align:left;font-size:xx-large">Phong模型是一个简单的光照模型，适用于快速计算。其中的光，有三个成分，分别为
+                        <ul>
+                            <li style="text-align:left;font-size:xx-large">漫反射光(Diffuse)</li>
+                            <li style="text-align:left;font-size:xx-large">高光(Specular)</li>
+                            <li style="text-align:left;font-size:xx-large">环境光(Ambient)</li>
+                        </ul>
+                    <p style="text-align:left;font-size:xx-large">用到四个向量，分别是</p>
+                    <ul>
+                        <li style="text-align:left;font-size:xx-large">光源向量($\mathbf{l}$)</li>
+                        <li style="text-align:left;font-size:xx-large">观察者向量($\mathbf{v}$)</li>
+                        <li style="text-align:left;font-size:xx-large">法向量($\mathbf{n}$)</li>
+                        <li style="text-align:left;font-size:xx-large">全反射向量($\mathbf{r}$)</li>
+                    </ul></p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-phongmd.png">
+                    </div>
+                </section>
+                <section id="idref">
+                    <h2>光照模型</h2>
+                    <h3>理想反射面</h3>
+                    <p style="text-align:left">理想反射面，法向量由局部平面所处方向决定，光线入射角与反射角相等，同时三个向量，入射光向量、法线向量和全反射向量須共面</p>
+                    <div class="columnleft">
+                        <p style="text-align:left">
+                        $$
+                        \mathbf{r}=2(\mathbf{l}\cdot \mathbf{n})\mathbf{n}-\mathbf{l}
+                        $$</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-idealrlt.png">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section id="lbsuf">
+                    <h2>光照模型</h2>
+                    <h3>朗伯表面</h3>
+                    <p style="text-align:left">朗伯表面(Lambertian Surface)是一种理想的漫反射表面，光线均匀地向各个方向散射。反射的光强度与入射光在垂直方向上强度呈线性关系，即</p>
+                    <ul>
+                        <li style="text-align:left">反射光强度与$\cos{\theta_i}$呈线性关系</li>
+                        <li style="text-align:left">若向量已正则化，有$\cos{\theta_i}=\mathbf{I}\cdot\mathbf{n}$</li>
+                        <li style="text-align:left">三个系数$k_r, k_g, k_b$分别对应光中三种颜色分量的反射系数</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="spusuf">
+                    <h2>光照模型</h2>
+                    <h3>高光表面</h3>
+                    <p style="text-align:left">大多数平面既非理想的漫反射表面，也非理想的镜面。平滑表面会在接近于镜面反射方向反射入射光，形成高光</p>
+                    <img src="../images/ch06-spusuf.png" style="width:50%">
+                </section>
+                <section id="mdlspc">
+                    <h2>光照模型</h2>
+                    <h3>建模高光反射</h3>
+                    <p style="text-align:left;font-size:xx-large" >Phong模型以一个变量表示反射光强，当观察者与全反射角之间的角度增大时，反射光强度会减小，即有$l_{ref} \sim k_sl\cos^{\alpha}{\phi}$,
+                        其中$l_{ref}$指代反射强度，$k_s$为光反射系数，其值介于0和1之间，表明有多少光被反射，$l$为入射光强度，$\cos^{\alpha}{\phi}$为Phong模型中定义的闪光系数，$\phi$为观察者与全反射方向之间的夹角</p>
+                    <img src="../images/ch06-phongtheta.png" style="width:60%">
+                </section>
+                <section id="shcoef">
+                    <h2>光照模型</h2>
+                    <h3>闪光系数</h3>
+                    <div class="columnleft">
+                        <ul style="text-align:left">
+                            <li>当$\alpha$无限趋近于正无穷时，对应于镜面材质</li>
+                            <li>当$\alpha$值界于100到200之间，对应于金属材质</li>
+                            <li>当$\alpha$值界于5到10之间时，对应于塑料材质</li>
+                        </ul>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-shinecoeff.png">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section id="amblgt">
+                    <h2>光照模型</h2>
+                    <h3>环境光</h3>
+                    <p style="text-align:left">环境光是光源和环境中的物体进行多次交互后产生的结果，其强度取决于光的颜色和物体的材质属性</p>
+                    <p style="text-align:left">需要在相应光的漫反射和高光分量上分别加上$k_al_a$，其中$k_a$为环境光反射系数，$l_a$为环境光强度</p>
+                </section>
+                <section id="disterm">
+                    <h2>光照模型</h2>
+                    <h3>距离因子</h3>
+                    <p style="text-align:left">光线在从光源到目标物体过程中，随着距离的增加，其强度衰减为距离的平方，即有衰减因子$k_r\sim \frac{1}{a+bd+cd^2}$，其中$d$即为距离，计算光照模型时，需要将该因子也加入到算式中
+                </section>
+                <section id="lgsrccomp">
+                    <h2>光照模型</h2>
+                    <h3>光源和材质</h3>
+                    <p style="text-align:left">Phong模型中，将光源加入到算式中，有每个光源都有独立的漫反射、高光反射和环境光分量用于独立计算，每种分量又可进一步分解成红、绿、蓝三种颜色分量，因此每个光源都有$l_{dr}, l_{dg}, l_{db}, l_{sr}, l_{sg}, l_{sb}, l_{ar}, l_{ag}, l_{ab}$九个分量</p>
+                    <p style="text-align:left">同样，对于物体的材质，也与光源性质相类似，分别对应于三种光源三种颜色分量的吸收性质，有$k_{dr}, k_{dg}, k_{db}, k_{sr}, k_{sg}, k_{sb}, k_{ar}, k_{ag}, k_{ab}$，除外，还有材质的闪光系数$\alpha$</p>
+                </section>
+                <section id="addphong">
+                    <h2>光照模型</h2>
+                    <h3>Phong模型计算式</h3>
+                    <p style="text-align:left;font-size:xx-large">将前述各分量相加，得到Phong模型的计算式，对于每一个光源，都有下式
+                    $$
+                    I=\frac{1}{a+bd+cd^2}(k_dl_d\mathbf{I}\cdot \mathbf{n} + k_sl_s(\mathbf{v}\cdot \mathbf{r})^{\alpha}）+ k_al_a\mathbf{n}
+                    $$
+                    <br>
+                    将场景中所有的光源相加，即可得到完整的光照效果计算式</p>
+                </section>
+            </section>
+            <section>
+                <section id="modpm">
+                    <h2>光照模型</h2>
+                    <h3>改进Phong模型</h3>
+                    <p style="text-align:left">Phong模型中高光分量的计算需要先计算每个顶点的观察向量$\mathbf{v}$和新的反射向量$\mathbf{r}$，Blinn提出了一种改进Phong模型，能够更有效地计算这些向量，其方法利用了<strong tyle="color:red">半路向量(halfway vector)</strong></p>
+                    <div class="columnleft">
+                        <p style="text-aling:left">
+                    $$
+                    h=\frac{(l+v)}{|l+v|}
+                    $$</p>
+                    </div>
+                    <div class="columnright">
+                    <img src="../images/ch06-halfvec.png" style="width:70%">
+                    </div>
+                </section>
+                <section id="modpmeq">
+                    <h2>光照模型</h2>
+                    <h3>利用半路向量</h3>
+                    <p style="text-align:left">
+                    将原公式中$(\mathbf{v}\cdot\mathbf{r})^\alpha$替代为$(\mathbf{n}\cdot\mathbf{h})^\beta$，其中$\beta$的值依据闪光系数设定</p>
+                    <p style="text-align:left">半路向量和$\mathbf{r}$和$\mathbf{v}$是共面的，为二者中间的向量，用半路向量替代后的模型称为<strong>改进Phong模型</strong>或<strong>Phong-Blinn光照模型</strong></p>
+                </section>
+                <section id="examp">
+                    <h2>光照模型</h2>
+                    <h3>示例</h3>
+                    <img src="../images/ch06-teapotarray.png" style="width:80%">
+                </section>
+                <section id="compvec">
+                    <h2>光照模型</h2>
+                    <h3>计算向量</h3>
+                    <p style="text-align:left">利用半路向量计算Phong模型，计算各向量，有
+                    <ul>
+                        <li>$l$和$v$由应用程序给出</li>
+                        <li>根据$l$和$n$可以计算$r$</li>
+                        <li>关键在计算平面法向量$n$，法向量取决于平面在程序中的表示，OpenGL中由用户程序计算法向量</li>
+                    </ul></p>
+                </section>
+                <section id="compprefd">
+                    <h2>光照模型</h2>
+                    <h3>计算反射方向</h3>
+                    <p style="text-align:left">根据光的反射，入射角等于反射角，<strong style="color:red">将向量正则化后</strong>，可以得到</p>
+                    <div class="columnleft">
+                    <p style="text-align:left">
+                    $$
+                    \mathbf{r}=2(\mathbf{l}\cdot \mathbf{n})\mathbf{n}-\mathbf{l}
+                    $$</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-idealrlt.png">
+                    </div>
+                </section>
+                <section id="plnml">
+                    <h2>光照模型</h2>
+                    <h3>平面法向量</h3>
+                    <p style="text-align:left">给定平面方程$ax+by+cz+d=0$，对平面上任意三点$p_0,p_1,p_2$，可以计算得到平面法线为
+                    $$
+                    \mathbf{n}=(p_2-p_0)\times (p_1-p_0)
+                    $$</p>
+                </section>
+                <section id="sphnml">
+                    <h2>光照模型</h2>
+                    <h3>球面法线</h3>
+                    <div class="columnleft">
+                        <p style="text-align:left">
+                        球面有隐函数$f(x,y,z)=0$或者以向量形式有$f(\mathbf{p})=\mathbf{p}\cdot\mathbf{p}-1=0$，其表面法线由导数给出。即有
+                        $$
+                        \mathbf{n}=\begin{bmatrix}
+                        \frac{\partial{f}}{\partial{x}}\\
+                        \frac{\partial{f}}{\partial{y}}\\
+                        \frac{\partial{f}}{\partial{z}}
+                        \end{bmatrix}
+                        =2\mathbf{p}
+                        $$
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/ch06-sphenml.png">
+                    </div>
+                </section>
+                <section id="parform">
+                    <h2>光照模型</h2>
+                    <h3>参数形式</h3>
+                    <p style="text-align:left;font-size:x-large">对球有方程
+                    $$
+                    \begin{cases}
+                    x=x(u,v)=\cos{u}\sin{v}\\
+                    y=y(u,v)=\cos{u}\cos{v}\\
+                    z=z(u,v)=\sin{u}
+                    \end{cases}
+                    $$<br>
+                    则由向量确定的切平面有
+                    $$
+                    \frac{\partial{\mathbf{p}}}{\partial{u}}=\begin{bmatrix}\frac{\partial{x}}{\partial{u}}\\ \frac{\partial{y}}{\partial{u}}\\ \frac{\partial{z}}{\partial{u}}\end{bmatrix},
+                    \frac{\partial{\mathbf{p}}}{\partial{v}}=\begin{bmatrix}\frac{\partial{x}}{\partial{v}}\\
+                    \frac{\partial{y}}{\partial{v}}\\ \frac{\partial{z}}{\partial{v}}\end{bmatrix}
+                    $$<br>
+                    法线可以由叉乘得到
+                    $$
+                    \mathbf{n}=\frac{\partial{\mathbf{p}}}{\partial{u}}\times \frac{\partial{\mathbf{p}}}{\partial{v}}
+                    $$</p>
+                </section>
+                <section id="general">
+                    <h2>光照模型</h2>
+                    <h3>一般情况</h3>
+                    <p style="text-align:left">对其它的简单情况，如干净曲面、参数多项式曲面等，都可以根据参数计算表面法向量</p>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../dist/reveal.js"></script>
+    <script src="../plugin/zoom/zoom.js"></script>
+    <script src="../plugin/notes/notes.js"></script>
+    <script src="../plugin/math/math.js"></script>
+    <script src="../plugin/search/search.js"></script>
+    <script src="../plugin/markdown/markdown.js"></script>
+    <script src="../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
