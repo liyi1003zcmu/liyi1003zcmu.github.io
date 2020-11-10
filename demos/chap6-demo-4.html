@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charet=UTF-8">
+        <title>Shading Demo for objects</title>
+
+        <script type='text/javascript' src="../js/common/objloader.js"></script>
+        <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../js/common/initShaders.js"></script>
+        <script type="text/javascript" src="../js/common/gl-matrix.js"></script>
+
+        <script type='text/javascript' src='../js/ch06/shaderRender.js'></script>
+       
+        <script type="text/javascript">
+            var renderer = 0;
+
+            function run() {
+                var vertSrc = document.getElementById("code_vert").value;
+                var fragSrc = document.getElementById("code_frag").value;
+
+                renderer = new Renderer("gl-canvas", vertSrc, fragSrc);
+                renderer.init();
+                //renderer.display();
+            }
+
+            function updateRenderer() {
+                var vertSrc = document.getElementById("code_vert").value;
+                var fragSrc = document.getElementById("code_frag").value;
+
+                renderer.updateShader(vertSrc, fragSrc);
+                renderer.display();
+            }
+
+            var interval = setInterval(timerFunc, 30);
+
+            function timerFunc() {
+                renderer.display();
+            }
+
+            function shaderMethodChange() {
+                var d = parseInt(document.getElementById("select_shader_id").value);
+                renderer.modeVal = d;
+                switch (d) {
+                    default:
+                    case 1:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-1").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-1").value;
+                        break;
+                    case 2:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-2").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-2").value;
+                        break;
+                    case 3:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-3").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-3").value;
+                        break;
+                    case 4:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-4").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-4").value;
+                        break;
+                    case 5:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-5").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-5").value;
+                        break;
+                    case 6:
+                        document.getElementById("code_vert").value = document.getElementById("vshader-6").value;
+                        document.getElementById("code_frag").value = document.getElementById("fshader-6").value;
+                        break;
+                }
+                updateRenderer();
+            }
+
+            function colorModeChanged(){
+                var d = parseInt(document.getElementById("select_color_id").value);
+                renderer.colorMode = d;
+            }
+
+            function modelChanged(){
+                var file = document.getElementById( "modelFileInput" ).files[0];
+                renderer.modelFile = file;
+                renderer.initModel();
+            }
+
+        </script>
+    </head>
+    <body onload="run()">
+        <table>
+            <tr style="vertical-align:top;">
+            <td><canvas id="gl-canvas" width="640" height="480">Your browser does not support the HTML5 Canvas element</canvas><br>
+            <select onchange="shaderMethodChange()" id="select_shader_id">
+                 <option value="1" selected="selected">true normals and per vertex shading</option>
+                 <option value="2">true normals and per fragment shading</option>
+                 <option value="3">vertex normals and per vertex shading</option>
+                 <option value="4">vertex normals and per fragment shading</option>
+                 <option value="5">Gouraud Shading</option>
+                 <option value="6">Phong Shading</option>
+            </select>
+            <input type='file' id='modelFileInput' onchange="modelChanged()">
+            
+            <select onchange="colorModeChanged()" id="select_color_id">
+                <option value="1">normal</option>
+                <option value="2">Ambient Only</option>
+                <option value="3">Diffuse Only</option>
+                <option value="4">Specular Only</option>
+            </select>
+            </td>
+            <td><p align='left' id='debug-info'></p></td>
+            </tr>
+            
+            <table>
+                <tr>
+                <td align='right'>Ambient reflection (ka): </td> 
+                <td id='slider-ka-value' width='30px'>1.0</td> 
+                <td><input type='range' id='slider-ka' name='ka' min='0' max='1' step='0.01'></td>
+                <td align='right'>Ambient Color:</td>
+                <td colspan='2'><input type='color' id='ka-color' name='kacolor' value='#ff0000'></td>
+                <td align='center' colspan='2'>Light Position:</td>
+				<td align='center' colspan='2'>Light Color</td>
+				<td align='center' colspan='3'>Eye Position</td>
+                </tr>
+                <tr>
+                <td align='right'>Diffuse reflection (kd): </td>   
+                <td id='slider-kd-value' width='30px'>1.0</td> 
+                <td><input type='range' id='slider-kd' name='kd' min='0' max='1' step='0.01'></td>
+                <td align='right'>Diffuse Color: </td>
+                <td><input type='color' id='kd-color' name='kdcolor' value='#ffffff'></td>
+                <td align='right' width='30px'>X:</td>
+                <td id='slider-x-value' width='30px' align='center'>1</td>
+                <td width='150px'><input type='range' id='slider-x' name='xvalue' min='-10.0' max='10.0' step='0.1'></td>
+                <td align='right'>Ambient Color:</td>
+                <td><input type='color' id='lt-ambient-color' name='ltamcolor' value='#ffffff'></td>
+				<td align='right' width='50px'>Radius: </td>
+				<td id='slider-radius-value' width='30px' align='center'>1.5</td>
+				<td width='150px'><input type='range' id='slider-radius' name='rvalue' min='0.1' max='30.0' step='0.1' value='3.0'></td>
+				</tr>
+                <tr>
+                <td align='right'>Specular reflection (ks): </td>
+                <td id='slider-ks-value' width='30px'>1.0</td>
+                <td><input type='range' id='slider-ks' name='ks' min='0' max='1' step='0.01'></td>
+                <td align='right'>Specular Color: </td>
+                <td><input type='color' id='ks-color' name='kscolor' value='#ffffff'></td>
+                <td align='right' width='30px'>Y:</td>
+                <td id='slider-y-value' width='30px' align='center'>1</td>
+                <td width='150px'><input type='range' id='slider-y' name='yvalue' min='-10.0' max='10.0' step='0.1'></td>
+                <td align='right'>Diffuse Color:</td>
+                <td><input type='color' id='lt-diffuse-color' name='ltdfcolor' value='#ffffff'></td>
+				<td align='right' width='50px'>Theta: </td>
+				<td id='slider-theta-value' width='30px' align='center'>0</td>
+				<td width='150px'><input type='range' id='slider-theta' name='tvalue' min='0' max='180' step='1' value='45'></td>
+				</tr>
+                <tr>
+                <td align='right'>Shininess:</td>
+                <td id='slider-sh-value' width='30px'>80</td>
+                <td><input type='range' id='slider-sh' name='sh' min='1' max='500' step='1'></td>
+                <td align='right'>Background Color: </td>
+                <td><input type='color' id='bk-color' name='bkcolor' value='#00ffff'></td>
+                <td align='right' width='30px'>Z:</td>
+                <td id='slider-z-value' width='30px' align='center'>1</td>
+                <td width='150px'><input type='range' id='slider-z' name='zvalue' min='-10.0' max='10.0' step='0.1'></td>
+                <td align='right'>Specular Color:</td>
+                <td><input type='color' id='lt-specular-color' name='ltspcolor' value='#ffffff'></td>
+				<td align='right' width='50px'>Phi:</td>
+				<td id='slider-phi-value' width='30px' align='center'>0</td>
+				<td width='150px'><input type='range' id='slider-phi' name='pvalue' min='-180' max='180' step='1' value='45'></td>
+				</tr>                
+			</table>
+
+            <table border="0" class="maintable" cellpadding="5px" cellspacing="5px">
+                <tr style="vertical-align: top;">
+                <td><p align='center'>Vertex shader: </p><br>
+                <textarea cols="50" rows="20" class="code_input_vert" id="code_vert" wrap="logical">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
+
+uniform vec4 lightPosition;
+
+uniform float shininess;
+
+// material
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+
+varying vec3 normalInterp;
+varying vec4 fColor;
+
+void main(){
+vec4 pos = modelViewMatrix * vPosition;
+normalInterp = normalize(normalMatrix * vNormal.xyz);
+
+gl_Position = projectionMatrix * pos;
+
+vec4 ambient = ambientProduct;
+
+vec3 N = normalize( normalInterp );
+vec3 L;
+
+if( lightPosition.w == 0.0 )
+{
+L = normalize( lightPosition.xyz );
+}
+else
+{
+L = normalize( lightPosition.xyz - pos.xyz );
+}
+
+float Kd = max( dot( L, N ), 0.0 );
+vec4 diffuse = Kd * diffuseProduct;
+
+float Ks = 0.0;
+if( Kd > 0.0 )
+{
+vec3 R = reflect( -L, N );
+vec3 E = -normalize( pos.xyz );
+float specAngle = max( dot( R, E ), 0.0 );
+Ks = pow( specAngle, shininess );
+}
+vec4 specular = Ks * specularProduct;
+
+fColor = ambient + diffuse + specular;
+fColor.a = 1.0;
+}
+                </textarea>
+                <p id="code_vert_error" style="width: 200px;"></p></td>
+                <td><p align='center'>Fragment shader: </p><br>
+                <textarea cols="50" rows="20" class="code_input" id="code_frag" wrap="logical">
+precision mediump float;
+
+varying vec4 fColor;
+
+void main()
+{
+gl_FragColor = fColor;
+}
+                </textarea>
+                <p id="code_frag_error" style="width: 200px;"></p></td>
+                </tr>
+            </table>
+        </table>
+
+        	<textarea id="vshader-1" style="display:none;">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+varying vec4 fColor;
+
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform float shininess;
+uniform float materialKa, materialKd, materialKs;
+uniform mat3 normalMatrix;
+
+void main()
+{
+	// pos is vertex position in eye coordinates
+	vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+	// vector from vertex position to light source
+	vec3 L;
+
+	// check for directional light
+	if(lightPosition.w == 0.0)
+	{ 
+		L = normalize(lightPosition.xyz);
+	}
+	else
+	{ 
+		L = normalize( lightPosition.xyz - pos );
+	}
+
+	// Because the eye point the is at the orgin
+	// the vector from the vertex position to the eye is
+	vec3 E = -normalize( pos );
+
+	// halfway vector
+	vec3 H = normalize( L + E );
+
+	// Transform vertex normal into eye coordinates
+	vec3 N = normalize( normalMatrix*vNormal.xyz);
+
+	// Compute terms in the illumination equation
+	vec4 ambient = materialKa * ambientProduct;
+
+	float Kd = max( dot(L, N), 0.0 );
+	vec4  diffuse = materialKd * Kd*diffuseProduct;
+
+	float Ks = pow( max(dot(N, H), 0.0), shininess );
+	vec4  specular = materialKs * Ks * specularProduct;
+
+	if( dot(L, N) < 0.0 ){
+		specular = vec4(0.0, 0.0, 0.0, 1.0);
+	} 
+
+	gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+	fColor = ambient + diffuse +specular;
+
+	fColor.a = 1.0;
+}
+	</textarea>
+        	<textarea id="fshader-1" style="display:none;">
+precision mediump float;
+varying vec4 fColor;
+
+void main()
+{
+	gl_FragColor = fColor;
+}
+	</textarea>
+        	<textarea id="vshader-2" style="display:none;">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+varying vec3 N, L, E;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform mat3 normalMatrix;
+
+void main()
+{
+	vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+	// check for directional light
+	if(lightPosition.w == 0.0)
+	{
+		L = normalize(lightPosition.xyz);
+	}
+	else
+	{
+		L = normalize( lightPosition.xyz - pos );
+	}
+
+	E = -normalize(pos);
+	N = normalize( normalMatrix*vNormal.xyz);
+
+	gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+}
+	</textarea>
+        	<textarea id="fshader-2" style="display:none;">
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform float materialKa, materialKd, materialKs;
+varying vec3 N, L, E;
+
+void main()
+{    
+	vec4 fColor;
+
+	vec3 H = normalize( L + E );
+	vec4 ambient = materialKa * ambientProduct;
+
+	float Kd = max( dot(L, N), 0.0 );
+	vec4  diffuse = materialKd * Kd*diffuseProduct;
+
+	float Ks = pow( max(dot(N, H), 0.0), shininess );
+	vec4  specular = materialKs * Ks * specularProduct;
+
+	if( dot(L, N) < 0.0 ) specular = materialKs * vec4(0.0, 0.0, 0.0, 1.0);
+
+	fColor = ambient + diffuse +specular;
+	fColor.a = 1.0;
+
+	gl_FragColor = fColor;
+}
+	</textarea>
+        	<textarea id="vshader-3" style="display:none;">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+varying vec4 fColor;
+
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform float shininess;
+uniform float materialKa, materialKd, materialKs;
+uniform mat3 normalMatrix;
+
+void main()
+{
+	vec3 pos = (modelViewMatrix * vPosition).xyz;
+	vec3 light = lightPosition.xyz;
+	vec3 L;
+
+	// check for directional light
+	if(lightPosition.w == 0.0) 
+		L = normalize(lightPosition.xyz);
+	else 
+		L = normalize( lightPosition.xyz - pos );
+
+	vec3 E = -normalize( pos );
+	vec3 H = normalize( L + E );
+
+	// Transform vertex normal into eye coordinates
+	vec3 N = normalize( normalMatrix*vNormal.xyz);
+
+	// Compute terms in the illumination equation
+	vec4 ambient = materialKa * ambientProduct;
+
+	float Kd = max( dot(L, N), 0.0 );
+	vec4  diffuse = materialKd * Kd*diffuseProduct;
+
+	float Ks = pow( max(dot(N, H), 0.0), shininess );
+	vec4  specular = materialKs * Ks * specularProduct;
+
+	if( dot(L, N) < 0.0 ) {
+		specular = vec4(0.0, 0.0, 0.0, 1.0);
+	} 
+
+	gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+	fColor = ambient + diffuse + specular;
+
+	fColor.a = 1.0;
+}
+	</textarea>
+        	<textarea id="fshader-3" style="display:none;">
+precision mediump float;
+
+varying vec4 fColor;
+
+void main()
+{
+	gl_FragColor = fColor;
+}
+	</textarea>
+        	<textarea id="vshader-4" style="display:none;">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+varying vec3 N, L, E;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform mat3 normalMatrix;
+
+void main()
+{
+	vec3 light;
+	vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+	if(lightPosition.z == 0.0)
+	{
+		L = normalize(lightPosition.xyz);
+	}
+	else
+	{
+		L = normalize(lightPosition).xyz - pos;
+	}
+
+	E =  -normalize(pos);
+	N = normalize( normalMatrix*vNormal.xyz);
+	gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+}
+	</textarea>
+        	<textarea id="fshader-4" style="display:none;">
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+uniform float materialKa, materialKd, materialKs;
+varying vec3 N, L, E;
+
+void main()
+{    
+	vec4 fColor;
+
+	vec3 H = normalize( L + E );
+	vec4 ambient = materialKa * ambientProduct;
+
+	float Kd = max( dot(L, N), 0.0 );
+	vec4  diffuse = materialKd * Kd*diffuseProduct;
+
+	float Ks = pow( max(dot(N, H), 0.0), shininess );
+	vec4  specular = materialKs * Ks * specularProduct;
+
+	if( dot(L, N) < 0.0 ){
+		specular = materialKs * vec4(0.0, 0.0, 0.0, 1.0);
+	}
+
+	fColor = ambient + diffuse + specular;
+	fColor.a = 1.0;
+
+	gl_FragColor = fColor;
+}
+	</textarea>
+        	<textarea id="vshader-5" style="display:none;">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat3 normalMatrix;
+
+uniform vec4 lightPosition;
+
+uniform float shininess;
+uniform float materialKa, materialKd, materialKs;
+
+// material
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+
+varying vec3 normalInterp;
+varying vec4 fColor;
+
+void main(){
+	vec4 pos = modelViewMatrix * vPosition;
+	normalInterp = normalize(normalMatrix * vNormal.xyz);
+
+	gl_Position = projectionMatrix * pos;
+
+	vec4 ambient = ambientProduct;
+
+	vec3 N = normalize( normalInterp );
+	vec3 L;
+
+	if( lightPosition.w == 0.0 )
+	{
+		L = normalize( lightPosition.xyz );
+	}
+	else
+	{
+		L = normalize( lightPosition.xyz - pos.xyz );
+	}
+
+	float Kd = max( dot( L, N ), 0.0 );
+	vec4 diffuse = Kd * diffuseProduct;
+
+	float Ks = 0.0;
+	if( Kd > 0.0 )
+	{
+		vec3 R = reflect( -L, N );
+		vec3 E = -normalize( pos.xyz );
+		float specAngle = max( dot( R, E ), 0.0 );
+		Ks = pow( specAngle, shininess );
+	}
+	vec4 specular = Ks * specularProduct;
+
+	fColor = materialKa * ambient + materialKd * diffuse + materialKs * specular;
+	fColor.a = 1.0;
+}
+
+	</textarea>
+        	<textarea id="fshader-5" stlye="display:none">
+precision mediump float;
+
+varying vec4 fColor;
+
+void main()
+{
+	gl_FragColor = fColor;
+}
+	</textarea>
+        	<textarea id="vshader-6" stlye="display:none">
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+uniform mat3 normalMatrix;
+
+varying vec3 normalInterp;
+varying vec4 vertexPos;
+
+void main(){
+	vertexPos = modelViewMatrix * vPosition;
+	normalInterp = normalize(normalMatrix * vNormal.xyz);
+	gl_Position = projectionMatrix * vertexPos;
+}
+	</textarea>
+        	<textarea id="fshader-6" style="display:none">
+precision mediump float;
+
+varying vec3 normalInterp;
+varying vec4 vertexPos;
+
+uniform vec4 lightPosition;
+uniform float shininess;
+
+uniform float materialKa, materialKd, materialKs;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+
+void main()
+{
+	vec3 N = normalize( normalInterp );
+	vec3 L;
+	if( lightPosition.w == 0.0 )
+		L = normalize( lightPosition.xyz );
+	else
+		L = normalize( lightPosition.xyz - vertexPos.xyz );
+
+	vec4 ambient = ambientProduct;
+
+	float Kd = max( dot( L, N ), 0.0 );
+	vec4 diffuse = Kd * diffuseProduct;
+
+	float Ks = 0.0;
+
+	if( Kd > 0.0 )
+	{
+		vec3 R = reflect( -L, N );
+		vec3 V = normalize( -vertexPos.xyz );
+		float speculaAngle = max( dot( R, V ), 0.0 );
+		Ks = pow( speculaAngle, shininess );
+	}
+	vec4 specular = Ks * specularProduct;
+
+	gl_FragColor = materialKa * ambient + materialKd * diffuse + materialKs * specular;
+}
+
+	</textarea>
+    </body>
+</html>
