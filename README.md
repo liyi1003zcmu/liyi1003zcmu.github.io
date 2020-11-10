@@ -4,7 +4,7 @@
 
 ### 第0章
 
-|    | 
+|    |
 | ---- |
 |[第0章](./CourseWare/chapter-0.html)|
 | [Lab0](./CourseWare/Chapter-1-lab0.md)|
@@ -48,6 +48,13 @@
 |[第5章-5](./CourseWare/Chapter5/chapter-5-5.html)|| | |
 |[Lab5](./CourseWare/Chapter5/Chapter-5-lab5.md)| | | |
 
+### 第六章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[第6章-1](./CourseWare/Chapter6/chapter-6-1.html)|[第6章-2](./CourseWare/Chapter6/chapter-6-2.html)|[第6章-3](./CourseWare/Chapter6/chapter-6-3.html)| |
+
+
 ## Demos
 ### 第1章
 
@@ -82,3 +89,10 @@
 |    |    |    |    |
 | ---- | ---- | ---- | ---- |
 |[demo-5-1](./demos/chap5-demo-1.html)|[demo-5-2](./demos/chap5-demo-2.html)|[demo-5-3](./demos/chap5-demo-3.html)| |
+
+### 第六章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[demo-6-1](./demos/chap6-demo-1.html)|[demo-6-2](./demos/chap6-demo-2.html)|[demo-6-3](./demos/chap6-demo-3.html)|[demo-6-4](./demos/chap6-demo-4.html)|
+
