@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>Shaded Cube With Phong Model</title>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+		attribute vec3 vNormal;
+		varying vec4 fColor;
+
+		uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+		uniform vec4 lightPosition;
+		uniform float shininess;
+
+		void main()
+		{
+			vec3 pos = -( modelViewMatrix * vPosition ).xyz;
+
+			// fixed light position
+			vec3 light = lightPosition.xyz;
+			vec3 L = normalize( light - pos );
+
+			vec3 E = normalize( -pos );
+			vec3 H = normalize( L + E );
+
+			vec4 NN = vec4( vNormal, 0 );
+
+			// transform vertex normal into eye coordinates
+			vec3 N = normalize( ( modelViewMatrix * NN ).xyz );
+
+			// compute terms in the illumination equation
+
+			vec4 ambient = ambientProduct;
+
+			float Kd = max( dot( L, N ), 0.0 );
+			vec4 diffuse = Kd * diffuseProduct;
+
+			float Ks = pow( max( dot( N, H ), 0.0 ), shininess );
+			vec4 specular = Ks * specularProduct;
+
+			if( dot( L, N ) < 0.0 ){
+				specular = vec4( 0.0, 0.0, 0.0, 1.0 );
+			}
+
+			gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+			fColor = ambient + diffuse + specular;
+
+			fColor.a = 1.0;
+		}
+	</script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+		varying vec4 fColor;
+
+		void main()
+		{
+			gl_FragColor = fColor;
+		}
+	</script>
+
+    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../js/common/initShaders.js"></script>
+    <script type="text/javascript" src="../js/common/gl-matrix.js"></script>
+
+    <script type="text/javascript" src="../js/ch06/shadedCube.js"></script>
+</head>
+
+<body onload="initCube()">
+    <h1>立方体着色</h1>
+    
+    <canvas id="gl-canvas" width="800" height="800">
+        你的浏览器不支持HTML5 Canvas元素
+    </canvas>
+
+    <button id="ButtonX">Rotate X</button>
+    <button id="ButtonY">Rotate Y</button>
+    <button id="ButtonZ">Rotate Z</button>
+    <button id="ButtonT">Toggle Rotation</button>
+
+</body>
+
+</html>
