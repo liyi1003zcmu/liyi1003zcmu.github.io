@@ -53,6 +53,7 @@
 |    |    |    |    |
 | ---- | ---- | ---- | ---- |
 |[第6章-1](./CourseWare/Chapter6/chapter-6-1.html)|[第6章-2](./CourseWare/Chapter6/chapter-6-2.html)|[第6章-3](./CourseWare/Chapter6/chapter-6-3.html)| |
+|[Lab6](./CourseWare/Chapter6/Chapter-6-lab6.md)| | | |
 
 
 ## Demos
