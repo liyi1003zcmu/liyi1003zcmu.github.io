@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+
+            <script id="vshader-objtex" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+uniform mat3 normalMatrix;
+
+varying vec4 vertexPos;
+varying vec3 normalInterp;
+
+varying vec2 fTexCoord;
+
+void main(){
+    vertexPos = modelViewMatrix * vPosition;
+    normalInterp = normalMatrix * vNormal; 
+
+    fTexCoord = vec2( vPosition.x, vPosition.y );
+    // cylindrical coordinates
+    //fTexCoord = vec2(atan(-vertexPos.z, vertexPos.x), vertexPos.y)*0.35 + vec2(0.1, 0.1);
+    //fTexCoord = vec2(atan(-vPosition.z, vPosition.x), vPosition.y) * 0.35 + vec2(0.1, 0.1);
+    
+    // Sphereical coordinates
+    //float phi = (atan(vPosition.y, vPosition.x) + asin(1.0))/acos(0.0);
+    //float r = sqrt(pow(vPosition.x, float(2))+pow(vPosition.y, float(2))+pow(vPosition.z, float(2)));
+    //float theta = acos(vPosition.z/r)/acos(0.0);
+    //fTexCoord = vec2( theta, phi );
+
+    //float pi = acos(0.0);
+    //float s = 0.5 * acos( vPosition.x )/pi;
+    //float t = 0.5 * asin( vPosition.y/sqrt(1.0-vPosition.x*vPosition.x))/pi;
+    //fTexCoord = vec2( s, t );
+
+    gl_Position = projectionMatrix * vertexPos;
+}
+        </script>
+
+        <script id="fshader-objtex" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 vertexPos;
+varying vec3 normalInterp;
+varying vec2 fTexCoord;
+
+uniform vec3 lightPos;
+
+uniform vec4 fColor;
+uniform sampler2D texture;
+uniform sampler2D texbump;
+uniform samplerCube texCubemap;
+
+uniform float averageBrightness;
+uniform float maxBrightness;
+
+uniform float textureAlpha;
+uniform float shininess;
+uniform float bumpDepth;
+
+float blackness( vec4 color ){
+    return ( 3.0 - color.r - color.g - color.b ) * color.a * 0.33;
+}
+
+vec3 bump( sampler2D bumpSampler, vec2 coord, vec3 sDirection, vec3 tDirection )
+{
+    vec2 dx = vec2( 1.0/256.0, 0.0 );
+    vec2 dy = vec2( 0.0, 1.0/256.0 );
+    float color = blackness( texture2D( bumpSampler, coord ) );
+    float x = (blackness( texture2D( bumpSampler, coord + dx ) ) - color );
+    float y = (blackness( texture2D( bumpSampler, coord + dy ) ) - color );
+    
+    return x * sDirection + y * tDirection;
+}
+
+void main()
+{   
+    // for Bumping
+    vec3 sDirection = vec3( -sin(fTexCoord.s), 0.0, cos(fTexCoord.t) );
+    vec3 tDirection = vec3( 0.0, 1.0, 0.0 );
+    vec3 bumpVal = bump( texbump, fTexCoord, sDirection, tDirection ) * bumpDepth;
+
+    // for reflection
+    vec3 normal = normalize( normalInterp + bumpVal );
+    vec3 eyevec = normalize( -vertexPos.xyz );
+
+    vec3 reflection = reflect( eyevec, normal);
+
+    // for refraction
+    float iorefr = 0.7519; // air: 99.97%, glass: 52.2% to 59%, water: 75.19%, Sapphire: 56.5%, diamond: 41.33%
+    vec3 refraction = refract( eyevec, normal, 0.9997);
+
+    // lighting
+    
+	vec3 lightvec;
+	lightvec = normalize( lightPos.xyz - vertexPos.xyz );
+
+	vec4 ambientLight = vec4( 0.3, 0.3, 0.3, 0.3 );
+
+	float diffuse = max( dot( lightvec, normal ), 0.0 );
+	vec4 diffuseLight =vec4(vec3( 0.9, 0.9, 0.9 ) * averageBrightness,1.0);
+
+	float specular = 0.0;
+
+	if( diffuse > 0.0 )
+	{
+		vec3 rlight = reflect( -lightvec, normal );
+		float speculaAngle = max( dot( rlight, eyevec ), 0.0 );
+		specular = max( pow( speculaAngle, 2.0 ), 0.0 );
+	}
+    vec4 specularLight = vec4( vec3(0.9, 0.9, 0.9) * maxBrightness * 0.5, 1.0);
+    
+    vec4 lightColor = ambientLight + (diffuseLight * diffuse ) + (specularLight * specular );
+
+    vec4 texColor = texture2D(texture, fTexCoord);
+    vec4 texCubeColor = textureCube( texCubemap, reflection );
+    float texalpha = textureAlpha * texColor.a;
+
+    vec4 reflectColor = textureCube( texCubemap, reflection );
+
+    vec4 refractColor = textureCube( texCubemap, refraction );
+    refractColor = mix( refractColor, vec4(1.0, 1.0, 1.0, 1.0), 0.3);
+
+    vec4 surfaceColor = fColor * ( 1.0 - texalpha) + texColor * texalpha;
+    vec4 color = surfaceColor * lightColor * ( ( reflectColor * shininess ) + ( 1.0 - shininess ) );
+    //vec4 color = surfaceColor * lightColor * ( ( refractColor * shininess ) + ( 1.0 - shininess ) );
+    //vec4 color = surfaceColor * ( ( reflectColor * shininess ) + ( 1.0 - shininess ) );
+    
+    gl_FragColor = color;// lightColor ;
+}	
+        </script>
+<script id="vshader-skybox" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+//attribute vec2 vTexCoords;
+attribute vec3 vNormal;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+varying vec3 fTexCoords;
+varying vec3 fNormal; // just for storage
+void main(){
+    vec4 eyePosition = projectionMatrix * modelViewMatrix * vPosition;
+    fNormal = (modelViewMatrix * vec4(vNormal,1.0)).xyz;
+    gl_Position = eyePosition;
+    fTexCoords = -vPosition.xyz;
+}
+        </script>
+        <script id="fshader-skybox" type="x-shader/x-fragment">
+precision mediump float;
+varying vec3 fTexCoords;
+varying vec3 fNormal;
+uniform samplerCube texCubemap;
+
+void main() {
+    vec3 normal = normalize(fNormal); //not used here.
+    gl_FragColor = textureCube(texCubemap, normalize(fTexCoords));
+}
+        </script>
+        <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../js/common/initShaders.js"></script>
+        <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+        <script type="text/javascript" src="../js/common/objloader.js"></script>
+
+        <script type="text/javascript" src="../js/ch07/textureObject.js"></script>
+    </head>
+    <body>
+        <div>
+            <canvas id="gl-canvas" width="1024" height="1024">
+                Your browser does not support HTML5 Canvas element.
+            </canvas>
+        </div>
+        <table>
+        <tr>
+        <td><label>选择一个OBJ模型文件</label></td>
+        <td><input type="file" accept=".obj" id="modelInput"><pre id="modelfileDisplay"></pre></td>
+        <td><input type="color" id="objcolor" name="objcolor" value="#ff0000"></td>
+        </tr>
+        <tr>
+        <td><label>选择一个纹理文件</label></td>
+        <td><input type="file" accept=".jpg,.png,.gif,.jpeg" id="textureInput"><pre id="texfileDisplay"></pre></td>
+        <td><div>Texture Alpha<input type="range" id="textureAlpha" type="range" max="1.0" min="0.0" step="0.01" value="1.0"/></div></td>
+        </tr>
+        <tr>
+        <td><label>选择一个凹凸映射文件</label></td>
+        <td><input type="file" accept=".jpg,.png,.gif,.jpeg" id="bumpInput"><pre id="bumpfileDisplay"></pre></td>
+        <td><div>Bump Depth<input type="range" id="bumpdepth" type="range" max="5.0" min="-5.0" step="0.01" value="0"/></div></td>
+        </tr>
+        <tr>
+        <td><div>Shininess<input id="shininess" type="range" min="0.1" max="1.0" value="1" step="0.01"/></div></td>
+        <td><div>Shadow <input id="shadowdepth" type="range" min="0.1" max="1.0" value="0.5" step="0.01"/></div></td>
+        </div>
+        </table>
+    </body>
+</html>
