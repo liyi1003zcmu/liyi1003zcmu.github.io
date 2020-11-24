@@ -1,107 +1,96 @@
 "use strict";
 
-const{ vec2, vec3, vec4 } = glMatrix;
+const{vec2, vec3, vec4 } = glMatrix;
 
 var canvas;
 var gl;
 var program;
 
-var points = [];
-var normals = [];
-var colors = [];
-var texCoords = [];
-var indices = [];
+var texSize = 4;
 
-var texSize = 64;
+var image1 = new Array()
+	for( var i=0; i<texSize; i++ ) 
+		image1[i] = new Array();
+	for( var i=0; i<texSize; i++ )
+		for( var j=0; j<texSize; j++ )
+			image1[i][j] = new Float32Array(4);
+	for( var i=0; i<texSize; i++ )
+		for( var j=0; j<texSize; j++ ){
+			var c = ((( i & 0x2 ) == 0 ) ^ (( j & 0x2 ) == 0 ));
+			image1[i][j] = [ c, c, c, 1 ];
+		}
 
-var texture;
-
-var image1 = new Array();
-    for( var i=0; i<texSize; i++ )
-        image1[i] = new Array();
-    for( var i=0; i<texSize; i++ ){
-        for (var j=0; j<texSize; j++) {
-            image1[i][j]= new Float32Array(4);
-        }
-    }
-    for(var i=0; i<texSize; i++)
-        for( var j=0; j<texSize; j++){
-            var c = ((( i & 0x8 ) == 0 ) ^ ((j & 0x8 ) == 0 ));
-            image1[i][j] = [ c, c, c, 1 ];
-        }
-
-var image2 = new Uint8Array( 4 * texSize * texSize );
+var image2 = new Uint8Array( 4 * texSize * texSize )
 for( var i = 0; i < texSize; i++ )
 	for( var j = 0; j < texSize; j++ )
 		for( var k = 0; k < 4; k++ )
 			image2[ 4 * texSize * i + 4 * j + k ] = 255 * image1[i][j][k];	
 
+var points = [];
+var colors = [];
+var texCoords = [];
+
+var texture;
 
 var xAxis = 0;
 var yAxis = 1;
 var zAxis = 2;
 var axis = xAxis;
-var theta = [ 45.0, 45.0, 0.0 ];
+var theta = [ 45.0, 45.0, 45.0 ];
 var thetaLoc;
 
-var vertices = [
-    vec4.fromValues( -0.5, -0.5,  0.5,  1.0 ),
-    vec4.fromValues( -0.5,  0.5,  0.5,  1.0 ),
-    vec4.fromValues(  0.5,  0.5,  0.5,  1.0 ),
-    vec4.fromValues(  0.5, -0.5,  0.5,  1.0 ),
-    vec4.fromValues( -0.5, -0.5, -0.5,  1.0 ),
-    vec4.fromValues( -0.5,  0.5, -0.5,  1.0 ),
-    vec4.fromValues(  0.5,  0.5, -0.5,  1.0 ),
-    vec4.fromValues(  0.5, -0.5, -0.5,  1.0 ), 
-];
+function makeCube(){
+	var vertices = [
+		vec4.fromValues( -0.5, -0.5,  0.5,  1.0 ),
+		vec4.fromValues( -0.5,  0.5,  0.5,  1.0 ),
+		vec4.fromValues(  0.5,  0.5,  0.5,  1.0 ),
+		vec4.fromValues(  0.5, -0.5,  0.5,  1.0 ),
+		vec4.fromValues( -0.5, -0.5, -0.5,  1.0 ),
+		vec4.fromValues( -0.5,  0.5, -0.5,  1.0 ),
+		vec4.fromValues(  0.5,  0.5, -0.5,  1.0 ),
+		vec4.fromValues(  0.5, -0.5, -0.5,  1.0 ), 
+	];
 
-var vertexColors = [
-    vec4.fromValues( 0.0, 0.0, 0.0, 1.0 ),
-    vec4.fromValues( 1.0, 0.0, 0.0, 1.0 ),
-    vec4.fromValues( 1.0, 1.0, 0.0, 1.0 ),
-    vec4.fromValues( 0.0, 1.0, 0.0, 1.0 ),
-    vec4.fromValues( 0.0, 0.0, 1.0, 1.0 ),
-    vec4.fromValues( 1.0, 0.0, 1.0, 1.0 ),
-    vec4.fromValues( 0.0, 1.0, 1.0, 1.0 ),
-    vec4.fromValues( 1.0, 1.0, 1.0, 1.0 )
-];
+	var vcol1 = vec4.fromValues( 0.0, 0.0, 0.0, 1.0 );
+	var vcol2 = vec4.fromValues( 1.0, 0.0, 0.0, 1.0 );
+	var vcol3 = vec4.fromValues( 1.0, 1.0, 0.0, 1.0 );
+	var vcol4 = vec4.fromValues( 0.0, 1.0, 0.0, 1.0 );
+	var vcol5 = vec4.fromValues( 0.0, 0.0, 1.0, 1.0 );
+	var vcol6 = vec4.fromValues( 1.0, 0.0, 1.0, 1.0 );
+	var vcol7 = vec4.fromValues( 0.0, 1.0, 1.0, 1.0 );
+	var vcol8 = vec4.fromValues( 1.0, 1.0, 1.0, 1.0 );
 
-var texCoord = [
-    vec2.fromValues( 0, 0 ),
-    vec2.fromValues( 0, 1 ),
-    vec2.fromValues( 1, 1 ),
-    vec2.fromValues( 1, 0 )
-];
+	var vertexColors = [
+		vec4.fromValues( 0.0, 0.0, 0.0, 1.0 ),
+		vec4.fromValues( 1.0, 0.0, 0.0, 1.0 ),
+		vec4.fromValues( 1.0, 1.0, 0.0, 1.0 ),
+		vec4.fromValues( 0.0, 1.0, 0.0, 1.0 ),
+		vec4.fromValues( 0.0, 0.0, 1.0, 1.0 ),
+		vec4.fromValues( 1.0, 0.0, 1.0, 1.0 ),
+		vec4.fromValues( 0.0, 1.0, 1.0, 1.0 ),
+		vec4.fromValues( 1.0, 1.0, 1.0, 1.0 )
+	];
 
-var texCoordID = [
-    0, 1, 2, 0, 2, 3
-];
+	var texCoord = [
+		vec2.fromValues( 0, 0 ),
+		vec2.fromValues( 0, 1 ),
+		vec2.fromValues( 1, 1 ),
+		vec2.fromValues( 1, 0 )
+	];
 
-var faces = [
-    1, 0, 3, 1, 3, 2, //正
-    2, 3, 7, 2, 7, 6, //右
-    3, 0, 4, 3, 4, 7, //底
-    6, 5, 1, 6, 1, 2, //顶
-    4, 5, 6, 4, 6, 7, //背
-    5, 4, 0, 5, 0, 1  //左
-];
+	var texCoordID = [
+		0, 1, 2, 0, 2, 3
+	];
 
-var fnormals = [
-	vec3.fromValues( 0, 0, 1 ),
-	vec3.fromValues( 0, 0, 1 ),
-	vec3.fromValues( 1, 0, 0 ),
-	vec3.fromValues( 1, 0, 0 ),
-	vec3.fromValues( 0, -1, 0 ),
-	vec3.fromValues( 0, -1, 0 ),
-	vec3.fromValues( 0, 1, 0 ),
-	vec3.fromValues( 0, 1, 0 ),
-	vec3.fromValues( 0, 0, -1 ),
-	vec3.fromValues( 0, 0, -1 ),
-	vec3.fromValues( -1, 0, 0 ),
-	vec3.fromValues( -1, 0, 0 )
-];
-/*
-function makeCube(){	
+	var faces = [
+		1, 0, 3, 1, 3, 2, //正
+		2, 3, 7, 2, 7, 6, //右
+		3, 0, 4, 3, 4, 7, //底
+		6, 5, 1, 6, 1, 2, //顶
+		4, 5, 6, 4, 6, 7, //背
+		5, 4, 0, 5, 0, 1  //左
+	];
+
 	for( var i = 0; i < faces.length; i++ ){
 		points.push( vertices[faces[i]][0], vertices[faces[i]][1], vertices[faces[i]][2], vertices[faces[i]][3] );
 		var texid = texCoordID[ i%6 ];
@@ -109,23 +98,17 @@ function makeCube(){
 		colors.push( vertexColors[Math.floor(i/6)][0], vertexColors[Math.floor(i/6)][1], vertexColors[Math.floor(i/6)][2], vertexColors[Math.floor(i/6)][3] );
 	}
 }
-*/
-function makeCube(){
-	for( var i = 0; i < faces.length; i++ ){
-		points.push( face[i] );
-	}
-
-}
 
 function configureTexture( image ){
-    texture = gl.createTexture();
-    gl.activeTexture( gl.TEXTURE0 );
-    gl.bindTexture( gl.TEXTURE_2D, texture );
-    gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
-    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, texSize, texSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, image );
-    gl.generateMipmap( gl.TEXTURE_2D );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+	texture = gl.createTexture();
+	
+	gl.activeTexture( gl.TEXTURE0 );
+	gl.bindTexture( gl.TEXTURE_2D, texture );
+	gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
+	gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, texSize, texSize, 0, gl.RGBA, gl.UNSIGNED_BYTE, image );	
+	gl.generateMipmap( gl.TEXTURE_2D );
+	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR );
+	gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
 }
 
 window.onload = function initCube(){
@@ -147,7 +130,7 @@ window.onload = function initCube(){
 
 	makeCube();
 
-    var cBuffer = gl.createBuffer();
+	var cBuffer = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( colors ), gl.STATIC_DRAW );
 
@@ -171,7 +154,7 @@ window.onload = function initCube(){
 	gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );
 	gl.enableVertexAttribArray( vTexCoord );
 
-    configureTexture( image2 );
+	configureTexture( image2 );
 
 	thetaLoc = gl.getUniformLocation( program, "theta" );
 	document.getElementById( "ButtonX" ).onclick = function(){
@@ -194,7 +177,7 @@ function render(){
 	theta[ axis ] += 2.0;
 	gl.uniform3fv( thetaLoc, theta );
 
-    gl.drawArrays( gl.TRIANGLES, 0, points.length/4 );
+	gl.drawArrays( gl.TRIANGLES, 0, points.length/4 );
 
 	requestAnimFrame( render );
 }
