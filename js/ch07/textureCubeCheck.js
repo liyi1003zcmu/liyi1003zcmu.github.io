@@ -1,6 +1,6 @@
 "use strict";
 
-const{ vec2, vec4 } = glMatrix;
+const{ vec2, vec3, vec4 } = glMatrix;
 
 var canvas;
 var gl;
