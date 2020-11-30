@@ -62,6 +62,7 @@
 | ---- | ---- | ---- | ---- |
 |[第7章-1](./CourseWare/Chapter7/chapter-7-1.html)|[第7章-2](./CourseWare/Chapter7/chapter-7-2.html)|[第7章-3](./CourseWare/Chapter7/chapter-7-3.html)|[第7章-4](../CourseWare/Chapter7/chapter-7-4.html)|
 |[第7章-5](./CourseWare/Chapter7/chapter-7-5.html)|[第7章-6](./CourseWare/Chapter7/chapter-7-6.html)|   |   |
+|[Lab7](./CourseWare/Chapter7/Chapter-7-lab7.md)| | | |
 
 
 
