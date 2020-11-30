@@ -147,12 +147,12 @@ window.onload = function initWindow(){
     configureCubeMapTexture();
     
     if( texture === null ){
-        var url = "http://localhost:8080/world.jpg";
+        var url = "../../textures/world.jpg";
         configureTexture( url );
     }
 
     if( bumpTexture === null ){
-        var url = "http://localhost:8080/roof.jpg";
+        var url = "../../textures/roof.jpg";
         configureBumpTexture(url);
     }
 
@@ -257,12 +257,12 @@ function configureBumpTexture( url ){
 }
 
 var faceUrl = [
-    'http://localhost:8080/posx.jpg',
-    'http://localhost:8080/negx.jpg',
-    'http://localhost:8080/negy.jpg',
-    'http://localhost:8080/posy.jpg',
-    'http://localhost:8080/posz.jpg',
-    'http://localhost:8080/negz.jpg',
+    '../../textures/posx.jpg',
+    '../../textures/negx.jpg',
+    '../../textures/negy.jpg',
+    '../../textures/posy.jpg',
+    '../../textures/posz.jpg',
+    '../../textures/negz.jpg',
 ];
 
 var cubemap_image_cnt = 0;    
