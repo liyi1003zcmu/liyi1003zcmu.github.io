@@ -13,5 +13,5 @@
 |    |
 | ---- |
 |[第1章](./CourseWare/Jchapter-1.html)|
-|[Lab1](./CourseWare/JLab_1.md)|
+|[Lab1](./CourseWare/JLab_1.html)|
 
