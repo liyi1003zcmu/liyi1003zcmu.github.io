@@ -20,4 +20,5 @@
 |    |    |
 | ---- | ---- |
 |[第2章](./CourseWare/JChapters/Jchapter-2.html)|  |
-|[Lab2-Mon](./CourseWare/JLabwork/JLab_2_Monday.html)|[Lab2-Wed](./CourseWare/JLabWork/JLab_2_Wednesday.html)|
+|[Lab2-Mon](./CourseWare/JLabwork/JLab_2_Monday.html)|[Lab2-Wed](./CourseWare/JLabwork/JLab_2_Wednesday.html)|
+
