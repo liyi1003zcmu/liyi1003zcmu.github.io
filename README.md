@@ -13,7 +13,7 @@
 |    |
 | ---- |
 |[第1章](./CourseWare/JChapters/Jchapter-1.html)|
-|[Lab1](./CourseWare/JLabWork/JLab_1.html)|
+|[Lab1](./CourseWare/JLabwork/JLab_1.html)|
 
 ### 第2章
 
