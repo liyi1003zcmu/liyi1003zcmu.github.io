@@ -27,4 +27,4 @@
 |    |    |    | 
 | ---- | ---- | ---- |
 |[第3章-1](./CourseWare/JChapters/Jchapter-3-1.html)|    | [第3章-2](./CourseWare/JChapters/Jchapter-3-2.html)|
-|[Lab3-Wed](./CourseWare/JLabwork/JLab_3_Wednesday.html)| [Lab4-Mon](./CourseWare/JLabwork/JLab_4_Monday.html)|[Lab4-Wed]()|
+|[Lab3-Wed](./CourseWare/JLabwork/JLab_3_Wednesday.html)| [Lab4-Mon](./CourseWare/JLabwork/JLab_4_Monday.html)|[Lab4-Wed](./CourseWare/JLabwork/JLab_4_Wednesday.html)|
