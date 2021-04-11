@@ -24,10 +24,10 @@
 
 ### 第3章 Java基本语法之数组和字符串
 
-|    |    |    |
-| ---- | ---- | ---- |
-|[第3章-1](./CourseWare/JChapters/Jchapter-3-1.html)|    | [第3章-2](./CourseWare/JChapters/Jchapter-3-2.html)|
-|[Lab3-Wed](./CourseWare/JLabwork/JLab_3_Wednesday.html)| [Lab4-Mon](./CourseWare/JLabwork/JLab_4_Monday.html)|[Lab4-Wed](./CourseWare/JLabwork/JLab_4_Wednesday.html)|
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[第3章-1](./CourseWare/JChapters/Jchapter-3-1.html)|    | [第3章-2](./CourseWare/JChapters/Jchapter-3-2.html)|    |
+|[Lab3-Wed](./CourseWare/JLabwork/JLab_3_Wednesday.html)| [Lab4-Mon](./CourseWare/JLabwork/JLab_4_Monday.html)|[Lab4-Wed](./CourseWare/JLabwork/JLab_4_Wednesday.html)|[Lab5-Mon](./CourseWare/JLabwork/JLab_5_Monday.html)|
 
 ### 第4章 面向对象基本概念之类
 
