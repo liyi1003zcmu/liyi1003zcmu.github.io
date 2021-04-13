@@ -29,9 +29,9 @@
 |[第3章-1](./CourseWare/JChapters/Jchapter-3-1.html)|    | [第3章-2](./CourseWare/JChapters/Jchapter-3-2.html)|    |
 |[Lab3-Wed](./CourseWare/JLabwork/JLab_3_Wednesday.html)| [Lab4-Mon](./CourseWare/JLabwork/JLab_4_Monday.html)|[Lab4-Wed](./CourseWare/JLabwork/JLab_4_Wednesday.html)|[Lab5-Mon](./CourseWare/JLabwork/JLab_5_Monday.html)|
 
-### 第4章 面向对象基本概念之类
+### 第4章 面向对象基本概念
 
-|    |
-| ---- |
-|[第4章](./CourseWare/JChapters/Jchapter-4-1.html)|
-|[Lab5-Wed](./CourseWare/JLabwork/JLab_5_Wednesday.html)|
+|    |    |
+| ---- | ---- |
+|[第4章-1](./CourseWare/JChapters/Jchapter-4-1.html)|[第4章-2](./CourseWare/JChapters/Jchapter-4-2.html)|
+|[Lab5-Wed](./CourseWare/JLabwork/JLab_5_Wednesday.html)|[Lab6-Wed](./CourseWare/JLabwork/JLab_6_Wednesday.html)|
