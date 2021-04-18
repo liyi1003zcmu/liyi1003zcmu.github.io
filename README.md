@@ -32,6 +32,6 @@
 ### 第4章 面向对象基本概念
 
 |    |    |    |
-| ---- | ---- |
+| ---- | ---- | ---- |
 |[第4章-1](./CourseWare/JChapters/Jchapter-4-1.html)|    |[第4章-2](./CourseWare/JChapters/Jchapter-4-2.html)|
 |[Lab5-Wed](./CourseWare/JLabwork/JLab_5_Wednesday.html)|[Lab6-Mon](./CourseWare/JChapters/JLabwork/JLab_6_Monday)|[Lab6-Wed](./CourseWare/JLabwork/JLab_6_Wednesday.html)|
