@@ -36,3 +36,9 @@
 |[第4章-1](./CourseWare/JChapters/Jchapter-4-1.html)|    |[第4章-2](./CourseWare/JChapters/Jchapter-4-2.html)|    |[第4章-3](./CourseWare/JChapters/Jchapter-4-3.html)|
 |[Lab5-Wed](./CourseWare/JLabwork/JLab_5_Wednesday.html)|[Lab6-Mon](./CourseWare/JLabwork/JLab_6_Monday.html)|[Lab6-Wed](./CourseWare/JLabwork/JLab_6_Wednesday.html)|[Lab7-Mon](./CourseWare/JLabwork/JLab_7_Monday.html)|[Lab7-Wed](./CourseWare/JLabwork/JLab_7_Wednesday.html)|
 
+### 第5章 异常处理
+
+|    |    |
+| ---- | ---- |
+|[第5章](./CourseWare/JChapters/Jchapter-5.html)||
+|[Lab8-Wed](./CourseWare/JLabwork/JLab_8_Wednesday.html)| |
