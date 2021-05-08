@@ -42,3 +42,9 @@
 | ---- | ---- |
 |[第5章](./CourseWare/JChapters/Jchapter-5.html)||
 |[Lab8-Wed](./CourseWare/JLabwork/JLab_8_Wednesday.html)| |
+
+### 第6章 泛型和模板类
+
+|   |   |
+| ---- | ---- |
+|[第6章-1](./CourseWare/JChapters/Jchapter-6-1.html)|[第6章-2](./CourseWare/JChapters/Jchapter-6-2.html)|
