@@ -1,0 +1,339 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Java程序设计--泛型</title>
+    <meta name="description" content="关于Java的基本信息">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft{
+            float: left;
+            width: 50%;
+        }
+        .columnright{
+            float: right;
+            width: 50%;
+        }
+        .li{
+            text-align: left;
+            font-size: x-large;
+        }
+        .p{
+            text-align: left;
+            font-size: x-large;
+        }
+    </style>
+</head>
+
+<body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>Java程序设计</h1>
+                    <H2>第五章 泛型和集合框架(1)</H2>
+                    
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section>
+                <section id="gencopt">
+                    <h2>泛型</h2>
+                    <ul>
+                        <li>类型参数化</li>
+                        <li>可定义一种类或方法，可接受任意类型参数</li>
+                        <li>在<strong style="color:red">编译</strong>时检查错误，而不是运行时检查</li>
+                        <li>在JDK1.5以后引入</li>
+                    </ul>
+                    <pre><code class="hljs">
+package java.lang;
+import java.util.*;
+public interface Comparable< T >{
+public int compareTo(T o);
+}
+                    </code></pre>
+
+                    <ul>
+                        <li>关于<strong style="color:red">Comparable< T ></strong></li>
+                        <ul>
+                            <li>可替代为任意引用类型</li>
+                            <li>不可替代为基本类型</li>
+                            <li>替代成实际类型称为<strong style="color:red">泛型实例化</strong></li>
+                            <li>可用E或T指代</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <section id="gengen">
+                        <h2>问题的提出</h2>
+                        <ul>
+                            <li>要对学生的成绩进行管理，不同的课程有不同的成绩形式，该如何表示成绩类型？</li>
+                            <ul>
+                                <li>百分制，float或double类型</li>
+                                <li>5级制，优秀、良好、中等、及格、不及格、字符串等</li>
+                                <li>两级制，合格、不合格，字符串或boolean类型</li>
+                                <li>等级制，A、B、C、D、E，字符类型</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="obj2gen">
+                        <h2>问题的提出</h2>
+                        <p>基于Object类型的解决方案</p>
+                        <img src="./../images/chap6/obj2gen.png">
+                    </section>
+                    <section id="objsol">
+                        <h2>问题的提出</h2>
+                        <p>基于Object类型的解决方案(代码)</p>
+                        <pre><code class="hljs">
+class Grade{
+    private Object stuGrade;
+    public void setStuGrade(Object sGrade){
+        this.stuGrade=sGrade;
+    }
+    public Object getStuGrade(){
+        return stuGrade;
+    }
+}
+
+//测试类
+public class TestGrade{
+    public static void main(String[] args){
+        Grade g=new Grade();
+        g.setStuGrade(88.5);
+        float stuGrade=(float)g.getStuGrade();
+        System.out.println("Student Grade is "+stuGrade);
+    }
+}
+                        </code></pre>
+                    </section>
+                    <section id="gensol">
+                        <h2>问题的提出</h2>
+                        <p>基于泛型的解决方案</p>
+                        <pre><code class="hljs">
+class Grade<T>{
+    private T stuGrade;
+    public void setStuGrade(T sGrade){
+        this.stuGrade=sGrade;
+    }
+    public T getStuGrade(){
+        return stuGrade;
+    }
+}
+
+public class TestGrade{
+    public static void main(String[] args){
+        Grade<Float> g=new Grade<Float>();
+        g.setStuGrade(88.5f);
+        float stuGrade=g.getStuGrade();
+        System.out.println("Student grade is : " + stuGrade);
+    }
+}
+                        </code></pre>
+                    </section>
+                </section>
+                <section>
+                    <section id="genclass">
+                        <h2>泛型类</h2>
+                        <ul>
+                            <li>泛型比使用Object类更简洁，更可靠</li>
+                            <li>< T >为形式上的类型，称为类型形式参数，也可以用其它字母代替，一般用T或E</T></li>
+                            <li>泛型定义
+                                    <p>[访问权限]class 类名< 泛型标识1, 泛型标识2, ... ></p>
+                                    <p>[访问权限]泛型标识1 变量名表;</p>
+                                    <p>[访问权限]返回类型 方法名(泛型标识 参数名){}</p>
+                            </li>
+                            <li>泛型使用时要进行实例化，即以具体的类替代泛型标识</li>
+                            <ul>
+                                <li>类名<具体类型名>对象名=new 类名<具体类型名>()</li>
+                            </ul>
+                                </ul>
+                            </li>
+                        </ul>
+                    </section>
+                    <section id="gstack">
+                        <h2>定义泛型类示例</h2>
+                        <img src="../images/chap6/gStack.png">
+                        <p><a href="../SourceCode/Lec_06_Src/GenericStack.java" target="_blank">GenericStack.java</a></p>
+                    </section>
+                </section>
+                <section id="genmet">
+                    <h2>定义泛型方法</h2>
+                    <ul>
+                        <li>泛型方法定义</li>
+                        <ul>
+                            <li>[访问权限] < 泛型标识 >返回类型 方法名< 泛型标识 参数名 >{}</li>
+                        </ul>
+                    </ul>
+                    <p><a href="../SourceCode/Lec_06_Src/GenericMethodDemo.java" target="_blank">GenericMethodDemo.java</a></p>
+                    <p><a href="../SourceCode/Lec_06_Src/BoundedTypeDemo.java" target="_blank">BoundedTypeDemo.java</a></p>
+                </section>
+                <section>
+                    <h2>通配符泛型</h2>
+                    <ul>
+                        <li>Integer是Number类的子类，但GenericStack< Integer >不是GenericStack< Number >类的子类</Number></li>
+                        <li>泛型符标识可采用通配符</li>
+                        <ul>
+                            <li>? 指代任意类</li>
+                            <li>? extends T 指代T的任意子类</li>
+                            <li>? super T 指代T的任意父类</li>
+                        </ul>
+                        <p><a href="../SourceCode/Lec_06_Src/WildCardDemo1.java" target="_blank">WildCardDemo1.java</a></p></a>
+                        <p><a href="../SourceCode/Lec_06_Src/WildCardDemo2.java" target="_blank">WildCardDemo2.java</a></p>
+                        <p><a href="../SourceCode/Lec_06_Src/WildCardDemo3.java" target="_blank">WildCardDemo3.java</a></p>
+                    </ul>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script src="../plugin/math/math.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 1000,
+                height: 1000,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+
+                math: {
+                    mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',
+                    // pass other options into `MathJax.Hub.Config()`
+                    TeX: { Macros: { RR: "{\\bf R}" } }
+                },
+
+                plugins: [RevealHighlight, RevealMath]
+            })
+        </script>
+    </body>
+</html>
+
