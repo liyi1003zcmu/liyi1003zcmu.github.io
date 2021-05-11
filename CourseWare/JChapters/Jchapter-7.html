@@ -1,0 +1,410 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Java程序设计--输入输出</title>
+    <meta name="description" content="关于Java的基本信息">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft{
+            float: left;
+            width: 50%;
+        }
+        .columnright{
+            float: right;
+            width: 50%;
+        }
+        .li{
+            text-align: left;
+            font-size: x-large;
+        }
+        .p{
+            text-align: left;
+            font-size: x-large;
+        }
+    </style>
+</head>
+
+<body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>Java程序设计</h1>
+                    <H2>第六章 输入/输出</H2>
+                    
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section> 
+                <section id="fileintro">
+                    <h2>文件</h2>
+                    <ul>
+                        <li>文件，是将相关记录放在一起的数据集合</li>
+                        <li>目录，是一组文件的集合</li>
+                        <li>所有的数据均以二进制形式存储</li>
+                        <li>文件读取，即将文件中的二进制数字取出来的过程</li>
+                        <li>文件写入，即将文件以二进制数字形式存储在文件中</li>
+                    </ul>
+                </section>
+                <section> 
+                    <section id="fileclass">
+                        <h2>文件类(1)</h2>
+                        <img src="../images/chap7/fileclass.png">
+                    </section>
+                    <section id="fileclass2">
+                        <h2>文件类(2)</h2>
+                        <ul>
+                            <li>File对象既可表示文件，也可表示目录</li>
+                            <li>目录，可显示目录清单，新建或删除目录</li>
+                            <li>文件，可查询文件属性和路径信息，输出和修改文件名等操作</li>
+                            <li>文件路径，包含相对路径和绝对路径</li>
+                            <ul>
+                                <li>相对路径，从当前目录为参考点描述文件位置的路径</li>
+                                <li>绝对路径，完整的描述文件位置的路径，从根目录开始，用户不需要其它信息就可判断出文件的位置，如"C:\User\Admin\Documents\aa.txt"</li>
+                            </ul>
+                        </ul>
+                        <p><a href="SourceCode/Lec_07_Src/TestFile.java" target="_blank">TestFile.java</a></p>
+                        <p><a href="SourceCode/Lec_07_Src/TestFileClass.java" target="_blank">TestFileClass.java</a></p>
+                    </section>
+                </section>
+                <section>
+                    <section id="fileio">
+                        <h2>文件读写基础</h2>
+                        <ul>
+                            <li>用Scanner从文本文件中输入 <a href="SourceCode/Lec_07_Src/ReadDataFile.java" target="_blank">ReadDataFile.java</a></li>
+                            <li>用PrintWriter可往文本文件中输出 <a href="SourceCode/Lec_07_Src/WriteDataFile.java" target="_blank">WriteDataFile.java</a></li>
+                        </ul>
+                    </section>
+					<section id="filecomp">
+						<h2>文件说明</h2>
+						<ul>
+							<li>File类只能访问文件的信息，无法访问文件的具体内容，不能实现对文件的读写操作</li>
+							<li>I/O流，可以实现对文件的读写操作</li>
+						</ul>
+						<img src="../images/chap7/iodig.png">
+					</section>
+					<section id="textencoding">
+					<h2>文件编码</h2>
+					<ul>
+						<li>文本文件以二进制形式存储，不同的编码标准有不同的形式</li>
+					</ul>
+					<img src="../images/chap7/textencoding.png">
+					</section>
+                </section>
+				<section>
+					<section id="strcopt">
+						<h2>流</h2>
+						<ul>
+							<li>Java中将输入输出都抽象成<strong style="color:red">流</strong></li>
+							<li>输入/输出的数据称为数据流(Data Stream)，可视作是有序的，有起点和终点的字节集合</li>
+						</ul>
+						<img src="../images/chap7/strcopt.png">
+					</section>
+				</section>
+                <section>
+                    <section id="types">
+                        <h2>流的分类</h2>
+                        <ul>
+                            <li>按数据流向</li>
+                            <ul>
+                                <li>输入流 -- 程序可从中读取数据的流</li>
+                                <li>输出流 -- 程序能向其中输出数据的流</li>
+                            </ul>
+                            <li>按数据传输单位</li>
+                            <ul>
+                                <li>字节流 -- 以字节为单位传输数据的流</li>
+                                <li>字符流 -- 以字符为单位传输数据的流</li>
+                            </ul>
+                            <li>按流的功能</li>
+                            <ul>
+                                <li>节点流 -- 用于直接操作数据源的流</li>
+                                <li>过滤流 -- 也叫处理流，对一个已存在流的连接和封装，用于提供更为强大、灵活的读写功能</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="strtype">
+                        <h2>流的分类</h2>
+                        <table>
+                            <tr style="background-color:maroon;">
+                                <th></th>
+                                <th style="color:white">字节流</th>
+                                <th style="color:white">字符流</th>
+                            </tr>
+                            <tr>
+                                <td>输入流</td>
+                                <td>InputStream</td>
+                                <td>Reader</td>
+                            </tr>
+                            <tr>
+                                <td>输出流</td>
+                                <td>OutputStream</td>
+                                <td>Writer</td>
+                            </tr>
+                            <tr></tr>
+                        </table>
+                       <p style="text-align:left;">每一个输入数据流都必须与一个数据源相连接</p>
+                    </section>
+                </section>
+                <section>
+                    <section id="bytestr">
+                        <h2>字节流</h2>
+                        <ul>
+                            <li>InputStream/OutpuStream</li>
+                            <li>以字节为单位的抽象流类，定义了字节流所有输入输出基本操作</li>
+                        </ul>
+                        <img src="../images/chap7/iostreamuml.png">
+                    </section>
+                    <section id="bytestrillu">
+                        <h2>字节流</h2>
+                        <img src="../images/chap7/bytestrillu.png">
+                    </section>
+                    <section id="charstr">
+                        <h2>字符流</h2>
+                        <ul>
+                            <li>Reader/Writer</li>
+                            <li>以字符为单位的抽象流类，定义了字符流所有输入输出基本操作</li>
+                        </ul>
+                        <img src="../images/chap7/charstruml.png">
+                    </section>
+                    <section id="charstrillu">
+                        <h2>字符流</h2>
+                        <img src="../images/chap7/charstrillu.png">
+                    </section>
+                </section>
+                <section id="filestr">
+                    <h2>文件流(字节流)</h2>
+                    <ul>
+                        <li>FileInputStream/FileOutputStream</li>
+                        <li>专门用于操作数据源中的文件的流</li>
+                        <li>将二进制流与外部文件相关联</li>
+                    </ul>
+                    <img src="../images/chap7/fstream.png">
+                    <p><a href="../SourceCode/Lec_07_Src/TestFileInput.java">TestFileInput.java</a></p>
+                    <p><a href="../SourceCode/Lec_07_Src/TestFileOutput.java">TestFileOutput.java</a></p>
+                </section>
+                <section id="filestrc">
+                    <h2>文件流(字符流)</h2>
+                    <ul>
+                        <li>FileReader/FileWriter</li>
+                        <li>专门用于操作数据源中的文件的流</li>
+                        <li>将字符流与外部文件相关联</li>
+                    </ul>
+                    <p><a href="../SourceCode/Lec_07_Src/TestFileCStream.java">TestFileCStream.java</a></p>
+                    <ul>
+                        <li>为提高效率，可采用一次读取一个字节数组和一次写入一个字节数组的形式</li>
+                    </ul>
+                    <p><a href="../SourceCode/Lec_07_Src/TestFileCStreamFast.java">TestFileCStreamFast.java</a></p>
+                </section>
+                <section>
+                    <h2>缓冲流</h2>
+                    <ul>
+                        <li>为提高数据读写的效率，Java API提供了带缓冲功能的流类</li>
+                        <li>使用这些流时，先创建一个内部缓冲区数组</li>
+                        <li>读取字节或字符时，先以从数据源读取到的数据填充该内部缓冲区，然后再返回</li>
+                        <li>写入字节或字符时，先以要写入的数据填充该内部缓冲区，然后一次性写入到目标数据源中</li>
+                        <li>BufferedInputStream/BufferedOutputStream，针对字节的缓冲输入输出流</li>
+                        <li>BufferedRreader/BufferedWriter，针对字符的缓冲输入输出流</li>
+                        <li>当操作字节文件或字符文本文件时，建议使用缓冲流，提高程序运行效率 <a href="../SourceCode/Lec_07_Src/TestFileBuffered.java">TestFileBuffered.java</a></li>
+                    </ul>
+                </section>
+                <section id="dstream">
+                    <h2>数据流</h2>
+
+                    <ul>
+                        <li>用于处理基本数据类型的读取和写入</li>
+                        <li>DataInputStream/DataOutputStream</li>
+                    </ul>
+                    <ul>
+                        <li><a href="../SourceCode/Lec_07_Src/TestDataInputStream.java">TestDataInputStream.java</a></li>
+                        <ul>
+                            <li>首先在内存中分配一个字节数组，并提供一个输出管道</li>
+                            <li>用DataOutputStream对输出管道进行套接，并将一些Java类型数据写到字节数组中</li>
+                            <li>创建一个输入管道，用DataInputStream对输入管道进行套接，获取相应数据内容</li>
+                        </ul>
+                    </ul>
+                    <ul>
+                        <li><a href="../SourceCode/Lec_07_Src/TestDataOutputStream.java">TestDataOutputStream.java</a></li>
+                        <ul>
+                            <li>将数据流和文件流进行套接，写入数据即表示将数据输出到文件中</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <section id="objstr">
+                        <h2>对象流</h2>
+                        <ul>
+                            <li>适用于存储和读取基本数据类型或对象的过滤器，能将Java中的对象写到数据源中，也能将数据源中的对象还原</li>
+                            <li>用ObjectOutputStream保存基本类型数据或者对象的机制称为<strong style="color:red">序列化</strong></li>
+                            <li>用ObjectInputStream读取基本类型数据或者对象的机制称为<strong style="color:red">反序列化</strong></li>
+                            <li>ObjectOutputStream/ObjectInputStream不能序列化用static或final修饰的成员变量</li>
+                            <li>所有能被序列化的类必须实现java.io.Serializable接口</li>
+                        </ul>
+                    </section>
+                    <section id="objexp">
+                        <h2>对象流实例</h2>
+                        <ul>
+                            <li><a href="../SourceCode/Lec_07_Src/Student.java">Student.java</a> 定义了可序列化的Student类</li>
+                            <li><a href="../SourceCode/Lec_07_Src/SerializableStudent.java">SerializableStudent.java</a> 创建了一个Student类对象，并将其序列化到文件student.dat中</li>
+                            <li><a href="../SourceCode/Lec_07_Src/DeserializableStudent.java">DeserializableStudent.java</a> 将指定文件中的数据反序列化，并打印输出信息</li>
+                            <ul>
+                                <li>从运行结果来看，读取出来的数据中，age值丢失了，这是因为其是用transient修饰的，其值未被序列化到文件中</li>
+                            </ul>
+                        </ul>
+                    </section>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script src="../plugin/math/math.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 1000,
+                height: 1000,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+
+                math: {
+                    mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',
+                    // pass other options into `MathJax.Hub.Config()`
+                    TeX: { Macros: { RR: "{\\bf R}" } }
+                },
+
+                plugins: [RevealHighlight, RevealMath]
+            })
+        </script>
+    </body>
+</html>
+
