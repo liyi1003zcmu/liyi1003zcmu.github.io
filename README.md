@@ -49,3 +49,9 @@
 | ---- | ---- |
 |[第6章-1](./CourseWare/JChapters/Jchapter-6-1.html)|[第6章-2](./CourseWare/JChapters/Jchapter-6-2.html)|
 |[Lab9-Wed](./CourseWare/JLabwork/JLab_9_Wednesday.html)| |
+
+### 第7章 输入输出流
+|   |
+| ---- |
+|[第7章](./CourseWare/JChapters/Jchapter-7.html)|
+|[Lab10-Wed](./CourseWare/JLabwork/JLab_10_Wednesday.html)|
