@@ -56,3 +56,9 @@
 | ---- |
 |[第7章](./CourseWare/JChapters/Jchapter-7.html)|
 |[Lab10-Wed](./CourseWare/JLabwork/JLab_10_Wednesday.html)|
+
+### 第8章 GUI界面设计
+
+|    |
+| ---- |
+|[第8章](./CourseWare/JChapters/Jchapter-8.html)|
