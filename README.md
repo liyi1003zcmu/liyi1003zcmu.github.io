@@ -66,4 +66,4 @@
 ### 第9章 数据库和网络编程
 |    |    |
 | ---- | ---- |
-|[第9章-1](./CourseWare/JChapters/Jchapter-9-1.html)|   |
+|[第9章-1](./CourseWare/JChapters/Jchapter-9-1.html)|[第9章-2](./CourseWare/JChapters/Jchapter-9-2.html)|
