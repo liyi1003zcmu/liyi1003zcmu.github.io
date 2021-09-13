@@ -1,0 +1,275 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学-交互和动画</title>
+    <meta name="description" content="认识WebGL交互和动画实现原理">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第三章 交互和动画</H2>
+                <h3>交互和输入</h3>
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="proske">
+                <h2>交互和输入</h2>
+                <h3>画板(Project Sketchpad)</h3>
+                <a href="https://bimaplus.org/news/the-very-beginning-of-the-digital-representation-ivan-sutherland-sketchpad/" target="_blank"><img src="../../images/cg/chap03/ch03-sketchpad.png" style="width:50%"></a>
+
+                <p style="text-align:left;font-size:xx-large">Ivan Sutherland于1963年构建了第一个关于交互的基本框架，描述了交互式图形学的基本特征，包含:</p>
+                <ul>
+                    <li style="text-align:left;font-size:xx-large">用户可以在显示设备上看见物体</li>
+                    <li style="text-align:left;font-size:xx-large">用户可通过输入设备(光笔、鼠标、跟踪球等)指向(或拾取)一个物体对象</li>
+                    <li style="text-align:left;font-size:xx-large">用户可改变物体的姿态(平移、转动、变形等)</li>
+                    <li style="text-align:left;font-size:xx-large">重复上述步骤</li>
+                </ul>
+            </section>
+            <section>
+                <section id="grainput">
+                    <h2>交互和输入</h2>
+                    <h3>图形输入</h3>
+                    <p style="text-align:left">设备可以有两种描述方式：</p>
+                    <ul>
+                        <li style="text-align:left">物理设备，如鼠标，键盘、跟踪球等</li>
+                        <li style="text-align:left">逻辑设备，即通过API返回给程序的信息，如当前所在位置、对象描述符等</li>
+                    </ul>
+                    <p style="text-align:left">设备模式，即何时及如何获取设备输入，主要有两种方式，一是请求驱动，二是事件驱动</p>
+                </section>
+                <section id="phydev">
+                    <h2>交互和输入</h2>
+                    <h3>物理设备</h3>
+                    <p style="text-align:left">物理输入设备主要有：鼠标、跟踪球、光笔、手写板、游戏杆、三维鼠标等</p>
+                </section>
+                <section id="incdev">
+                    <h2>交互和输入</h2>
+                    <h3>增量(相对)设备</h3>
+                    <p style="text-align:left">增量设备，指的是类似手写板之类，直接返回定位给操作系统的设备，比如鼠标、跟踪球、游戏杆等都属于此类。</p>
+                    <p style="text-align:left">此类设备给出的是相对的位置变化，很难得到绝对的定位，同时，设备因为灵敏性不同，提供的定位数据也有差异</p>
+                </section>
+                <section id="logdev">
+                    <h2>交互和输入</h2>
+                    <h3>逻辑设备</h3>
+                    <p style="text-align:left">考虑有C和C++代码，如C: scanf("%d", &x); 和C++: cin>>x; 在这两句代码中，输入设备是什么？</p>
+                    <p style="text-align:left">从代码中很难说清，可以是键盘，可以是文件，也可以是另一段程序的输出等</p>
+                    <p style="text-align:left">这样的代码提供的是<strong>逻辑输入</strong>，程序返回的只是一个数字，与实际物理设备无关</p>
+                </section>
+                <section id="gralogdev">
+                    <h2>交互和输入</h2>
+                    <h3>图形逻辑设备</h3>
+                    <p style="text-align:left">图形输入与标准输入通常只输入文字数字相比，类别更多，在两个早期的图形学API(GKS, PHIGS)中定义了六种类型的逻辑输入：</p>
+                    <ul>
+                        <li style="text-align:left">定位(Locator)，用于返回位置</li>
+                        <li style="text-align:left">拾取器(Pick)，返回物体对象ID</li>
+                        <li style="text-align:left">键盘(Keyboard)，返回字符串</li>
+                        <li style="text-align:left">轨迹(Stroke)，返回一系列位置</li>
+                        <li style="text-align:left">计算器(Valuator)，返回浮点数</li>
+                        <li style="text-align:left">选择器(Choice)，返回若干选项中的一个</li>
+                    </ul>
+                </section>
+                <section id="xwininput">
+                    <h2>交互和输入</h2>
+                    <h3>X窗口输入</h3>
+                    <p style="text-align:left">X Window采用了客户端--服务器的模式用于网络工作站。其中，客户端指的是OpenGL程序，图形服务器，指的是具有指点设备和键盘的图形显示</p>
+                    <img src="../../images/cg/chap03/ch03-xwinsys.png" style="width:80%">
+                </section>
+            </section>
+            <section>
+                <section id="inputmode">
+                    <h2>交互和输入</h2>
+                    <h3>输入模式</h3>
+                    <p style="text-align:left">输入设备都包含<strong>触发器</strong>，如鼠标的按键、键盘按下或释放按键，可用于向操作系统改善信号</p>
+                    <p style="text-align:left">一旦触发，输入设备就能将相关信息返回给系统，如鼠标返回位置信息，键盘返回字符的ASCII码</p>
+                </section>
+                <section id="request">
+                    <h2>交互和输入</h2>
+                    <h3>请求模式</h3>
+                    <p style="text-align:left">请求模式下，只有当用户触发了设备才会给程序提供输入，典型的如键盘输入，当按下按键，相应的删除、编辑等动作才生效</p>
+                    <img src="../../images/cg/chap03/ch03-requestmode.png" style="width:80%">                    
+                </section>
+                <section id="event">
+                    <h2>交互输入</h2>
+                    <h3>事件模式</h3>
+                    <p style="text-align:left">很多系统都有一种以上的输入设备，每种设备都能在任意时间由用户触发，因此每次触发都会产生一个<strong>事件</strong>，该事件会放入一个<strong>事件队列</strong>中由用户程序负责检查</p>
+                    <img src="../../images/cg/chap03/ch03-eventmode.png" style="width:90%">
+                </section>
+                <section id="evetype">
+                    <h2>交互输入</h2>
+                    <h3>事件类型</h3>
+                    <p style="text-align:left">常见的用户输入事件类型包括以下几种:</p>
+                    <ul>
+                        <li style="text-align:left">窗口事件，如缩放、最小化、最大化、关闭等</li>
+                        <li style="text-align:left">鼠标事件，如单击一个或多个按键</li>
+                        <li style="text-align:left">运动事件，如移动鼠标</li>
+                        <li style="text-align:left">键盘事件，如按下或释放按键</li>
+                        <li style="text-align:left">空事件，通常用于定义当事件队列中没有其它事件时该处理的事件</li>
+                    </ul>
+                </section>
+            </section>
+            
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight]
+        });
+    </script>
+</body>
+
+</html>
