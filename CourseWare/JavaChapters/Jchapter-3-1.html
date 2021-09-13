@@ -1,0 +1,577 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Java程序设计--Java基础语法</title>
+    <meta name="description" content="关于Java的基本信息">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin//highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft{
+            float: left;
+            width: 50%;
+        }
+        .columnright{
+            float: right;
+            width: 50%;
+        }
+        .li{
+            text-align: left;
+        }
+        .p{
+            text-align:left;
+        }
+    </style>
+</head>
+
+<body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>Java程序设计</h1>
+                    <H2>第二章 Java语言基础(二)</H2>
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section>
+
+                <section id="progIntro">
+                    <h2>为什么是数组</h2>
+                    <p>写一段程序，求班级所有同学某次测试成绩的平均分</p>
+                    <pre>
+                        <code class="fragment" class="java">
+/*
+ AverageScore: Display average score of class
+*/
+public class AverageScore{
+  public static void main( String[] args ){
+    int[] scores = new int[40];
+    for( int i = 0; i < 40; i++ ){
+      scores[i] = ( int )( Math.random() * 1000 ) % 40 + 60;
+    }
+    // int[] scores = new int[40]{ 91, 92, ..., 86, 87 };
+    int sum = 0;
+    for( int i = 0; i < 40; i++ ){
+      sum += scores[i];
+    }
+    double averageScore = sum * 1.0 / 40;
+    System.out.println( "The average score of class is " + averageScore );
+  }
+}                            
+                        </code>
+                    </pre>
+                </section>
+                <section>
+                    <section id="arraydef">
+                        <h2>数组是什么</h2>
+                        <dl>
+                            <dt>数组</dt>
+                            <dd>是有序的元素集合，包括基本数据类型、引用数据类型，或是对其它数组的引用</dd>
+                        </dl>
+                        <ul>
+                            <li>数组是对象，是扩展自类Object的对象，类Object中定义的方法都可用于数组对象，实现对数组中元素的操作</li>
+                            <li>数组声明无需指明数组长度</li>
+                        </ul>
+                    </section>
+                    <section id="arrayInfo">
+                        <h2>数组是什么</h2>
+                        <img src="../images/chap3/arrayIntro.png">
+                    </section>
+                </section>
+                <section>
+                    <section id="arraydec">
+                        <h2>声明数组</h2>
+                        <p style="text-align:left;">声明数组，即声明数组的类型，数组名</p>
+                        <p style="text-align:left;">type arrayName[];</p>
+                        <ul>
+                            <li>char s[]; &rarr; <strong style="color:red">char[] s;</strong></li>
+                            <li>int intArray[]; &rarr; <strong style="color:red">int[] intArray;</strong></li>
+                        </ul>
+                    </section>
+                    <section id="arrayinit">
+                        <h2>数组初始化值</h2>
+                        <ul>
+                            <li>静态初始化</li>
+                            <pre><code>
+int[] intArray = { 34, 28, 59, 89 };
+int[] intArray = new int[]{ 34, 28, 59, 89 };
+                            </code></pre>
+                            <li>动态初始化</li>
+                            <pre><code>
+int[] intArray = new int[4];
+int intArray[] = new int[4];
+                            </code></pre>
+                            <p>数组中元素的初始值是？如果是double, float, char, boolean 类型呢？</p>
+                            <p>如下的使用可否？</p>
+                            <pre><code>
+int[] intArray;
+intArray = { 44, 33, 22, 11 };
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section id="initinternal">
+                        <h2>数组初始化内存管理</h2>
+                        <img src="../images/chap3/arrayInit.png">
+                    </section>
+                </section>
+                <section id="assignarr">
+                    <h2>访问数组元素</h2>
+                    <p>数组下标从0到n-1</p>
+                    <pre><code>
+int[] arr = new int[5];
+for( int i = 0; i < arr.length; i++ )
+  arr[ i ] = i;
+                    </code></pre>
+                </section>
+                <section>
+                    <section id="arrop1">
+                        <h2>数组操作示例1</h2>
+                        <pre><code>
+public class ScoreTest1{
+  public static void main( String[] args ){
+    int[] score = new int[];
+    score[0] = 90;
+    score[1] = 92;
+    System.out.println( score[0] );
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section id="arrop2">
+                        <h2>数组操作示例2</h2>
+                        <pre><code>
+public class ScoreTest2{
+  public static void main( String[] args ){
+    int[] score = { 12, 32, 45, 48, 69 };
+    for( int i = 0; i < score.length; i++ ){
+      System.out.println( score[i] );
+    }
+    //for( int num:score )
+      //System.out.println(num);
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section id="arrop3">
+                        <h2>数组操作示例3</h2>
+                        <pre><code>
+public class ScoreTest3{
+  public static void main( String[] args ){
+    int[] score = new int[4];
+    score = { 45, 87, 69, 98, 80 };
+    int[] score2 = new int[]{ 60, 72, 90, 85, 100 };
+    int[] score3;
+    score3 = { 60, 80, 85, 79, 65 };
+    int[] score4 = score2;
+    int[] score3 = score2;
+    score3[1] = 79;
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section id="arrop4">
+                        <h2>数组操作示例4</h2>
+                        <pre><code>
+public class ScoreTest4{
+  public static void main( String[] args ){
+    int[] score = new int[3];
+    score[0] = 10;
+    System.out.println( score[1] );
+  }
+}
+                        </code></pre>
+                    </section>
+                </section>
+                <section>
+                    <section id="arrusage">
+                        <h2>数组使用基本方法</h2>
+<pre><code>
+double[] myList = new double[10];
+</code></pre>
+                        <ul>
+                        <li>数组元素用输入值赋值</li>
+                        <pre><code>
+Scanner input = new Scanner( System.in );
+System.out.print( "Enter " + myList.length + " elements: " );
+for( int i = 0; i < myList.length; i++ )
+  myList[i] = input.nextDouble();
+                        </code></pre>
+                        <li>数组元素用随机数赋值</li>
+                            <pre><code>
+for(int i = 0; i < myList.length; i++ )
+  myList[i] = Math.random() * 100;
+                            </code></pre>
+                            <li>打印数组元素</li>
+                            <pre><code>
+for(int i = 0; i < myList.length; i++ )
+  System.out.println( myList[i] + " " );
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section id="arrusage2">
+                        <h2>数组使用基本方法(2)</h2>
+                        <ul>
+                            <li>数组元素求和</li>
+                            <pre><code>
+double total = 0;
+for( int i = 0; i < myList.length; i++ )
+  total += myList[i];
+                            </code></pre>
+                            <li>找到最大的元素</li>
+                            <pre><code>
+double max = myList[0];
+for( int i = 1; i < myList.length; i++ )
+  if( myList[i] > max ) max = myList[i];
+                            </code></pre>
+                            <li>找到最大元素的最小下标</li>
+                            <pre><code>
+double max = myList[0];
+int indexOfMax = 0;
+for( int i = 1; i < myList.length; i++ ){}
+  if( myList[i] > max ){
+    max = myList[i];
+    indexOfMax = i;   
+  }
+}
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section id="arrusage3">
+                        <h2>数组使用基本方法(3)</h2>
+                        <ul>
+                            <li>数组元素随机变换位置</li>
+                            <pre><code>
+for(int i = 0; i < myList.length-1; i++ ){
+  int j = (int)(Math.random() * myList.length );
+  double temp = myList[i];
+  myList[i] = myList[j];
+  myList[j] = temp;
+}
+                            </code></pre>
+                            <li>数组元素顺序移位</li>
+                            <pre><code>
+double temp = myList[0];
+for(int i = 1; i < myList.length; i++ )
+  myList[i-1] = myList[i];
+myList[myList.length-1]=temp;
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section id="foreach">
+                        <h2>Foreach</h2>
+                        <p>foreach循环是Java提供的一种循环的简单形式</p>
+                        <pre><code>
+for( double e: myList )
+  System.out.println( e );
+                        </code></pre>
+                        <p>foreach循环和普通的for循环功能实现上的区别在哪？</p>
+                    </section>
+                </section>
+                <section>
+                    <section id="copyarray">
+                        <h2>复制数组</h2>
+                        <pre><code>
+    int[] list1 = new int[10]; int list2 = new int[10];
+                        </code></pre>
+                        <p class="fragment">执行list2=list1后，发生了什么？</p>
+                        <div class="columnleft">
+                            <img class="fragment" src="./../images/chap3/arraycopy_before.png">
+                        </div>
+                        <div class="columnright">
+                            <img class="fragment" src="./../images/chap3/arraycopy_after.png">
+                        </div>
+                    </section>
+                    <section id="howtocopy">
+                        <h2>如何正确复制数组元素</h2>
+                        <ul>
+                            <li>利用循环依次复制每一个元素</li>
+                            <pre><code>
+for(int i = 0; i < myList.length; i++ )
+  list2[i] = list1[i];
+                            </code></pre>
+                            <li>利用java.lang.System类的arraycopy方法，<br>
+                            System.arraycopy(from, index, to, index, length)
+                            </li>
+                            <pre><code>
+System.arraycopy( list1, 0, list2, 0, list1.length );
+                            </code></pre>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section id="passarray">
+                        <h2>数组作为方法参数</h2>
+                        <pre><code>
+public class TestArrayArguments{
+  public static void main( String[] args ){
+    int x = 1;
+    int[] y = new int[10];
+    m( x, y );
+
+    System.out.println( "x is " + x );
+    System.out.println( "y[0] is " + y[0] );
+  }
+
+  public static void m( int number, int[] numbers ){
+    number = 1000;
+    numbers[0] = 5555;
+  }
+}
+                        </code></pre>
+                        <p>思考，以上代码的输出是什么？</p>
+                    </section>
+                </section>
+                <section>
+                    <section id="arraysmethod">
+                        <h2>数组操作Arrays方法</h2>
+                        <p>java.util.Arrays类</p>
+                        <table style="font-size:xx-large">
+                            <tr style="background-color: royalblue;">
+                                <th>主要的Arrays方法</th>
+                                <th>方法描述</th>
+                            </tr>
+                            <tr>
+                                <th>static List asList[T[])</th>
+                                <th>将一个数组转换为一个List</th>
+                            </tr>
+                            <tr style="background-color: #dddddd;">
+                                <th>static int binarySearch(Object[],key)</th>
+                                <th>在数组中搜索特定元素，并返回其下标</th>
+                            </tr>
+                            <tr>
+                                <th>static boolean equals(Object[], Ojbect[])</th>
+                                <th>比较两个数组，看它们所包含的元素是否都相同</th>
+                            </tr>
+                            <tr style="background-color: #dddddd;">
+                                <th>public static void sort(Object[])</th>
+                                <th>对数组中的元素进行排序</th>
+                            </tr>
+                            <tr>
+                                <th>public static String toString(Object[])</th>
+                                <th>创建一个字符串，使其包含数组内的所有元素</th>
+                            </tr>
+                            <tr style="background-color: #dddddd;"> 
+                                <th>static T[] copyOf(T[], length)</th>
+                                <th>复制数组，将指定长度的内容拷贝到新数组中</th>
+                            </tr>
+                            </table>
+                    </section>
+                    <section id="arraydemo">
+                        <h2>Arrays方法数组使用示例</h2>
+                        <pre><code>
+import java.util.*;
+
+public class ArrayTest{
+    public static void main( String[] args ){
+    int[] narray = { 38, 60, 19, 27, 70, 54 };
+    System.out.println( Arrays.toString( narray ) );
+    System.out.println( Arrays.binarySearch( narray, 27 ) );
+    
+    int[] narray2 = Arrays.copyOf( narray, narray.length );
+    //int[] narray2 = narray;
+
+    System.out.println( narray2[ 5 ] + ", " + narray2.length );
+    System.out.println( Arrays.equals( narray, narray2 ));
+    System.out.println( narray.equals( narray2 ) );
+    Arrays.sort( narray );
+    System.out.println( Arrays.toString( narray ) );
+    //System.out.println( narray.toString() );
+    }
+}
+                        </code></pre>
+                        <a href="../SourceCode/Lec_03_Src/ArrayTest.java">ArrayTest.java</a>
+                    </section>
+                </section>
+                <section>
+                    <section id="arrayerror">
+                        <h2>数组使用常见错误</h2>
+                        <ul>
+                            <li>数组初始化错误</li>
+                            <pre><code>
+int[] score = new int[4];
+score = { 60, 70, 89, 90 };//两句合一句
+
+int[] score = new int[4]{ 60, 70, 80, 90 };//一句分两句
+                            </code></pre>
+                            <li>未指明数组大小</li>
+                            <pre><code>
+int[] score = new int[]; score[0] = 37; score[1] = 45;
+                            </code></pre>
+                            <li>数组下标越界</li>
+                            <pre><code>
+int[] score = new int[2]; score[1] = 54; score[2] = 77;
+                            </code></pre>
+                        </ul>
+                    </section>
+                </section>
+                <section id="multiarray">
+                    <h2>多维数组</h2>
+                    <dl>
+                        <dt>多维数组</dt>
+                        <dd>即数组的数组，数组中的每一个元素都是数组，常用的是<strong>二维数组</strong>，一般表示为int[][] myArray;</dd>
+                    </dl>
+                    <pre><code>
+int[][] a1 = { {2,3}, {1,5}, {3,3} };
+int[][] a = new int[][]{{2,3}, {1,5}, {3,3}};
+
+int[][] a2 = new int[4][];
+a2[0] = new int[3];
+a2[1] = new int[2];
+
+int[][] a3 = new int[4][5];
+int[] a4[] = new int[2][];
+int[] a5[] = new int[5][4];
+                    </code></pre>
+                    <pre><code>
+int ea1[2][3];
+int[][] ear2 = new int[][2];
+int ear3[][4] = new int[3][4];
+                    </code></pre>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin//zoom/zoom.js"></script>
+        <script src="../plugin//notes/notes.js"></script>
+        <script src="../plugin//search/search.js"></script>
+        <script src="../plugin//markdown/markdown.js"></script>
+        <script src="../plugin//highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 1000,
+                height: 1000,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+
+                plugins: [ RevealHighlight ]
+            })
+        </script>
+    </body>
+</html>
+
