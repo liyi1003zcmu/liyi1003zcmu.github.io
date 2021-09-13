@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--从几何到像素</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第八章 从几何到像素</H2>
+                <h3>隐面消除</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id='hsrobj'>
+                    <h2>隐面消除</h2>
+                    <h3>对象空间方法</h3>
+                    <p style="text-align:left">对象空间方法，对物体两两进行测试遮挡性，其最差情况下n个多边形复杂度为$O(n^2)$</p>
+                    <img src="../../images/cg/chap08/ch08-plypairpos.png">
+                </section>
+                <section id="pater">
+                    <h2>隐面消除</h2>
+                    <h3>画家算法</h3>
+                    <p style="text-align:left">利用画家算法绘制时，遵循从后往前的顺序绘制多边形，以此保证位于后方的多边形会被前方的多边形遮挡</p>
+                    <img src="../../images/cg/chap08/ch08-painteralg.png">
+                </section>
+                <section id="dptsrt">
+                    <h2>隐面消除</h2>
+                    <h3>深度排序</h3>
+                    <p style="text-align:left">画家算法要求对多边形先按照深度排序，一般计算复杂度为$O(n\log{n})$，但也存在一些三角形并不完全位于某些三角形前方或完全位于某些三角形后方，存在简单情形和复杂情形</p>
+                    <img src="../../images/cg/chap08/ch08-painterdepthsort.png" style="width:50%">
+                </section>
+                <section id="easycs">
+                    <h2>隐面消除</h2>
+                    <h3>深度排序简单情形</h3>
+                    <p style="text-align:left">如果多边形A位于所有多边形的后面，则可直接绘制该多边形。</p>
+                    <p style="text-align:left">若多边形在Z方向上有重叠，但在X和Y方向上都没重叠，可以在几个方向上分别独立绘制</p>
+                    <img src="../../images/cg/chap08/ch08-depthsortsimple.png">
+                </section>
+                <section id="comcs">
+                    <h2>隐面消除</h2>
+                    <h3>深度排序复杂情形</h3>
+                    <div class="columnleft">
+                        <img src="../../images/cg/chap08/ch08-polygonoverlap.png" style="width:80%">
+                        <br>
+                        <p style="text-align:left;font-size:xx-large"> 所有方向上均有重叠，在一个方向上完全位于另一个的一侧</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../../images/cg/chap08/ch08-polygoncylicoverlap.png" style="width:60%">
+                        <br><p style="text-align:left;font-size:xx-large">循环重叠(Cyclic Overlap)</p>
+                        <img src="../../images/cg/chap08/ch08-polygonpiecingoverlap.png" style="width:60%">
+                        <br><p style="text-align:left;font-size:xx-large">穿透重叠(Penetration)</p></b>
+                    </div>
+                </section>
+                <section id="bfrmv">
+                    <h2>隐面消除</h2>
+                    <h3>背面剔除</h3>
+                    <div class="columnleft" style="width:60%">
+                        <ul>
+                            <li style="text-align:left;font-size:xx-large">
+                                只有当$-90\leq \theta \leq 90$，面片才可见，这等价于$\cos{\theta}\geq 0$，即$\mathbf{v}\cdot
+                                \mathbf{n}\geq 0$
+                            </li>
+                            <li style="text-align:left;font-size:xx-large">
+                                面片所在平面有方程$ax+by+cz+d=0$，正则化后令$n=\begin{bmatrix}0&0&1&0\end{bmatrix}^T$
+                            </li>
+                            <li style="text-align:left;font-size:xx-large">
+                                只需要检查$c$的符号
+                            </li>
+                            <li style="text-align:left;font-size:xx-large">
+                                在OpenGL中，可通过状态开关控制实现背面消隐功能，但如果对象为非凸，结果可能会有错
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="columnright" style="width:40%">
+                        <img src="../../images/cg/chap08/ch08-backfacecull.png">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section id="imgspa">
+                    <h2>隐面消除</h2>
+                    <h3>图像空间方法</h3>
+                    <p style="text-align:left;font-size:xx-large">图像空间方法通过查看每条投影线(对$m\times n$的帧缓存，总共有$nm$个)，找到距离最近的$k$个多边形，其计算复杂度为$O(mnk)$，主要方法包括光线跟踪算法、Z-Buffer算法等</p>
+                    <img src="../../images/cg/chap08/ch08-imagespace.png" style="width:80%">
+                </section>
+                <section id="zbuf">
+                    <h2>隐面消除</h2>
+                    <h3>Z-Buffer算法</h3>
+                    <div class="columnleft";style="width:40%">
+                    <p style="text-align:left;font-size:xx-large">Z-Buffer算法主要思想是利用一个Z缓存，或深度缓存存储对每个像素所找到的最近的对象的深度值，在渲染每个多边形时，将每个像素的深度值与深度缓存中的值进行比较，若小于深度缓存中的值，更新深度缓存中的值为当前像素的深度值，并设置对应的颜色为当前像素的颜色</p>
+                    </div>
+                    <div class="columnright";style="width:60%">
+                        <img src="../../images/cg/chap08/ch08-zbuffer-algorithm.png" style="width:90%">
+                    </div>
+                </section>
+                <section id="effcy">
+                    <h2>隐面消除</h2>
+                    <h3>算法效率</h3>
+                    <p style="text-align:left;font-size:xx-large">如果沿着扫描线方向移动时，深度值的改变量满足$a\Delta x+b\Delta y+c\Delta z = 0$, 沿着扫描线方向有$\Delta y=0, \Delta z=-\frac{a}{c}$，在屏幕空间则有$\Delta x=1$</p>
+                    <img src="../../images/cg/chap08/ch08-zbufferimpl.png" style="width:80%">
+                </section>
+                <section id="scline">
+                    <h2>隐面消除</h2>
+                    <h3>扫描线算法</h3>
+                    <p style="text-align:left">通过扫描线算法，可以把着色和隐面消除结合起来</p>
+                    <div class="columnleft">
+                        <img src="../../images/cg/chap08/ch08-zbuffer-scanline.png">
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left">扫描线i: 不需要深度信息，只可能在一个多边形内，或不在多边形内</p>
+                        <p style="text-align:left">扫描线j: 当扫描线通过多个多边形时需要深度信息</p>
+                    </div>
+                </section>
+                <section id="impl">
+                    <h2>隐面消除</h2>
+                    <h3>实现</h3>
+                    <p style="text-align:left">实现算法需要特定数据结构存储相关信息，包括:</p>
+                    <ul>
+                        <li style="text-align:left">每个多边形的标记，用于标记扫描线是在多边形内，还是多边形外</li>
+                        <li style="text-align:left">扫描线增量结构，用于存储当前扫描线遇到的是哪条边</li>
+                        <li style="text-align:left">平面参数</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="vistext">
+                    <h2>隐面消除</h2>
+                    <h3>可见性测试</h3>
+                    <p style="text-align:left">在实际应用中，一般希望尽可能多地消除不可见的物体对象，以降低流水线的计算负担，并是降低在总线上的数据传输，提高计算性能和效率。为进行可见性测试，一般可利用BSP树对空间进行划分</p>
+                </section>
+                <section id="bspexp">
+                    <h2>隐面消除</h2>
+                    <h3>BSP树示例</h3>
+                    <p style="text-align:left;font-size:xx-large">考虑由六个平行的多边形</p>
+                    <img src="../../images/cg/chap08/ch08-bsp-view.png" style="width:70%">
+                    <p style="text-align:left;font-size:xx-large">从顶视图看下去如下图所示，多边形A将B、C和D、E、F分隔开</p>
+                    <img src="../../images/cg/chap08/ch08-bsp-topview.png" style="width:50%">
+                </section>
+                <section id="bsptree">
+                    <h2>隐面消除</h2>
+                    <h3>BSP树</h3>
+                    <p style="text-align:left">对前面的树可进一步分隔有，多边形C分开了B和A，多边形D分开了E和F，其树结构如下图所示</p>
+                    <img src="../../images/cg/chap08/ch08-bsp-tree.png" style="width:70%">
+                    <p style="text-align:left">信息可以存储在BSP树中，用于可见性和遮挡测试</p>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
