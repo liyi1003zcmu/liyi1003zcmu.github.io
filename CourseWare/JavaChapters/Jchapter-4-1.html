@@ -1,0 +1,641 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Java程序设计--Java面向对象基础</title>
+    <meta name="description" content="关于Java的基本信息">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft{
+            float: left;
+            width: 50%;
+        }
+        .columnright{
+            float: right;
+            width: 50%;
+        }
+        .li{
+            text-align: left;
+            font-size: x-large;
+        }
+        .p{
+            text-align: left;
+            font-size: x-large;
+        }
+    </style>
+</head>
+
+<body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>Java程序设计</h1>
+                    <H2>第三章 面向对象基础(一)</H2>
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section>
+				<section>
+					<section id="ooconcept">
+						<h2>面向对象的概念</h2>
+						<p>从现实世界中的对象到类的模型</p>
+						<img src="../images/chap4/ClassObject.png">
+					</section>
+					<section id="oofeature">
+						<h2>面向对象的四大特点</h2>
+						<ul>
+							<li>抽象，即将事物映射为程序中的对象</li>
+							<li>封装，即将数据及对数据的操作捆绑在一起成为类</li>
+							<li>继承，即将一个已有类中的数据和方法保留，加上自己特殊的方法和数据，构成一个新的类</li>
+							<li>多态，即指在一个或多个类中，不同的方法可以有相同的名字</li>
+						</li>
+					</section>
+				</section>
+				<section id="javacscpp">
+					<h2>Java vs. C++</h2>
+                    <img src="../images/chap4/cppvsjava.png">
+				</section>
+                <section id="ooprule">
+                    <h2>Java面向对象实现的规则</h2>
+                    <ul>
+                        <li>类的定义与实现在同一个文件中</li>
+                        <li>源文件的命名需以文件中以public修饰的类名命名，严格区分大小写</li>
+                        <li>源文件中可以有多个类，但以public修饰的类最多只能有一个</li>
+                        <li>以extends表示继承关系，指明从哪个父类继承</li>
+                        <li>若没有用extends指明父类，默认以Object类为父类</li>
+                        <li>Object类是唯一一个没有父类的类，其它类都有且仅有一个父类</li>
+                        <li>类定义不以";"结束</li>
+                    </ul>
+                </section>
+                <section>
+                    <section id="oodesign">
+                        <h2>面向对象类示例</h2>
+                        <p>创建一个职员类</p>
+                        
+                        <table  style="font-size:xx-large">
+                            <caption>职员对象实例</caption>
+                            <tr style="background-color: royalblue;">
+                                <th>姓名</th>
+                                <th>工号</th>
+                                <th>部门</th>
+                                <th>公司年限</th>
+                                <th>性别</th>
+                                <th>基本工资</th>
+                                <th>年龄</th>
+                            </tr>
+                            <tr>
+                                <th>张凡</th>
+                                <th>01012005</th>
+                                <th>技术研发部</th>
+                                <th>7</th>
+                                <th>男</th>
+                                <th>8877.26</th>
+                                <th>35</th>
+                            </tr>
+                            <tr style="background-color:#bbbbbb">
+                                <th>刘青</th>
+                                <th>06013007</th>
+                                <th>人力资源部</th>
+                                <th>8</th>
+                                <th>男</th>
+                                <th>5385.89</th>
+                                <th>41</th>
+                            </tr>
+                            <tr>
+                                <th>江流</th>
+                                <th>04021020</th>
+                                <th>项目一部</th>
+                                <th>4</th>
+                                <th>女</th>
+                                <th>4729.06</th>
+                                <th>29</th>
+                            </tr>
+                        </table>
+                    </section>
+                    <section id="codesign2">
+                        <h2>职员类属性项设置</h2>
+                        <table style="font-size:x-large">
+                            <caption>职员类属性及表示</caption>
+                            <tr style="background-color: royalblue;">
+                                <th>属性项</th>
+                                <th>姓名</th>
+                                <th>工号</th>
+                                <th>部门</th>
+                                <th>公司年限</th>
+                                <th>性别</th>
+                                <th>基本工资</th>
+                                <th>年龄</th>
+                            </tr>
+                            <tr>
+                                <th>属性名</th>
+                                <th>empName</th>
+                                <th>empID</th>
+                                <th>empDep</th>
+                                <th>empYear</th>
+                                <th>empGender</th>
+                                <th>empSalary</th>
+                                <th>empAge</th>
+                            </tr>
+                            <tr style="background-color: #bbbbbb;">
+                                <th>数据类型</th>
+                                <th>String</th>
+                                <th>String</th>
+                                <th>String</th>
+                                <th>int</th>
+                                <th>char</th>
+                                <th>float</th>
+                                <th>int</th>
+                            </tr>
+                            <tr>
+                                <th>取值范围</th>
+                                <th>不限</th>
+                                <th>8位字符</th>
+                                <th>不限</th>
+                                <th>0~100</th>
+                                <th>F/M</th>
+                                <th>7位数字(5位整数，2位小数</th>
+                                <th>0~100</th>
+                            </tr>
+                        </table>
+                    </section>
+                    <section id="codesign3">
+                        <h2>职员类方法设置</h2>
+                        <table style="font-size:x-large">
+                            <caption>职员类方法</caption>
+                            <tr style="background-color: royalblue;">
+                                <th>名称</th>
+                                <th>功能</th>
+                                <th>名称</th>
+                                <th>功能</th>
+                            </tr>
+                            <tr>
+                                <th>构造方法</th>
+                                <th>对象初始化</th>
+                                <th>getYear()</th>
+                                <th>获取对象在公司工作年限</th>
+                            </tr>
+                            <tr>
+                                <th>getName()</th>
+                                <th>获取对象姓名</th>
+                                <th>getGender()</th>
+                                <th>获取对象性别</th>
+                            </tr>
+                            <tr>
+                                <th>getID()</th>
+                                <th>获取对象工号</th>
+                                <th>getBaseSalary()</th>
+                                <th>获取对象基本公资</th>
+                            </tr>
+                            <tr>
+                                <th>getDepartment()</th>
+                                <th>获取对象所属部门</th>
+                                <th>getAge()</th>
+                                <th>获取对象在年龄</th>
+                            </tr>
+                        </table>
+                    </section>
+                    <section id="empclass">
+                        <h2>职员类UML图</h2>
+                        <img src="../images/chap4/employeeuml.png">
+                    </section>
+                    <section id="empcode">
+                        <h2>职员类代码实现</h2>
+                        <p><a href="../SourceCode//Lec_04_src/Employee.java">Employee.java</a></p>
+                        <ul>
+                            <li>属性</li>
+                            <li>构造方法</li>
+                            <li>属性构建器(setter)</li>
+                            <li>属性获取器(getter)</li>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section id="cons1">
+                        <h2>构造方法(1)</h2>
+                        <p>关于构造方法的几点说明</p>
+                        <ul>
+                            <li>构造方法名与<strong>类名</strong>相同</li>
+                            <li>构造方法默认不带参数，可自定义带参数的构造方法</li>
+                            <li>构造方法无返回参数</li>
+                            <li>构造方法用于对象初始化时调用，即在使用<strong>new</strong>操作符时调用</li>
+                            <li>可不显式定义构造方法，采用默认构造方法</li>
+                        </ul>
+                        <div class="columnleft">
+                            <pre><code>
+Employee(){
+  empName="";
+  empID="";
+  ...
+}
+                            </code></pre>
+                        </div>
+                        <div class="columnright">
+                            <pre><code>
+Employee(String name, String id){
+  this.empName=name;
+  this.empID=id;
+}
+                            </code></pre>
+
+                        </div>
+                    </section>
+                    <section id="cons2">
+                        <h2>构造方法(2)</h2>
+                        <ul>
+                            <li>每个类都至少有一个构造方法，若程序员没有为类显示定义构造方法，编译器会自动为其生成一个默认的<strong>无参</strong>构造方法</strong></li>
+                            <li><strong style="color:red">this()</strong>方法指代默认的无参构造方法，其它构造方法可调用此方法，但该方法必须放在方法定义的第一行</li>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section id="objcrt1">
+                        <h2>对象创建</h2>
+                        <ul>
+                            <li>声明对象引用，即向编译器注册一个类对象的名字</li>
+                            <pre><code>
+Employee li=null;
+                            </code></pre>
+                            <li>为对象分配存储空间并初始化</li>
+                            <pre><code>
+li=new Employee("li","05201039");
+li=new Employee();
+                            </code></pre>
+                            <li>将上述两过程合并执行</li>
+                            <pre><code>
+Employee li=new Employee();
+Employee li=new Employee("li","05201039");
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section id="objcrt2">
+                        <h2>对象创建</h2>
+                        <pre><code>
+Employee li=new Employee("li","05201039");
+                        </code></pre>
+                        <img src="../images/chap4/objcreate0.png">
+                    </section>
+                    <section id="objcrt3">
+                        <h2>对象创建</h2>
+                        <pre><code>
+Employee li=new Employee("li","05201039");
+                        </code></pre>
+                        <img src="../images/chap4/objcreate1.png">
+                    </section>
+                    <section id="objcrt4">
+                        <h2>对象创建</h2>
+                        <pre><code>
+Employee li=new Employee("li","05201039");
+                        </code></pre>
+                        <img src="../images/chap4/objcreate2.png">
+                    </section>
+                </section>
+                <section id="odacc">
+                    <h2>对象数据的访问</h2>
+                    <ul>
+                        <li>用"."访问对象数据和方法</li>
+                        <ul>
+                            <li>引用名.成员变量名</li>
+                            <li>引用名.成员方法名(方法参数)</li>
+                        </ul>
+                        <li>引用数据类型和空值</li>
+                        <ul>
+                            <li>类成员的类型若为引用数据类型，且未指向任何对象，初始默认值为null</li>
+                            <li>任何变量使用之前<strong>必须</strong>先对其赋值</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="thiskey">
+                    <h2>this关键字</h2>
+                    <ul>
+                        <li>this关键字是指向调用对象本身的引用名，其作用有二</li>
+                        <ul>
+                            <li>引用类的隐藏数据域</li>
+                            <li>在构造方法中调用另一个构造方法</li>
+                        </ul>
+                    </ul>
+                    <div class="columnleft">
+                        <pre><code>
+public class Foo{
+  int i=5;
+  statid double k=0.0;
+  void seti(int i){
+    this.i=i;//指代对象本身
+  }
+  static void setK(double k){
+    Foo.k=k;
+  }
+}
+Foo f1=new Foo();
+f1.seti(10);
+Foo f2=new Foo();
+f2.setK(45.0);
+                        </code></pre>
+                    </div>
+                    <div class="columnright">
+                        <pre><code>
+public class Circle{
+  private double radius;
+  public Circle(double radius){
+    this.radius=radius;//明确radius
+  }
+  public Circle(){
+    this(1.0);//指代另一构造方法
+  }
+  public double getArea(){
+    return this.radius*this.radius*Math.PI;
+  }
+}
+                        </code></pre>
+                    </div>
+                </section>
+                <section id="mclass">
+                    <h2>主方法和主类</h2>
+                    <ul>
+                        <li>主方法是程序的运行入口</li>
+                        <li><strong style="color:red">public static void main(String[] args)</strong></li>
+                        <li>必须作为一个类的成员，不能独立存在</li>
+                        <li>主类，包含了main()方法，且用public修饰的类</li>
+                        <li>理论上每个Java类都可定义一个main方法，但在同一时刻，只能使用一个main方法</li>
+                    </ul>
+                </section>
+                <section id="datapac">
+                    <h2>类的数据封装</h2>
+                    <ul>
+                        <li>数据封装原则</li>
+                        <ul>
+                            <li>属性用private修饰</li>
+                            <li>提供设置器(setter)和获取器(getter)</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="param">
+                    <h2>类对象作为方法参数传递</h2>
+                    <ul>
+                        <li>基本数据类型--传值</li>
+                        <li>引用数据类型--传引用</li>
+                        <p><a href="../SourceCode//Lec_04_Src/TestPass1.java">TestPass1.java</a></p>
+                        
+                        <p><a href="../SourceCode//Lec_04_Src/TestPass2.java">TestPass2.java</a></p>
+                    </ul>
+                </section>
+                <section>
+                    <section id="static1">
+                        <h2>静态对象修饰符--static</h2>
+                        <ul>
+                            <li>用static修饰的变量</li>
+                            <ul>
+                                <li>静态变量，类似全局变量(<strong style="color:red">注意区别</strong>)</li>
+                                <li>用于可在所有类的对象实例中共享的数据</li>
+                                <li>静态变量将数据存放在通用存储区域中，所有类的实例对象均可访问</li>
+                            </ul>
+                            <li>用static修饰的方法</li>
+                            <ul>
+                                <li>称为静态方法</li>
+                            </ul>
+                            <li>类的静态方法和实例方法均能调用静态变量</li>
+                            <li>类的实例变量和方法只能由实例方法调用</li>
+                        </ul>
+                    </section>
+                    <section id="static2">
+                        <h2>静态变量代码实例(1)</h2>
+                        <pre><code data-line-numbers>
+public class Circle{
+  private double radius;
+  public static int numberOfObjects=0;
+
+  Circle(){
+    this(1.0);
+  }
+  Circle(double r){
+    radius=r;
+    numberOfObjects++;
+  }
+  public double getRadius(){
+    return radius;
+  }
+  public void setRadius(double r){
+    this.radius=r;
+  }
+  public double getArea(){
+    return Math.PI*radius*radius;
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section id="static3">
+                        <h2>如何使用static</h2>
+                        <ul>
+                            <li>是否该定义静态方法或静态变量</li>
+                            <ul>
+                                <li>将与单个实体对象相关的变量或方法定义为实例变量或方法，如Circle类中的半径变量radius，计算面积方法getArea()等</li>
+                                <li>将与特定实体对象无关的变量或方法或定义为静态变量或方法，如Math.sin(), Math.PI, Math.cos()方法等</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="static4">
+                        <h2>静态变量代码示例(2)</h2>
+                        <p>这样使用static对吗？</p>
+                        <pre><code data-line-numbers>
+public class Foo2{
+  int i = 2;
+  static int k = 5;
+  public static void main( String[] args ){
+    Foo2 fo = new Foo2();
+    int j = fo.i;
+    fo.m1();
+  }
+  public void m1(){
+    i = i + k + m2( i, k );
+  }
+  public static int m2( int i, int j ){
+    return ( int )Math.pow( i, j );
+  }
+}
+                        </code></pre>
+                    </section>
+                </section>
+                <section>
+                    <section id="package">
+                        <h2>类文件与包</h2>
+                        <ul>
+                            <li>类文件</li>
+                            <ul>
+                                <li>一个java源代码文件中可以定义多个类</li>
+                                <li>用public修饰的类，即主类只能有一个</li>
+                                <li>编译时，会为每个类单独生成一个.class字节码文件</li>
+                            </ul>
+                            <li>包</li>
+                            <ul>
+                                <li>包是java提供的对类文件进行组织和管理的机制</li>
+                                <li>包和子包共同构成包的层次结构</li>
+                                <li>包中的类可通过访问控制实现互相访问</li>
+                                <li>一个包中的名字与其它包中的名字不冲突</li>
+                                <li>但在同一个包中，所有的类文件名必须唯一，不能重复</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="package2">
+                        <h2>包的声明</h2>
+                        <ul>
+                            <li>包的声明：package 包名;</li>
+                            <li>一个源文件只能有一条package语句</li>
+                            <li>package语句位于源文件的第一行</li>
+                            <li>多个源文件可放入同一个包中</li>
+                            <li>默认情况下，若没有声明包，系统会为源程序创建一个未命名的包，将该源文件中定义的类都组织到这个包中，但因为该包未命名，因此不能被其它包所引用</li>
+                            <li>程序员可编写属于自己的包，需遵循包的命名规范</li>
+                            <ul>
+                                <li>com.公司名.开发组名.项目名.程序模块名......</li>
+                            </ul>
+                            <li>包名全小写</li>
+                            <li>包和类的导入用关键字import</li>
+                        </ul>
+                    </section>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 1000,
+                height: 1000,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+
+                plugins: [ RevealHighlight ]
+            })
+        </script>
+    </body>
+</html>
+
