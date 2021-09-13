@@ -1,0 +1,408 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--离散技术</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第七章 离散技术</H2>
+                <h3>环境映射和反射</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="envcopt">
+                <h2>环境映射和反射</h2>
+                <h3>环境映射概述</h3>
+                <p style="text-align:left">环境映射(反射)作为纹理映射的一种应用，主要用于提供环境渲染(Environment Map)，如天空盒映射(Cube Map)、球状映射(Spherical Map)等，也可应用于如凹凸贴图(Bump Map)</p>
+                <div class="columnleft">
+                    <img src="../../images/cg/chap07/ch07-environ-map.png">
+                </div>
+                <div class="columnright">
+                    <img src="../../images/cg/chap07/ch07-reflection-map.png">
+                </div>
+            </section>
+            <section>
+                <section id=“envmap2">
+                    <h2>环境映射和反射</h2>
+                    <h3>环境映射</h3>
+                    <p style="text-align:left">环境映射可用于创建具有高反光效果的表面，主要通过纹理映射实现这种视觉效果，如果采用光线跟踪计算全局光照，计算量会很大。这种技术主要面向娱乐产业，最早应用于电影效果的渲染，在电子游戏行业也有广泛的应用</p>
+                </section>
+                <section id="envimg">
+                    <h2>环境映射和反射</h2>
+                    <h3>环境映射图示意</h3>
+                    <img src="../../images/cg/chap07/ch07-environ-map-1.png">
+                </section>
+                <section id="envidea">
+                    <h2>环境映射和反射</h2>
+                    <h3>基本思想</h3>
+                    <p style="text-align:left;font-size:xx-large">
+                        环境映射的基本思想是，环境位于无穷远处，只要一个物体自身不具备反射属性，则在某个点上，其内容完全取决于反射向量，即从观察者的角度看去，物体表面的呈现内容完全取决于环境的内容。
+                        主要过程可描述如下：
+                    <ol>
+                        <li style="text-align:left;font-size:xx-large">创建一个二维环境映射图像</li>
+                        <li style="text-align:left;font-size:xx-large">对于位于反射物体表面的每个像素，计算其法线</li>
+                        <li style="text-align:left;font-size:xx-large">根据视点所在位置和表面的法线计算反射向量</li>
+                        <li style="text-align:left;font-size:xx-large">利用反射向量计算其对应于环境纹理中的像素索引</li>
+                        <li style="text-align:left;font-size:xx-large">利用对应像素中的内容对表面的像素进行着色</li>
+                    </ol>
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="mapsphere">
+                    <h2>环境映射和反射</h2>
+                    <h3>球面映射</h3>
+                    <img src="../../images/cg/chap07/ch07-environ-map-2.png">
+                </section>
+                <section id="sphmid">
+                    <h2>环境映射和反射</h2>
+                    <h3>球面映射纹理</h3>
+                    <p style="text-align:left;font-size:xx-large">若将环境中的物体对象都映射到球面上，对位于球体中心的观察者而言，无法判断物体是位于球上体或是沿着反射线的更远处，为此，可以将物体环境映射到球面作为纹理，再映射到目标对象上，也可利用其它的一些表面作为中介，如天空盒、圆柱体等</p>
+                    <img src="../../images/cg/chap07/ch07-environ-map-3.png">
+                </section>
+            </section>
+            <section>
+                <section id="cbmap">
+                    <h2>环境映射和反射</h2>
+                    <h3>天空盒映射</h3>
+                    <div class="columnleft">
+                        <img src="../../images/cg/chap07/ch07-cubemap.png">
+                    </div>
+                    <div class="columnright">
+                        <img src="../../images/cg/chap07/ch07-cubeskybox.png">
+                    </div>
+                </section>
+                <section id="idcbmap">
+                    <h2>环境映射和反射</h2>
+                    <h3>天空盒像素索引</h3>
+                    <div class="columnleft" style="width:60%">
+                    <p style="text-align:left;font-size:xx-large">
+                    <ul>
+                        <li style="text-align:left;">计算向量$R=2(N-V)N-V$</li>
+                        <li style="text-align:left">将对象移至原点位置</li>
+                        <li style="text-align:left">取R长度最大的分量，确定R与之相交的天空盒的面</li>
+                        <li style="text-align:left">以另两个分量作为纹理坐标</li>
+                    </ul></p>
+                    </div>
+                    <div class="columnright" style="width:40%">
+                    <img src="../../images/cg/chap07/ch07-cubemapcpt.png"></div>
+                </section>
+            </section>
+            <section>
+                <section id="glimp">
+                    <h2>环境映射和反射</h2>
+                    <h3>OpenGL实现</h3>
+                    <p style="text-align:left">WebGL只支持天空盒映射，桌面版OpenGL支持球体映射。要实现天空盒映射，首先需生成纹理，利用相机拍摄的照片，或是计算机生成的图片，一般需要六张，分别表示上、下、左、右、前、后，在WebGL中建立天空盒图片，再形成纹理映射到物体对象上</p>
+                </section>
+                <section id="cbmapimp">
+                    <h2>环境映射和反射</h2>
+                    <h3>天空盒映射实现</h3>
+                    <p tyle="text-align:left">对天空盒图片，首先根据在盒子中对应的面和边定义每个图片的纹理坐标，纹理坐标以3D表示，一般与顶点坐标相对应，便于计算。WebGL有对应的函数建立天空盒映射
+                    <br>
+                    vec4 texColor = textureCube( mycube, texcoord );</p>
+                </section>
+                <section id="emwithsdr">
+                    <h2>环境映射和反射</h2>
+                    <h3>环境映射与着色器</h3>
+                    <p style="text-align:left">环境映射通常在世界坐标系中计算，物体建模表示的矩阵可作为模型矩阵常量传给着色器。利用环境映射也可模拟一些复杂的效果，如水波流动的效果</p>
+                </section>
+                <section id="issues">
+                    <h2>环境映射和反射</h2>
+                    <h3>注意点</h3>
+                    <p style="text-align:left">环境映射使用时有几点需要注意</p>
+                    <ul>
+                        <li style="text-align:left">需保证环境与物体之间距离足够远，可参照物体与远处光源间的距离</li>
+                        <li style="text-align:left">物体不能为凹形体，以避免自我反射</li>
+                        <li style="text-align:left">物体之间无反射</li>
+                        <li style="text-align:left">需要对场景中每一个物体都建立反射映射</li>
+                        <li style="text-align:left">如果视点发生移动，则需要重新计算映射</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="fmcbmap">
+                    <h2>环境映射和反射</h2>
+                    <h3>建立天空盒</h3>
+                    <p style="text-align:left">在场景内将相机置于中心，分别以90度视角拍摄六个方向照片用于构建天空盒，也可利用360度照片转换得到</p>
+                    <img src="../../images/cg/chap07/ch07-cubeskybox.png">
+                </section>
+                <section id="texgen">
+                    <h2>环境映射和反射</h2>
+                    <h3>天空盒纹理生成</h3>
+                    <p style="text-align:left">利用WebGL函数对每一幅图像进行操作，生成用于映射的纹理图，将六幅图拼接在一起构成完整的天空盒，生成用地立方体中天空盒映射的纹理对象<br>
+                    gl.textureMap2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X, level, rows, columns, border, gl.RGBA, gl.UNSIGNED_BYTE, image1)
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="exap1">
+                    <h2>环境映射和反射</h2>
+                    <h3>天空盒建立示例</h3>
+                    <p style="text-align:left">考虑一旋转立方体，本身位于一个立方体内部，该立方体表面反射出了立方体六个面上的颜色，其中每面的颜色都为一纯色(Red, Green, Blue, Cyan, Magenta, Yellow)，每面的颜色都可视作一种纹理的元素</p>
+                    <pre><code class="hljs" data-trim>
+var red = new Uint8Array( [255, 0, 0, 255] );
+var green = new Uint8Array( [0, 255, 0, 255] );
+var blue = new Uint8Array( [ 0, 0, 255, 255] );
+var cyan = new Uint8Array( [0, 255, 255, 255] );
+var magenta = new Uint8Array( [255, 0, 255, 255] );
+var yellow = new Uint8Array( [0, 255, 255, 255] );
+                    </code></pre>
+                </section>
+                <section id="mkvobj">
+                    <h2>环境映射和的反射</h2>
+                    <h3>天空盒建立示例(2)</h3>
+                    <p tyle="text-align:left">建立纹理对象</p>
+                    <pre><code class="hljs" data-trim>
+cubeMap = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
+
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, red);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, green);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, blue);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, cyan);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, yellow);
+gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, gl.RGBA, 1, 1, 0, gl.RGBA,gl.UNSIGNED_BYTE, magenta);
+gl.activeTexture( gl.TEXTURE0 );
+
+gl.uniform1i(gl.getUniformLocation(program, "texMap"),0);
+
+                    </code></pre>
+                </section>
+                <section id="vershd">
+                    <h2>纹理映射和反射</h2>
+                    <h3>天空盒建立示例(3)</h3>
+                    <p style="text-align:left">顶点着色器代码</p>
+                    <pre><code class="hljs" data-trim>
+varying vec3 R;
+attribute vec4 vPosition;
+attribute vec4 Normal;
+uniform mat4 ModelView;
+uniform vec3 theta;
+void main()
+{
+    vec3 angles = radians(theta);
+    vec3 c = cos(angles);
+    vec3 s = sin(angles);
+    mat4 rx = mat4(1.0, 0.0, 0.0, 0.0,
+            0.0, c.x, s.x, 0.0,
+            0.0, -s.x, c.x, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+    mat4 ry = mat4(c.y, 0.0, -s.y, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            s.y, 0.0, c.y, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+    mat4 rz = mat4(c.z, -s.z, 0.0, 0.0,
+            s.z, c.z, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+    mat4 ModelView = rz * ry * rx;
+    vec4 eyePos = ModelView * vPosition;
+    vec4 N = ModelView * Normal;
+    R = reflect(eyePos.xyz, N.xyz);
+    gl_Position = ModelView * vPosition;
+}
+                    </code></pre>
+                </section>
+                <section id="fgshd">
+                    <h2>纹理映射和反射</h2>
+                    <h3>天空盒建立示例(4)</h3>
+                    <p style="text-align:left">面片着色器代码</p>
+                    <pre><code class="hljs" data-trim>
+varying vec3 R;
+uniform samplerCube texMap;
+
+void main()
+{
+    vec4 texColor = textureCube( texMap, R );
+    gl_FragColor = texColor;
+}
+                    </code></pre>
+                </section>
+            </section>
+            <section id="sphmap">
+                <h2>纹理映射和反射</h2>
+                <h3>球状映射</h3>
+                <p style="text-align:left">最初由Blinn和Newell提出的环境映射技术是基于经纬线将参数变量映射到纹理坐标上。OpenGL所支持的球状映射所需要的圆形纹理映射等价于用鱼眼相机所拍摄的照片</p>
+                <img src="../../images/cg/chap07/ch07-fisheye.jpg" style="width:50%">
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
