@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--图形学编程</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+    
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第二章 图形学编程</H2>
+                <h3>OpenGL发展史</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="oglbacktitle">
+                    <h2>OpenGL发展史</h2>
+                    <h3>API早期发展(IFIPS)</h3>
+                    <ul>
+                        <li style="text-align:left">国际信息处理联盟(IFIPS)1973年成立了两个委员会，提出了一套图形学标准，称为图形核心标准(Graphical Kernel System, GKS)，其核心为2D，适用于工作站处理，该标准于80年代被ISO和ANSI接受</li>
+                        <li style="text-align:left">但由于该标准发展远落后于硬件发展，GKS很难扩展到3D</li>
+                    </ul>
+                </section>
+                <section id="phigsx">
+                    <h2>OpenGL发展史</h2>
+                    <h3>API早期发展(PHIGS和X)</h3>
+                    <ul>
+                        <li style="text-align:left">面向编程的导铧图形系统(<strong style="color:red">P</strong>rogrammers <strong style="color:red">H</strong>ierachical <strong style="color:red">G</strong>raphics <strong style="color:red">S</strong>ystem, PHIGS)，由CAD社区提出，将具有图形信息的模型保存在数据库中</li>
+                        <li style="text-align:left"><a href="https://www.opengroup.org/desktop/x">X窗口系统</a>，是由DEC和MIT合作提出的，采用了客户端--服务器的体系架构提供对图形计算的支持</li>
+                        <li style="text-align:left">PEX将上面两者结合起来，但因为也同时结合了二者的缺点，导致应用成本较高，难以得到推广</li>
+                    </ul>
+                </section>
+                <section id="sgigl">
+                    <h2>OpenGL发展史</h2>
+                    <h3>API早期发展(SGI和GL)</h3>
+                    <ul>
+                        <li style="text-align:left">硅谷图形公司(Sillicon Graphics, SGI)创造性地于1982年在图形工作站上实现了硬件流水线，为应用程序开发提供了名为GL(Graphics Library)的库访问底层系统功能</li>
+                        <li style="text-align:left">GL库的发布极大地简化了三维交互应用程序的开发，降低了开发成本和难度</li>
+                    </ul>
+                </section>
+                <section id="openglori">
+                    <h2>OpenGL发展史</h2>
+                    <h3>API早期发展(OpenGL)</h3>
+                    <li style="text-align:left">GL的成功推动了OpenGL的发布</li>
+                    <li style="text-align:left">OpenGL发布于1992年，是一个跨平台的库，其特点是易于使用；更接近底层硬件，可以获得更佳的性能；仅关注于渲染功能；不提供对窗口、输入等功能的支持，以减小对于窗口系统的依赖</li>
+                </section>
+            </section>
+            <section>
+                <section id="ogldev">
+                    <h2>OpenGL发展史</h2>
+                    <h3>OpenGL演变</h3>
+                    <p style="text-align:left">OpenGL最初由建筑评审委员会(Architectural Review Board, ARB)所控制，其成员包括了SGI, Microsoft, NVidia, HP, 3DLabs, IBM等，目前OpenGL由<a href="https://www.khronos.org/">Khronos Group</a>所负责</p>
+                    <p style="text-align:left">OpenGL的版本在2.5以前发展基本稳定，具有良好的版本向下兼容性，版本的发展主要为体现新的硬件技术进步，如支持三维纹理映射、纹理对象、顶点和面片程序等，并能通过扩展提供为特定硬件平台的支持</p>
+                </section>
+                <section id="ogldevfig">
+                    <h2>OpenGL发展史</h2>
+                    <h3>OpenGL演变</h3>
+                    <img src="../../images/cg/chap02/ch02-oglevo.png">
+                    <p style="text-align:left;font-size:medium">Benjamin Kenwright. 2017. Getting started with computer graphics and the vulkan API. In SIGGRAPH Asia 2017 Courses (SA
+                    '17). Association for Computing Machinery, New York, NY, USA, Article 5, 1–86.
+                    DOI:https://doi.org/10.1145/3134472.3136556</p>
+                </section>
+                <section id="modgl">
+                    <h2>OpenGL发展史</h2>
+                    <h3>当代OpenGL</h3>
+                    <p style="text-align:left">当代OpenGL的性能主要是通过GPU而非CPU实现。可以通过对着色器编程实现对GPU的控制，应用程序的任务就是往GPU传递数据，GPU会负责所有的渲染工作</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe.png" style="width:100%">
+                </section>
+                <section id="twomodes">
+                    <h2>OpenGL发展史</h2>
+                    <h3>图形渲染的两种模式</h3>
+                    <p style="text-align:left">所有的模型均以顶点表示，顶点可构成基本图元，如线段、多边形、曲线、曲面等</p>
+                    <div class="columnleft">
+                        <p style="text-align:left"><strong style="color:red">即时模式(Immediate Mode)</strong>，应用程序定义每个顶点都会立即送到GPU中渲染，这种实现会造成CPU和GPU之间数据传输的瓶颈，在OpenGL3.1及以后的版本和OpenGL ES 2.0中删去</p>
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left"><strong style="color:red">保有模式(Retained Mode)</strong>，所有顶点及其属性均保存在数组中，将数组传送给GPU进行渲染，但若需要更新，则需更新所有数组中的内容并再次传递给GPU。对于重复渲染，传递数组并储存在GPU中的方式显然效率更高</p>
+                    </div>
+                </section>
+                <section id="ogl31">
+                    <h2>OpenGL发展史</h2>
+                    <h3>OpenGL3.1</h3>
+                    <p style=”text-align:left">OpenGL3.1版本完全基于着色器，并未提供默认的着色器程序，每个应用程序均需提供点元着色器和面片着色器程序</p>
+                    <p style="text-align:left">不再提供即时模式，并减少了状态变量的数目</p>
+                    <p style="text-align:left">不再提供对于大部分2.5版本函数的支持，也不再需要向下兼容，但还是存在兼容性扩展</p>
+                </section>
+                <section id="oglother">
+                    <h2>OpenGL发展史</h2>
+                    <h3>其它版本</h3>
+                    <ul>
+                        <li style="text-align:left;font-size:xx-large"><a href="https://www.khronos.org/opengles/">OpenGL ES</a>，面向移动设备和嵌入式设备的OpenGL版本</li>
+                        <ul>
+                            <li style="text-align:left;font-size:xx-large">2.0版本是OpenGL3.1的简化版，开始支持可编程着色器，目前最新版本为3.2</li>
+                            <li style="text-align:left;font-size:xx-large">3.1版本是一个里程碑，开始在移动设备上支持显卡普适计算</li>
+                        </ul>
+                        <li style="text-align:left;font-size:xx-large"><a href="https://www.khronos.org/webgl/">WebGL</a>，将OpenGL ES的API移植到浏览器环境中运行，提供对JavaScript的支持，能够在浏览器中进行三维绘制。能够支持几乎所有的主流浏览器</li>
+                        <ul>
+                            <li style="text-align:left;font-size:xx-large">WebGL 1.0对应于OpenGL ES 2.0版本</li>
+                            <li style="text-align:left;font-size:xx-large">WebGL 2.0对应于OpenGL ES 3.0</li>
+                        </ul>
+                        <li style="text-align:left;font-size:xx-large"><a href="https://www.khronos.org/opengl/">OpenGL</a> 4.x...... 不断引入新特征，以实现对新的图形计算硬件的支持，目前最新版本为4.6</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight]
+        });
+    </script>
+</body>
+
+</html>
