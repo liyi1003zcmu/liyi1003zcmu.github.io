@@ -1,0 +1,256 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学-几何与变换</title>
+    <meta name="description" content="WebGL几何形体与变换基础">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第四章 几何和变换</H2>
+                <h3>表示</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="linind">
+                    <h2>表示</h2>
+                    <h3>线性无关</h3>
+                    <p style="text-align:left">一组向量$v_1,v_2,\cdots,v_n$，如果满足
+                    $$\alpha_1v_1+\alpha_2v_2+\cdots+\alpha_nv_n=0 \iff \alpha_1=\alpha_2=\cdots=\alpha_n=0$$
+                    就称这组向量线性无关</p>
+                    <ul>
+                        <li style="text-align:left">如果一组向量线性无关，则其中任一向量都不能用该组其它向量表示</li>
+                        <li style="text-align:left">如果一组向量线性相关，则其中任一向量都可以用该组其它向量表示</li>
+                    </ul>
+                </section>
+                <section id="dims">
+                    <h2>表示</h2>
+                    <h3>维度</h3>
+                    <p style="text-align:left">向量空间里，线性无关向量的最大数目是固定的，该值称为空间的维度</p>
+                    <p style="text-align:left">在$n$维空间中，任意$n$个线性无关的向量构成了空间的<strong>基(basis)</strong></p>
+                    <p style="text-align:left">给定一组基$v_1,v_2,\cdots,v_n$，空间中任意向量$v$均可写成
+                    $$v=\alpha_1v_1+\alpha_2v_2+\cdots+\alpha_nv_n$$
+                    其中$\{\alpha_i\}$各不相同</p>
+                </section>
+            </section>
+            <section>
+                <h2>表示</h2>
+                <h3>什么是表示</h3>
+                <p style="text-align:left">为表示客观存在的物体，需要有一个参考系统，将其中的点和形体与客观世界中的物体对象联系起来。这就需要坐标系和参考系，比如世界坐标系(World coordinates)，相机坐标系(Camera coordinates)等</p>
+            </section>
+            <section>
+                <section id="coordsys1">
+                    <h2>表示</h2>
+                    <h3>坐标系</h3>
+                    <p style="text-align:left">有一组基$v_1,v_2,\cdots,v_n$，有向量$v=\alpha_1v_1+\alpha_2v_2+\cdots+\alpha_nv_n$，常数$\{\alpha_1,\alpha_2,\cdots,\alpha_n\}$就是向量$v$相对于基的表示，可以将其写为向量形式有
+                    $$\mathbf{a}=[\alpha_1 \alpha_2 \cdots \alpha_n]^{T}=\begin{bmatrix}\alpha_1\\\alpha_2\\\cdots\\\alpha_n\end{bmatrix}$$</p>
+                    <p style="text-align:left">例如：$v=2v_1+3v_2-4v_3$，有$\mathbf{a}=[2\ 3\ -4]^{T}$</p>
+                </section>
+                <section id="coordsys2">
+                    <h2>表示</h2>
+                    <h3>坐标系</h3>
+                    <p style="text-align:left">下列两个坐标系表示，哪个是正确的</p>
+                    <div class="columnleft">
+                        <img src="../../images/cg/chap04/ch04-coordrt1.png">
+                    </div>
+                    <div class="columnright">
+                        <img src="../../images/cg/chap04/ch04-coordrt2.png">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section id="frame1">
+                    <h2>表示</h2>
+                    <h3>标架</h3>
+                    <p style="text-align:left">仅有坐标系还不能表示点，在仿射空间中，还需要在基上加入单个点--原点，构成<strong>标架</strong></p>
+                    <img src="../../images/cg/chap04/ch04-frame.png">
+                </section>
+                <section id="frame2">
+                    <h2>表示</h2>
+                    <h3>标架(2)</h3>
+                    <p style="text-align:left">所有的标架可定义为$(P_0, v_1, v_2, v_3)$，在标架中，每个向量可写成$$v=\alpha_1v_1+\alpha_2v_2+\cdots+\alpha_nv_n$$
+                    每个点可写成$$P=P_0+\beta_1v_1+\beta_2v_2+\cdots+\beta_nv_n$$</p>
+                </section>
+                <section id="pandv">
+                    <h2>表示</h2>
+                    <h3>区分点和向量</h3>
+                    <p style="text-align:left">从前面的描述中，可以看到，点和向量的表示类似，有$\mathbf{P}=[\beta_1\ \beta_2\ \beta_3]$，$\mathbf{v}=[\alpha_1\ \alpha_2\ \alpha_3]$。但是，<strong style="color:red">点有位置，向量没有位置</strong></p>
+                    <img src="../../images/cg/chap04/ch04-pandv.png" style="width:60%">
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: { Macros: { RR: "{\\bf R}" } }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
