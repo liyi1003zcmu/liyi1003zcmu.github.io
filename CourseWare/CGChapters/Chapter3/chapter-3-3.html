@@ -1,0 +1,375 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学-交互和动画</title>
+    <meta name="description" content="认识WebGL交互和动画实现原理">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第三章 交互和动画</H2>
+                <h3>定位和拾取</h3>
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="windowpos">
+                    <h2>定位和拾取</h2>
+                    <h3>窗口坐标系</h3>
+                    <p>将绘制区坐标转换为裁剪区坐标(正则化)</p>
+
+                    <canvas id="dcanpos" width="700" height="500"></canvas>
+                   
+                    <script>
+                        var canvas = document.getElementById("dcanpos");
+                        var ctx = canvas.getContext("2d");
+                        ctx.lineWidth = 4;
+                        ctx.strokeStyle = "#000000";
+                        ctx.beginPath();
+                        ctx.moveTo(100, 100);
+                        ctx.lineTo(500, 100);
+                        ctx.lineTo(500, 400);
+                        ctx.lineTo(100, 400);
+                        ctx.closePath();
+                        ctx.stroke();
+                        ctx.fillStyle = "#B3D3C0";
+                        ctx.fillRect(100, 100, 400, 300);
+                        ctx.beginPath();
+                        ctx.arc(100, 100, 10, 0, 2 * Math.PI);
+                        ctx.arc(500, 400, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(300, 240, 10, 0, 2 * Math.PI);
+                        ctx.fill();
+
+                        ctx.font = "24px Arial";
+                        ctx.fillStyle = "#000000";
+                        ctx.fillText("(0, 0)", 110, 130);
+                        ctx.fillText("(xw, yw)", 200, 250);
+                        ctx.fillText("(w-1,h-1)", 400, 380);
+                        ctx.fillText("w", 300, 420)
+                        ctx.fillText("h", 80, 250);
+                    </script>
+                    <br>
+                    <div class="columnleft">
+                        $(0,h)\rightarrow(-1,-1)$<br>
+                        $(w,0)\rightarrow(1,1)$
+                    </div>
+                    <div class="columnright">
+                        $x=-1+\frac{2x_w}{w}$<br>
+                        $y=-1+\frac{2(h-y_w)}{h}$
+                    </div>
+                </section>
+                <section id="poseve">
+                    <h2>定位和拾取</h2>
+                    <h3>点击事件定位</h3>
+                    <p style="text-align:left">HTML文件中的画布(canvas)可通过属性<strong style="color:red">canvas.width和canvas.height</strong>设定其大小尺寸，返回的事件坐标为<strong style="color:red">event.clientX和event.clientY</strong></p>
+                    <pre><code class="hljs" data-trim>
+// add a vertex to GPU for each click
+canvas.addEventListener("click", function(){
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    var t=vec2(-1+2*event.clientX/canvas.width,
+        -1+2*(canvas.height-event.clientY)/canvas.height);
+    gl.bufferSubData(gl.ARRAY_BUFFER,sizeof['vec2']*index,t);
+    index++;
+});
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="squexa">
+                    <h2>定位和拾取</h2>
+                    <h3>事件示例(1)</h3>
+                    <p style="text-align:left">鼠标按下位置绘制矩形点</p>
+                    <img src="../../images/cg/chap03/ch03-drawdotsquare.png" style="width:80%">
+                </section>
+                <section id="traexa">
+                    <h2>定位和拾取</h2>
+                    <h3>事件示例(2)</h3>
+                    <p style="text-align:left">连续按下鼠标键绘制三角形</p>
+                    <img src="../../images/cg/chap03/ch03-drawtristrip.png" style="width:80%">
+                </section>
+                <section id="recexa">
+                    <h2>定位和拾取</h2>
+                    <h3>事件示例(3)</h3>
+                    <p style="text-align:left">两次点击绘制矩形</p>
+                    <img src="../../images/cg/chap03/ch03-drawrect.png" style="width:80%">
+                </section>
+                <section id="polexa">
+                    <h2>定位和拾取</h2>
+                    <h3>事件示例(4)</h3>
+                    <p style="text-align:left">两次点击绘制矩形</p>
+                    <img src="../../images/cg/chap03/ch03-drawpoly.png" style="width:80%">
+                </section>
+            </section>
+            <section>
+                <section id="wineve">
+                    <h2>定位和拾取</h2>
+                    <h3>窗口事件</h3>
+                    <p style="text-align:left">窗口事件可通过会改变画布窗口的行为触发生成，比如，移动窗口、改变窗口大小、打开窗口、最小化窗口/最大化窗口</p>
+                    <p style="text-align:left">利用其它画布的其它应用所产生的事件同样也会影响WebGL的画布，有一些默认的回调函数可用于处理此类事件</p>
+                </section>
+                <section id="rseve"">
+                    <h2>定位和拾取</h2>
+                    <h3>reshape事件</h3>
+                    <p style="text-align:left">如果用鼠标改变画布的大小，画布的内容需要重绘，可以有两种选择，一是重绘同样的物体，改变物体的大小，二是以同样的大小绘制更多或更少的物体。但一般都会保持窗口的比例</p>
+                </section>
+                <section id="rsevepro">
+                    <h2>定位和拾取</h2>
+                    <h3>onresize事件</h3>
+                    <p style="text-align:left">返回新的画布大小，其值在<strong style="color:red">window.innerHeight</strong>和<strong style="color:red">window.innerWidth</strong></p>
+                    <p style="text-align:left">可利用这两项属性改变<strong style="color:red">canvas.height</strong>和<strong style="color:red">canvas.width</strong></p>
+                    <pre><code class="hljs" data-trim>
+window.onresize=function(){
+    var min=innerWidth;
+    if(innerHeight&lt;min){
+        min=innerHeight;
+    }
+    if(min&lt;canvas.width||min&lt;canvas.height){
+        gl.viewport(0, canvas.height-min, min, min);
+    }
+};
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="pick">
+                    <h2>定位和拾取</h2>
+                    <h3>拾取的难点</h3>
+                    <p style="text-align:left">拾取，即给定画布中的点，确定该点属于哪个物体对象。由于缺少唯一性，流水线又是往前处理，定位设备也无法提供精确的定位，都造成了拾取的难度</p>
+                </section>
+                <section id="selection">
+                    <h2>定位和拾取</h2>
+                    <h3>选择</h3>
+                    <p style="text-align:left">固定管线OpenGL支持选择操作，对每个图元都由应用程序指定一个id，用于表明该图元属于哪个物体对象。渲染场景时，位于鼠标点击区域附近的图元的id加入点击列表(hit list)中。在渲染完成后，可通过该点击列表获取所选择的对象信息</p>
+                    <p style="text-align:left">选择的实现过程是在鼠标周围创建一个小的窗口区域，对于一个图元是否渲染在该窗口区域中进行跟踪，可以选择不显示渲染结果，也可以将其内容渲染到其它的颜色缓存中，或利用一些备用的缓存，而不作缓存交换。为实现这种选择技术，还需要记录相应点击位置的深度信息。</p>
+                </section>
+                <section id="selec2">
+                    <h2>定位和拾取</h2>
+                    <h3>颜色拾取</h3>
+                    <p style="text-align:left">可以用gl.readPixels获得窗口当前位置上的颜色信息。但是利用颜色识别物体会碰到两个问题，一是不同的物体可以有同样的颜色，物体阴影也同样能显示多种颜色。因此，需要为每一个物体指派一个独特的颜色，并将此颜色渲染到离线帧中，然后利用gl.readPixels获得鼠标当前位置的颜色，并利用映射表找到此颜色对应的物体</p>
+                </section>
+                <section id="selec3">
+                    <h2>定位和拾取</h2>
+                    <h3>包围盒拾取</h3>
+                    <p style="text-align:left">前两种方法都需要额外的渲染时间以完成拾取。这里可以利用包围盒表，将鼠标中心位置通过查表映射到相应的物体上</p>
+                    <canvas id="bdcanvas" width="700" height="500"></canvas>
+				    <script>
+				 	var canvas = document.getElementById( "bdcanvas" );
+					var ctx = canvas.getContext( "2d" );
+					ctx.lineWidth = 3;
+					ctx.strokeStyle = "#000000";
+					ctx.beginPath();
+					ctx.moveTo(365,20);
+					ctx.lineTo(130,480);
+					ctx.lineTo(600,480);
+					ctx.closePath();
+					ctx.fillStyle = "#B3D3C0";
+					ctx.fill();
+					ctx.beginPath();
+					ctx.moveTo(130,20);
+					ctx.lineTo(130,480);
+					ctx.lineTo(600,480);
+					ctx.lineTo(600,20);
+					ctx.closePath();
+					ctx.stroke();
+
+					ctx.beginPath();
+					ctx.arc(360,220,10,0,2*Math.PI);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(550,100,10,0,2*Math.PI);
+					ctx.fillStyle = "blue";
+					ctx.fill();
+					ctx.beginPath();
+					ctx.arc(70,170,10,0,2*Math.PI);
+					ctx.fillStyle = "green";
+					ctx.fill();
+
+                    ctx.font = "18px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.fillText("outsid box", 0, 210);
+                    ctx.fillText("outside triangle", 0, 230);
+                    ctx.fillText("inside box", 320, 260);
+                    ctx.fillText("inside triangle", 320, 280);
+                    ctx.fillText("inside box", 510, 130);
+                    ctx.fillText("outside triangle", 470, 150);
+				 </script>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: { Macros: { RR: "{\\bf R}" } }
+            },
+            
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
