@@ -1,0 +1,449 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Java程序设计--泛型</title>
+    <meta name="description" content="关于Java的基本信息">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../dist/reset.css">
+    <link rel="stylesheet" href="../dist/reveal.css">
+    <link rel="stylesheet" href="../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft{
+            float: left;
+            width: 50%;
+        }
+        .columnright{
+            float: right;
+            width: 50%;
+        }
+        .li{
+            text-align: left;
+            font-size: x-large;
+        }
+        .p{
+            text-align: left;
+            font-size: x-large;
+        }
+    </style>
+</head>
+
+<body>
+        <div class="reveal">
+            <div class="slides">
+                <section id="titlepage">
+                    <h1>Java程序设计</h1>
+                    <H2>第五章 泛型和集合框架(2)</H2>
+                    
+                    <p id="date"></p>
+                    <script>
+                        var now = new Date();
+                        var year = now.getFullYear();
+                        var month = now.getMonth();
+                        var day = now.getDate();
+                        document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                    </script>
+                </section>
+                <section id="colset">
+                    <h2>Java集合框架</h2>
+                    <img src="../images/chap6/javaFrameHierarchy.jpg">
+                    <ul>
+                        <li>JDK中专门设计的一组类，为方便实现各种数据存储，可用于专门存储其它对象的类</li>
+                        <li>JDK1.5以后保证类型安全</li>
+                    </ul>
+                </section>
+                <section id="typesafe">
+                    <h2>集合框架类型安全</h2>
+                    <p style="text-align:left">JDK1.5以后类型安全</p>
+                    <div class="columnleft">
+                        <pre><code>
+ArrayList apples=new ArrayList();
+apples.add(new Apple());
+apples.add(new Orange());
+                        </code></pre>
+                        <p style="font-size:xx-large;">编译器允许插入不同类型的对象</p>
+                    </div>
+                    <div class="columnright">
+                        <pre><code>
+ArrayList< Apple > apples=new ArrayList< Apple >();
+apples.add(new Apple());
+apples.add(new Orange());//不允许添加不同类型的对象
+                        </code></pre>
+                        <p style="font-size:xx-large;">利用泛型得到类型安全的容器</p>
+                    </div>
+
+                    <p style="text-align:left">类型不安全的容器使用: <a href="../SourceCode/Lec_06_Src/AppleAndOrangeWithoutGenerics.java" target="_blank">AppleAppleAndOrangeWithoutGenerics.java</a></p>
+                    <p style="text-align:left">类型安全的容器使用：<a href="../SourceCode/Lec_06_Src/AppleAndOrangeWithSafeType.java" target="_blank">AppleAndOrangeWithSafeType.java</a></p>
+                    <p style="text-align:left">类型安全的容器使用--类型自动转换：<a href="../SourceCode/Lec_06_Src/AppleListDemo.java" target="_blank">AppleListDemo.java</a></p>
+                </section>
+                <section>
+                    <section id="collset">
+                        <h2>Collection接口</h2>
+                        <ul>
+                            <li>定义在java.util包中，使用前需先导入</li>
+                            <li>Collection接口为集合的根接口，表示一组对象，JDK不提供此类接口的直接实现，需要通过具体的子类(List\Set\Queue)实现</li>
+                            <li>List存放有序且允许重复的元素</li>
+                            <li>Set存放无序且不允许重复的元素</li>
+                            <li>Queue只允许从容器的一端插入对象，从另一端移除对象</li>
+                        </ul>
+                    </section>
+                    <section id="colldef">
+                        <h2>Collection接口定义</h2>
+                        <table style="font-size:x-large">
+                        <tr style="background-color:royalblue;">
+                            <th style="color:white">方法类别</th>
+                            <th style="color:white">方法名</th>
+                            <th style="color:white">方法介绍</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">容器中添加、删除操作方法</td>
+                            <td>boolean add(Object o)</td>
+                            <td>将对象添加到容器</td>
+                        </tr>
+                        <tr>
+                            <td>boolean addAll(Collection c)</td>
+                            <td>将容器c中的元素添加到容器中</td>
+                        </tr>
+                        <tr>
+                            <td>boolean remove(Object o)</td>
+                            <td>如果容器中有与o相匹配的元素，则删除o</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="7">容器中元素查询操作方法</td>
+                            <td>void clear()</td>
+                            <td>清除容器中所有元素</td>
+                        </tr>
+                        <tr>
+                            <td>int size()</td>
+                            <td>返回当前容器中元素的数量</td>
+                        </tr>
+                        <tr>
+                            <td>boolean isEmpty()</td>
+                            <td>查找此容器中是否包含元素</td>
+                        </tr>
+                        <tr>
+                            <td>boolean contains(Object o)</td>
+                            <td>查找此容器中是否包含指定元素o</td>
+                        </tr>
+                        <tr>
+                            <td>boolean contains(Collection c)</td>
+                            <td>判断此容器内是否包含指定容器c中的元素</td>
+                        </tr>
+                        <tr>
+                            <td>Iterator iterator()</td>
+                            <td>返回一个该容器上的迭代器，用于访问该容器中的各元素</td>
+                        </tr>
+                        <tr>
+                            <td>boolean containsAll(Collection c)</td>
+                            <td>查找容器中是否包含容器c中的所有元素</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <ul>
+                        <li>创建容器对象时，最好用接口类型声明，如
+                            <pre><code>
+Collection< Integer > c=new ArrayList< Integer >();
+                            </code></pre>
+                        </li>
+                    </ul>
+                    </section>
+                    <section>
+                        <h2>Collection接口使用示例</h2>
+                        <p style="text-align:left">往容器中添加一组元素: <a href="../SourceCode/Lec_06_Src/AddingGroups.java" target="_blank">AddingGroups.java</a></p>
+                        <p style="text-align:left">往容器中添加一组类的对象: <a href="../SourceCode/Lec_06_Src/AddListInference.java" target="_blank">AddListInference.java</a></p>
+                        <p style="text-align:left">打印容器中的元素: <a href="../SourceCode/Lec_06_Src/PrintContainer.java" target="_blank">PrintContainer.java</a></p>
+                    </section>
+                </section>
+                <section id="ite">
+                    <h2>迭代器</h2>
+                    <ul>
+                        <li>迭代器Iterator< E ></li>
+                        <li>遍历Collection容器中的元素</li>
+                        <li>定义在Collection接口上的各子类容器都有一个与容器类型相对应的迭代器</li>
+                        <li>可通过迭代器遍历访问容器中的每个元素对象</li>
+                    </ul>
+
+                    <table style="font-size:xx-large">
+                        <tr style="background-color:royalblue;">
+                            <th style="color:white">方法类别</th>
+                            <th style="color:white">方法名</th>
+                            <th style="color:white">方法介绍</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">迭代器Iterator</td>
+                            <td>boolean hasNext()</td>
+                            <td>判断游标右侧是否还有元素</td>
+                        </tr>
+                        <tr>
+                            <td>Object next()</td>
+                            <td>返回游标右侧的元素，并将游标移动到下一个元素</td>
+                        </tr>
+                        <tr>
+                            <td>void remove()</td>
+                            <td>删除游标左侧的元素</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <p style="text-align:left">迭代器使用示例: <a href="../SourceCode/Lec_06_Src/IteratorDemo.java" target="_blank">IteratorDemo.java</a></p>
+                </section>
+                <section>
+                    <section id="listclass">
+                        <h2>List实现类</h2>
+                        <ul>
+                            <li>List用于存放有序可重复的元素，有ArrayList, LinkedList, Vector</li>
+                            <li>ArrayList</li>
+                            <ul>
+                                <li>支持可随需要动态增长的数组</li>
+                                <li>随机访问元素速度快，但插入和删除元素慢</li>
+                                <li>本质是一个长度可变的数组</li>
+                            </ul>
+                            <li>LinkedList</li>
+                            <ul>
+                                <li>链接列表数组结构，通过连接指针关联前后两个元素</li>
+                                <li>插入和删除元素速度快，顺序访问速度快，随机访问速度慢</li>
+                                <li>适合实现栈(stack)和队列(queue)</li>
+                            </ul>
+                            <li>Vector</li>
+                            <ul>
+                                <li>实现可增长数组</li>
+                                <li>大多数操作与ArrayList同，区别在于线程同步</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section id="listmet">
+                        <h2>List方法定义</h2>
+                        <table style="font-size:x-large">
+                            <tr style="background-color:royalblue;">
+                                <th style="color:white">方法名</th>
+                                <th style="color:white">方法介绍</th>
+                            </tr>
+                            <tr>
+                                <td>E set(int index, E element)</td>
+                                <td>用给定对象替换指定位置index处的元素</td>
+                            </tr>
+                            <tr>
+                                <td>E get(int index)</td>
+                                <td>返回给定位置index上的元素</td>
+                            </tr>
+                            <tr>
+                                <td>E remove(int index)</td>
+                                <td>删除指定位置的元素，后续元素依次位移</td>
+                            </tr>
+                            <tr>
+                                <td>void add(int index, E element)</td>
+                                <td>插入给定元素到指定位置index，后续元素依次后移</td>
+                            </tr>
+                            <tr>
+                                <td>boolean addAll(int index, Collection< ? extends E > c)</td>
+                                <td>在指定位置插入一组元素，其后元素依次后移</td>
+                            </tr>
+                            <tr>
+                                <td>int index(Object o)</td>
+                                <td>返回指定元素的最先位置，如果指定元素不存在，则返回-1</td>
+                            </tr>
+                            <tr>
+                                <td>int lastIndexOf(Object o)</td>
+                                <td>从后向前查找指定元素的最先位置，若指定元素不存在，则返回-1</td>
+                            </tr>
+                            <tr>
+                                <td>List< E > subList(int fromIndex, int toIndex)</td>
+                                <td>返回从fromIndex到toIndex之间的子列表</td>
+                            </tr>
+                            <tr>
+                                <td>ListIterator< E > listIterator()</td>
+                                <td>是迭代器的一个实例，可应用于所有List的实现类</td>
+                            </tr>
+                            <tr></tr>
+                        </table>
+                        <p style="font-size:x-large"><a href="../SourceCode/Lec_06_Src/ListDemo1.java" target="_blank">ListDemo1.java</a></p>
+                        <p style="font-size:x-large"><a href="../SourceCode/Lec_06_Src/ListDemo2.java" target="_blank">ListDemo2.java</a></p>
+                        <p style="font-size:x-large"><a href="../SourceCode/Lec_06_Src/ListDemo3.java" target="_blank">ListDemo3.java</a></p>
+                        <p style="font-size:x-large"><a href="../SourceCode/Lec_06_Src/VectorDemo.java" target="_blank">VectorDemo.java</a></p>
+                    </section>
+                </section>
+                <section id="colmet">
+                    <h2>Collections类</h2>
+                    <ul>
+                        <li>Collections是一个工具类，提供对集合的操作</li>
+                        <li>提供静态方法，实现了基于List的常用算法，主要用于排序</li>
+                    </ul>
+                    <table style="font-size:x-large">
+                        <tr style="background-color:royalblue;">
+                            <th style="color:white">方法名</th>
+                            <th style="color:white">方法介绍</th>
+                        </tr>
+                        <tr>
+                            <td>void sort(List)</td>
+                            <td>对List内的元素排序</td>
+                        </tr>
+                        <tr>
+                            <td>void shuffle(List)</td>
+                            <td>对List内的元素随机排序</td>
+                        </tr>
+                        <tr>
+                            <td>void reverse(List)</td>
+                            <td>将List内的元素逆序排序</td>
+                        </tr>
+                        <tr>
+                            <td>void fill(List, Object)</td>
+                            <td>用特定的对象Object重写List容器，将对象引用复制到容器的每个位置上，且只对List有效</td>
+                        </tr>
+                        <tr>
+                            <td>void copy(List dest, List src)</td>
+                            <td>将src的内容复制到dest中</td>
+                        </tr>
+                        <tr>
+                            <td>int binarySearch(List, Object)</td>
+                            <td>利用二分法查找并返回Object对象在List中的位置</td>
+                        </tr>
+                    </table>
+                    <p style="font-size:x-large"><a href="../SourceCode/Lec_06_Src/ListDemo4.java" target="_blank">ListDemo4.java</a></p>
+                </section>
+            </div>
+        </div>
+
+        <script src="../dist/reveal.js"></script>
+        <script src="../plugin/zoom/zoom.js"></script>
+        <script src="../plugin/notes/notes.js"></script>
+        <script src="../plugin/search/search.js"></script>
+        <script src="../plugin/markdown/markdown.js"></script>
+        <script src="../plugin/highlight/highlight.js"></script>
+        <script src="../plugin/math/math.js"></script>
+        <script>
+            Reveal.initialize({
+               // display controls in the bottom right corner
+                controls: true,
+
+                // display a presentation progress bar
+                progress: true,
+                // set default timing of 2 minutes per slides
+                defaultTiming: 120,
+
+                // Display the page number of the current slides
+                slideNumber: true,
+
+                // Push each slide change to the browser history
+                history: false,
+
+                // Enable keyboard shortcuts for navigation
+                keyboard: true,
+
+                // Enable the slide overview mode
+                overview: true,
+
+                // Vertical centering of slides
+                center: true,
+
+                // Enable touch navigation on devices with touch input
+                touch: true,
+
+                // Loop the presentation
+                loop: false,
+
+                // Change teh presentation direction to be RTL
+                rtl: false,
+
+                // Randomizes the order of slides each time the presentation loads
+                shuffle: false,
+
+                // Turns fragments on and off globally
+                fragment: true,
+
+                // Flags if the presentation is running in an embedded mode,
+                // i.e. contained within a limited portion of the screen
+                embedded: false,
+
+                // Flags if we should show a help overlay when the questionmark key is pressed
+                help: true,
+
+                // Flags if speaker notes should be visible to all viewers
+                showNotes: false,
+
+                // Global override for autoplaying embedded media( video/audio/iframe)
+                // - null: media will only autoplay if data-autopay is present
+                // - true: all media will autoplay, regradless of individual setting
+                // - false: no media will autoplay, regardless of individual setting
+                autoPlayMedia: null,
+
+                // Number of milliseconds between automatically proceeding to the next slide, 
+                //disabled when set to 0, this value can be overwritten by
+                // using a data-autoslide attribute on your slides
+                autoSlide: 0,
+
+                // Stop auto-sliding after user input
+                autoSlideStoppable: true,
+
+                // Use this method for navigation when auto-sliding
+                autoSlideMethod: Reveal.navigateNext,
+
+                // Enable slide navigation via mouse wheel
+                mouseWheel: false,
+
+                // Hides the address bar on mobile devices
+                hideAddressBar: true,
+
+                // Opens links in an iframe preview overlay
+                previewLinks: false,
+
+                // Transition style
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Transition speed
+                transitionSpeed: 'default', // default/fast/slow
+
+                // Transition style for full page slide backgrounds
+                backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+                // Number of slides away from the current that are visible
+                viewDistance: 3,
+
+                // Parallax background image
+                parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+                // Parallax background size
+                parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+                // Number of pixels to move the parallax background per slide
+                // - calculated automatically unless specified
+                // - set to 0 to disable movement along an axis
+                parallaxBackgroundHorizontal: null,
+                parallaxBackgroundVertical: null,
+
+                // The display mode that will be used to show slides
+                display: 'block',
+
+                // print to pdf while no slide grows to more than one printed page
+                pdfMaxPagesPerSlide: 1,
+
+                // presentation
+                width: 1000,
+                height: 1000,
+
+                margin: 0.1,
+
+                minScale: 0.2,
+                maxScale: 1.5, 
+
+                math: {
+                    mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                    config: 'TeX-AMS_HTML-full',
+                    // pass other options into `MathJax.Hub.Config()`
+                    TeX: { Macros: { RR: "{\\bf R}" } }
+                },
+
+                plugins: [RevealHighlight, RevealMath]
+            })
+        </script>
+    </body>
+</html>
+
