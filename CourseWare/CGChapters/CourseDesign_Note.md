@@ -9,7 +9,7 @@
 ## 3. 实现工具
 不接受完全用Unity完成的系统，不接受用3DS Max, Maya, Blender等直接渲染的动画或场景，可以使用这些工具建模，在自己的代码中渲染绘制。
 
-实现过程不限语言，可使用C++, C#, Python, JavaScript, Java等，可使用现成的各种引擎开发，主要的游戏引擎见[Game Engine List](https://en.wikipedia.org/wiki/List_of_game_engines)，主要的WebGL引擎见[WebGL Framework](https://en.wikipedia.org/wiki/List_of_WebGL_frameworks)
+实现过程不限语言，可使用C++, C#, Python, JavaScript, Java等，可使用现成的各种引擎开发，主要的游戏引擎见[Game Engine List](https://en.wikipedia.org/wiki/List_of_game_engines), 主要的WebGL引擎见[WebGL Framework](https://en.wikipedia.org/wiki/List_of_WebGL_frameworks)
 
 ## 4. 提交形式
 提交同样分为两部分：
