@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--成像</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第五章 成像</H2>
+                <h3>阴影</h3>
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="shad">
+                    <h2>阴影</h2>
+                    <h3>关于阴影的一些事实</h3>
+                    <p style="text-align:left">想象一下，在真实环境中，什么时候你看不到阴影？只有一种可能，你的眼睛和空间中唯一的光源重合，此时阴影位于物体的正后方。<br>
+                    阴影是一种全局渲染问题，本质是一个被遮挡的不可见的平面</p>
+                </section>
+                <section id="shdpip">
+                    <h2>阴影</h2>
+                    <h3>流水线渲染器中的阴影</h3>
+                    <p style="text-align:left">阴影是由光线跟踪自动生成的，当检测到没有光线到达物体时就会产生阴谋，计算中需要考虑场景所有的物体对象</p>
+                    <p style="text-align:left">流水线一次处理一个物体，阴影不能自动生成，可以通过投影成像计算阴影(Projective shadow)，或者利用阴影映射(shadow maps)或阴影空间(shadow volume)计算</p>
+                </section>
+            </section>
+            <section>
+                <section id=="prosha">
+                    <h2>阴影</h2>
+                    <h3>投影计算阴影</h3>
+                    <div class="columnleft">
+                        <p style="text-align:left;font-size:xx-large">投影计算阴影可在飞行模拟中提供视觉线索。其原理利用了多边形的投影仍然是多边形，产生的多边形称为阴影多边形</p>
+                        <p style="text-align:left;font-size:xx-large">给定一个点光源和一个多边形，阴影多边形的每个顶点对应于原多边形每个顶点在点光源作用下在平面上的投影</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../../images/cg/chap05/ch05-shadowpoly.png">
+                    </div>
+                </section>
+                <section id="compute">
+                    <h2>阴影</h2>
+                    <h3>顶点阴影计算</h3>
+                    <p style="text-align:left">假设原顶点位置为$(x_o,y_o,z_o)$，对应的阴影顶点位置为$(x,y,z)$，先考虑最简单的情况，往$XOZ$平面投影，有$(x,y,z)=(x_p,0,z_p)$</p>
+                    <ul>
+                        <li style="text-align:left">将原顶点平移到原点，有$T(-x_o,-y_o,-z_o)$</li>
+                        <li style="text-align:left">对应投影矩阵为
+                        $$
+                        M=\begin{bmatrix}
+                        1&0&0&0\\
+                        0&1&0&0\\
+                        0&0&1&0\\
+                        0&\frac{1}{-y_o} &0&0
+                        \end{bmatrix}
+                        $$</li>
+                        <li style="text-align:left">平移回原位置</li>
+                    </ul>
+                </section>
+                <section id="shaproc">
+                    <h2>阴影</h2>
+                    <h3>阴影处理过程</h3>
+                    <ul>
+                        <li style="text-align:left">生成两个一致的三角形，将其颜色传给GPU，其中阴影三角形可将对应颜色设置为黑色</li>
+                        <li style="text-align:left">计算两个对应的模型视图矩阵</li>
+                        <li style="text-align:left">传入原三角形的模型视图矩阵，并渲染</li>
+                        <li style="text-align:left">传入阴影三角形对应的模型视图矩阵，并渲染阴影三角形</li>
+                    </ul>
+                    <p style="text-align:left">阴影三角形的模型视图矩阵计算有两个过程，渲染时还需开启深度检测</p>
+                </section>
+                <section id="genesha">
+                    <h2>阴影</h2>
+                    <h3>一般化阴影处理</h3>
+                    <p style="text-align:left">目前方法只适用于计算平面上的阴影，无法计算一般化对象上的阴影，其它方法在后面会涉及介绍</p>
+                </section>
+            </section>
+            <section>
+                <section id="shamap">
+                    <h2>阴影</h2>
+                    <h3>阴影映射</h3>
+                    <div class="columnleft">
+                    <p style="text-align:left;font-size:xx-large">当从一个光源渲染场景时，深度缓存会保存到光源到其最近的面片之间的距离，这些深度信息可保存在深度映射(depth map)或阴影映射(shadow map)中。如果场景中有多个光源，每个光源都会生成一个对应的阴影映射</p>
+                    <p style="text-align:left;font-size:xx-large">当用阴影映射进行绘制时，阴影中不应当包含任何被光照亮的部分</p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../../images/cg/chap05/ch05-shadmap.png">
+                    </div>
+                </section>
+                <section id="rendpro">
+                    <h2>阴影</h2>
+                    <h3>渲染过程</h3>
+                    <p style="text-align:left">渲染时，将面片到光源的距离与阴影映射中保存的距离相比较，若面片到光源的距离大于阴影映射中保存的距离，表明该面片在阴影中，渲染时用阴影的颜色绘制，若相反，则用面片对应的颜色进行绘制</p>
+                    <p style="text-align:left">在流水线中实现时，需要进行多次绘制，可参见渲染到纹理技术，所有过程都在着色器中实现</p>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-../js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
