@@ -1,0 +1,400 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--从几何到像素</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第九章 建模和层次结构</H2>
+                <h3>图形对象和场景图</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section id="humfig">
+                    <h2>图形对象和场景图</h2>
+                    <h3>即时图形模式的局限性(Immediate Mode Graphics)</h3>
+                    <p style="text-align:left">在应用程序中定义一个几何对象，代码执行时，对象就被传送到流水线上进行处理，绘制完成后，对象就从图形系统中消失了。如果需要重绘对象，无论是改变了状态的，或是未改变的，都需要重新执行这部分代码。在传统OpenGL管线中，可以利用显示列表部分实现</p>
+                </section>
+                <section id="rtmd">
+                    <h2>图形对象和场景图</h2>
+                    <h3>保留图形模式(Retained Mode Graphics)</h3>
+                    <p style="text-align:left">在保留图形模式中，服务器端保存显示列表，GPU允许将数据保存在GPU中，基本上所有的即时模式的函数都已不再支持，不过仍然可以将原来的OpenGL看作一种更底层的函数调用</p>
+                </section>
+                <section id="oglobj">
+                    <h2>图形对象和场景图</h2>
+                    <h3>OpenGL和对象</h3>
+                    <p style="text-align:left">OpenGL还是面向对象的。比如需要定义一个绿色的球体，可以用多边形建立球体的模型，其颜色由OpenGL的状态决定，而不是作为对象的一种属性，与顶点属性之间也没有紧密的联系。这种表示不符合我们对客观对象的认识，因此可以考虑用面向对象的概念在代码中建立更好的对象描述</p>
+                </section>
+                <section id="mdlcmp">
+                    <h2>图形对象和场景图</h2>
+                    <h3>两种模式的对比</h3>
+                    <p style="text-align:left">以绘制旋转的立方体为例</p>
+                    <div class="columnleft">
+                        <p style="text-align:left">命令式编程模式下，旋转函数需要知道立方体的表示，包括顶点列表和边列表</p>
+                        <img src="../../images/cg/chap09/ch09-improgmodel.png">
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left">在面向对象模式下，物体以对象形式存储，应用程序需要传送消息给对象，对象中包含了进行变换的方法</p>
+                        <img src="../../images/cg/chap09/ch09-ooprogmodel.png">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section id="lang">
+                    <h2>图形对象和场景图</h2>
+                    <h3>语言对比</h3>
+                    <p style="text-align:left">用C实现，可利用结构构建对象</p>
+                    <p style="text-align:left">在C++或Java或JavaScript，可以直接构建类对象，C++可以实现更好的对象设计和接口调用，JavaScript则支持对象的多个方法定义</p>
+                </section>
+                <section id="cbobj">
+                    <h2>图形对象和场景图</h2>
+                    <h3>立方体对象</h3>
+                    <p style="text-align:left">设定需要构建一个简单的立方体对象，能够实现其缩放、平移、旋转等，并通过代码设定其颜色等</p>
+                    <pre><code class="hljs" data-trim>
+var Cube{
+    var color[3];
+    var matrix[4][4];
+}
+
+var myCube = new Cube();
+myCube.color[0]=1.0;
+myCube.color[1]=myCube.color[2]=0.0;
+myCube.matrix[0][0]=...
+                    </code></pre>
+                    <p style="text-align:left">设定立方体的变换和颜色</p>
+                    <pre><code class="hljs" data-trim>
+myCube.translate(1.0, 0.0, 0.0);
+myCube.rotate(theta, 1.0, 0.0, 0.0);
+setColor(myCube, 1.0, 0.0, 0.0);
+                    </code></pre>
+                    <p style="text-align:left">立方体绘制方法</p>
+                    <pre><code class="hljs" data-trim>
+mycube.render();
+                    </code></pre>
+                </section>
+                <section id="impl">
+                    <h2>图形对象和场景图</h2>
+                    <h3>实现问题</h3>
+                    <p style="text-align:left">实现时，可利用私有部分的任意实现，如顶点列表。私有成员可访问公有成员，类方法的实现可采用任意形式以隐藏其具体实现过程。而实现绘制方法仍然需要调用标准的OpenGL绘制函数</p>
+                </section>
+            </section>
+            <section>
+                <section id="otobj">
+                    <h2>图形对象和场景图</h2>
+                    <h3>其它对象</h3>
+                    <p style="text-align:left">其它对象也有几何属性，如相机、光源等，同时还需要定义非几何对象，如材质、颜色、变换矩阵等</p>
+                </section>
+                <section id="jsobj">
+                    <h2>图形对象和场景图</h2>
+                    <h3>JS Objects</h3>
+                    <pre><code class="hljs" data-trim>
+cube mycube;
+
+material plastic;
+mycube.setMaterial(plastic);
+
+camera frontView;
+frontView.position(x ,y, z);
+                    </code></pre>
+                    <p style="text-align:left">也可创建更类似Java或C++的对象，包含构造器、原型、对象方法、私有变量和方法等</p>
+                </section>
+                <section id="ltobj">
+                    <h2>图形对象和场景图</h2>
+                    <h3>光源对象</h3>
+                    <pre><code class="hljs" data-trim>
+var myLight = new Light();
+
+    // match Phong model
+    myLight.type = 0; //directional
+    myLight.position = ……;
+    myLight.orientation = ……;
+    myLight.specular = ……;
+    myLight.diffuse = ……;
+    myLight.ambient = ……;
+}
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="scene">
+                    <h2>图形对象和场景图</h2>
+                    <h3>场景</h3>
+                    <p style="text-align:left">再来看一下之前定义的人模型，可以看到，可以用树结构或者等价的代码描述该模型，并且可以写一个通用的遍历树方法显示模型。同理，场景中的各种因素，包括相机、光源、材质、几何对象等也可以同样的形式构建一棵树，绘制场景可以通过遍历树实现</p>
+                </section>
+                <section id="scgph">
+                    <h2>图形对象和场景图</h2>
+                    <h3>场景图</h3>
+                    <img src="../../images/cg/chap09/ch09-scenegraph.png">
+                    <pre><code class="hljs" data-trim>
+myScene = new Scene();
+myLight = new Light();
+myLight.Color = ……;
+…
+myscene.Add(myLight);
+object1 = new Object();
+object1.color = …
+myscene.add(object1);
+…
+…
+myscene.render();
+
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="sghis">
+                    <h2>图形对象和场景图</h2>
+                    <h3>场景图历史</h3>
+                    <p style="text-align:left">OpenGL的发展很大程度上依靠那些不断挑战硬件极限的人们，如实现实时图形学计算、动画和模拟计算、独立应用程序实现等。CAD社区需要共享各类数据库，但并没有实时计算或照片效果实现的需求，但要求有跨平台的支持，因此也就最早提出了图形标准PHIGS</p>
+                </section>
+                <section id="sgog">
+                    <h2>图形对象和场景图</h2>
+                    <h3>场景图组织</h3>
+                    <img src="../../images/cg/chap09/ch09-sgstructure.png">
+                </section>
+            </section>
+            <section>
+                <section id="3dlib-1">
+                    <h2>图形对象和场景图</h2>
+                    <h3>Inventor和Java3D</h3>
+                    <p style="text-align:left;">
+                        Inventor和Java3D都提供了场景图API，场景图也可描述为一个文件，通过场景图API提供对场景各种变换的支持。但是，最初的实现无法和图形系统相适应，因此，现有的多种场景图API都建立在OpenGL，WebGL或DirectX等底层API之上
+                    </p>
+                </section>
+                <section id="3dlib-2">
+                    <h2>图形对象和场景图</h2>
+                    <h3>VRML和OSG</h3>
+                    <ul>
+                        <li style="text-align:left;">
+                            VRML，是一个能够适用于万维网络环境的场景图API，可通过链接支持分布式网络数据库，其全称为虚拟现实标记语言(<font color="red">V</font>irtual <font
+                                color="red">R</font>eality <font color="red">M</font>arkup <font color="red">L</font>anguage, VRML)
+                        </li>
+                        <li style="text-align:left;">
+                            OSG，全称为Open Scene
+                            Graph，为一场景管理器API，支持复杂场景的构建和渲染，在第一轮渲染时可通过遮挡裁剪可支持复杂的几何形体，在第二轮裁剪时，可通过对几何形体的排序支持半透明效果，前两道渲染结果能够生成一个几何形体列表供第三道渲染使用
+                        </li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="three-1">
+                    <h2>图形对象和场景图</h2>
+                    <h3>Three.js</h3>
+                    <p style="text-align:left;font-size:80%">
+                        Three.js是一个构建在WebGL基础之上的场景管理器，可用于渲染场景图，在Web开发中得到广泛的应用，官方网站为<a
+                            href="http://www.threejs.org">http://www.threejs.org</a>，提供了大量的示例供参考，Eric
+                        Haines在Udacity上也开设了关于Three.js的开放课程，供大家学习。与传统的计算机图形学的实现方法相比，three.js的实现有很大的不同
+                    </p>
+                </section>
+                <section id="three-2">
+                    <h2>图形对象和场景图</h2>
+                    <h3>three.js场景</h3>
+                    <p style="text-align:left;font-size:80%">
+                        利用three.js构建场景对象，主要代码如下：
+                    </p>
+                    <pre><code class="hljs" data-trim>
+var scene = new THREE.scene();
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+
+var renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+var geometry = new THREE.CubeGeometry(1, 1, 1);
+var material = new THREE.MeshBasicMaterial({color:0x00FF00});
+var cube = new THREE.Mesh(geometry, mateiral);
+scene.add(cube);
+camera.position.z = 5;
+
+// three.js 渲染主循环
+var render = function(){
+    requestAnimationFrame(render);
+    cube.rotation.x += 0.1;
+    cube.rotation.y += 0.1;
+    renderer.render(scene, camera);
+};
+            		</code></pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/math/math.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
