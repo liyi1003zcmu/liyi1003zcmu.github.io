@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>计算机图形学--图形学编程</title>
+    <meta name="description" content="认识图形系统和图形学计算模型概述">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 49%;
+        }
+    
+        .columnright {
+            float: right;
+            width: 49%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <H2>第二章 图形学编程</H2>
+                <h3>图像生成</h3>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="imgform">
+                <h2>图像生成</h2>
+                <h3>如何生成图像</h3>
+                <p style="text-align:left;">是否能够设计实现专用的图形学硬件和软件，以符合合成相机模型，以生成图像？</p>
+                <p style="text-align:left">需要提供API满足应用程序开发的需要，至少需要提供对象、材质、观察、光线等的计算和模拟</p>
+                <p style="text-align:left">这些API又该如何实现？</p>
+            </section>
+            <section>
+                <section id="physicalappr">
+                    <h2>图像生成</h2>
+                    <h3>物理方法</h3>
+                        <div class="row">
+                            <div class="columnleft">
+                                <ul>
+                                    <li style="text-align:left;font-size:xx-large">光线跟踪，从投影中心沿着光路计算，直到光线投身到无穷远处，或者被物体吸收为止
+                                        <ul>
+                                            <li>可有效地实现全局光照效果，如多重反射、半透明效果等</li>
+                                            <li>计算量大，速度较慢</li>
+                                            <li>计算过程中始终需要场景中所有物体的数据</li>
+                                        </ul>
+                                    </li>
+                                    <li style="text-align:left;font-size:xx-large">辐射，用基于能量的方法计算，与光线跟踪相比，计算量更大，速度更悭</li>
+                                </ul>
+                            </div>
+                            <div class="columnright">
+                                <img src="../../images/cg/chap02/ch02-raytracing.png" style="width:100%">
+                            </div>
+                        </div>
+                </section>
+                <section id="pracappr">
+                    <h2>图像生成</h2>
+                    <h3>实践方法</h3>
+                    <p style="text-align:left;">根据应用程序生成图像需要历经的顺序一次一步处理，其好处在于可以仅考虑局部光照</p>
+                    <p>WebGL处理流水线</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe.png" style="width:100%">
+                    <p style="text-align:left;">所有的步骤都在图形计算硬件中实现</p>
+                </section>
+            </section>
+            <section>
+                <section id="vertexproc">
+                    <h2>图像生成</h2>
+                    <h3>顶点处理</h3>
+                    <p style="text-align:left">流水线中绝大部分的计算都是在将用于表示物体的一系列顶点从一个坐标系变换到另一个坐标系中，其中主要的坐标系包括：</p>
+                    <ul>
+                        <li>物体坐标系</li>
+                        <li>相机坐标系</li>
+                        <li>屏幕坐标系</li>
+                    </ul>
+                    <p style="text-align:left">每一次坐标系的变换都相当于进行矩阵计算，因此这也是顶点处理需要完成的工作</p>
+                    <p style="text-align:left">同时，顶点处理还负责计算顶点的颜色</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe-vpro.png" style="width:100%">
+                </section>
+                <section id="project">
+                    <h2>图像生成</h2>
+                    <h3>投影</h3>
+                    <p style="text-align:left">投影的过程，即是通过三维观察，将三维物体对象投身到成像平面上形成二维图像的过程</p>
+                    <ul>
+                        <li style="text-align:left">透视投影：所有的投影线汇聚于投影中心</li>
+                        <li style="text-align:left">平行投影：所有的投影线都平行，投影中心指向投影方向</li>
+                    </ul>
+                    <img src="../../images/cg/chap02/ch02-glpipe-vpro.png" style="width:100%">
+                </section>
+                <section id="primasse">
+                    <h2>图像生成</h2>
+                    <h3>图元合成</h3>
+                    <p style="text-align:left">在裁剪和光栅化之前，所有的顶点需要先构成几何形体，包括线段、多边形、曲线和曲面等</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe-clip.png" style="width:100%">
+                </section>
+                <section id="clip">
+                    <h2>图像生成</h2>
+                    <h3>裁剪</h3>
+                    <p style="text-align:left">裁剪，即指将位于相机成像空间外的对象去除，只保留在空间内可见的物体对象</p>
+                    <img src="../../images/cg/chap02/ch02-camvol.png" style="position:absolute;width:450px;left:0px;border:0">
+                    <img src="../../images/cg/chap02/ch02-camclp.png" style="position:absolute;width:450px;right:0px;border:0">
+                </section>
+                <section id="raster">
+                    <h2>图像生成</h2>
+                    <h3>光栅化</h3>
+                    <p style="text-align:left">如果场景中的物体对象没有被裁剪，在帧缓存中与该物体对应的像素就需要指定一种颜色</p>
+                    <p style="text-align:left">光栅化会为每个对象生成一组用于表示该对象的面片，可理解为”潜在“的像素，每个面片在面片缓存中都有对应的位置，都有颜色、深度两个属性，而这些属性都可以通过插值计算得到</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe-ras.png" style="width:100%">
+                </section>
+                <section id="fragproc">
+                    <h2>图像生成</h2>
+                    <h3>面片处理</h3>
+                    <p style="text-align:left">面片处理的目的是确定在帧缓存中每个对应像素的颜色。颜色值可以是纹理映射的结果，也可以是对顶点颜色进行插值计算的结果</p>
+                    <p style="text-align:left">面片也会被其它距离相机更近的面片遮挡，其颜色就取决于离相API的面片的颜色，这种技术称为”隐面消除"</p>
+                    <img src="../../images/cg/chap02/ch02-glpipe-frag.png" style="width:100%">
+                </section>
+            </section>
+            <section>
+                <section id="proapi">
+                    <h2>图像生成</h2>
+                    <h3>编程接口</h3>
+                    <p style="text-align:left">从应用程序开发的角度来看，图形系统是通过一系列软件接口实现的，即应用程序接口(Application Programmer Interface, API)</p>
+                    <p style="text-align:left">API需要提供对图像生成各阶段功能的支持，包括<strong style="color:red">对象描述，观察者，光源，材质</strong>，除此之外，还需要提供对于<strong style="color:red">输入设备</strong>的支持，及其它系统功能</p>
+                    <img src="../../images/cg/chap02/ch02-gsysapi.png" style="width:100%">
+                </section>
+                <section id="apiobj">
+                    <h2>图像生成</h2>
+                    <h3>对象描述API</h3>
+                    <p style="text-align:left">大部分的API都能支持有限的基本元素，包括</p>
+                    <ul>
+                        <li style="text-align:left">点(0d)</li>
+                        <li style="text-align:left">线段(1d)</li>
+                        <li style="text-align:left">多边形(2d)</li>
+                        <li style="text-align:left">部分曲线和曲面(如：二次曲线，参数多项式曲线等)</li>
+                    </ul>
+                    <p style="text-align:left">所有的基本元素都是通过空间中的位置坐标或顶点定义</p>
+                </section>
+                <section id="apiexp">
+                    <h2>图像生成</h2>
+                    <h3>对象描述API示例</h3>
+                    
+                    <div class="columnleft">
+                    <h4>OpenGL版</h4>
+                    <pre><code class="hljs">
+glBegin(GL_POLYGON);
+  glVertex3f( 0.0, 0.0, 0.0 );
+  glVertex3f( 0.0, 1.0, 0.0 );
+  glVertex3f( 0.0, 0.0, 1.0 );
+glEdn();
+                    </code></pre>
+                    <p style="text-align:left;font-size:xx-large">根据不同的参数绘制不同类型的对象，数据可以在CPU中处理后，再通过管线传递给GPU</p>
+                    </div>
+                    <div class="columnright">
+                    <h4>GPU版</h4>
+                    <pre><code class="hljs">
+var points=[
+  vec3( 0.0, 0.0, 0.0 ),
+  vec3( 0.0, 1.0, 0.0 ).
+  vec3( 0.0, 0.0, 1.0 ),
+];
+                    </code></pre>
+                    <p style="text-align:left;font-size:xx-large">将几何顶点信息放在数组中，将数组传递给GPU，由GPU负责渲染，渲染结果为三角形</p>
+                    </div>
+                </section>
+                <section id="camspec">
+                    <h2>图像生成</h2>
+                    <h3>相机参数</h3>
+                    <p style="text-align:left">API中需要指定的相机参数包括</p>
+                    <ul>
+                        <li style="text-align:left">相机的位置，具有六自由度，包括镜头中心的位置和方向角度</li>
+                        <li style="text-align:left">镜头焦距</li>
+                        <li style="text-align:left">相片大小</li>
+                        <li style="text-align:left">成像平面方向</li>
+                    </ul>
+                    <img src="../../images/cg/chap02/ch02-camspec.png" style="position:absolute;top:330px;right:0px;width:450px;border:0">
+                </section>
+                <section id="lighmat">
+                    <h2>图像生成</h2>
+                    <h3>光线和材质</h3>
+                    <div class="columnleft">
+                        <p style="text-align:left">API中对光线需要的信息：</p>
+                        <ul>
+                            <li style="text-align:letft">光源类型，点光源 vs 分布式光源</li>
+                            <li style="text-align:left">聚光灯</li>
+                            <li style="text-align:left">光源位置，距离</li>
+                            <li style="text-align:left">光源颜色属性</li>
+                        </ul>
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left">API中对材质需要的信息</p>
+                        <ul>
+                            <li style="text-align:left">对光的吸收性，与颜色相关</li>
+                            <li style="text-align:left">对光的发散性，漫反射或是镜面反射</li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../../dist/reveal.js"></script>
+    <script src="../../../plugin/zoom/zoom.js"></script>
+    <script src="../../../plugin/notes/notes.js"></script>
+    <script src="../../../plugin/search/search.js"></script>
+    <script src="../../../plugin/markdown/markdown.js"></script>
+    <script src="../../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide, 
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            width: 900,
+            height: 900,
+
+            margin: 0.1,
+
+            minScale: 0.2,
+            maxScale: 1.5,
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight]
+        });
+    </script>
+</body>
+
+</html>
