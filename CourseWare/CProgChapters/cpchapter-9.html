@@ -1,0 +1,667 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第9章结构">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第九章 结构</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第9章 结构</h2>
+                <p>
+                    <a href="#/9-1">9.1 输出平均分最高的学生信息</a><br />
+                    <a href="#/9-2">9.2 学生成绩排序</a><br />
+                    <a href="#/9-3">9.3 修改学生成绩</a><br />
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>什么是结构? 结构与数组有什么差别?</li>
+                    <li>结构有几种定义形式，它们之间有何不同?</li>
+                    <li>什么是结构的嵌套?</li>
+                    <li>什么是结构变量和结构成员变量?如何引用结构成员变量?</li>
+                    <li>结构变量如何作为函数参数使用?</li>
+                    <li>什么是结构数组?如何定义和使用结构数组?</li>
+                    <li>什么是结构指针?它如何实现对结构分量的操作?</li>
+                    <li>结构指针是如何作为函数的参数的?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="9-1">
+                    <h2>9.1 输出平均分最高的学生信息</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例9-1. 输出平均分最高的学生信息</p>
+                    <p>假设学生的基本信息包括学号、姓名、三门课程成绩以及个人平均成绩。输入n个学生的成绩信息，计算并输出平均分最高的学生信息
+                    </p>
+                </section>
+                <section id="9-1-1">
+                    <h3>9.1.1 程序解析</h3>
+                    <pre style="font-size:43%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+struct student{  /* 学生信息结构定义 */
+    int num;  /* 学号 */
+    char name[10];  /* 姓名 */
+    int computer, english, math;  /* 三门课程成绩 */
+    double average;  /* 个人平均成绩 */
+};
+int main()
+{
+    int i, n;
+    struct student max, stu;
+    printf("Enter n:");
+    scanf("%d", &n);
+    printf("Input the student's number, name and course scores:\n");
+    for(i=0; i&lt;n; i++){
+        printf("No. %d", n);
+        scanf("%d%s%d%d%d", &stu.num, stu.name, &stu.computer, &stu.english, &stu.math);
+        stu.average=(stu.computer+stu.english+stu.math)/3.0;
+        if(i==0)
+            max=stu;
+        else if(stu.average&gt;max.average)
+            max=stu;
+    }
+    printf("num:%d, name:%s, average:%.2f\n", max.num, max,name, max.average);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-1-2">
+                    <h3>结构的概念与定义</h3>
+                    <p class="smallft">
+                        结构，是C语言中一种<strong style="color:red">构造数据类型</strong>，能够将有内存联系的<strong style="color:red">不同类型数据</strong>统一成一个整体，使之相互关联<br />
+                        结构也是<strong style="color:red">变量的集合</strong>，可按照对基本数据类型的操作方法单独使用其变量成员
+                    </p>
+                    <p class="smallft">
+                        结构与数组，都是<strong style="color:red">构造类型</strong>，是多个变量的集体，但数组成员类型相同，结构成员类型不同
+                    </p>
+                </section>
+                <section id="9-1-2-1">
+                    <h3>结构的定义</h3>
+                    <p class="smallft">
+                        结构类型定义的一般形式为<br />
+                        <text style="color:darkblue">struct</text> <text style="color:red">结构名</text><br />
+                        {<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;类型名  结构成员名1;<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;类型名  结构成员名2;<br />
+                        ......<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;类型名  结构成员名n;<br />
+                        };
+                    </p>
+                    <ul>
+                        <li class="smallft">关键字struct和后面的结构名一起组成一个新的<text style="color:red">数据类型名</text></li>
+                        <li class="smallft">结构定义以<text style="color:red">分号</text>结束，C语言中将结构的定义看作是一条语句</li>
+                    </ul>
+                </section>
+                <section id="9-1-2-2">
+                    <h3>结构定义示例</h3>
+                    <pre>
+                        <code class="language-c" data-trim>
+struct point
+{
+    double x;
+    double y;
+};
+                        </code>
+                    </pre>
+                    <ul>
+                        <li class="smallft">如平面点的定义，x和y的类型相同，也可采用数组的形式描述，但采用结构进行描述，更贴近事物本质，更增加程序的可读性，使程序更易于理解</li>
+                        <li class="smallft">结构适合用于描述具有多个属性的实体或对象</li>
+                    </ul>
+                </section>
+                <section id="9-1-3">
+                    <h3>9.1.3 结构的嵌套定义</h3>
+                    <p class="smallft">
+                        在实际生活中，一个较大的实体可能由多个成员构成，而这些成员有可能又是由一些更小的成员构成，如下图中学生信息的构成:
+                    </p>
+                    <img src="../images/cprog/chap08/8-8.png" />
+                    <div class="columnleft">
+                        <pre>
+                            <code class="language-c" data-trim>
+struct address{
+    char city[20];
+    char street[20];
+    int code;
+    int zip;
+};
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="language-c" data-trim>
+struct nest_student{
+    int num;
+    char name[10];
+    struct address addr;
+    int computer, english, math;
+    double average;
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="9-1-4">
+                    <h3>9.1.4 结构变量的定义和初始化</h3>
+                    <div class="columnleft" style="width:33%">
+                        <ul>
+                            <li style="font-size:50%"><text style="color:darkblue">单独定义</text>：先定义一个结构类型，再定义一个具有这种类型的变量</li>
+                        </ul>
+                        <pre style="font-size:50%">
+                            <code class="language-c" data-trim>
+struct student{
+    int num;
+    char name[10];
+    int computer, english, math;
+    double average;
+};
+struct student s1, s2;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <ul>
+                            <li style="font-size:50%"><text style="color:darkblue">混合定义</text>：在定义结构类型的同时定义结构变量<br /></li>
+                        </ul>
+                        <pre style="font-size:50%">
+                            <code class="language-c" data-trim>
+struct student{
+    int num;
+    char name[10];
+    int computer, english, math;
+    double average;
+}s1, s2;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <ul>
+                            <li style="font-size:50%"><text style="color:darkblue">无类型名定义</text>：在宛义结构变量时省略结构名，<text style="color:red">慎用</text><br /></li>
+                        </ul>
+                        <pre style="font-size:50%">
+                            <code class="language-c" data-trim>
+struct{
+    int num;
+    char name[10];
+    int computer, english, math;
+    double average;
+}s1, s2;
+                            </code>
+                        </pre>
+                    </div>
+                    <p class="smallft">
+                        <br />
+                        结构变量初始化:<br />
+                        struct student stu={101, "Zhang", 87, 78, 85};
+                    </p>
+                </section>
+                <section id="9-1-5">
+                    <h3>9.1.5 结构变量的使用</h3>
+                    <p class="smallft">
+                        1. 结构变量成员的引用<br />
+                        在C语言中，使用<text style="color:darkblue">结构成员操作符"."</text>引用结构成员<br />
+                        <text style="color:darkblue">结构变量名<text style="color:red">.</text>结构成员名</text>
+                    </p>
+                    <pre>
+                        <code class="language-c" data-trim>
+stu.num=101;
+strcpy(stu.name, "Wang");
+nest_stu.addr.zip=310053;
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-1-5-1">
+                    <h3>结构变量的使用</h3>
+                    <p class="smallft">
+                        2. 结构变量的整体赋值<br />
+                        <text style="color:darkblue">具有相同类型的结构变更可以直接赋值</text><br />
+                        赋值时，将赋值运算符右侧结构变量的每一个成员的值都赋值给左侧结构变量中相应的成员
+                    </p>
+                    <pre>
+                        <code class="language-c" data-trim>
+struct student s1={101, "Zhang", 78, 87, 85}, s2;
+s2=s1;
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-1-5-2">
+                    <h3>结构变量的使用</h3>
+                    <p class="smallft">
+                        3. 结构变量作为函数参数或返回值<br />
+                        可以在函数间传递结构类型数据<br />
+                        结构变量作为函数参数<br />
+                        定义: double count_average(struct student s)<br />
+                        调用: stu.average=count_average(stu);
+                    </p>
+                    <p class="smallft">
+                        <text style="color:darkblue">优点:</text> 可传递多个数据且参数形式简单<br />
+                        <text style="color:darkblue">缺点:</text> 对成员较多的大型结构，参数传递时所进行的结构数据复制使得效率较低
+                    </p>
+
+                </section>
+            </section>
+            <section>
+                <section id="9-2">
+                    <h2>9.2 学生成绩排序</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例9-2. 学生成绩排序</p>
+                    <p>输入n(n&lt;50)个学生的成绩信息，按照学生的个人平均成绩从高到低输出他们的信息
+                    </p>
+                    <p class="smallft">
+                        定义结构数组 struct student stus[50], temp;
+                    </p>
+                </section>
+                <section id="9-2-1">
+                    <h3>9.2.1 程序解析</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim>
+#include&lt;stdio.h&gt;
+struct student{  /* 定义学生信息结构 */
+    int num;
+    char name[10];
+    int computer, english, math;
+    double average;
+};
+int main()
+{
+    int i, index, j, n;
+    struct student stus[50], temp;  /* 定义结构数组 */
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=0; i&lt;n; i++){
+        printf("Input info of NO. %d\n", i+1);
+        printf("Number Name, computer, english, math:");
+        scanf("%d%s%d%d%d", &stus[i].num, stus[i].name, &stus[i].computer, &stus[i].english, &stus[i].math);
+        stus[i].average=(stus[i].computer+stus[i].english+stus[i].math)/3.0;
+    }
+    /* 给结构数组排序，采用选择排序法 */
+    for(i=0; i&lt;n-1; i++){
+        index=1;
+        for(j=i+1; j&lt;n; j++){
+            if(stus[j].average&lt;stus[index].average)
+                index=j;
+        }
+        temp=stus[index];
+        stus[index]=stus[i];
+        stus[i]=temp;
+    }
+    /* 输出排序后的信息 */
+    printf("Num\tname\taverage\n");
+    for(i=0; i&lt;n; i++)
+        printf("%d\t%s\t%.2f\n", stus[i].num, stus[i].name, stus[i].average);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-2-2">
+                    <h3>结构数组操作</h3>
+                    <p class="smallft">
+                        一个结构变量只能表示一个实体信息，如果有多个相同类型的实体，需要构建结构数组表示<Br />
+                        结构数组是结构与数组的结合，与变通数组的不同之处在于，<text style="color:red">每个数组元素都是一个结构类型的变量</text><br />
+                        结构数组的定义方法与结构变量类似: <br />
+                        struct student stus[50];<br />
+                        表示stus是一个结构数组，有50个数组元素，每个元素都是一个结构类型struct student的变量
+                    </p>
+                </section>
+                <section id="9-2-2-1">
+                    <h3>结构数组的初始化和引用</h3>
+                    <p class="smallft">
+                        结构数组的初始化与数组的初始化没有本质区别
+                    </p>
+                    <pre>
+                        <code class="language-c" data-trim>
+struct student stus[50]={
+    {101, "Zhang", 78, 87, 85},
+    {201, "Wang", 83, 92, 79}
+};
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        结构数组元素的成员引用，格式为:<text style="color:red">结构数组名[下标].结构成员名</text><br />
+                        使用方法与同类型变量完全相同<br />
+                        stus[i].num=101;<br />
+                        strcpy(stus[i].name, "Feng");<br />
+                        stus[i]=stus[k];
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="9-3">
+                    <h2>9.3 修改学生成绩</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例9-3. 修改学生成绩</p>
+                    <p>输入n(n&lt;50)个学生的成绩信息，再输入一个学生的学号、课程以及成绩，在自定义函数中修改该学生指定课程的成绩
+                    </p>
+                    <p class="smallft">
+                        自定义函数: pos=update_score(stus, n, num, course, score);
+                    </p>
+                </section>
+                <section id="9-3-1">
+                    <h3>9.3.1 程序解析(1)</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+struct student{
+    int num;
+    char name[20];
+    int computer, english, math;
+    double average;
+};
+
+int update_score(struct student *p, int n, int num, int course, int score)
+{
+    int i, pos;
+    for(i=0; i&lt;n; i++, p++)
+        if(p->num==num)
+            break;
+    if(i&lt;n){
+        switch(course){
+            case 1:
+            p->computer=score; break;
+            case 2:
+            p->english=score; break;
+            case 3:
+            p->math=score; break;
+        }
+        pos=i;
+    }else{
+        pos=-1;
+    }
+
+    return pos;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-3-1-1">
+                    <h3>9.3.1 程序解析(2)</h3>
+                    <pre style="font-size:25%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+    int i, pos, n, num, course, score;
+    struct student stus[50];   /* 定义结构数组 */
+
+    /* 输入n个学生信息 */
+    printf("Input n: ");
+    scanf("%d", &n);
+    for(i = 0; i < n; i++){
+        printf("Input the info of No.%d:\n", i+1);
+        printf("number:");
+        scanf("%d", &stus[i].num);
+        printf("name:");
+        scanf("%s", stus[i].name);
+        printf("computer score:");
+        scanf("%d", &stus[i].computer);
+        printf("math score:");
+        scanf("%d", &stus[i].math);
+        printf("english score:");
+        scanf("%d", &stus[i].english);
+    }
+
+    /* 输入待修改学生信息 */
+    printf("Input the number of updated student: ");
+    scanf("%d", &num);
+    printf("Choice the course: 1.math 2.english 3.computer: ");
+    scanf("%d", &course);
+    printf("Input the new score: ");
+    scanf("%d", &score);
+
+    /*调用函数，修改学生成绩*/
+    pos = update_score(stus, n, num, course, score);
+
+    /*输出修改后的学生信息*/
+    if(pos == -1){
+        printf("Not found!\n");
+    }else{
+        printf("After update:\n");
+        printf("num\t computer\t english\t math\n");
+        printf("%d\t %d\t %d\t %d\n", students[pos].num, students[pos].computer, students[pos].english, students[pos].math);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="9-3-2">
+                    <h3>结构指针的概念</h3>
+                    <p class="smallft">
+                        指针可以指向任何一种变量，而结构变量也是C语言中的一种合法变量，因此，指针也可以指向结构变量，这就是<text style="color:red">结构指针</text>，即<text style="color:red">指向结构类型变量的指针</text>
+                    </p>
+                    <pre>
+                        <code class="language-c" data-trim>
+struct student stu={101, "Zhang", 78, 87, 84};
+struct student *p;
+p=&stu;
+(*p).num=101;  /* 用*p访问结构成员 */
+p->num=101;  /* 用指向运算符"->"访问指针所指向的结构成员
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        当p指向结构变量Stu时，以下三条语句等效<br />
+                        <text style="color:red">stu.num=101;</text><br />
+                        <text style="color:red">(*p).num=101;</text><br />
+                        <text style="color:red">p->num=101;</text><br />
+                    </p>
+                </section>
+                <section id="9-3-3">
+                    <h3>结构指针作为函数参数</h3>
+                    <p class="smallft" style="font-size:80%">
+                        将结构指针作为函数的参数，可以完成比基本类型指针更为复杂的操作<br />
+                        如自定义函数<br />
+                        int update_score(struct student *p, int n, int num, int course, int score);<br />
+                        在调用时<br />
+                        pos=update_score(stus, n, num, course, score);<br />
+                        stus就是struct student类型的数组<br />
+                        与结构变量作为函数参数相比，用结构指针作为函数参数的效率更高，而在此例中，也只能采用指针作为函数参数才能通过间接访问实现程序功能
+                    </p>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
