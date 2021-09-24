@@ -1,0 +1,1042 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第12章文件">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第十二章 文件</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第12章 文件</h2>
+                <p>
+                    <a href="#/12-1">12.1 素数文件</a><br />
+                    <a href="#/12-2">12.2 用户信息加密和校验</a><br />
+                    <a href="#/12-3">12.3 文件综合应用：资金帐户管理</a><br />
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>什么是文件?C文件是如何存储的?</li>
+                    <li>什么是文件缓冲系统?工作原理如何?</li>
+                    <li>什么是文本文件和二进制文件?</li>
+                    <li>怎样打开、关闭文件?</li>
+                    <li>怎样编写文件读写程序?</li>
+                    <li>怎样编写程序，实现简单的数据处理?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="12-1">
+                    <h2>12.1 素数文件</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例12-1. 系数文件</p>
+                    <p>从2开始依次找出500个素数，将这些素数存入文本文件prime.txt中 Found</p>
+                </section>
+                <section id="12-1-1">
+                    <h3>12.1.1 程序解析</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;math.h&gt;
+int prime(int n)  /* 见例5-5 */
+{
+    ......
+}
+int main()
+{
+    int n=2, count=0;
+    FILE *fp;  /* 定义文件指针 */
+
+    if((fp=fopen("prime.txt", "w"))==NULL){  /* 打开文件 */
+        printf("File open error!\n");
+        exit(0);
+    }
+    while(count&lt;500){
+        if(prime(n)!=0){  /* 写入文件 */
+            count++;
+            fprintf(fp, "%d ", n);
+        }
+        n++;
+    }
+    if(fclose(fp)){  /* 关闭文件 */
+        printf("Can not close file\n");
+        exit(0);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-1-2">
+                    <h3>12.1.2 文件的概念</h3>
+                    <p class="smallft">
+                        操作系统中的<text style="color:darkred">文件</text>是指驻留在外部介质(如磁盘等)中的一个有序数据集<br />
+                        文件类型主要包含<br />
+                        1. 程序文件，如源文件、目标程序、可执行程序等<br />
+                        2. 数据文件，用于输入输出，如文本文件、图像文件、声音文件等<br />
+                        文件所具有的特点包含以下三点：<br />
+                        1. 数据可永久保存<Br />
+                        2. 数据长度不定<br />
+                        3. 数据按顺序存取
+                    </p>
+                </section>
+                <section id="12-1-3">
+                    <h3>12.1.3 文本文件和二进制文件</h3>
+                    <p class="smallft">
+                        C语言中的文件是由一个个字节数据组成的<text style="color:darkred">数据流</text><br />
+                        具有两种基本形式<br />
+                        即<Text style="color:darkred">ASCII码文本文件--字符流</Text>和<text style="color:darkred">二进制文件--二进制流</text>，其中二进制文件直接将内容数据以二进制形式保存<br />
+                        例如，整数1234以不同形式保存时<br />
+                        以文本文件保存时，保存为<text style="color:darkblue">49 50 51 52</text> 保存为4个字符<br />
+                        以二进制文件保存时，保存为<text style="color:darkblue">04D2</text> 为整数1234对应的二进制形式
+                    </p>
+                </section>
+                <section id="12-1-4">
+                    <h3>12.1.4 缓冲文件系统</h3>
+                    <img src="../images/cprog/chap12/12-1.png" />
+                    <p class="smallft">
+                        CPU和内存的速度远高于外部存储的速度，将数据直接从内存写入外部存储效率很低
+                    </p>
+                </section>
+                <section id="12-1-4-1">
+                    <h3>缓冲文件系统执行过程</h3>
+                    <p class="smallft">
+                        向磁盘输出数据时，数据先写入缓冲区，等缓冲区装满后，将缓冲区写入磁盘<br />
+                        从磁盘读入数据时，先一次性从磁盘文件将一批数据读入到缓冲区，再从缓冲区逐个读入数据到变量
+                    </p>
+                </section>
+                <section id="12-1-4-2">
+                    <h3>缓冲文件与文件类型指针</h3>
+                    <p class="smallft">
+                        用文件指针指示文件缓冲区中具体读写的位置<br />
+                        <text style="color:red">FILE *fp;</text><br />
+                        同时使用多个文件时，每个文件都有缓冲区，用不同的文件指针分别指示
+                    </p>
+                    <img src="../images/cprog/chap12/12-2.png" />
+                </section>
+                <section id="12-1-5">
+                    <h3>12.1.5 文件结构与文件类型指针</h3>
+                    <p class="smallft">
+                        FILE为结构类型，用typedef定义在stdio.h文件中
+                    </p>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+typedef struct{
+    short level;  /* 缓冲区使用量  */
+    unsigned flags;  /* 文件状态标志 */
+    char fd;  /* 文件描述符 */
+    short bsize;  /* 缓冲区大小 */
+    unsigned char *buffer;  /* 文件缓冲区的首地址 */
+    unsigned char *curp;  /* 指向文件缓冲区的工作指针 */
+    unsigned char hold;  /* 其他信息 */
+    unsigned istemp;
+    short token;
+}FILE;
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-1-5-1">
+                    <h3>自定义类型typedef</h3>
+                    <p class="smallft">
+                        typedef用于<br />
+                        (1). 将C语言中已有的类型(包括已定义过的自定义类型)重新命名<br />
+                        (2). 新的名称可以代替已有数据类型<br />
+                        (3). 常用于简化对复杂的数据类型定义的描述<br />
+
+                        <text style="color:darkred">typedef</text> <已有类型名> <新类型名>;<br />
+                        <text style="color:darkred">typedef</text> int INTEGER<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;int i, j; ==> INTEGER i, j;<br />
+                        <text style="color:darkred">typedef</text> int* POINT<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;int* pt; ==> POINT pt;<br />
+                    </p>
+                </section>
+                <section id="12-1-5-2">
+                    <h3>typedef的使用方法</h3>
+                    <p class="smallft">
+                        定义变量 <text style="color:darkred">int i;</text> <br />
+                        用typedef将变量名命名为新类型名 <text style="color:darkred">typedef int INTEGER;</text><br />
+                        用新类型名定义变量 <text style="color:darkred">INTEGER i;</text><br />
+                        如<br />
+                        typedef int NUM[10];<br />
+                        NUM a <==> int a[10];
+                    </p>
+                </section>
+                <section id="12-1-5-3">
+                    <h3>文件类型指针</h3>
+                    <p class="smallft">
+                        <text style="color:red">FILE *fp;</text><br />
+                        文件类型指针指向文件缓冲区，通过移动指针实现对文件的操作
+                    </p>
+                </section>
+                <section id="12-1-6">
+                    <h3>12.1.6 文件控制块FCB</h3>
+                    <img src="../images/cprog/chap12/12-3.png" style="width:70%"/>
+                </section>
+                <section id="12-1-6-1">
+                    <h3>文件控制块描述</h3>
+                    <ul>
+                        <li class="smallft">文件控制块(File Control Block, FCB)，操作系统中对文件进行操作控制都是通过FCB实现，实际处理的是FCB列表</li>
+                        <li class="smallft">一个文件对应一个FCB</li>
+                        <li class="smallft">文件缓冲区由程序中fopen语句动态创建</li>
+                        <li class="smallft">打开文件时，FCB的内容信息被复制到文件缓冲区保存，用文件指针指向文件缓冲区就可实现对文件数据的操作</li>
+                    </ul>
+                </section>
+                <section id="12-1-7">
+                    <h3>12.1.7 文件处理步骤</h3>
+                    <p class="smallft">
+                        文件处理有四个步骤:
+                    </p>
+                    <ol>
+                        <li class="smallft">定义文件指针</li>
+                        <li class="smallft">打开文件，文件指针指向磁盘文件缓冲区</li>
+                        <li class="smallft">文件处理，即文件读写操作</li>
+                        <li class="smallft">关闭文件</li>
+                    </ol>
+                </section>
+            </section>
+            <section>
+                <section id="12-2">
+                    <h2>12.2 用户信息加密和校验</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例12-2. 用户信息加密和校验</p>
+                    <p style="text-align:left; font-size: 80%;">为了保障系统安全，通常采取用户帐号和密码登录系统。系统用户信息存放在一个文件中，系统帐号名和密码由若干字母与数字字符构成，因安全需要文件中的密码不能是明文，必须要经过加密处理。请编程实现: 输入5个用户信息(包含帐号名和密码)并写入文件f12-2.dat。要求文件中每个用户信息占一行，帐号名和加密过的密码之间用一个空格分隔。密码加密算法: 对每个字符ASCII码的低四位求反，高四位保持不变（即将其与15进行异或运算）</p>
+                </section>
+                <section id="12-2-1">
+                    <h3>12.2.1 程序解析</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+#include&lt;stdlib.h&gt;
+struct sysuser{  /* 定义系统用户账号信息结构 */
+    char username[20];
+    char password[8];
+};
+void encrypt(char *pwd)
+{
+    int i;
+    /* 与15异或(00001111)，实现低四位取反，高四位不变 */
+    for(i=0; i&lt;strlen(pwd); i++)
+        pwd[i]=pwd[i]^15;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-1-1">
+                    <h3>程序解析(2)</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+    FILE *fp;  /* 定义文件指针 */
+    int i;
+    struct sysuser su;
+    /* 打开文件，进行写入操作 */
+    if((fp=fopen("f12-2.txt", "w"))==NULL){
+        printf("File open error!\n");
+        exit(0);
+    }
+    /* 将5位用户账号信息写入文件 */
+    for(i=1; i<=5; i++){
+        printf("Enter %dth sysuser(name password):", i);
+        scanf("%s%s", su.username, su.password);  /* 输入账号和密码 */
+        encrypt(su.password);  /* 加密处理 */
+        fprintf(fp, "%s %s\n", su.username, su.password);  /* 写入文件 */
+    }
+    if(fclose(fp)){  /* 关闭文件 */
+        printf("Can not close the file\n");
+        exit(0);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-2">
+                    <h3>12.2.2 打开文件和关闭文件</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+if((fp=fopen("f12-2.txt","w")) == NULL){
+    printf("File open error!\n");
+    exit(0);
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-size:60%">
+                        <text style="color:darkblue">fopen("文件名", "文件打开方式");</text><br />
+                        将文件指针与文件实体对应，程序对文件指针进行操作，指针fp代表磁盘文件<br />
+                        执行成功，fopen返回包含文件缓冲区等信息在内的FILE型地址，赋给文件指针fp<br />
+                        如果执行不成功，则返回一个NULL(空值)<br />
+                        如果不成功，执行exit(0)关闭所有打开的文件，终止程序的执行<br />
+                        其中，参数0表示程序正常结束，非0参数通常表示不正常的程序结束
+                    </p>
+                </section>
+                <section id="12-2-2-1">
+                    <h3>文件打开方式</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">fp=fopen("f12-2.txt", "w");</text>
+                    </p>
+                    <table style="align-content:center;font-size: 60%">
+                        <caption>
+                            文件打开方式参数表
+                        </caption>
+                        <tr>
+                            <th colspan="2">文本文件(ASCII)</th>
+                            <th colspan="2">二进制文件(Binary)</th>
+                        </tr>
+                        <tr>
+                            <th>使用方式</th>
+                            <th>含义</th>
+                            <th>使用方式</th>
+                            <th>含义</th>
+                        </tr>
+                        <tr>
+                            <td>"r"</td>
+                            <td>打开只读文件</td>
+                            <td>"rb"</td>
+                            <td>打开只读文件</td>
+                        </tr>
+                        <tr>
+                            <td>"w"</td>
+                            <td>建立只写新文件</td>
+                            <td>"wb"</td>
+                            <td>建立只写新文件</td>
+                        </tr>
+                        <tr>
+                            <td>"a"</td>
+                            <td>打开添加写文件</td>
+                            <td>"ab"</td>
+                            <td>打开添加写文件</td>
+                        </tr>
+                        <tr>
+                            <td>"r+"</td>
+                            <td>打开读/写文件</td>
+                            <td>"rb+"</td>
+                            <td>打开读/写文件</td>
+                        </tr>
+                        <tr>
+                            <td>"w+"</td>
+                            <td>建立读/写新文件</td>
+                            <td>"wb+"</td>
+                            <td>建立读/写新文件</td>
+                        </tr>
+                        <tr>
+                            <td>"a+"</td>
+                            <td>打开读/写文件</td>
+                            <td>"ab+"</td>
+                            <td>打开读/写文件</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="12-2-2-2">
+                    <h3>文件读写与打开方式</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+if 读文件
+    指定的文件必须存在，否则出错;
+if 写文件(指定的文件可以存在，也可以不存在)
+    if 以"w"方式写
+        if 该文件已经存在
+            原文件将被删除并重新建立;
+        else
+            按指定的名字新建一个文件;
+    else if 以"a"方式写
+        if 该文件已经存在
+            写入的数据将被添加到指定文件原有数据的后面，不会删去原来的内容;
+        else
+            按指定的名字新建一个文件(与"w"相同);
+if 文件同时读和写
+    使用"r+", "w+"或"a+"打开文件
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-2-3">
+                    <h3>关闭文件</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+if(fclose(fp)){
+    printf("Can not close the file!\n");
+    exit(0);
+}
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        <p class="smallft" style="font-size:80%">
+                            <text style="color:darkblue">fclose(文件指针);</text><br />
+                            将缓冲区中的数据写入磁盘扇区，确保写文件的正常完成<br />
+                            释放文件缓冲区单元和FILE结构体，使文件指针与具体文件脱钩<br />
+                            函数fclose()的返回值为0，表示正常关闭文件，非0值表示无法正常关闭文件
+                        </p>
+                    </p>
+                </section>
+                <section id="12-2-3">
+                    <h3>12.2.3 文件读写</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例12-3. 复制用户文件</p>
+                    <p style="text-align:left; font-size: 80%;">将例12-2的用户信息文件f12-2.txt文件备份一份，取名为文件f12-3.txt，说明，运算程序前请将文件f12-2.txt与源程序放在同一目录下</p>
+                </section>
+                <section id="12-2-3-1">
+                    <h3>文件读写源程序</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+int main()
+{
+    FILE *fp1, *fp2;
+    char ch;
+    /* 打开文件， 读出数据 */
+    if((fp1=fopen("f12-2.txt", "r"))==NULL){
+        printf("File open error!\n");
+        exit(0);
+    }
+    if((fp2=fopen("f12-3.txt", "w"))==NULL){
+        printf("File open error!\n");
+        exit(0);
+    }
+    while(!feof(fp1)){  /* 从fp1所指的文件中按字符顺序依次读取 */
+        ch=fgetc(fp1);
+        if(ch!=EOF)  /* 将字符ch写入fp2所指的文件 */
+            fputc(ch, fp2);
+    }
+    if(fclose(fp1)){  /* 关闭文件 */
+        printf("Can not close the file!\n");
+        exit(0);
+    }
+    if(fclose(fp2)){  /* 关闭文件 */
+        printf("Can not close the file!\n");
+        exit(0);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-3-2">
+                    <h3>打开多个文件</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+if((fp1=fopen("f12-2.txt", "r"))==NULL){
+    printf("File open error!\n");
+    exit(0);
+}
+if((fp2=fopen("f12-3.txt", "w"))==NULL){
+    printf("File open error!\n");
+    exit(0);
+}
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        C语言中允许同时打开多个文件<br />
+                        不同的文件对应不同的文件指针<br />
+                        但不允许同一个文件在关闭前再次打开
+                    </p>
+                </section>
+                <section id="12-2-3-3">
+                    <h3>文件读写函数</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>函数类型</th>
+                            <th>函数名</th>
+                        </tr>
+                        <tr>
+                            <td>字符读写函数</td>
+                            <td>fgetc()/fputc()</td>
+                        </tr>
+                        <tr>
+                            <td>字符串读写函数</td>
+                            <td>fputs()/fgets()</td>
+                        </tr>
+                        <tr>
+                            <td>格式化读写函数</td>
+                            <td>fscanf()/fprintf()</td>
+                        </tr>
+                        <tr>
+                            <td>二进制读写函数</td>
+                            <td>fread()/fwrite()</td>
+                        </tr>
+                        <tr>
+                            <td>检测文件结尾函数</td>
+                            <td>feof()</td>
+                        </tr>
+                        <tr>
+                            <td>检测文件读写出错函数</td>
+                            <td>ferror()</td>
+                        </tr>
+                        <tr>
+                            <td>清除末尾标志和出错标志函数</td>
+                            <td>clearerr()</td>
+                        </tr>
+                        <tr>
+                            <td>文件定位函数</td>
+                            <td>fseek(), rewind(), ftell()</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="12-2-3-4">
+                    <h3>字符读写函数fgetc和fputc</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+while(!eof(fp1)){
+    ch=fgetc(fp1);
+    if(ch!=EOF) fputc(ch, fp2);
+}
+                        </code>
+                    </pre>
+                    <div class="columnleft">
+                        <p class="smallft" style="font-size:80%">
+                            函数fgetc()<br />
+                            <text style="color:darkred">ch=fgetc(fp);</text><br />
+                            从fp所指示的磁盘文件上读入一个字符到ch<br />
+                            <text style="color:red">要区分键盘字符输入函数getchar()</text>
+                        </p>
+                    </div>
+                    <div class="columnleft">
+                        <p class="smallft" style="font-size:80%">
+                            函数fputc()<br />
+                            <text style="color:darkred";>fputc(ch, fp);</text><br />
+                            将一个字符ch写到fp所指示的磁盘文件上<br />
+                            返回值为-1(EOF)，表示写文件失败; 若返回ch表示写文件成功
+                        </p>
+                    </div>
+                </section>
+                <section id="12-2-3-5">
+                    <h3>字符串读写函数fgets和fputs</h3>
+                    <p class="smallf" style="font-size:80%">
+                        函数fputs()<br />
+                        <text style="color:darkred">fputs(s, fp);</text><br />
+                        用来向指定的文本文件写入一个字符串<br />
+                        s为要写入的字符串，结束符'\0'不写入文件<br />
+                        函数返回值，若执行成功，返回所写的最后一个字符，否则返回EOF
+                    </p>
+                </section>
+                <section id="12-2-3-6">
+                    <h3>字符串读写函数fgets和fputs</h3>
+                    <p class="smallf" style="font-size:60%">
+                        函数fgets()<br />
+                        <text style="color:darkred">fgets(s, n, fp);</text><br />
+                        从文本文件中读取字符串<br />
+                        s可以是字符数组名或字符指针，n为指定读入的字符个数，fp为文件指针<br />
+                        当函数被调用时，最多读取n-1个字符，并将读入的字符串存入s所指向内存地址开始的n-1个连续的内存单元中<br />
+                        当函数读取的字符达到指定的个数，或接收到换行符，或接收到文件结束标志EOF时，将在读取的字符后面自动添加一个'\0'字符；若有换行符，则将换行符保留(换行符在'\0'之前)；若有EOF，则不保留<br />
+                        若函数执行成功，返回读取的字符串<br />
+                        若函数执行失败，则返回空指针，此时，s的内容不确定
+                    </p>
+                </section>
+                <section id="12-2-3-7">
+                    <h3>文件读写示例</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例12-4. 用户信息校验</p>
+                    <p style="text-align:left; font-size: 80%;">例12-2的f12-2.txt文件保存着系统用户信息，编写一个函数checkUserValid()用于登录系统时校验用户的合法性<br />
+                    在程序运行时输入用户名和密码，然后在文件中查找该用户信息，如果用户名和密码在文件中找到，则表示用户合法，返回1，否则返回0<br />
+                    程序运行时，输入一个用户名和密码，调用checkUserValid()函数，如果返回1，则提示"Valid User!"，否则输出"Invalid User!"</p>
+                </section>
+                <section id="12-2-3-8">
+                    <h3>用户信息校验源程序(1)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;string.h&gt;
+struct sysuser{
+    char username[20];
+    char password[8];
+};
+int checkUserValid(struct sysuser *psu);
+
+void encrypt(char *pwd)
+{
+    int i;
+    /* 与15异或(00001111)，实现低四位取反，高四位不变 */
+    for(i=0; i&lt;strlen(pwd); i++)
+        pwd[i]=pwd[i]^15;
+}
+int main()
+{
+    struct sysuser su;
+    printf("Enter username: ");
+    scanf("%s", su.username);
+    printf("Enter password: ");
+    scanf("%s", su.password);
+    if(checkUserValid(&su)==1)  /* 调用函数进行校验 */
+        printf("Valid user!\n");
+    else
+        printf("Invalide user!\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-3-9">
+                    <h3>用户信息校验源程序(2)</h3>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+/* 校验用户信息的合法性，成功返回1，否则返回0 */
+int checkUserValid(struct sysuser *psu)
+{
+    FILE *fp;
+    char usr[30], usr1[30], pwd[10];
+    int check=0;  /* 检查结果变量，初始化为0 */
+    /* 连接生成待校验字符串 */
+    strcpy(usr,psu->username);  /* 复制psu->username到usr1 */
+    strcpy(pwd,psu->password);  /* 复制psu->password到pwd */
+    encrypt(pwd);  /* 调用例12-2的encrypt对密码进行加密 */
+    /* 连接usr、空格、pwd和\n构成新字符串usr，用于在文件中逐行检查 */
+    strcat(usr, " "); strcat(usr,pwd); strcat(usr,"\n");
+    /* 打开文件"f12-2.txt"读入 */
+    if((fp=fopen("f12-2.txt","r"))==NULL){
+        printf("File open error!\n");
+        exit(0);
+    }
+    /* 从文件读入用户信息数据，遍历判断是否存在 */
+    while(!feof(fp)){
+        fgets(usr1,30,fp);  /* 读入一行用户信息作为一个字符串到usr1 */
+        if(strcmp(usr,usr1)==0){  /* 比较判断usr与usr1是否相同 */
+            check=1;
+            break;
+        }
+    }
+    if(fclose(fp)){
+        printf("Can not close the file!\n"); exit(0);
+    }  /* 关闭文件 */
+    return check;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-3-10">
+                    <h3>格式化文件读写fscanf和fprintf</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">fscanf(文件指针, 格式字符串, 输入表);<br />
+                        fprintf(文件指针, 格式字符串, 输出表);</text><br />
+                        实现指定格式的输出输出函数
+                    </p>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+FILE *fp;
+int n;
+float x;
+fp=fopen("a.txt", "r");
+fscanf(fp, "%d%f", &n, &x);  /* 表示从文件a.txt分别读入整型数到变量a，浮点数到变量x */
+fp=fopen("b.txt", "w");
+fprintf(fp, "%d%f", n, x);  /* 表示将变量n和变量x的值写入文件b.txt */
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-2-3-11">
+                    <h3>数据块读写函数fread()和fwrite()</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">fread(buffer, size, count, fp);</text><br />
+                        从二进制文件中读入一个数据块到变量<br />
+                        <text style="color:darkred">fwrite(bufffer, size, count, fp);</text><br />
+                        向二进制文件中写入一个数据块<br />
+                        其中，buffer为指针，表示存放数据的首地址<br />
+                        size表示数据块的字节数，count表示要读写的数据块块数，fp为文件指针
+                    </p>
+                </section>
+                <section id="12-2-4">
+                    <h3>12.2.4 其他相关函数</h3>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">feof(fp);</text><br />
+                        判断fp指针是否已经到文件末尾，若已经到文件结束位置，返回1，否则返回0
+                    </p>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">rewind(FILE *fp)</text><br />
+                        定位文件指针，使文件指针指向读写文件的首地址，即打开文件时文件指针所指向的位置
+                    </p>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">fseek(fp, offset, from);</text><br />
+                        将文件指针fp从from位置移动offset，其中，offset为偏移量，类型为long，from表示起始位置，文件首部、当前位置、文件尾部分别对应0, 1, 2，或者常量SEEK_SET, SEEK_CUR, SEEK_END<br />
+                        如fseek(fp, 20L, 0); /* 将文件位置指针移动到离文件首20字节处 */<br />
+                        fseek(fp, -20L, SEEK_END); /* 将文件位置指针移动到离文件尾部前20字节处 */
+                    </p>
+                </section>
+                <section id="12-2-4-1">
+                    <h3>其他相关函数(2)</h3>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">ftell(fp);</text><br />
+                        获取当前文件指针的位置，即相对于文件开头的位移量(字节数)，若函数出错，返回-1L
+                    </p>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">ferror(fp)</text><br />
+                        用来检查文件在用各种输入输出函数进行读写时是否出错，若返回值为0，表示未出错，否则表示有错，其中文件指针必须为已经定义过的
+                    </p>
+                    <p style="text-align:left; font-size:60%">
+                        <text style="color:darkred">clearerr(fp)</text><br />
+                        用来清除出错标志和文件结束标志，使其值为0
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="12-3">
+                    <h2>文件综合应用:个人资金账户管理</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例12-6. 个人资金账户管理</p>
+                    <p style="text-align:left; font-size: 80%;">资金账户信息统一放在随机文件中，该随机文件的数据项包括：记录ID，发生日期，发生事件，发生金额(正表示收，负表示支出)和余额。每发生一笔收支，文件要增加一条记录，并计算一次余额<br />
+                    程序要实现三个功能:<br />
+                    (1). 创建资金账户文件并添加收入或支出记录<br />
+                    (2). 输出所有记录，显示资金账户的明细收支流水信息<br />
+                    (3). 查询最后一条记录，获账户余额</p>
+                </section>
+                <section id="12-3-1">
+                    <h3>12.3.1 顺序文件和随机文件</h3>
+                    <p class="smallft" style="font-size:80%">
+                    按照C程序对文件访问的特点来分，文件可分为顺序访问文件和随机访问文件，简称为顺序文件和随机文件。前面介绍的所有例子都进行的是顺序访问，通过使用fprintf()或fputs()函数创建的数据记录长度并不是完全一致的，这种记录长度不确定的文件访问称为顺序访问。而随机访问文件要求文件中单个记录的长度固定，可直接访问，这样速度快，并且无需通过其他记录查找特定记录。因此随机文件适合银行系统、航空售票系统、销售点系统和其他需要快速访问特定数据的事务处理系统。
+                    </p>
+                </section>
+                <section id="12-3-2">
+                    <h3>12.3.2 个人资金账户管理</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include "stdio.h"
+#include "stdlib.h"
+#include "process.h"
+long size;					/* 用来保存sizeof(struct LogData) */
+struct LogData{				/* 记录的结构 */
+    long logid;				/* 记录ID */
+    char logdate[11];		/* 记录发生日期 */
+    char lognote[15];		/* 记录事件说明 */
+    double charge;			/* 发生费用：正表示收入，负表示支出 */
+    double balance;			/* 余额 */
+};
+
+int inputchoice()			/* 选择操作参数 */
+{
+   	int mychoice;
+
+   	printf("\nEnter your choice:\n");
+   	printf("1 - Add a new cash LOG.\n2 - List All Cash LOG.\n");
+   	printf("3 - Query Last Cash LOG.\n0 - End program.\n");
+   	scanf("%d", &mychoice);
+
+   	return mychoice;
+}
+
+long getLogcount(FILE *cfptr) 		/* 获取文件记录总数 */
+{
+	long begin, end, logcount;
+
+	fseek(cfptr, 0L, SEEK_SET);
+	begin = ftell(cfptr);
+	fseek(cfptr, 0L, SEEK_END);
+	end = ftell(cfptr);
+	logcount = (end-begin)/size;
+
+	return logcount;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-3-2-1">
+                    <h3>12.3.2 个人资金账户管理(2)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+void ListAllLog(FILE *cfptr) 		/* 列出所有收支流水记录 */
+{
+   	struct LogData log;
+
+   	fseek(cfptr,0L,SEEK_SET);			/* 定位指针到文件开始位置 */
+   	fread(&log,size,1,cfptr);
+    printf("logid  logdate lognote charge balance\n");
+   	while(!feof(cfptr)){
+		printf("%6ld %-11s %-15s %10.2lf %10.2lf\n", log.logid, log.logdate, log.lognote, log.charge, log.balance);
+    	fread(&log, size, 1, cfptr);
+  	}
+}
+
+void QueryLastLog(FILE *cfptr) 		/* 查询显示最后一条记录 */
+{
+	struct LogData log;
+	long logcount;
+
+	logcount = getLogcount(cfptr);
+	if(logcount > 0){				/* 表示有记录存在 */
+	    fseek(cfptr, size*(logcount-1), SEEK_SET);	/* 定位最后记录 */
+	    fread(&log, size, 1, cfptr);				/* 读取最后记录 */
+	    printf("The last log is:\n");
+	    printf("logid:%-6ld\nlogdate:%-11s\nlognote:%-15s\n", log.logid, log.logdate, log.lognote);
+		printf("charge:%-10.2lf\nbalance:%-10.2lf\n", log.charge, log.balance);   /* 显示最后记录内容 */
+	}else{
+		printf("no logs in file!\n");
+	}
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-3-2-2">
+                    <h3>12.3.2 个人资金账户管理(3)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+void AddNewLog(FILE *cfptr) 	/* 添加新记录 */
+{
+	struct LogData log, lastlog;
+    long logcount;
+
+	printf("Input logdate(format:2006-01-01):");
+	scanf("%s", log.logdate);
+	printf("Input lognote:");
+	scanf("%s", log.lognote);
+	printf("Input Charge:Income+ and expend-:");
+	scanf("%lf", &log.charge);
+	logcount = getLogcount(cfptr);	/* 获取记录数 */
+
+	if(logcount>0){
+		fseek(cfptr,size*(logcount-1),SEEK_SET);
+		fread(&lastlog, size, 1, cfptr);  /* 读入最后记录 */
+		log.logid = lastlog.logid + 1;	 /* 记录号按顺序是上次的号+1 */
+		log.balance = log.charge + lastlog.balance;
+	}else{								/* 如果文件是初始，记录数为0 */
+		log.logid = 1;
+		log.balance = log.charge;
+	}
+	rewind(cfptr);
+	printf("logid= %ld\n", log.logid);
+	fwrite(&log, sizeof(struct LogData), 1, cfptr);	 /* 写入记录 */
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="12-3-2-3">
+                    <h3>12.3.2 个人资金账户管理(4)</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+	FILE *fp;
+	int choice;
+
+	if((fp = fopen("cashbox.txt", "ab+")) == NULL){
+      	printf("can not open file cashbox.txt!\n");
+      	exit(0);
+ 	}
+	size = sizeof(struct LogData);
+	while((choice = inputchoice()) != 0){
+      	switch(choice){
+	      	case 1:                 /*添加新记录*/
+		     	AddNewLog(fp);
+				 break;
+	      	case 2:                 /*列出所有收支流水记录*/
+		    	ListAllLog(fp);
+				break;
+		  	case 3:                 /*查询最后的余额*/
+		     	QueryLastLog(fp);
+				break;
+		  	default:
+		     	printf("Input Error.");break;
+      	}
+   	}
+    if(fclose(fp) != 0){
+        printf( "Can not close the file!\n" );
+        exit(0);
+    }
+   	return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
