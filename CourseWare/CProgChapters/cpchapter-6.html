@@ -1,0 +1,1483 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第6章数据类型和表达式">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第六章 数据类型和表达式</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第6章 数据类型和表达式</h2>
+                <p>
+                    <a href="#/6-1">6.1 数据的存储和基本数据类型</a><br />
+                    <a href="#/6-2">6.2 数据的输入和输出</a><br />
+                    <a href="#/6-3">6.3 类型转换</a><br />
+                    <a href="#/6-4">6.4 表达式</a>
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>C语言的基本数据类型有哪些?</li>
+                    <li>各种基本数据类型的常量有哪些表现形式?</li>
+                    <li>C语言有哪些表达式？各种表达式的求解规则是什么</li>
+                </ul>
+            </section>
+            <section id="intro">
+                <h2>数据类型和表达式</h2>
+                <img src="../images/cprog/chap06/6-1.png" />
+                <p class="smallft">
+                    运算，即指的对数据的操作，运算符+数据&rarr;表达式
+                </p>
+            </section>
+            <section>
+                <section id="6-1">
+                    <h2>6.1 数据的存储和基本数据类型</h2>
+                </section>
+                <section id="6-1-1-1">
+                    <h3>6.1.1 数据的存储--整型数据</h3>
+                    <p class="smallft">
+                        假设在机器上，整数用内存中<text style="color:red">2</text>个字节存储，即16个二进制位<br />
+                        最高位为符号位，0表示正数，1表示负数<br />
+                        则69和-69分别表示为<br />
+                        <text style="color:red">0</text>000 0000 0100 0101<br />
+                        <text style="color:red">1</text>000 0000 0100 0101
+                        </br?>
+                    </p>
+                </section>
+                <section id="6-1-1-2">
+                    <h3>数值的表示方法--原码</h3>
+                    <p class="smallft" style="font-weight:bold">
+                        除<text style="color:red">符号位</text>以外的二进制位表示整数的绝对值，不足的位数以"0"补足
+                    </p>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例:</text> 以16位二进制原码表示69和-69<br />
+                        &nbsp;69<sub>10</sub>=(<text style="color:red">0</text>000000001000101)<sub>2</sub><br />
+                        -69<sub>10</sub>=(<text style="color:red">1</text>000000001000101)<sub>2</sub>
+                    </p>
+                </section>
+                <section id="6-1-1-3">
+                    <h3>数值的表示方法--反码</h3>
+                    <p class="smallft" style="font-weight:bold">
+                        正整数的表示与原码相同，负整数的表示对<text style="color:red">数值位</text>按位取反
+                    </p>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例:</text> 以16位二进制反码表示69和-69<br />
+                        以16位二进制原码表示69为69<sub>10</sub>=(<text style="color:red">0</text>000000001000101)<sub>2</sub><br />
+                        所以，反码表示为: <br />
+                        &nbsp;69<sub>10</sub>=(<text style="color:red">0</text>000000001000101)<sub>2</sub><br />
+                        -69<sub>10</sub>=(<text style="color:red">1</text>111111110111010)<sub>2</sub>
+                    </p>
+                </section>
+                <section id="6-1-1-4">
+                    <h3>数值的表示方法--补码</h3>
+                    <p class="smallft" style="font-weight:bold">
+                        正整数的表示与原码相同，负整数的表示对<text style="color:red">数值位</text>按位取反，并加<text style="color:red">1</text>
+                    </p>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例:</text> 以16位二进制反码表示69和-69<br />
+                        以16位二进制原码表示69为69<sub>10</sub>=(<text style="color:red">0</text>000000001000101)<sub>2</sub><br />
+                        所以，反码表示为: <br />
+                        &nbsp;69<sub>10</sub>=(<text style="color:red">0</text>000000001000101)<sub>2</sub><br />
+                        -69<sub>10</sub>=(<text style="color:red">1</text>111111110111011)<sub>2</sub>
+                    </p>
+                </section>
+                <section id="6-1-1-5">
+                    <h3>原码 反码和补码</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th></th>
+                            <th>原码</th>
+                            <th>反码</th>
+                            <th>补码</th>
+                        </tr>
+                        <tr>
+                            <td>+0</td>
+                            <td>0000 0000 0000 0000</td>
+                            <td>0000 0000 0000 0000</td>
+                            <td>0000 0000 0000 0000</td>
+                        </tr>
+                        <tr>
+                            <td>-0</td>
+                            <td>1000 0000 0000 0000</td>
+                            <td>1111 1111 1111 1111</td>
+                            <td>0000 0000 0000 0000</td>
+                        </tr>
+                        <tr>
+                            <td>+1</td>
+                            <td>0000 0000 0000 0001</td>
+                            <td>0000 0000 0000 0001</td>
+                            <td>0000 0000 0000 0001</td>
+                        </tr>
+                        <tr>
+                            <td>-1</td>
+                            <td>1000 0000 0000 0001</td>
+                            <td>1111 1111 1111 1110</td>
+                            <td>1111 1111 1111 1111</td>
+                        </tr>
+                        <tr>
+                            <td>32767(2<sup>15</sup>-1)</td>
+                            <td>0111 1111 1111 1111</td>
+                            <td>0111 1111 1111 1111</td>
+                            <td>0111 1111 1111 1111</td>
+                        </tr>
+                        <tr>
+                            <td>-32767(-(2<sup>15</sup>-1))</td>
+                            <td>1111 1111 1111 1111</td>
+                            <td>1000 0000 0000 0000</td>
+                            <td>1000 0000 0000 0001</td>
+                        </tr>
+                        <tr>
+                            <td>-32768(-2<sup>16</sup>)</td>
+                            <td></td>
+                            <td></td>
+                            <td>1000 0000 0000 0000</td>
+                        </tr>
+                        <tr>
+                            <td>32768(2<sup>!6</sup>)</td>
+                            <td>0000 0001 0000 0000 0000 0000</td>
+                            <td>0000 0001 0000 0000 0000 0000</td>
+                            <td>0000 0001 0000 0000 0000 0000</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <p class="smallft">
+                        32767+1=? &nbsp;&nbsp;&nbsp;&nbsp; -32768-1=? (溢出)
+                    </p>
+                </section>
+                <section id="6-1-1-6">
+                    <h3>原码 反码和补码的表示范围</h3>
+                    <p class="smallft">
+                        16个二进制位表示整数，表示范围分别为
+                    </p>
+                    <ul>
+                        <li class="smallft">原码: -32767 ~ 32767</li>
+                        <li class="smallft">反码: -32767 ~ 32767</li>
+                        <li class="smallft">补码: -32768 ~ 32767</li>
+                    </ul>
+                </section>
+                <section id="6-1-1-7">
+                    <h3>实型数据的存储</h3>
+                    <p class="smallft">
+                        将整数表示成科学计数法，如-123.45写成科学计算法为-1.2345&times;10<sup>2</sup>，可记成<br />
+                        <text style="text-align:center;">-1.2345e+02</text><br />
+                        用32位浮点数表示，包含：符号位(1位)，阶码(8位)，尾数(23位)<br />
+                        用64位浮点数表示，包含：符号位(1位)，阶码(11位)，尾数(52位)
+                    </p>
+                </section>
+                <section id="6-1-1-8">
+                    <h3>字符型数据的存储</h3>
+                    <p class="smallft">
+                        字符型数据的存储采用ASCII码，存储在一个字节中<br />
+                        如字符常量'A'的ASCII码值为65，表示成<br />
+                        0100 0001
+                    </p>
+                </section>
+                <section id="6-1-2">
+                    <h3>6.1.2 基本数据类型</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>类别</th>
+                            <th>名称</th>
+                            <th>类型名</th>
+                            <th>数据长度</th>
+                            <th>取值范围</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="6">整型</td>
+                            <td>[有符号]整型</td>
+                            <td>int</td>
+                            <td>32 bits</td>
+                            <td>-2<sup>31</sup> ~ 2<sup>31</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>[有符号]短整型</td>
+                            <td>short[int]</td>
+                            <td>16 bits</td>
+                            <td>-2<sup>15</sup> ~ 2<sup>15</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>[有符号]长整型</td>
+                            <td>long[int]</td>
+                            <td>32 bits</td>
+                            <td>-2<sup>31</sup> ~ 2<sup>31</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号整型</td>
+                            <td>unsigned[int]</td>
+                            <td>32 bits</td>
+                            <td>0 ~ 2<sup>32</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号短整型</td>
+                            <td>unsigned short[int]</td>
+                            <td>16 bits</td>
+                            <td>0 ~ 2<sup>16</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号长整型</td>
+                            <td>unsigned long[int]</td>
+                            <td>32 bits</td>
+                            <td>0 ~ 2<sup>32</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>字符型</td>
+                            <td>字符型</td>
+                            <td>char</td>
+                            <td>8 bits</td>
+                            <td>0 ~ 255</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">实型<br />(浮点型)</td>
+                            <td>单精度浮点型</td>
+                            <td>float</td>
+                            <td>32 bits</td>
+                            <td>&plusmn;(10<sup>-38</sup> ~ 10<sup>+38</sup>)</td>
+                        </tr>
+                        <tr>
+                            <td>双精度浮点型</td>
+                            <td>double</td>
+                            <td>64 bits</td>
+                            <td>&plusmn;(10<sup>-308</sup> ~ 10<sup>308</sup>)</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="6-1-2-1">
+                    <h3>基本数据类型--整型</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>类别</th>
+                            <th>名称</th>
+                            <th>类型名</th>
+                            <th>数据长度</th>
+                            <th>取值范围</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="6">整型</td>
+                            <td>[有符号]整型</td>
+                            <td>int</td>
+                            <td>32 bits</td>
+                            <td>-2<sup>31</sup> ~ 2<sup>31</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>[有符号]短整型</td>
+                            <td>short[int]</td>
+                            <td>16 bits</td>
+                            <td>-2<sup>15</sup> ~ 2<sup>15</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>[有符号]长整型</td>
+                            <td>long[int]</td>
+                            <td>32 bits</td>
+                            <td>-2<sup>31</sup> ~ 2<sup>31</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号整型</td>
+                            <td>unsigned[int]</td>
+                            <td>32 bits</td>
+                            <td>0 ~ 2<sup>32</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号短整型</td>
+                            <td>unsigned short[int]</td>
+                            <td>16 bits</td>
+                            <td>0 ~ 2<sup>16</sup>-1</td>
+                        </tr>
+                        <tr>
+                            <td>无符号长整型</td>
+                            <td>unsigned long[int]</td>
+                            <td>32 bits</td>
+                            <td>0 ~ 2<sup>32</sup>-1</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="6-1-2-2">
+                    <h3>整型常量(整数)</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th></th>
+                            <th>十进制</th>
+                            <th>二进制</th>
+                            <th>八进制</th>
+                            <th>十六进制</th>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>正、负号<br />0~9<br />首位非0</td>
+                            <td></td>
+                            <td>正、负号<br />0~7<br />首位为0</td>
+                            <td>正、负号<br />0~9,A~F<br />前缀0x</td>
+                        </tr>
+                        <tr>
+                            <td>如10<sub>10</sub></td>
+                            <td>10</td>
+                            <td>0000 1010</td>
+                            <td>012</td>
+                            <td>0xA</td>
+                        </tr>
+                        <tr>
+                            <td>如16<sub>10</sub></td>
+                            <td>16</td>
+                            <td>0001 0000</td>
+                            <td>020</td>
+                            <td>0X10</td>
+                        </tr>
+                        <tr>
+                            <td>如123<sub>10</sub></td>
+                            <td>123</td>
+                            <td>0111 1011</td>
+                            <td>0173</td>
+                            <td>0x7B</td>
+                        </tr>
+                    </table>
+                    <p class="smallft" style="text-align:center;">
+                        整数的取值不能超出整型数据的取值范围<br />
+                        比长整型数还要大的数用实数表示<br />
+                        用后缀表示整数类型，如123<text style="color:red">L</text>表示长整数，123<text style="color:red">U</text>表示无符号整数，123<text style="color:red">LU</text>表示无符号长整数
+                    </p>
+                </section>
+                <section id="6-1-2-3">
+                    <h3>基本数据类型--字符型</h3>
+                    <p class="smallft">
+                        字符具有数值特征，字符变量和整型变量的定义和赋值可以在ASCII码范围内互换
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+char c;
+c='A'; //==>等价于 c=65;
+
+int i;
+i=65; //==>等价于 i='A';
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-1-2-4">
+                    <h3>字符常量</h3>
+                    <p class="smallft">
+                        字符常量用单引号表示，如'a', 'A', '9', '+', '$'<br />
+                        所有的字符定义在ASCII字符集中，'0'~'9', 'A'~'Z', 'a'~'z'<br />
+                        可对字符进行运算，注意区分数字1和字符'1'
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+char c;
+c='A'; // c的值为65
+printf("%d %c", c, c); // 输出 65 A
+c=c+1; // c的值为66，对应字符'B'
+printf("%d %c", c, c); // 输出 66 B
+c=c+'1'; // c的值为115
+printf("%d %c", c, c); // 输出 115 s
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-1-2-5">
+                    <h3>转义字符</h3>
+                    <ul>
+                        <li class="smallft">转义字符定义为反斜杠后跟一个字符或数字, 为字符常量，表示一个字符</li>
+                        <li class="smallft">如'\n', '\101', '\x41', 'A'</li>
+                        <li class="smallft">所有字符均可以用转义字符表示</li>
+                    </ul>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>字符</th>
+                            <th>含义</th>
+                        </tr>
+                        <tr>
+                            <td>\n</td>
+                            <td>换行</td>
+                        </tr>
+                        <tr>
+                            <td>\t</td>
+                            <td>横向跳格(用于输出若干个空格)</td>
+                        </tr>
+                        <tr>
+                            <td>\b</td>
+                            <td>退格，用于显示输出时刷新左边一个字符</td>
+                        </tr>
+                        <tr>
+                            <td>\\</td>
+                            <td>反斜杠字符'\'</td>
+                        </tr>
+                        <tr>
+                            <td>\"</td>
+                            <td>双引号</td>
+                        </tr>
+                        <tr>
+                            <td>\'</td>
+                            <td>单引号</td>
+                        </tr>
+                        <tr>
+                            <td>\ddd</td>
+                            <td>1-3位八进制数ddd所代表的字符，如\007为“嘟”声，\40为空格</td>
+                        </tr>
+                        <tr>
+                            <td>\xhh</td>
+                            <td>1-2位十六进制数ddd所代表的字符，如\x41为'A'，\20为空格</td>
+                        </tr>
+                        <tr>
+                        </tr>
+                    </table>
+                </section>
+                <section id="6-1-2-6">
+                    <h3>基本数据类型--实型</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>类别</th>
+                            <th>名称</th>
+                            <th>类型名</th>
+                            <th>数据长度</th>
+                            <th>取值范围</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">实型<br />(浮点型)</td>
+                            <td>单精度浮点型</td>
+                            <td>float</td>
+                            <td>32 bits</td>
+                            <td>&plusmn;(10<sup>-38</sup> ~ 10<sup>+38</sup>)</td>
+                        </tr>
+                        <tr>
+                            <td>双精度浮点型</td>
+                            <td>double</td>
+                            <td>64 bits</td>
+                            <td>&plusmn;(10<sup>-308</sup> ~ 10<sup>308</sup>)</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <br />
+                    <ul>
+                        <li class="smallft" style="font-size:60%">浮点型数据的<text style="color:red">数据精度</text>和<text style="color:red">取值范围</text>是两个不同的概念</li>
+                        <pre style="font-size:50%">
+                            <code data-trim>
+float x=1234567.89; /* 数据在取值范围内，但无法精确表达 */
+float y=1.2e55; /* 数据的精度不高，但超出取值范围 */
+                            </code>
+                        </pre>
+                        <li class="smallft" style="font-size:60%">并不是所有的实数都能在计算机中<text style="color:red">精确</text>表示</li>
+                        <li class="smallft" style="font-size:60%">实型常量的类型都是<text style="color:red">double</text></li>
+                        <li class="smallft" style="font-size:60%">实型常量表示法<br />浮点表示法: 0.123, 123.4, 12., .12<br />科学计数法: 6.025E-27, 1.2e+30, 1E-5</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="6-2">
+                    <h2>6.2 数据的输入输出</h2>
+                </section>
+                <section id="6-2-1">
+                    <h3>6.2.1 整型数据的输入输出</h3>
+                    <pre>
+                        <code class="hljs" data-trim>
+printf(格式控制, 输出参数1, ..., 输出参数n);
+scanf(格式控制, 输入参数1, ..., 输入参数n);
+                        </code>
+                    </pre>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>类别</th>
+                            <th>十进制</th>
+                            <th>八进制</th>
+                            <th>十六进制</th>
+                        </tr>
+                        <tr>
+                            <td>int</td>
+                            <td>%d</td>
+                            <td>%o</td>
+                            <td>%x</td>
+                        </tr>
+                        <tr>
+                            <td>long</td>
+                            <td>%ld</td>
+                            <td>%lo</td>
+                            <td>%lx</td>
+                        </tr>
+                        <tr>
+                            <td>unsigned</td>
+                            <td>%u</td>
+                            <td>%o</td>
+                            <td>%x</td>
+                        </tr>
+                        <tr>
+                            <td>unsigned long</td>
+                            <td>%lu</td>
+                            <td>%lo</td>
+                            <td>%lx</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="6-2-1-1">
+                    <h3>输出整型数据示例</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    printf("%d, %o, %x\n", 10, 10, 10);
+    printf("%d, %d, %d\n", 10, 010, 0x10);
+    printf("%d, %x\n", 012, 012);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-2-1-2">
+                    <h3>输入整型数据示例</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int a, b;
+    printf("Input a, b:");
+    scanf("%x%d", &a, &b);
+    printf("%d%5d\n", a, b); /* %5d指定变量b的输出宽度为5 */
+    printf("%x, %d\n", a, b);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-2-2">
+                    <h3>6.2.2 实型数据的输入输出</h3>
+                    <ul>
+                        <li class="smallft">输入: scanf()</li>
+                        <ul>
+                            <li class="smallft">float, <text style="color:red">%f</text>或<text style="color:red">%e</text>，以小数或指数形式输入一个单精度浮点数</li>
+                            <li class="smallft">double, <text style="color:red">%lf</text>或<text style="color:red">%le</text>，以小数或指数形式输入一个双精度浮点数</li>
+                        </ul>
+                        <li class="smallft">输出: printf()</li>
+                        <ul>
+                            <li class="smallft">float和double采用相同的格式控制输出，%f以小数形式输出浮点数，保留6位小数；%e以指数形式输出浮点数</li>
+
+                        </ul>
+                    </ul>
+                </section>
+                <section id="6-2-2-1">
+                    <h3>实型数据输出格式示例</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double d=3.1415926;
+    printf("%f, %e\n", d, d);
+    printf("%5.3f, %5.2f, %.2f\n", d, d, d); /* 分别指明总位数和小数位数 */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-2-2-2">
+                    <h3>实型数据的输入示例</h3>
+                    <p class="smallft">
+                        假设float的精度为7位，double的精度为16位
+                    </p>
+                    <div class="columnleft">
+                        <pre style="font-size:50%">
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    float f;
+    double d;
+    printf("Input f, d:");
+    scanf("%lf%lf", &f,  &d);
+    printf("f=%f\n d=%f\n", f, d);
+    d=1234567890123.12;
+    printf("d=%f\n", d);
+    return 0;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class+"columnright">
+                        <p class="smallft">
+                            Input f, d:<br />
+                            <text style="color:darkred">1234567890123.123456</text><br />
+                            <text style="color:darkred">1234567890123.123456</text><br />
+                            f=1234567954432.000000<br />
+                            d=1234567890123.123540<br />
+                            d=1234567890123.120120<br />
+                        </p>
+                    </div>
+                </section>
+                <section id="6-2-3">
+                    <h3>6.2.3 字符型数据输入输出</h3>
+                    <ul>
+                        <li class="smallft">scanf和printf</li>
+                        <pre>
+                            <code class="hljs" data-trim>
+char ch;
+scanf("%c", &ch);
+printf("%c", ch);
+                            </code>
+                        </pre>
+                        <li class="smallft">getchar和putchar</li>
+                        <pre>
+                            <code class="hljs" data-trim>
+char ch;
+ch=getchar();
+putchar(ch);
+                            </code>
+                        </pre>
+                    </ul>
+                </section>
+                <section id="6-2-3-1">
+                    <h3>输出输出字符示例</h3>
+                    <div class="columnleft" style="width:30%">
+                        <pre style="font-size:50%">
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char ch1, ch2;
+    ch1=getchar();
+    ch2=getchar();
+    putchar(ch1);
+    putchar('#');
+    putchar(ch2);
+    return 0;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright" style="width:70%">
+                        <pre style="font-size:50%">
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char ch1, ch2, ch3;
+    scanf("%c%c%c", &ch1, &ch2, &ch3);
+    printf("%c%c%c%c%c", ch1, '#', ch2, '#', ch3);
+    return 0;
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="6-2-3-2">
+                    <h3>大小写英文字母转换</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例6-1. 大小写英文字母转换</p>
+                    <p style="text-align:left; font-size:80%">输入一行字符，将其中的大写字母转换为小写字母后输出，小写字母转换为相应的大写字母后输出，其它字符按原样输出
+                    </p>
+                </section>
+                <section id="6-2-3-3">
+                    <h3>字符运算</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            大小写英文字母转换<br />
+                            'b'-'a'='B'-'A'<br />
+                            ......<br />
+                            'z'-'a'='Z'-'A'<br />
+                            'm'-'a'+'A'==>'M'<br />
+                            'M'-'A'+'a'==>'m'
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            数字字符和数字转换<br />
+                            '9'-'0'=9-0<br />
+                            '9'='0'+9<br />
+                            ......<br />
+                            '1'='0'+1
+                        </p>
+                    </div>
+                </section>
+                <section id="6-2-3-4">
+                    <h3>大小写英文字母转换源程序</h3>
+                    <pre style="font-size:80%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char ch;
+    printf("Input characters:");
+    while((ch=getchar())!='\n'){
+        if(ch>='A' && ch<='Z')
+            ch=ch-'A'+'a';
+        else if(ch>='a' && ch<='z')
+            ch=ch-'a'+'A';
+        putchar(ch);
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="6-3">
+                    <h2>6.3 类型转换</h2>
+                    <p class="smallft">
+                        不同类型数据的混合运算，先要将数据转换成相同的类型，再运算
+                    </p>
+                </section>
+                <section id="6-3-1">
+                    <h3>6.3.1 自动类型转换</h3>
+                    <p chass="smallft" style="font-weight:bold;">
+                        非赋值运算
+                    </p>
+                    <p class="smallft">
+                        自动转换类型：<br />
+                        <text style="font-weight:bold">取值范围小的&rarr;取值范围大的</text><br />
+                        <text style="font-weight:bold">整数&rarr;浮点</text><br />
+                        char, short &rarr; int<br />
+                        unsigned short &rarr; unsigned<br />
+                        long &rarr; unsigned long<br />
+                        float &rarr; double<br />
+                        <br />
+                        int &rarr; unsigned &rarr; unsigned long &rarr; double
+                    </p>
+                    <p class="smallft fragment">
+                        计算表达式'A'+12-10.05的结果，类型是?<br />
+                        <text class="fragment">'A' &rarr; 65, 65+12=77, 77-10.05=66.95, 类型为double</text>
+                    </p>
+                </section>
+                <section id="6-3-1=1">
+                    <h3>自动类型转换(赋值运算)</h3>
+                    <p class="smallft">
+                        <text style="color:red">变量</text>=表达式<br />
+                        计算赋值运算符右侧表达式的值<br />
+                        将赋值运算符右侧表达式的值赋给左侧的变量(自动转换右侧表达式的类型)
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+double x;
+x=1; /* x=? */
+
+int ai;
+ai=2.56; /* ai=? */
+
+short a=1000;
+char b='A';
+long c;
+c=a+b; /* c=? */
+
+short bi;
+bi=0X12345678L; /* bi=? */
+
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-3-2">
+                    <h3>强制类型转换</h3>
+                    <p class="smallft">
+                        强制类型转换运算符: <text style="color:red">(类型名)</text> 表达式<br />
+                        如<br />
+                        <text class="fragment">(double)3</text><text class="fragment">&nbsp;&rarr;&nbsp;</text><text class="fragment">3.0</text><br />
+                        <text class="fragment">(int)3.8</text><text class="fragment">&nbsp;&rarr;&nbsp;</text><text class="fragment">3</text><br />
+                        <text class="fragment">(double)(5/2)</text><text class="fragment">&nbsp;&rarr;&nbsp;</text><text class="fragment">2.0</text><br />
+                        <text class="fragment">(double)5/2</text><text class="fragment">&nbsp;&rarr;&nbsp;</text><text class="fragment">2.5</text><br />
+                    </p>
+                </section>
+                <section id="6-3-2-1">
+                    <h3>强制类型转换示例</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i;
+    double x;
+
+    x=3.8;
+    i=(int)x;
+    printf("x=%.f, i=%d\n", x, i);
+    printf("(double)(int)x=%f\n", (double)(int)x);
+    printf("x mod 3=%d\n", (int)x%3);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="6-4">
+                    <h2>6.4 表达式</h2>
+                    <dt style="text-align:left;">
+                        表达式
+                    </dt>
+                    <dd style="text-align:left;">
+                        由运算符和运算对象(操作数)组成的有意义的运算式子，它的值和类型由参与运算的运算符和运算对象的类型决定，其中，运算符指具有运算功能的符号；运算对象包含常量、变量和函数表达式等<br />
+                        表达式一般包含算术表达式、赋值表达式、关系表达式、逻辑表达式、条件表达式和逗号表达式等
+                    </dd>
+                </section>
+                <section id="6-4-1">
+                    <h3>6.4.1 算术表达式</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <caption>
+                            算术运算符
+                        </caption>
+                        <tr>
+                            <td>目数</td>
+                            <td colspan="4">单目</td>
+                            <td colspan="5">双目</td>
+                        </tr>
+                        <tr>
+                            <td>运算符</td>
+                            <td>++</td>
+                            <td>--</td>
+                            <td>+</td>
+                            <td>-</td>
+                            <td>+</td>
+                            <td>-</td>
+                            <td>*</td>
+                            <td>/</td>
+                            <td>%</td>
+                        </tr>
+                        <tr>
+                            <td>名称</td>
+                            <td>自增</td>
+                            <td>自减</td>
+                            <td>正值</td>
+                            <td>负值</td>
+                            <td>加</td>
+                            <td>减</td>
+                            <td>乘</td>
+                            <td>除</td>
+                            <td>模(求余)</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <ul>
+                        <li class="smallft"><text style="color:red">/</text> 整数除以整数，结果为整数，如1/4=0, 10/3=3</li>
+                        <li class="smallft"><text style="color:red">%</text> 模(求余)，针对整型数据，如5%6=5, 9%4=1, 100%4=0</li>
+                        <li class="smallft"><text style="color:red">+/-</text> 作为单目运算符时，+10, -10, 作为双目运算符时，x+10, y-10</li>
+                        <li class="smallft">双目运算符两侧操作数的类型要相同，否则，自动进行类型转换后再运算</li>
+                    </ul>
+                </section>
+                <section id="6-4-1-1">
+                    <h3>自增运算符++和自减运算符--</h3>
+                    <ul>
+                        <li class="smallft">使变量的值增1或减1<br />
+                            <text style="color:red">++n n++</text>&nbsp;&nbsp;&nbsp;&nbsp;n=n+1<br />
+                            <text style="color:red">--n n--</text>&nbsp;&nbsp;&nbsp;&nbsp;n=n-1
+                        </li>
+                        <li class="smallft">将变量的值作为表达式的值<br />
+                            <text style="color:red">++n</text>&nbsp;&nbsp;&nbsp;&nbsp; n=n+1, 将n的值作为表达式++n的值<br />
+                            <text style="color:red">n++</text>&nbsp;&nbsp;&nbsp;&nbsp; 将n的值作为表达式n++的值, n=n+1
+                        </li>
+                    </ul>
+                    <pre>
+                        <code class="hljs" data-trim>
+int n, m;
+n=2; m=++n;  /* m=3, n=3 */
+n=2; m=n++;  /* m=2, n=3 */
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-4-1-2">
+                    <h3>算术运算符的优先级和结合性</h3>
+                    <p class="smallft">
+                        双目运算符(+, -) &nbsp; &rarr; &nbsp; 双目运算符(*, /, %) &nbsp; &rarr; &nbsp; 单目运算符(+, -, ++, --)
+                    </p>
+                    <p class="smallft">
+                        -5+3%2=(-5)+(3%2)=-4<br />
+                        3*5%3=(3*5)%3=0<br />
+                        -i++=-(i++)
+                    </p>
+                    <p class="smallft">
+                        写出下列表达式<br />
+                        s(s-a)(s-b)(s-c) &nbsp; &rarr; &nbsp; <text class="fragment" style="color:red">s*(s-a)*(s-b)*(s-c)</text><br />
+                        (x+2)e<sup>2x</sup> &nbsp; &rarr; &nbsp; <text class="fragment" style="color:red">(x+2)*pow(e,2*x)</text><br />
+                        $\frac{-b+\sqrt{b^2-4ac}}{2a}$&nbsp; &rarr; &nbsp; <text class="fragment" style="color:red">(-b+sqrt(b*b-4*a*c))/(2*a)</text>
+                    </p>
+                </section>
+                <section id="6-4-2">
+                    <h3>6.4.2 赋值表达式</h3>
+                    <p class="smallft">
+                        <text style="color:red">变量=</text>表达式<br />
+                    </p>
+                    <ul>
+                        <li class="smallft">计算赋值运算符右侧表达式的值</li>
+                        <li class="smallft">将赋值表达式右侧表达式的值赋给左侧变量，右侧表达式的类型自动转换为左侧变量的类型</li>
+                        <li class="smallft">将赋值表达式左侧变量的值作为表达式的值</li>
+                        <li class="smallft">表达式结合从右往左</li>
+                    </ul>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+int n;
+double x, y;
+x=3*4;  /* 表达式的值为12，类型为浮点双精度 */
+x=y=3;  /* x=(y=3), y=3的值为3.0，类型为浮点双精度，x的值为3.0，类型为浮点双精度 */
+n=3.14*2; /* n的值为6 */
+x=10/4; /* x的值为2.0 */
+
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-4-2-1">
+                    <h3>复合赋值运算符</h3>
+                    <p class="smallft">
+                        复合赋值运算符包括:+=, -=, *=, /=, %=<br />
+                        赋值表达式更新为: 变量&nbsp;&nbsp; <text style="color:red">赋值运算符</text> &nbsp;&nbsp; 表达式<br />
+                        x<text style="color:red">+=</text> exp 等价于 x<text style="color:red">=</text>x<text style="color:red">+</text>exp<br />
+                        x<text style="color:red">*=</text>y-3 等价于 x<text style="color:red">=</text>x<text style="color:red">*</text>(y-3)
+                    </p>
+                </section>
+                <section id="6-4-3">
+                    <h3>6.4.3 关系表达式</h3>
+                    <p class="smallft">关系运算符用于比较两个操作数，比较结果为<text style="color:red">真(1)</text>或<text style="color:red">假(0)</text><br />
+                        x&lt;y &nbsp;&nbsp; x
+                        <=y &nbsp;&nbsp; x==y &nbsp;&nbsp; <br />
+                        x&gt;y &nbsp;&nbsp; x>=y &nbsp;&nbsp; x!=y
+                    </p>
+                    <p class="smallft" style="font-size:70%">运算符优先级：<br />
+                        算术运算符 &rarr; 比较运算符(<text style="color:red">&lt; <= &gt;>=</text>) &rarr; 比较运算符(<text style="color:red">== !=</text>) &rarr; 赋值运算符</p>
+                    <p class="smallft">运算符左结合</p>
+                    <p class="smallft" style="font-size:70%">
+                        a&gt;b==c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">(a&gt;b)==c</text><br />
+                        d=a&gt;b &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">d=(a&gt;b)</text><br />
+                        ch&gt;'a'+1 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">ch&gt;('a'+1)</text><br />
+                        d=a+b&gt;c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">d=((a+b)&gt;c)</text><br />
+                        3<=x<=5 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">(3<=x)<=5< /text><br />
+                                b-1==a!=c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">((b-1)==a)!=c</text>
+                    </p>
+                </section>
+                <section id="6-4-3-1">
+                    <h3>关系表达式运算</h3>
+                    <p class="smallft">
+                        用<text style="color:darkred">关系运算符</text>将2个<text style="color:darkred">表达式</text>称为关系表达式，下列式子中哪些是关系表达式?
+                    </p>
+                    <p class="smallft">
+                        char c='w';<br />
+                        int a=2, b=3, c=1, d, x=10;<br />
+                        a&gt;b==c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; (a&gt;b)==c <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                        d=a&gt;b &nbsp;&nbsp; &rarr; &nbsp;&nbsp; d=(a&gt;b) <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                        ch&gt;'a'+1 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; ch&gt;('a'+1) <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 1</text><br />
+                        d=a+b&gt;c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; d=((a+b)&gt;c) <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp;1</text><br />
+                        3<=x<=5 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; (3<=x)<=5 <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                            b-1==a!=c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; ((b-1)==a)!=c<text class="fragment" style="color:darkred"> &nbsp;&nbsp; &rarr; &nbsp;&nbsp; 1</text>
+                    </p>
+                </section>
+                <section id="6-4-4">
+                    <h3>6.4.4 逻辑表达式</h3>
+                    <p class="smallft">
+                        (ch>='a' && ch<='z') || (ch>='A' && ch
+                            <='Z')<br />
+                            ch == ' ' || ch == '\n'<br />
+                            x >= 3 && x <= 5 </p>
+                </section>
+                <section id="6-4-4-1">
+                    <h3>逻辑运算符</h3>
+                    <p style="text-align:left; font-size:70%">
+                        逻辑运算符为:<text style="color:red">&&(逻辑与) ||(逻辑或) !(逻辑非)</text><br />
+                        逻辑运算结果:<text style="color:red">1</text>(真) <text style="color:red">0</text>(假)<br />
+                        逻辑运算对象: 关系表达式 或 逻辑量，如x>=3<text style="color:red">&&</text> x
+                        <=5, !x<br />
+                        逻辑量，非0为真，0为假
+                    </p>
+                    <table style="align-content:center;font-size:70%">
+                        <caption>
+                            逻辑运算真值表
+                        </caption>
+                        <tr>
+                            <td>a</td>
+                            <td>b</td>
+                            <td>a&&b</td>
+                            <td>a||b</td>
+                            <td>!a</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>真(1)</td>
+                            <td>真(1)</td>
+                            <td>假(0)</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <td>0</td>
+                            <td>假(0)</td>
+                            <td>真(1)</td>
+                            <td>假(0)</td>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>假(0)</td>
+                            <td>真(1)</td>
+                            <td>真(1)</td>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>假(0)</td>
+                            <td>假(0)</td>
+                            <td>真(1)</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="6-4-4-2">
+                    <h3>逻辑运算符的优先级和结合性</h3>
+                    <p class="smallft">
+                        赋值运算符 &rarr; 逻辑运算符(|| &&) &rarr; 关系运算符 &rarr; 算术运算符 &rarr; 逻辑运算符
+                    </p>
+                    <p class="smallft">运算符左结合</p>
+                    <p class="smallft" style="font-size:70%">
+                        a || b && c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">a || (b && c)</text><br />
+                        !a && b &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">(!a) && b</text><br />
+                        x >= 3 && x <= 5 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">(x >= 3) && (x <= 5)</text><br />
+                                !x == 2 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">(!x) == 2</text><br />
+                                a || 3 + 10 && 2 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment">a || ((3 + 10) && 2)</text><br />
+                    </p>
+                </section>
+                <section id="6-4-4-3">
+                    <h3>逻辑表达式</h3>
+                    <p class="smallft">
+                        用<text style="color:darkred">逻辑运算符</text>将<text style="color:darkred">关系表达式</text>或<text style="color:darkred">逻辑量</text>连接起来的式子称为逻辑表达式。下列式子中哪些是逻辑表达式?
+                    </p>
+                    <p class="smallft">
+                        char c='w';<br />
+                        int a=2, b=0, c=0;<br />
+                        float x=3.0;<br /><br />
+                        a && b&nbsp;&nbsp; &rarr; &nbsp;&nbsp; <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                        a || b && c &nbsp;&nbsp; &rarr; &nbsp;&nbsp; a || (b && c) <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 1</text><br />
+                        !a && b &nbsp;&nbsp; &rarr; &nbsp;&nbsp; (!a) && b <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                        a || 3 + 10 && 2 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; a || ((3 + 10) && 2) <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp;1</text><br />
+                        !x == 2 &nbsp;&nbsp; &rarr; &nbsp;&nbsp; (!x) == 2 <text class="fragment" style="color:darkred">&nbsp;&nbsp; &rarr; &nbsp;&nbsp; 0</text><br />
+                        !(x==2) &nbsp;&nbsp; &rarr; &nbsp;&nbsp;<text class="fragment" style="color:darkred"> &nbsp;&nbsp; &rarr; &nbsp;&nbsp; 1</text><br />
+                        ch || b &nbsp;&nbsp; &rarr; &nbsp;&nbsp;<text class="fragment" style="color:darkred"> &nbsp;&nbsp; &rarr; &nbsp;&nbsp; 1</text>
+                    </p>
+                </section>
+                <section id="6-4-4-4">
+                    <h3>写出满足要求的逻辑表达式</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例6-4. 写出满足要求的逻辑表达式</p>
+                    <ul>
+                        <li class="smallft">x为零</li>
+                        <p class="smallft">
+                            x==0<br />!x
+                        </p>
+                        <li class="smallft">x不为零</li>
+                        <p class="smallft">
+                            x!=0<br />x
+                        </p>
+                        <li class="smallft">x和y不同时为零</li>
+                        <p class="smallft">
+                            x!=0 || y!=0<br />!(x==0 && y==0)<br />x||y
+                        </p>
+                    </ul>
+                </section>
+                <section id="6-4-5">
+                    <h3>6.4.5 条件表达式</h3>
+                    <p class="smallft">
+                        <text style="color:darkblue">exp1</text> <text style="color:red">?</text> <text style="color:darkblue">exp2</text> <text style="color:red">:</text> <text style="color:darkblue">exp3</text><br />
+                        等价于
+                    <pre>
+                            <code  class="hljs">
+if(exp1)
+    exp2;
+else
+    exp3;
+                            </code>
+                        </pre>
+                    </p>
+                </section>
+                <section id="6-4-6">
+                    <h3>条件表达式</h3>
+                    <p class="smallft">
+                        分析下列条件表达式
+                    </p>
+                    <div class="columnleft" style="width:33%">
+                        <pre>
+                            <code class="hljs" data-trim>
+int n;
+a=(n>0)?2.9;1;
+
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            n=10时, a=2.9<br />
+                            n=-10时, a=1
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(a>b)
+    z=a;
+else
+    z=b;
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            z=(a>b)?a:b;
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <p class="smallft" style="font-size:50%">
+                            $$y=\begin{cases}
+                            x+2 & x>0\\
+                            x^2 & x\leq 0
+                            \end{cases}
+                            $$
+                        </p>
+                        <p>
+                            y=(x>0)?x+2:x*x;
+                        </p>
+                    </div>
+                </section>
+                <section id="6-4-6">
+                    <h3>6.4.6 逗号表达式</h3>
+                    <p style="text-align:center; font-weight: bold;">
+                        表达式1, 表达式2, ......, 表达式n
+                    </p>
+                    <p class="smallft">
+                        先计算表达式1，再依次计算表达式n的值 ，将表达式n的值作为逗号表达式的值
+                    </p>
+                    <p class="smallft">
+                        int a, b, c;
+                        (a=2), (b=3), (c=a+b);
+                    </p>
+                    <p class="smallft">
+                        逗号运算符的优先级最低，左结合
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+for(i=0, sum=0; i<=100; i++)
+    sum+=i;
+                        </code>
+                    </pre>
+                </section>
+                <section id="6-4-7">
+                    <h3>6.4.7 位运算</h3>
+                    <table style="align-content:center;font-size:70%">
+                        <caption>
+                            位运算符
+                        </caption>
+                        <tr>
+                            <td>运算符</td>
+                            <td>名称</td>
+                            <td>备注</td>
+                        </tr>
+                        <tr>
+                            <td>&</td>
+                            <td>按位"与"</td>
+                            <td>双目</td>
+                        </tr>
+                        <tr>
+                            <td>|</td>
+                            <td>按位"或"</td>
+                            <td>双目</td>
+                        </tr>
+                        <tr>
+                            <td>^</td>
+                            <td>按位"异或", 相同取0，不同取1</td>
+                            <td>双目</td>
+                        </tr>
+                        <tr>
+                            <td>~</td>
+                            <td>按位"取反"</td>
+                            <td>单目</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <<< /td>
+                            <td>左移位</td>
+                            <td>双目</td>
+                        </tr>
+                        <tr>
+                            <td>>></td>
+                            <td>右移位</td>
+                            <td>双目</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="6-4-7-1">
+                    <h3>位逻辑运算</h3>
+                    <p class="smallft">
+                        x = 0 &nbsp;&nbsp;&nbsp;&nbsp; 00000000 00000000<br />
+                        y = 3 &nbsp;&nbsp;&nbsp;&nbsp; 00000000 00000011<br />
+                        x & y &nbsp;&nbsp;&nbsp;&nbsp; 00000000 00000000<br />
+                        x | y &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00000000 00000011<br />
+                        x ^ y &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00000000 00000011<br />
+                        x && y &nbsp;&nbsp; 0<br />
+                        x || y &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br />
+                        1010 ^ 0101 = 1111
+                    </p>
+                    <p class="smallft">
+                        <text style="color:red">注意区分&&和&，以及||和|</text>
+                    </p>
+                </section>
+                <section id="6-4-7-2">
+                    <h3>位移位运算</h3>
+                    <p class="smallft">
+                        << &nbsp;&nbsp;&nbsp;&nbsp; 对操作数左移给出的位数，低位补零<br />
+                        >> &nbsp;&nbsp;&nbsp;&nbsp; 对操作数右移给出的位数，高位补零
+                    </p>
+                    <p class="smallft">
+                        x&lt;&lt;3 &nbsp;&nbsp; 将x向左移3位，空出的位用零补足<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00111010 &lt;&lt;3<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 11010000<br />
+                        <br />
+                        x&gt;&gt;3 &nbsp;&nbsp; 将x向右移3位，空出的位用零补足<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00111010 &gt;&gt;3<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 00000111<br />
+                    </p>
+                </section>
+                <section id="6-4-7-3">
+                    <h3>复合位赋值运算符</h3>
+                    <p class="smallft">
+                        复合位赋值运算符有：&= &nbsp;&nbsp; |= &nbsp;&nbsp; ^=&nbsp;&nbsp; >>= &nbsp;&nbsp;
+                        <<=<br />
+                        a &= b 相当于 a = a & b<br />
+                        a <<= 2 相当于 a=a << 2 </p>
+                </section>
+                <section id="6-4-8">
+                    <h3>6.4.8 其他运算</h3>
+                    <p class="smallft">
+                        长度运算符(sizeof)，是单目运算符，用于计算<text style="color:darkred">变量</text>或<text style="color:darkred">数据类型</text>的字节长度
+                    </p>
+                    <p class="smallft">
+                    <pre>
+                            <code class="hljs" data-trim>
+int a;
+sizeof(a); // 求整型变量a的长度，值为4(bytes)
+sizeof(int); // 求整型的长度，值为4(bytes)
+sizeof(double); // 求双精度浮点数的长度，值为8(bytes)
+                            </code>
+                        </pre>
+                    </p>
+                </section>
+                <section id="6-4-9">
+                    <h3>6.4.9 程序解析</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例6-5. 统计单词的个数</p>
+                    <p style="text-align:left; font-size:80%">输入一行字符，统计其中单词的个数，其中，“单词”指的是连续不含空格的字符串，各单词之间用空格分隔，空格数可以是任意多个
+                    </p>
+                </section>
+                <section id="6-4-9-1">
+                    <h3>统计单词个数源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int cnt, word;  /* cnt记录单词的个数，word表示新单词标识 */
+    char ch;
+    word=cnt=0;     /* word初值为0，表示还没有遇到新单词 */
+    printf("Input characters:");
+    while((ch=getchar())!='\n'){
+        if(ch==' ')  /* 读入空格，表示不是单词 */
+            word=0;  /* word赋0，表示没有遇到新单词 */
+        else if(word==0){  /* 读入非空格且word为0，此为单词首字母 */
+            word=1;  /* word赋1，表示遇到新单词 */
+            cnt++;   /* 累加单词计数器cnt */
+        }
+    }
+    printf("%d\n", cnt);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
