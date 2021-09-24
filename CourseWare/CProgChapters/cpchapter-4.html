@@ -1,0 +1,1741 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第4章循环结构">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第四章 循环结构</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第4章 循环结构</h2>
+                <p>
+                    <a href="#/4-1">4.1 用格雷戈里公式求$\pi$的近似值(while语句)</a><br />
+                    <a href="#/4-2">4.2 统计一个整数的位数(do-while语句)</a><br />
+                    <a href="#/4-3">4.3 判断素数(break和continue语句)</a><br />
+                    <a href="#/4-4">4.4 求1!+2!+...+n!(循环嵌套)</a>
+                    <a href="#/4-5">4.5 循环结构程序设计</a>
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>什么是循环?为什么要使用循环?如何实现循环?</li>
+                    <li>实现循环时，如何确定循环条件和循环体?</li>
+                    <li>怎样使用while和do-while语句实现次数不确定的循环?</li>
+                    <li>while和do-while语句有什么不同?</li>
+                    <li>如何使用break语句处理多循环条件?</li>
+                    <li>如何实现多重循环?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="4-1">
+                    <h2>4.1 用格雷戈里公式求$\pi$的近似值</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例4-1. 使用格雷戈里公式求$\pi$的近似值</p>
+                    <p>要求精确到最后一项的绝对值小于给定精度eps
+                        $$
+                        \frac{\pi}{4}=1-\frac{1}{3}+\frac{1}{5}-\frac{1}{7}+\ldots
+                        $$
+                    </p>
+                </section>
+                <section id="4-1-1">
+                    <h3>4.1.1 程序解析</h3>
+                    <p class="smallft">
+                        循环结束条件: |item|&lt;eps<br />
+                        循环条件: |item|>=eps --> fabs(item)>=eps
+                    </p>
+                    <p class="smallft">
+                        参照<text style="font-weight:bold">例2-8. </text>求1-1/3+1/5-...的前n项和
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+flag=1;
+denominator=1;
+item=1;
+sum=0;
+
+for(i=1;i<=n;i++) /* 替换为while(fabs(item)>=eps) */
+{
+    sum=sum+item;
+    flag=-flag;
+    denominator=denominator+2;
+    item=flag*1.0/denominator;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-1-1-1">
+                    <h3>格雷戈里公式求$\pi$源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int denominator, flag;
+    double item, pi;
+    flag=1; denominator=1; item=1.0; pi=0;
+    while(fabs(item)>=eps)
+    {
+        pi=pi+item;
+        flag=-flag;
+        denominator=denominator+2;
+        item=flag*1.0/denominator;
+    }
+    pi=pi+item;
+    pi=pi*4;
+    printf("pi=%.4f\n", pi);
+    return 0;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-weight:bold">
+                        从第1项到倒数第2项，fabs(item)&gt;eps，最后一项fabs(item)&lt;eps
+                    </p>
+                </section>
+                <section id="4-1-2">
+                    <h3>4.1.2 while语句</h3>
+                    <p style="font-size:60%; text-align:left;">
+                        while(条件)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;循环体语句; /* 一条语句或者多条复合语句 */<Br />
+                    </p>
+                    <p style="font-size:60%; text-align:left;color:darkred;">
+                        注意区分循环体和循环条件
+                    </p>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap04/4-1.png" style="width:80%" />
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap04/4-2.png" style="width:65%" />
+                    </div>
+                </section>
+                <section id="4-1-2-1">
+                    <h3>while语句说明</h3>
+                    <ul>
+                        <li class="smallft">while和for语句都是在循环前先判断条件</li>
+                        <li class="smallft">将for语句改写成while语句</li>
+                        <div class="columnleft">
+                            <p style="font-size:60%; text-align:left;">
+                                for(表达式1; 表达式2; 表达式3)<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;循环体语句<br />
+                                <br />
+                                <br />
+                                <br />
+                            </p>
+                        </div>
+                        <div class="columnright">
+                            <p style="font-size:60%; text-align:left;">
+                                表达式1;<br />
+                                while(表达式2){<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;for的循环体语句;<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;表达式3;<br />
+                                }
+                            </p>
+                        </div>
+                        <li class="smallft">改写的前提是，for的循环体语句中没有使用continue语句</li>
+                    </ul>
+                </section>
+                <section id="4-1-2-2">
+                    <h3>while和for的比较</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            for循环
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+sum=0;
+for(i=1;i<=10;i++)
+{
+    sum=sum+i;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            while循环
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+sum=0;
+i=1;         /* 循环变量赋初值 */
+while(i<=10) /* 循环条件 */
+{
+    sum=sum+i;
+    i++;     /* 循环变量改变值 */
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="4-1-2-3">
+                    <h3>统计学生的成绩</h3>
+                    <p style="font-size: 80%;"><text style="font-weight:bold">例4-2.</text> 从键盘输入一批学生的成绩，计算平均成绩，并统计不及格学生的人数
+                    </p>
+                    <p class="smallft" style="font-size:60%">
+                        比较：<text style="font-weight:bold">例3-3</text>. 输入一个正整数n，再输入n个学生的成绩，计算平均分，并统计不及格成绩的个数
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+total=0;
+count=0;
+for(i=1;i<=n;i++)
+{
+    scanf("%lf", &score);
+    total=total+score;
+    if(score&lt;60)
+    {
+        count++;
+    }
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="text-align:center">
+                        如何确定循环条件?
+                    </p>
+                </section>
+                <section id="4-1-2-4">
+                    <h3>解题分析--统计成绩</h3>
+                    <p class="smallft" style="font-weight:bold">
+                        确定循环条遥
+                    </p>
+                    <ul>
+                        <li class="smallft">不知道输入数据的个数，无法事先确定循环次数</li>
+                        <li class="smallft">可以用一个特殊的数据作为正常输入数据的结束，比如选用一个负数作为结束标志，比如循环条件是score>=0，可使用score&lt;0作为循环结束条件</li>
+                    </ul>
+                </section>
+                <section id="4-1-2-5">
+                    <h3>程序段设计</h3>
+                    <p class="smallft">
+                        从for循环到while循环
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+total=0;
+count=0;
+for(i=1;i<=n;i++)
+{
+    scanf("%lf", &score);
+    total=total+score;
+
+    if(score&lt;60)
+    {
+        count++;
+    }
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+num=0;
+total=0;
+count=0;
+scanf("%lf", &score);
+while(score>=0)
+{
+    total=total+score;
+    num++;
+    if(score&lt;60)
+    {
+        count++;
+    }
+    scanf("%lf", &score);
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="4-1-2-6">
+                    <h3>统计成绩源程序</h3>
+                    <pre style="font-size:43%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count, num;
+    double score, total;
+    num=0; total=0; count=0;
+    printf("Enter score:\n");
+    scanf("%lf", &score); /* 输入第1个数 */
+    while(score>=0)       /* 输入负数，循环结束 */
+    {
+        total=total+score;
+        num++;
+        if(total&lt;60)
+        {
+            count++;
+        }
+        scanf("%lf", &score);
+    }
+    if(num!=0)
+    {
+        printf("Average: %.2f\n", total/num);
+        printf("Number of failures is %d\n", count);
+    }else
+    {
+        printf("Average is 0\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-1-2-7">
+                    <h3>常见循环控制小结</h3>
+                    <ul>
+                        <li class="smallft">计数控制循环(2.4)</li>
+                        <p style="text-align:left; font-size:60%">
+                            sum=0<br />
+                            for(i=1;i
+                            <=n;i++)<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;sum=sum+i;
+                        </p>
+                        <li class="smallft">计算值控制的循环(例4-1)</li>
+                        <p style="text-align:left; font-size:60%">
+                            item=1.0;<br />
+                            while(fabs(item)>=eps){<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;item=flag*1.0/denominator;<br />
+                            }
+                        </p>
+                        <li>输入值控制的循环(伪数据)(例4-2)</li>
+                        <p style="text-align:left; font-size:60%">
+                            scanf("%lf", &score);<br />
+                            while(score>=0){<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;scanf("%lf", &score);<br />
+                            }
+                        </p>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="4-2">
+                    <h2>4.2 统计一个整数的位数</h2>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-3. 统计一个整数的位数
+                    </p>
+                    <p class="smallft">从键盘读入一个整数，统计该数的位数</p>
+                </section>
+                <section id="4-2-1">
+                    <h3>4.2.1 程序解析</h3>
+                    <p class="smallft">
+                        分析：以<text style="color:red">495</text>为例，从低位往高位(右向左)，一位一位地数
+                    </p>
+                    <ul>
+                        <li class="smallft">从个位数开始: <text style="color:darkblue">第1次数出5(495%10=5)</text></li>
+                        <li class="smallft">数好一位，就划掉该数字，得到一个新数字49: 49<text style="color:red"><s>5</s></text>。<br /><text style="color:darkblue">舍去5，得到新数49(495/10=49)</text></li>
+                        <li class="smallft">继续从新数的个位数开始数：<text style="color:darkblue">第2次数出9(49%10=9)</text></li>
+                        <li class="smallft">数好一位，就划掉该数字，再得到一个新数4: 4<text style="color:red"><s>95</s></text>。<br /><text style="color:darkblue">舍去9，得到新数4(49/10=4)</text></li>
+                        <li class="smallft">继续从新数的个位数开始数：<text style="color:darkblue">第3次数出4(4%10=4)</text></li>
+                        <li class="smallft">数好一位，就划掉该数字，再得到一个新数0: <text style="color:red"><s>495</s></text>。<br /><text style="color:darkblue">舍去4，得到新数0(4/10=0)</text></li>
+                        <li class="smallft">全部数好，全部划去，遇零结束。共重复3次，得到3位数</li>
+                    </ul>
+                </section>
+                <section id="4-2-1-1">
+                    <h3>算法解析</h3>
+                    <table style="align-content:center;font-size: 60%;">
+                        <tr>
+                            <th></th>
+                            <th>digit=number%10</th>
+                            <th>number=number/10</th>
+                        </tr>
+                        <tr>
+                            <td>number=495</td>
+                            <td>495%10=5</td>
+                            <td>495/10=49</td>
+                        </tr>
+                        <tr>
+                            <td>number=49</td>
+                            <td>49%10=9</td>
+                            <td>49/10=4</td>
+                        </tr>
+                        <tr>
+                            <td>number=4</td>
+                            <td>4%10=4</td>
+                            <td>4/10=0</td>
+                        </tr>
+                        <tr>
+                            <td>number=0结束</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <br />
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>循环结束条件</th>
+                            <th>循环条件</th>
+                            <th>循环体</th>
+                        </tr>
+                        <tr>
+                            <td>number==0</td>
+                            <td>number!=0</td>
+                            <td>digit=number%10;<br />number=number/10;<br />count++;</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="4-2-1-2">
+                    <h3>循环体</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            do-while循环
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+count=0;
+do{
+    digit=number%10;
+    number=number/10;
+    count++;
+}while(number!=0);
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            while循环
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+count=0;
+while(number!=0)
+{
+    digit=number%10;
+    number=number/10;
+    count++;
+}
+                            </code>
+                        </pre>
+                        <br />
+                    </div>
+                    <p class="fragment" style="text-align:center; font-size:80%; color:darkred;">
+                        思考: 两种循环的区别是什么？
+                    </p>
+                </section>
+                <section id="4-2-1-3">
+                    <h3>统计位数源程序</h3>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap04/4-2-1.png" />
+                        <p style="text-align:center; font-size:80%">
+                            while循环
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap04/4-2-2.png" />
+                        <p style="text-align:center; font-size:80%">
+                            do-while循环
+                        </p>
+                    </div>
+                </section>
+                <section id="4-2-1-4">
+                    <h3>统计位数源程序(1)</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count, number;
+    printf("Enter a number:");
+    scanf("%d", &number);
+    if(number&lt;0)
+    {
+        number=-number;
+    }
+    count=0;
+    do{
+        number=number/10;
+        count++;
+    }while(number!=0);
+    printf("It contains %d digits.\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-2-1-5">
+                    <h3>统计位数源程序(2)</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count, number, t_number;
+    printf("Enter a number:");
+    scanf("%d", &number);
+    t_number=number;
+    if(t_number&lt;0)      /* 保护输入的数number */
+    {
+        t_number=-t_number;
+    }
+    count=0;
+    do{
+        t_number=t_number/10;
+        count++;
+    }while(t_number!=0);
+    printf("It contains %d digits.\n", count);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-2-2">
+                    <h3>do-while语句</h3>
+                    <div class="columnleft">
+                        <pre>
+                        <code class="hljs" data-trim>
+do{
+    循环体语句;
+}while(表达式);
+                        </code>
+                    </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap04/4-3.png" />
+                    </div>
+                </section>
+                <section id="4-2-2-1">
+                    <h3>while和do-while的比较</h3>
+                    <div class="columnleft">
+                        <p style="text-align:left; font-size:70%">
+                            <text style="font-weight:bold">while</text>: 先判别条件，再决定是否循环
+                        </p>
+                        <img src="../images/cprog/chap04/4-1.png" style="width:80%" />
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left; font-size:70%">
+                            <text style="font-weight:bold">do-while</text>: 先至少循环一次，然后再根据条件决定是否继续循环
+                        </p>
+                        <img src="../images/cprog/chap04/4-3.png" />
+                    </div>
+                </section>
+                <section id="4-2-2-2">
+                    <h3>将一个整数逆序输出</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例4-4. </text>将一个整数逆序输出
+                    </p>
+                    <p class="smallft">确定<text style="color:red">循环条件</text>和<text style="color:red">循环体(循环不变体)</text>，取12345为例，需得到5 4 3 2 1</p>
+                    <table style="font-size:60%">
+                        <tr>
+                            <td>12345%10=5</td>
+                            <td>12345/10=1234</td>
+                        </tr>
+                        <tr>
+                            <td>1234%10=4</td>
+                            <td>1234/10=123</td>
+                        </tr>
+                        <tr>
+                            <td>123%10=3</td>
+                            <td>123/10=12</td>
+                        </tr>
+                        <tr>
+                            <td>12%10=2</td>
+                            <td>12/10=1</td>
+                        </tr>
+                        <tr>
+                            <td>1%10=1</td>
+                            <td>1/10=0结束</td>
+                        </tr>
+                    </table>
+                    <p class="smallft">
+                        循环不变式:<br /> &nbsp;&nbsp;digit=number%10;<br /> &nbsp;&nbsp;number=number/10;<br />
+                        循环结束条件:<br /> &nbsp;&nbsp;number==0;
+                    </p>
+                </section>
+                <section id="4-2-2-3">
+                    <h3>整数逆序输出源程序</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int number;
+    printf("Enter a number:");
+    scanf("%d", &number);
+    do{
+        printf("%d ", number%10);
+        number=number/10;
+    }while(number!=0);
+    return 0;
+}
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section id="4-3">
+                    <h2>4.3 判断素数</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例4-5. 判断素数</p>
+                    <p>输入一个正整数m，判断它是否为素数。素数指的是只能被1和自身整除的正整数，1不是素数，2是素数
+                    </p>
+                </section>
+                <section id="4-3-1-1">
+                    <h3>4.3.1 程序解析</h3>
+                    <p style="text-align:left;font-size:60%">
+                        判断素数的依据：除了1和m，不能被其它数整除<br />
+                        设i取值范围在[2, m-1]之间，有
+                    </p>
+                    <ul>
+                        <li style="text-align:left;font-size:60%">如果m不能被该区间上的任何一个整数整除，即对每个i，m%i都不为0，则m是素数</li>
+                        <li style="text-align:left;font-size:60%">只要能找到一个i，有m%i=0，则m必不是素数</li>
+                    </ul>
+                    <table style="font-size:60%">
+                        <tr>
+                            <th>m</th>
+                            <th>%2</th>
+                            <th>%3</th>
+                            <th>%4</th>
+                            <th>%5</th>
+                            <th></th>
+                            <th>%(m-1)</th>
+                        </tr>
+                        <tr>
+                            <th>m不是素数-->||</th>
+                            <th>=0</th>
+                            <th>=0</th>
+                            <th>=0</th>
+                            <th>=0</th>
+                            <th>...</th>
+                            <th>=0</th>
+                        </tr>
+                        <tr>
+                            <th>m是素数-->&&</th>
+                            <th>!=0</th>
+                            <th>!=0</th>
+                            <th>!=0</th>
+                            <th>!=0</th>
+                            <th>...</th>
+                            <th>!=0</th>
+                        </tr>
+                    </table>
+
+                    <p class="smallft" style="font-size:60%">
+                        m不可能被大于m/2的整数整除<br />
+                        i的取值可能有<br />
+                        [2,m-1], [2, m/2], [2, $\sqrt{m}$], [2, $\sqrt{m}+1$]
+                    </p>
+                </section>
+                <section id="4-3-1-2">
+                    <h3>4.3.1 程序解析</h3>
+                    <pre>
+                        <code class="hljs" data-trim>
+limit=sqrt(m)+1; /* 考虑浮点数运算误差 */
+for(i=2; i<=limit; i++)
+{
+    if(m%i==0)
+        break;
+}
+if(i>m/2)
+    printf("yes\n");
+else
+    printf("no\n");
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-3-1-3">
+                    <h3>判断素数源程序</h3>
+                    <pre style="font-size:45%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int m, limit, i;
+    printf("Enter a number:");
+    scanf("%d", &m);
+    if(m<=1)
+        printf("no\n");
+    else if(m==2)
+        printf("yes\n");
+    else
+    {
+        limit=sqrt(m)+1;
+        for(i=2; i<=limit; i++)
+        {
+            if(m%i==0)
+                break;
+        }
+        if(i>limit)
+            printf("yes\n");
+        else
+            printf("no\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-3-2-1">
+                    <h3>4.3.2 break语句</h3>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+while(expa){
+    语句1;
+    if(expb)
+        break;
+    语句2;
+}
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            当循环有多个出口时<br />
+                        <ul>
+                            <li class="smallft">共同表示循环条件</li>
+                            <li class="smallft">区分结束条件</li>
+                        </ul>
+                        <pre>
+                                <code class="hljs" data-trim>
+for(i=2; i<=limit; i++)
+    if(m%i==0) break;
+if(i>limit) print("yes\n");
+else printf("no\n");
+                                </code>
+                            </pre>
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap04/4-4.png" style="width:80%" />
+                    </div>
+                </section>
+                <section id="4-3-2-2">
+                    <h3>练习--输出结果是什么</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim>
+for(i=2; i<=limit; i++)
+if(m%i==0) break;
+if(i&gt;limit) print("yes\n");
+else printf("no\n");
+                        </code>
+                    </pre>
+                    <p style="text-align:center;font-size:60%">
+                        Enter a number: 9<br /><text class="fragment">no</text>
+                    </p>
+                    <div class="columnleft">
+                        <pre style="font-size:40%">
+                            <code class="hljs" data-trim>
+for(i=2; i<=limit; i++)
+if(m%i==0){
+    printf("no\n");
+    break;
+}
+printf("yes\n");
+                            </code>
+                        </pre>
+                        <p style="text-align:center;font-size:60%">
+                            Enter a number: 9<br /><text class="fragment">no<br />yes</text>
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <pre style="font-size:40%">
+                            <code class="hljs" data-trim>
+for(i=2; i<=limit; i++)
+{
+    if(m%i==0) printf("no\n");
+    else printf("yes\n");
+}
+                            </code>
+                        </pre>
+                        <p style="text-align:center;font-size:60%">
+                            Enter a number: 9<br /><text class="fragment">yes<br />no<br />yes</text>
+                        </p>
+                    </div>
+                </section>
+                <section id="4-3-2-3">
+                    <h3>continue语句</h3>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+while(expa)
+{
+    语句1;
+    if(expb)
+        continue;
+    语句2;
+}
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            跳过continue后面的语句，继续下一次循环
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap04/4-5.png" style="width:80%" />
+                    </div>
+                </section>
+                <section id="4-3-2-4">
+                    <h3>break和continue</h3>
+                    <p class="smallft">
+                        下述代码的输出结果是什么?
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char c;
+    int i;
+    for(i=0; i&lt;10; i++)
+    {
+        c=getchar();
+        if(c=='\n')
+            continue;
+        putchar(c);
+    }
+}
+                        </code>
+                    </pre>
+                    <p style="text-align:left; font-size:60%">
+                        输入: abc&lt;Enter&gt;efgh&lt;Enter&gt;123&lt;Enter&gt;<br />
+                        输出的字符: <text class="fragment">abcefgh1</text>
+                    </p>
+                </section>
+                <section id="4-3-2-5">
+                    <h3>for和while的差异--continue</h3>
+                    <p class="smallft">
+                        输出100~200之间所有能被3整除的数
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+for(i=100; i<=200; i++)
+{
+    if(i%3==0)
+        printf("%d ", i);
+}
+                            </code>
+                        </pre>
+                        <pre>
+                            <code class="hljs" data-trim>
+for(i=100; i<=200; i++)
+{
+    if(i%3!=0)
+        continue;
+    printf("%d ", i);
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+i=100;
+while(i<=200)
+{
+    if(i%3!=0)
+        continue;
+    printf("%d ", i);
+    i++;
+}
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            这样对吗？
+                        </p>
+                    </div>
+                    <p class="smallft">
+                        <text style="color:red">for和while等价的前提是, for的循环语句中没有使用continue</text>
+                    </p>
+                </section>
+                <section id="4-3-2-6">
+                    <h3>改写猜数游戏</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例4-6. </text>改写例3-1的简单猜数游戏，输入你所猜的整数(规定为1~100)，与计算机产生的被猜数比较，若相等，显示猜中；若不等，显示与被猜数的大小关系，最多允许猜7次
+                    </p>
+                </section>
+                <section id="4-3-2-7">
+                    <h3>改写猜数游戏--版本(!)</h3>
+                    <pre style="font-size:42%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count=0, flag, mynumber, yournumber;
+    mynumber=38;  /* 计算机指定被猜的数 */
+    flag=0;       /* flag为0表示没猜中，1表示猜中 */
+    while(count&lt;7)
+    {
+        printf("Enter your number:");
+        scanf("%d", yournumber);
+        count++;
+        if(yournumber==mynumber)  /* 若相等，显示猜中 */
+        {
+            printf("Lucky you!\n");
+            flag=1;
+            break;      /* 已猜中，终止循环 */
+        }else if(yournumber&gt;mynumber)
+        {
+            printf("Too big!\n");
+        }else
+        {
+            print("Too small\n");
+        }
+    }
+    if(flag==0)    /* 超过7次还没猜中，提示游戏结束 */
+        printf("Game Over!\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-3-2-8">
+                    <h3>改写判断素数程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int m, limit, i, flag;
+    printf("Enter a number:");
+    scanf("%d", &m);
+    if(m<=1)
+        flag=0;
+    else if(m==2)
+        flag=1;
+    else
+    {
+        flag=1;
+        limit=sqrt(m)+1;
+        for(i=2; i<=limit; i++)
+        {
+            if(m%i==0)
+            {
+                flag=0;
+                break;
+            }
+        }
+        if(flag==1)
+            printf("yes\n");
+        else
+            printf("no\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-3-2-9">
+                    <h3>改写猜数游戏--版本(2)</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;time.h&gt;
+int main()
+{
+    int count=0, flag=0, mynumber, yournumber;
+    srand(time(0));
+    mynumber=rand()%100+1; /* 随机产生一个1~100之间的被猜数 */
+    while(count&lt;7)
+    {
+        printf("Enter your number:");
+        scanf("%d", yournumber);
+        count++;
+        if(yournumber==mynumber)  /* 若相等，显示猜中 */
+        {
+            printf("Lucky you!\n");
+            flag=1;
+            break;      /* 已猜中，终止循环 */
+        }else if(yournumber&gt;mynumber)
+        {
+            printf("Too big!\n");
+        }else
+        {
+            print("Too small\n");
+        }
+    }
+    if(flag==0)    /* 超过7次还没猜中，提示游戏结束 */
+        printf("Game Over!\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="4-4">
+                    <h2>4.4 求1!+2!+...+n!</h2>
+                    <p style="text-align:center; font-size:100%; font-weight:bold">
+                        例4-7. 使用函数求阶乘和
+                    </p>
+                    <p>
+                        输入一个正整数n(n&#8804;16)，计算1!+2!+3!+...+n!。要求定义和调用函数fact(n)计算n的阶乘，如果n是非负数，则该函数返回n的阶乘，否则返回0
+                    </p>
+                </section>
+                <section id="4-4-1-1">
+                    <h3>4.4.1 程序解析</h3>
+                    <pre style="font-size:46%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+double fact(int n);
+int main()
+{
+    int i, n;
+    double sum;
+    printf("Enter n:");
+    scanf("%d", &n);
+    sum=0;
+    for(i=1; i<=n; i++)
+        sum=sum+fact(i);
+    printf("sum=%.0f\n", sum);
+    return 0;
+}
+double fact(int n)
+{
+    int i;
+    double result;
+
+    if(n&lt;0)
+        return 0;
+    result=1;
+    for(i=1; i<=n; i++)
+        result=result*i;
+    return result;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-4-1-2">
+                    <h3>嵌套循环</h3>
+                    <p class="smallft">
+                        求阶乘的循环:
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+item=1;
+for(i=1; i<=n; i++)
+    item=item*i;
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        循环求阶乘加和
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+sum=0;
+for(i=1; i<=n; i++)
+{
+    item=1;              /* 每次求阶乘都从1开始乘 */
+    for(j=1; j<=i; j++)  /* 内层循环算出item=i! */
+    {                    /* 注意内外层循环用不同的变量控制 */
+        item=item*j;
+    }
+    sum=sum+item;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-4-1-3">
+                    <h3>讨论--内层循环的初始化</h3>
+                    <p class="smallft">
+                        求1!+2!+3!+...+n!
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+sum=0;
+for(i=1; i<=n; i++)
+{
+    item=1;
+    for(j=1; j<=i; j++)
+    {
+        item=item*j;
+    }
+    sum=sum+item;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+sum=0;
+item=1;
+for(i=1; i<=n; i++)
+{
+    for(j=1; j<=i; j++)
+    {
+        item=item*j;
+    }
+    sum=sum+item;
+}
+                            </code>
+                        </pre>
+                        <p class="smallft fragment" style="text-align:center">
+                            求1!+1!2!+...+1!2!...n!
+                        </p>
+                    </div>
+                </section>
+                <section id="4-4-1-4">
+                    <h3>分析嵌套循环的执行过程</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+sum=0;
+for(i=1; i<=n; i++)
+{
+    item=1;
+    for(j=1; j<=i; j++)
+    {
+        item=item*j;
+    }
+    sum=sum+item;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        <text style="color:darkred">第2-10行</text>，外层循环变量i的每个值，内层循环变量<text style="color:darkred">第5-8行</text>都要变化一个完整的轮次<br />
+                        内外层循环变量的名字不能相同，分别用<text style="color:darkred">i</text>和<text style="color:darkred">j</text>
+                    </p>
+                </section>
+                <section id="4-4-1-5">
+                    <h3>练习</h3>
+                    <p class="smallft">
+                        以下代码片段运行结果是什么?内层循环总共执行了多少次?
+                    </p>
+                    <pre style="font-size:45%">
+                        <code class="hljs" data-trim>
+for(i=1; i<=100; i++)
+{
+    for(j=1; j<=i; j++)
+    {
+        printf("%d %d\n", i, j);
+    }
+}
+                        </code>
+                    </pre>
+                    <table class="fragment" style="font-size:50%">
+                        <tr>
+                            <td>i=1</td>
+                            <td>j=1</td>
+                            <td>1 1</td>
+                            <td>No.1</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">i=2</td>
+                            <td>j=1</td>
+                            <td>2 1</td>
+                            <td>No.2</td>
+                        </tr>
+                        <tr>
+                            <td>j=2</td>
+                            <td>2 2</td>
+                            <td>No.3</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="text-align:center">............</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="4">i=100</td>
+                            <td>j=1</td>
+                            <td>100 1</td>
+                            <td>No.4951</td>
+                        </tr>
+                        <tr>
+                            <td>j=2</td>
+                            <td>100 2</td>
+                            <td>No.4952</td>
+                        </tr>
+                        <tr>
+                            <td>......</td>
+                            <td>......</td>
+                            <td>......</td>
+                        </tr>
+                        <tr>
+                            <td>j=100</td>
+                            <td>100 100</td>
+                            <td>No.5050</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+            </section>
+            <section>
+                <section id="4-5">
+                    <h2>4.5 循环结构程序设计</h2>
+                    <ul>
+                        <li class="smallft">循环程序的实现要点</li>
+                        <ul>
+                            <li class="smallft">归纳出哪些操作需要反复执行? 执行体</li>
+                            <li class="smallft">这些操作在哪些情况下重复执行? 循环条件</li>
+                        </ul>
+                        <li class="smallft">常见的循环控制方式</li>
+                        <ul>
+                            <li class="smallft">计数控制、计算值控制、输入值控制</li>
+                            <li class="smallft">多重控制(计数控制+计算值控制, ......)</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="4-5-1">
+                    <h3>常见的循环控制方式</h3>
+                    <ul>
+                        <li style="text-align:left; font-size:50%"><text style="font-weight:bold;">计数控制</text>：2.4，例4-6, 4-7, 4-9, 4-11, 4-12</li>
+                        <p style="text-align:left; font-size:50%">
+                            sum=0;<br />
+                            for(i=1; i
+                            <=n; i++){<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;sum=sum+fact(i);<br />
+                            }
+                        </p>
+                        <li style="text-align:left; font-size:50%"><text style="font-weight:bold;">计算值控制</text>：例4-1, 4-3, 4-4</li>
+                        <p style="text-align:left; font-size:50%">
+                            item=1.0;<br />
+                            while(fabs(item)>=0.0001){<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;item=flag*1.0/denominator;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                            }
+                        </p>
+                        <li style="text-align:left; font-size:50%"><text style="font-weight:bold;">输入值控制为主</text>：例4-2, 4-8</li>
+                        <p style="text-align:left; font-size:50%">
+                            scanf("%lf", &score);<br />
+                            while(score>=0){<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;scanf("%lf", &score);<br />
+                            }
+                        </p>
+                        <li style="text-align:left; font-size:50%"><text style="font-weight:bold;">计数控制+计算值控制</text>：例4-5, 4-6, 4-10</li>
+                    </ul>
+                </section>
+                <section id="4-5-2">
+                    <h3>循环语句的控制</h3>
+                    <ul>
+                        <li class="smallft">主要考虑因素：循环控制方式</li>
+                        <ul>
+                            <li class="smallft">事先给定循环次数，首选for</li>
+                            <li class="smallft">通过其它条件控制循环，考虑while或do-while</li>
+                            <ul>
+                                <li class="smallft">如果循环条件在进入循环时明确，可选用while循环</li>
+                                <li class="smallft">如果循环条件需要在循环体中明确，则使用do-while语句</li>
+                            </ul>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="4-5-3">
+                    <h3>求学生成绩最高分</h3>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-8. 求最值问题
+                    </p>
+                    <p class="smallft">输入一批学生的成绩，找出最高分</p>
+                </section>
+                <section id="4-5-3-1">
+                    <h3>求学生成绩最高分(for实现)</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, mark, max, n;
+    printf("Enter n:");
+    scanf("%d", &n);
+    printf("Enter %d marks:", n);
+    scanf("%d", &mark);    /* 读入第一个成绩 */
+    max=mark;      /* 假设第一个成绩是最高分 */
+    for(i=1; i<=n; i++)
+    {
+        scanf("%d", &mark);
+        if(mark&gt;max)
+            max=mark;
+    }
+    printf("max=%d\n", max);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-3-2">
+                    <h3>求学生成绩最高分(while实现)</h3>
+                    <p class="smallft">
+                        以"-1"作为成绩输入的结束
+                    </p>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim  data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int mark, max;
+    printf("Enter marks:");
+    scanf("%d", &mark);    /* 读入第一个成绩 */
+    max=mark;      /* 假设第一个成绩是最高分 */
+    while(mark>=0)
+    {
+        if(mark&gt;max)
+            max=mark;
+        scanf("%d", &mark);
+    }
+    printf("max=%d\n", max);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-3-3">
+                    <h3>求学生成绩最高分(do-while实现)</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim  data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int mark, max;
+    max=-1; /* 给max赋一个小初值 */
+    printf("Enter marks:", n);
+    do{
+        scanf("%d", &mark);
+        if(mark&gt;max)
+            max=mark;
+    }while(mark>=0);
+    printf("max=%d\n", max);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-4">
+                    <h3>Fibonacci数列问题</h3>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-9. 斐波那契问题
+                    </p>
+                    <p class="smallft">输入正整数n(1&#8804;n&#8804;46)，输出斐波那契(Fibonacci)数列的前n项：1, 1, 2, 3, 5, 8, 13, ..., 每行输出5个。Fibonacci数列就是满足任一项数字是前两项的和(最开始的两项均定义为1)的数列</p>
+                    <pre>
+                        <code>
+x1=x2=1;
+x=x1+x2;
+x1=x2;
+x2=x;
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-4-1">
+                    <h3>Fibonacci数列问题源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, n, x1, x2, x;  /* x1和x2分别代表前两项，x是其后一项 */
+    printf("Enter n:");
+    scanf("%d", &n);
+    if(n&lt;1 || n&gt;46)
+    {
+        printf("Invalid.\n");
+    }
+    else if(n==1)
+    {
+        printf("%10d", 1);    /* 输出第1项 */
+    }
+    else
+    {
+        x1=1; x2=1;
+        printf("%10d%10d", x1, x2);  /* 先输出前两项 */
+        for(i=3; i<=n; i++)      /* 循环输出后n-2项 */
+        {
+            x=x1+x2;             /* 计算新项 */
+            printf("%10d", x);
+            if(i%5==0)
+                printf("\n");
+            x1=x2;
+            x2=x;
+        }
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-5">
+                    <h3>素数问题</h3>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-10. 素数问题
+                    </p>
+                    <p class="smallft">输入2个正整数m和n(1&#8804;m&#8804;n&#8804;500)，输出m到n之间的全部素数，每行输出10个。素数就是只能被1和自身整除的正整数，1不是素数，2是素数</p>
+                    <pre>
+                        <code class="hljs" data-trim>
+for(k=m; k<=n; k++)
+    if(k是素数)
+        printf("%d", k);
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-5-1">
+                    <h3>素数问题解析</h3>
+                    <p class="smallft">
+                        判断k是否为素数
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+if(k<=1)
+    flag=0;
+else if(k==2)
+    flag=1;
+else{
+    flag=1;
+    limit=sqrt(k)+1;
+    for(i=2; i<=limit; i++){
+        if(k%i==0){
+            flag=0;
+            break;
+        }
+    }
+}
+if(flag==1)
+    printf("%d", k);
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-5-2">
+                    <h3>素数问题源程序</h3>
+                    <pre style="font-size: 33%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int count, i, k, flag, limit, m, n;
+    printf("Enter m, n");
+    scanf("%d%d", &m, &n);
+    count=0;
+    if(m&lt;1 || n&gt;500 || m&lt;n)
+        printf("Invalid\n");
+    else{
+        for(k=m; k<=n; k++){
+            if(k<=1)
+                flag=0;
+            else if(k==2)
+                flag=1;
+            else{
+                flag=1;
+                limit=sqrt(k)+1;
+                for(i=2; i&lt;limit; i++){
+                    if(k%i==0){
+                        flag=1;
+                        break;
+                    }
+                }
+            }
+            if(flag==1){
+                printf("%d", k);
+                count++;
+                if(count%10==0)
+                    printf("\n");
+            }
+        }
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-6">
+                    <h3>搬砖问题</h3>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-11. 搬砖问题
+                    </p>
+                    <p class="smallft">某工地需要搬运砖块，书籍男人一人搬3块，女人一人搬2块，小孩两人搬一块。如果想用n人正好搬n块砖，问有哪些搬法?</p>
+                </section>
+                <section id="4-5-6-1">
+                    <h3>搬砖问题源程序(1)</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int children, men, women, cnt, n;
+    printf("Enter n:");
+    scanf("%d", &n);
+    cnt=0;
+    for(men=0; men<=n; men++){
+        for(women=0; women<=n; women++){
+            for(children=0; children<=n; children++){
+                if(men+women+children==n && men*3+women*2+children*0.5==n){
+                    printf("men=%d, women=%d, children=%d", men, women, children);
+                    cnt++;
+                }
+
+            }
+        }
+    }
+    if(cnt==0){
+        printf("None\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-6-2">
+                    <h3>搬砖问题源程序(2)</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int children, men, women, cnt, n;
+    int men_limit, women_limit;
+    printf("Enter n:");
+    scanf("%d", &n);
+    cnt=0;
+    men_limit=n/3;
+    women_limit=n/2;
+    for(men=0; men<=men_limit; men++){
+        for(women=0; women<=women_limit; women++){
+            children=n-men-women;
+            if(men+women+children==n && men*3+women*2+children*0.5==n){
+                printf("men=%d, women=%d, children=%d", men, women, children);
+                cnt++;
+            }
+        }
+    }
+    if(cnt==0){
+        printf("None\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="4-5-7">
+                    <h3>找零钱问题</h3>
+                    <p style="text-align:center; font-weight:bold;font-size:100%">
+                        例4-12. 找零钱问题
+                    </p>
+                    <p class="smallft">有足够数量的5分、2分和1分硬币，现在要用这些硬币来支付一笔小于1元的零钱money，问至少要用多少个硬币？输入零钱，输出硬币的总数量和相应面额的硬币数量</p>
+                    <p class="smallft fragment">
+                        硬币总数最小，优先考虑使用面值大的硬币<br />
+                        采用三重循环嵌套，按照5分、2分和1分的顺序，从上限(money/币值)到下限(0)
+                    </p>
+                </section>
+                <section id="4-5-7-1">
+                    <h3>找零钱问题源程序</h3>
+                    <pre style="font-size:43%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int flag, money, n1, n2, n5; /* n1, n2, n5分别表示5分、2分和1分硬币的数量 */
+
+    flag=1;  /* 表示是否中止嵌套循环 */
+    printf("Enter money:");
+    scanf("%d", &money);
+    for(n5=money/5; (n5>=0)&&(flag==1); n5--){
+        for(n2=(money-n5*5)/2; (n2>=0)&&(flag==1); n2--){
+            for(n1=money-n5*5-n2*2;(n1>=0)&&(flag==1); n1--){
+                if(n5*5+n2*2+n1==money){
+                    printf("n5: %d, n2: %d, n1: %d\n, total: %d", n5, n2, n1, n1+n2+n5);
+                    flag=0;
+                }
+            }
+        }
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
