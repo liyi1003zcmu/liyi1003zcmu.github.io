@@ -1,0 +1,1325 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第7章数组">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第七章 数组</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第7章 数组</h2>
+                <p>
+                    <a href="#/7-1">7.1 输出所有大于平均值的数</a><br />
+                    <a href="#/7-2">7.2 找出矩阵中最大值所在的位置</a><br />
+                    <a href="#/7-3">7.3 判断回文</a><br />
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>什么是数组?为什么要使用数组?如何定义数组?</li>
+                    <li>如何引用数组元素?</li>
+                    <li>二维数组的元素在内存中按什么方式存放?</li>
+                    <li>什么是字符串?字符串结束符的作用是什么?</li>
+                    <li>如何实现字符串的存储和操作，包括字符串的输入输出?</li>
+                    <li>怎样理解C语言将字符串作为一个特殊的一维字符数组?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="7-1">
+                    <h2>7.1 输出所有大于平均值的数</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-1. 输出所有大于平均值的数</p>
+                    <p>输入n个整数(1&#8804;n&#8804;10)，计算这些数的平均值，输出所有大于平均值的数
+                    </p>
+                </section>
+                <section id="7-1-1">
+                    <h3>7.1.1 程序解析</h3>
+                    <pre style="font-size: 40%;">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, n;
+    double average, sum;
+    int a[10];    /* 定义一个数组a，最多有10个元素 */
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    sum=0;
+    if(n>=1 && n<=10){
+        printf("Enter %d integers:", n);
+        for(i=0; i&lt;n; i++){    /* 输入n个元素，并求所有元素的和 */
+            scanf("%d", &a[i]);
+            sum+=a[i];
+        }
+        average=sum/n;
+        printf("Average=%.2f\n", average); /* 求平均值 */
+        for(i=0; i&lt;n; i++){
+            if(a[i]>average)
+                printf("%d ", a[i]);     /* 与平均值比较，输出大于平均值的数 */
+        }
+        printf("\n");
+    }else{
+        printf("Invalid value\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-1-1">
+                    <h3>数组</h3>
+                    <img src="../images/cprog/chap07/7-1.png" />
+                    <dt style="text-align:left">
+                        数组
+                    </dt>
+                    <dd style="text-align:left">
+                        由<text style="color:darkred">相同类型</text>数据组成的<text style="color:darkblue">有序</text><text style="color:darkred">集合</text>，在内存中连续存放。数组由<text style="color:darkblue">数组名</text>和<text
+                            style="color:darkblue">下标</text>唯一确定每个数组元素，所有元素均属于相同类型
+                    </dd>
+                    <p class="smallft">
+                        使用数组，使程序简洁、可读性高，易于使用循环结构。
+                    </p>
+                </section>
+                <section id="7-1-2">
+                    <h3>7.1.2 一维数组的定义和引用</h3>
+                    <p class="smallft">
+                        <text style="color:darkblue">类型名</text> <text style="color:darkred">数组名</text> <text style="color:darkblue">[数组长度]</text><br />
+                        类型名，用于指明数组元素的类型<br />
+                        数组名，标识符，用于标识数组(变量)的名称<br />
+                        数组长度，<text style="color:darkblue">常量表达式</text>，用于指定数组的大小
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+int a[10]; /* 定义一个含有10个整型元素的数组a */
+char c[200]; /* 定义一个含有200个字符元素的数组c */
+float f[5]; /* 定义一个含有5个浮点型元素的数组f */
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-2-1">
+                    <h3>数组的内存结构</h3>
+                    <p class="smallft" style="font-weight:bold;">
+                        数组名是一个<text style="color:red">地址常量</text>，存放数组内存空间的首地址
+                    </p>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            假定系统规定int类型占用2个字节，则若定义int a[10];，其在内存中的分配方式如图中所示
+                        </p>
+                        <p class="smallft" style="font-size:70%">
+                            即只要知道了数组首元素的地址，以及每个元素存储所需的字节数，其余各个元素的存储地址均可计算得到
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap07/7-2.png" />
+                    </div>
+                </section>
+                <section id="7-1-2-2">
+                    <h3>数组元素的引用</h3>
+                    <p class="smallft" style="font-size:60%">
+                        数组使用遵循先<text style="color:darkblue">定义</text>，后<text style="color:darkblue">使用</text>的原则，一次只能引用<text style="darkblue">单个的</text>数组元素，不能一次引用整个数组<br />
+                        数组元素引用的语法:<br />
+                        <text style="color:red">数组名[下标]</text><br />
+                        下标：整型表达式；下标取值范围：0~数组长度-1<br />
+                        如int a[10];<br />
+                        对10个元素的引用分别为: a[0], a[1], a[2], ..., a[9]<br />
+                        注意数组下标不能越界，不能使用a[10]<br />
+                    </p>
+                    <p class="smallft" style="font-size:60%">
+                        数组元素的使用方法与同类型的变量使用方法相同<br />
+                        注意区分数组的定义和数组元素的引用
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+int a[10];
+int i, sum=0;
+for(i=0; i&lt;10; i++){
+    scanf("%d", &a[i]);
+    sum+=a[i];
+    printf("%d", a[i]);
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-3">
+                    <h3>7.1.3 一维数组的初始化</h3>
+                    <ul>
+                        <li class="smallft">定义数组时，对数组元素赋初值<br />
+                            <text style="color:darkblue">类型名 数组名[数组长度]={初值表};</text>
+                        </li>
+                    </ul>
+                    <pre style="font-size:80%">
+                        <code class="hljs" data-trim>
+int a[10]={1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-3-1">
+                    <h3>一维数组的初始化</h3>
+                    <ul>
+                        <li clss="smallft">静态数组、动态数组的初始化</li>
+                    </ul>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim data-line-numbers>
+/* 静态数组若没有初始化初值，所有元素自动赋0 */
+static int b[6]={1,2,3,4,5,6};
+static int b[6];
+
+static in s[6]={1,2,3} /* s[3]~s[5]均为0 */
+
+/* 动态存储数组若没有初始化初值，所有元素自动赋随机值 */
+int c[6]; /* 等价于 auto int c[6]; */
+
+int d[5]={0, 1}; /* d[0]=0, d[1]=1, 其余元素为随机值 */
+
+/* 如果是对所有元素赋初值，可省略数组长度，但建议不要省略 */
+int a[]={0, 1, 2, 3, 4, 5}; /* 等价于int a[6]={...} */
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-4">
+                    <h3>7.1.4 使用一维数组编程</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+for(int i=0; i&lt;n; i++)
+    printf("%d ", a[i]);
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        将数组下标作为循环变量，通过循环，逐个处理数组元素，核心是<br />
+                        <text style="color:darkred">对一组具有相同类型的数据元素，重复执行相同的操作</text>
+                    </p>
+                </section>
+                <section id="7-1-4-1">
+                    <h3>一维数组示例</h3>
+                    <ul>
+                        <li classs="smallft">例7-2. 用数组计算Fibonacci数列的前n个数，并按每行打印5个的顺序输出</li>
+                        <li classs="smallft">例7-3. 顺序查找法。输入正整数n和整数x，再输入n个整数并存入数组a中，在数组中查找x，若找到，输出相应的最小下标，否则，输出"Not found"</li>
+                        <li classs="smallft">例7-4. 输入n, 再输入n个整数，(1)输出最小值和它对应的下标；(2)将最小值与第一个数交换，输出交换后的n个数</li>
+                        <li classs="smallft">例7-5. 选择法排序。输入n，再输入n个整数，用选择法将它们从小到大排序后输出</li>
+                        <li classs="smallft">例7-6. 调查电视节目受欢迎程序。某电视台要进行一次对该台8个栏目的受欢迎情况，共调查了n位观众，现要求编写程序，输入观众的投票，统计输出各栏目的得票情况</li>
+                        <li classs="smallft">例7-7. 二分查找法。设已有一个n个元素的整形数组a，且按值从小到大有序排列。输入一个整数x，然后在数组中查找x，如果找到，输出相应的下标，否则，输出"Not Found"</li>
+                    </ul>
+                </section>
+                <section id="7-1-4-2">
+                    <h3>计算Fibonacci数列</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-2. 计算Fibonacci数列</p>
+                    <p>用数组计算Fibonacci数列的前n(1&#8804;n&#8804;46)个数，即1,1,2,3,...，并按每行打印5个的顺序输出，如果最后一行的输出少于5个数，也需要换行
+                    </p>
+                    <p class="smalllft" style="font-size:80%">
+                        <text style="font-weight:bold">分析</text>: 用数组计算并存放Fibonacci数列的前n个数，有f[0]=f[1]=1; f[i]=f[i-1]+f[i-2](2&#8804;n&#8804;45)
+                    </p>
+                </section>
+                <section id="7-1-4-3">
+                    <h3>Fibonacci数列源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 46      /* 定义符号常量MAXN */
+int main()
+{
+    int i, n;
+    int fib[MAXN]={1,1}; /* 数组初始化，生成斐波那契数列的前两项 */
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    if(n>=1 && n<=46){
+        /* 计算斐波那契数列的其余n-2项 */
+        for(i=2; i&lt;n; i++)
+            fib[i]=fib[i-1]+fib[i-2];
+
+        /* 输出斐波那契数列 */
+        for(i=0; i&lt;n; i++){
+            printf("%6d", fib[i]);
+            if(i%5==4)    /* 每5个换行 */
+                printf("\n");
+        }
+        if(n%5!=0)    /* 如果总数不是5的倍数，最后换行 */
+            printf("\n");
+    }else{
+        printf("Invalid value!\n");  /* 输出错误信息 */
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-4-4">
+                    <h3>查找满足条件的所有整数</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-3. 查找满足条件的所有整数</p>
+                    <p>输入正整数n(1&#8804;n&#8804;10)和整数x，再输入n个整数并存入数组a中，然后在数组a中查找给定的x。如果数组a中的元素与x的值相同，输出所有满足条件的元素的下标(下标从0开始)；如果没有找到，输出"Not Found"</p>
+                </section>
+                <section id="7-1-4-5">
+                    <h3>查找满足条件的所有整数源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 10
+int main()
+{
+    int i, flag, n, x;
+    int a[MAXN];
+    printf("Enter n:");
+    scanf("%d%d", &n, &x);
+    printf("Enter %d integers", n);
+    for(i=0; i&lt;n; i++)
+        scanf("%d", &a[i]);
+
+    flag=0;  /* 在数组a中查找，先假设x不在数组a中，设置flag为0 */
+    for(i=0; i&lt;n; i++){
+        if(a[i]==x){    /* 如果在数组a中找到了x，输出数组下标i，设置flag为1 */
+            printf("Index is %d\n", i);
+            flag=1;
+        }
+    }
+    if(flag==0)    /* 如果flag为0，表明x不在数组a中 */
+        printf("Not Found!\n");
+    return 0;
+}
+
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-size:60%">
+                        题目若改为：(1)如果存在，输出yes,否则输出no? (2)如果找到，输出最小的下标? (3)如果找到，输出最大的下标? (4)如果存在，输出找到的次数?
+                    </p>
+                </section>
+                <section id="7-1-4-6">
+                    <h3>求最小值和最小下标</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-4. 求最小值和最小下标</p>
+                    <p>输入一个正整数(1&#8804;n&#8804;10)，再输入n个正整数，将它们存入数组a<br />
+                        (1). 求最小值及其下标，输出最小值和它对应的最小下标<br />
+                        (2). 交换最小值，将最小值和第一个数交换，输出交换后的n个数</p>
+                </section>
+                <section id="7-1-4-7">
+                    <h3>求最小值和最小下标</h3>
+                    <img src="../images/cprog/chap07/7-3.png" style="width:30%" />
+                </section>
+                <section id="7-1-4-8">
+                    <h3>求最小值和最小下标</h3>
+                    <pre style="font-size:35%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 10
+int main()
+{
+    int i, index, n;
+    int a[MAXN];
+
+    printf("Enter n:");  /* 输入n和n个数组元素 */
+    scanf("%d", &n);
+    printf("Enter %d integers:", n);
+    for(i=0; i&lt;n; i++)
+        scanf("%d", &a[i]);
+
+    index=0;    /* 找最小值，下标保存在index中 */
+    for(i=1; i&lt;n; i++){
+        if(a[i]&lt;a[index])
+            index=i;
+    }
+    printf("Min is %d\t index is %d\n", a[index], index);
+
+    /* 交换最小值和第一项 */
+    int temp;
+    temp=a[index];
+    a[index]=a[0];
+    a[0]=temp;
+
+    for(i=0; i&lt;n; i++)  /* 输出数组元素 */
+        printf("%d ", a[i]);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-4-9">
+                    <h3>选择排序</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-5. 选择排序算法</p>
+                    <p>输入一个正整数n(1&#8804;n&#8804;10)，再输入n个整数，用选择排序法将它们从小到大排序后输出</p>
+                    <a href="https://visualgo.net/" target="_blank"><img src="../images/cprog/chap07/7-4selectionSort.gif" /></a>
+                </section>
+                <section id="7-1-4-10">
+                    <h3>选择排序算法描述</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">第1步:</text> 在未排序的n个数(a[0]~a[n-1])中找到最小数，将它与a[0]交换<br />
+                        <text style="font-weight:bold">第2步:</text> 在剩下未排序的n-1个数(a[1]~a[n-1])中找到最小数，将它与a[1]交换<br />
+                        ......<br />
+                        <text style="font-weight:bold">第n-1步:</text> 在剩下的未排序的2个数(a[n-2]~a[n-1])中找到最小数，将它与a[n-2]交换
+                    </p>
+                    <p class="smallft">
+                        总共需进行<text style="color:red">n-1</text>步，每步中要找到最小的数，分别需要进行<text style="color:red">n-1, n-2, n-3, ..., 2, 1次比较</text>，总共需要进行多少次比较？
+                    </p>
+                </section>
+                <section id="7-1-4-11">
+                    <h3>选择排序法</h3>
+                    <img src="../images/cprog/chap07/7-5.png" style="width:40%" />
+                </section>
+                <section id="7-1-4-12">
+                    <h3>选择排序源程序</h3>
+                    <pre style="font-size:35%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 10
+int main()
+{
+    int i, index, k, n, temp;
+    int a[MAXN];
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    printf("Enter %d integers:");
+    for(i=0; i&lt;n; i++)
+        scanf("%d", &a[i]);
+
+    /* 对n个数进行选择排序 */
+    for(k=0; k&lt;n-1; k++){
+        index=k;    /* index存放当前最小值所在的下标 */
+        for(i=k+1; i&lt;n; i++){
+            if(a[i]&lt;a[index])    /* 寻找到当前最小的下标，保存在index */
+                index=i;
+        }
+        temp=a[index];    /* 交换最小元素与下标为k的元素 */
+        a[index]=a[k];
+        a[k]=temp;
+    }
+    /* 输出数组 */
+    printf("After sorting:");
+    for(i=0; i&lt;n; i++)
+        printf("%d ", a[i]);
+    printf("\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-4-13">
+                    <h3>投票情况统计</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-6. 调查电视节目受欢迎程度</p>
+                    <p>某电视台要调查观众对该台8个栏目的受欢迎情况，共调查了n(1&#8804;&#8804;1000)位观众。现要求编写程序，输入每一位观众的投票情况(每位观众只能选择一个最喜欢的栏目投票)，统计输出各栏目的得票情况</p>
+                    <p class="smallft">
+                        用数组count保存各栏目的得票情况<br />
+                        count[i]记录编号为i(1~8)的栏目的得票数<br />
+                        count[i]++统计编号为i(1~8)的栏目的得票数<br />
+                    </p>
+                </section>
+                <section id="7-1-4-14">
+                    <h3>投票情况统计源程序</h3>
+                    <pre style="font-size:45%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 8
+int main()
+{
+    int i, n, response;
+    int count[MAXN+1];  /* 数组下标对应栏目编号，不使用count[0] */
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=1; i<=MAXN; i++)
+        count[i]=0;
+    for(i=1; i&lt;n; i++){
+        printf("Enter your response:");
+        scanf("%d", &response);
+        if(response>=1 && response <=MAXN)
+            count[response]++;
+        else
+            printf("Invalid: %d", response);
+    }
+    printf("Result:");
+    for(i=1; i<=MAXN; i++){
+        if(count[i]!=0)
+            printf("%4d%4d\n", i, count[i]);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-1-4-15">
+                    <h3>二分法查找</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-7. 二分查找法</p>
+                    <p>设已有一个n(1&#8804;n&#8804;10)个元素的整型数组a，<text style="color:red">且按值从小到大有序排列</text>。输入一个整数x，然后在数组中查换x，如果找到，输出相应的下标，否则，输出"Not Found"</p>
+                </section>
+                <section id="7-1-4-16">
+                    <h3>二分法查找</h3>
+                    <img src="../images/cprog/chap07/7-6.png" style="width:35%" />
+                </section>
+                <section id="7-1-4-17">
+                    <h3>二分法查找源程序</h3>
+                    <pre style="font-size:45%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int low, high, mid, n=10, x;
+    int a[10]={1,2,3,4,5,6,7,8,9,10}; /* 有序数组 */
+
+    printf("Enter x:"); /* 输入要查找的数x */
+    scanf("%d", &x);
+    low=0, high=n-1;    /* 初始化区间为整个数组 */
+    while(low<=high){
+        mid=(low+high)/2;
+        if(x==a[mid])
+            break;
+        else if(x&lt;a[mid])
+            high=mid-1;
+        else
+            low=mid+1;
+    }
+    if(low<=high)
+        printf("index is %d\n", mid);
+    else
+        printf("Not Found\n");
+
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="7-2">
+                    <h2>7.2 找出矩阵中最大值所在的位置</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-8. 找出矩阵中最大值所在的位置</p>
+                    <p>输入两个正整数m和n(1&#8804;m,n&#8804;6)，再输入1个m&times;n的矩阵，找出最大值以及它的行下标和列下标。假设最大值唯一</p>
+                </section>
+                <section id="7-2-1">
+                    <h3>7.2.1 程序解析</h3>
+                    <p class="smallft">
+                        利用row记录最大值的行下标，col记录对应的列下标，最大值为a[row][col]
+                    </p>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXM 6
+#define MAXN 6
+int main()
+{
+    int col, i, j, m, n, row;
+    int a[MAXM][MAXN];
+
+    printf("Enter m, n:");
+    scanf("%d%d", &m, &n);
+    printf("Enter %d integers:\n", m*n);  /* 提示输入m*n个数 */
+    for(i=0; i&lt;m; i++)                 /* 行下标m是外层循环变量 */
+        for(j=0; j&lt;n; j++)             /* 列下标n是内层循环变量 */
+            scanf("%d", &a[m][n]);
+
+    row=col=0;                            /* 遍历二维数组找出最大值 */
+    for(i=0; i&lt;m; i++){                /* 按行-列的顺序遍历，将最大值下标存在row和col中 */
+        for(j=0; j&lt;n;j++){
+            if(a[i][j]>a[row][col]){
+                row=i;
+                col=j;
+            }
+        }
+    }
+    printf("max=a[%d][%d]=%d\n", row, col, a[row][col]);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-2-2">
+                    <h3>7.2.2 二维数组的定义和引用</h3>
+                    <p class="smallft">
+                        多维数组的空间表达
+                    </p>
+                    <ul>
+                        <li class="smallft">一维数组，一列长表或一个向量</li>
+                        <li class="smallft">二维数组，一个表格或一个平面矩阵</li>
+                        <li class="smallft">三维数组：三维空间的一个方阵</li>
+                        <li class="smallft">多维数组：多维空间的一个数据阵列</li>
+                    </ul>
+                </section>
+                <section id="7-2-2-1">
+                    <h3>二维数组定义</h3>
+                    <p class="smallft">
+                        <text style="color:darkblue">类型名</text> <text style="color:darkred">数组名</text><text style="color:darkblue">[行长度][列长度]</text><br />
+                        如int a[3][2]; 定义了一个3行2列的二维数组，总共有6个元素<br />
+                        int b[5][10]; 定义了一个5行10列的二维数组，总共有50个元素
+                    </p>
+                </section>
+                <section id="7-2-2-2">
+                    <h3>二维数组引用</h3>
+                    <p class="smallft">
+                        二维数组使用也必须先定义，后引用<br />
+                        对于二维数组元素的引用，<text style="color:darkblue">数组名[行下标][列下标]</text><br />
+                        其中行下标和列下标都为整型表达式，其值为<br />
+                        0&#8804;行下标&#8804;行长度-1，0&#8804;列下标&#8804;列长度-1<Br />
+                        注意下标不能越界
+                    </p>
+                </section>
+                <section id="7-2-2-3">
+                    <h3>二维数组在内存中的存储方式</h3>
+                    <p class="smallft">
+                        二维数组在内存中元素按<text style="color:darkred">行/列</text>的形式存放。如定义int a[3][2]，表示1个3行2列的矩阵，其元素的存放形式如图中所示
+                    </p>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap07/7-7-1.png" />
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap07/7-7-2.png" />
+                    </div>
+                </section>
+                <section id="7-2-3">
+                    <h3>7.2.3 二维数组的初始化</h3>
+                    <p class="smallft">
+                        二维数组初始化，可按行赋初值，也可顺序赋初值
+                    </p>
+
+                    <div class="columnleft">
+                        <p class="smallft">
+                            分行赋初值
+                        </p>
+                        <pre style="font-size:50%">
+                            <code class="hljs" data-trim>
+/* a= 1 2 3 */
+/*    4 5 6 */
+/*    7 8 9 */
+
+int a[3][3]={{1,2,3}, {4,5,6}, {7,8,9}};
+static int b[4][3]={{1,2,3}, {}, {4,5}};
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            顺序赋初值
+                        </p>
+                        <pre style="font-size:50%">
+                            <code class="hljs" data-trim>
+/* b= 1 2 3 */
+/*    0 0 0 */
+/*    4 5 0 */
+/*    0 0 0 */
+
+int a[3][3]={1,2,3,4,5,6,7,8,9};
+static int b[4][3]={1,2,3,0,0,0,4,5};
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="7-2-3-1">
+                    <h3>二维数组的初始化</h3>
+                    <p class="smallft">
+                        二维数组初始化时可以省略行长度(第1个维度)，但列的维度不能省略<br />
+                        可对全部元素赋初值<br />
+                        int a[][3]={1,2,3,4,5,6,7,8,9};<br />
+                        或采用分行赋初值时，在初值表中列出全部行<br />
+                        static int b[][3]={{1,2,3}, {}, {4,5}, {}};
+                    </p>
+                </section>
+                <section id="7-2-4">
+                    <h3>7.2.4 使用二维数组编程</h3>
+                    <p class="smallft">
+                        行下标和列下标分别做为循环变量，通过<text style="color:darkred">二重循环</text>，遍历二维数组，一般将<text style="color:darkblue">行下标i</text>作为外层循环变量，将<text style="color:darkblue">列下标j</text>作为内层循环变量，即按照行/列顺序访问数组元素
+                    </p>
+                </section>
+                <section id="7-2-4-1">
+                    <h3>矩阵与二维数组</h3>
+                    <p class="smallft">
+                        用二维数组a表示n&times;n的方阵时，下标i,j的取值范围都是[0,n-1]
+                    </p>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap07/7-8.png" />
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            副对角线&nbsp;&nbsp;&nbsp;&nbsp;i+j==n-1<br />
+                            上三角&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i
+                            <=j<br />
+                            下三角&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i>=j<br />
+                            主对角线&nbsp;&nbsp;&nbsp;&nbsp;i==j
+                        </p>
+                    </div>
+                </section>
+                <section id="7-2-4-2">
+                    <h3>方阵转置</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-9. 方阵转置</p>
+                    <p>输入一个正整数n(1&lt;n&#8804;6)，根据下式生成一个n&times;n的方阵，将该方阵转置(行列互换)并输出</p>
+                    a[i][j]=i*n+j+1(0&#8804;i&#8804;n-i, 0&#8804;j&#8804;n-1)<br />
+                    <div class="columnleft">
+                        <p class="smallft">
+                            转置前
+                            $$
+                            A=\left[
+                            \begin{matrix}
+                            1 & 2 & 3\\
+                            4 & 5 & 6\\
+                            7 & 8 & 9
+                            \end{matrix}
+                            \right]
+                            $$
+                        </p>
+                    </div>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            转置后
+                            $$
+                            A^T=\left[
+                            \begin{matrix}
+                            1 & 4 & 7\\
+                            2 & 5 & 8\\
+                            3 & 6 & 9
+                            \end{matrix}
+                            \right]
+                            $$
+                        </p>
+                    </div>
+                </section>
+                <section id="7-2-4-3">
+                    <h3>方阵转置源程序</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 6
+int main()
+{
+    int i, j, n, temp;
+    int a[MAXN][MAXN];
+
+    /* 给二维数组赋值 */
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=0; i&lt;n; i++)
+        for(j=0; j&lt;n; j++)
+            a[i][j]=i*n+j+1;
+
+    /* 行列互换 */
+    for(i=0; i&lt;n; i++){
+        for(j=0; j&lt;n;j++){
+            if(i<=j){      /* 只遍历上三角，交换a[i][j]和a[j][i] */
+                temp=a[i][j];
+                a[i][j]=a[j][i];
+                a[j][i]=temp;
+            }
+        }
+    }
+    /* 输出矩阵 */
+    for(i=0; i&lt;n; i++){
+        for(j=0; j&lt;n; j++){
+            printf("%4d", a[i][j]);
+        }
+        printf("\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-2-4-4">
+                    <h3>计算天数</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-10. 计算天数</p>
+                    <p>定义函数day_of_year(year, month, day)，计算并返回年year、月month和日day对应的是该年的第几天</p>
+                    <p style="text-align:left; font-size:70%">
+                        <text style="font-weight:bold">例如：</text> 调用day_of_year(2000,3,1)返回61，day_of_year(1981, 3, 1)返回60。<br />
+                        需要判断闰年，闰年的定义是能被4整除且不能被100整除，或能被400整除的年份
+                    </p>
+                    <table style="align-content:center;font-size: 60%">
+                        <caption>
+                            每月天数
+                        </caption>
+                        <tr>
+                            <td>月份</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>7</td>
+                            <td>8</td>
+                            <td>9</td>
+                            <td>10</td>
+                            <td>11</td>
+                            <td>12</td>
+                        </tr>
+                        <tr>
+                            <td>非闰年</td>
+                            <td>0</td>
+                            <td>31</td>
+                            <td>28</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                        </tr>
+                        <tr>
+                            <td>闰年</td>
+                            <td>0</td>
+                            <td>31</td>
+                            <td>29</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                            <td>30</td>
+                            <td>31</td>
+                        </tr>
+                    </table>
+                </section>
+                <section id="7-2-4-5">
+                    <h3>计算天数源程序</h3>
+                    <pre>
+                        <code class="language-c" data-trim data-line-numbers>
+int day_of_year(int year, int month, int day)
+{
+    int k, leap;
+    int days=0;
+    int tab[2][13]={
+        {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+        {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+    };
+
+    leap= (year%4==0 && year%100!=0) || (year%400==0);
+    for(k=1; k&lt;month; k++)
+        days+=tab[leap][k];
+    days+=day;
+    return days;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="7-3">
+                    <h2>7.3 判断回文</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-11. 判断回文字符串</p>
+                    <p>输入一个以回车符为结束标志的字符串(少于80个字符)，判断该字符串是否为回文。回文就是字符串中心对称，如“noon"、"radar"是回文，”reader”不是回文</p>
+                </section>
+                <section id="7-3-1">
+                    <h3>判断回文源程序</h3>
+                    <pre style="font-size: 35%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 80
+int main()
+{
+    int i, k;
+    char line[MAXLINE];
+
+    /* 输入字符串 */
+    printf("Enter a string:");
+    k=0;
+    while((line[k]=getchar())!='\n') /* 输入结束符为'\n' */
+        k++;
+    line[k]='\0';    /* 将字符串结束符'\0'存入数组 */
+
+    /* 判断字符串line是否为回文 */
+    i=0;  /* i为字符串首字符的下标 */
+    k=k-1; /* k为字符串尾字符的下标 */
+    while(i&lt;k){    /* 能否改写for循环 */
+        if(line[i]!=line[k])   /* 如果字符不相等，提前结束循环 */
+            break;
+        i++;
+        k--;
+    }
+    if(i>=k)
+        printf("It is a palindrome\n");
+    else
+        printf("It is not a palindrome\n");
+
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="7-3-2">
+                    <h3>7.3.2 一维字符数组</h3>
+                    <p class="smallft">
+                        字符串的存储和运算可以用一维字符数组实现，一维字符数组的定义、引用、初始化和其它类型的一维数组相同
+                    </p>
+                    <pre style="font-size:50%">
+                    <code class="hljs" data-trim>
+char str[80];
+char t[5]={'H', 'a', 'a', 'p', 'y'};
+for(i=0; i&lt;5; i++)
+    putchar(t[i]);
+static char s1[6]={'H', 'a', 'a', 'p', 'y', 0};
+/* 0代表字符'\0'，也就是ASCII码值为0的字符 */
+static char s2[6]={'H', 'a', 'a', 'p', 'y', '\0'};
+                    </code>
+                    </pre>
+                </section>
+                <section id="7-3-3">
+                    <h3>字符串</h3>
+                    <dt>字符串常量</dt>
+                    <dd>用一对双引号括起来的字符序列，包含字符串结束符<text style="color:red">'\0'</text></dd>
+                    <p class="smallft">如由5个字符构成的字符串，"Happy"，实际有效长度为6<br />
+                        'H' 'a' 'a' 'p' 'y' <text style="color:red">'\0'</text><br />
+                        字符串可看作是一个特殊的一维字符数组</p>
+                </section>
+                <section id="7-3-3-1">
+                    <h3>字符串的存储--数组初始化</h3>
+                    <p class="smallft">
+                        字符串可以放在一维字符数组中，数组长度&#8805;字符串有效长度+1
+                    </p>
+                    <pre style="font-size:60%">
+                    <code class="hljs" data-trim>
+/* 一维字符数组初始化 */
+static char s[6]={'H','a','p','p','y','\0'};
+/* 字符串常量初始化 */
+static char s[6]={"Happy"};
+static char s[6]="Happy";
+                    </code></pre>
+                    <p class="smallft" style="color:darkblue">"Happy"能否存入char t[5]中?</p>
+                </section>
+                <section id="7-3-3-2">
+                    <h3>字符串的存储</h3>
+                    <p class="smallft">
+                        auto char s[80]="Happy";<br />
+                        字符串遇'\0'结束<br />
+                        第一个'\0'前面的所有字符与'\0'一起构成字符串"Happy"<br />
+                        '\0'之后的其它数组元素与该字符串无关
+                    </p>
+                    <p class="smallft" style="color:darkblue">字符串由<text style="color:darkred">有效字符</text>和字符串结束符<text style="color:darkred">'\0'</text>组成</p>
+                </section>
+                <section id="7-3-3-3">
+                    <h3>对字符串的操作</h3>
+                    <p class="smallft">对字符串的操作类似于对字符数组的操作<br />
+                        普通字符数组，数组元素的个数是确定的，一般用下标控制循环<br />
+                        字符串，没有显式给出有效字符的个数，只规定在字符串结束符'\0'之前的字符都是字符串的有效字符，一般用结束符'\0'控制循环<br />
+                        即循环条件为<text style="color:red">s[i]!='\0'</text>
+                    </p>
+                    <pre style="font-size:60%"><code class="hljs" data-trim>
+/* 以下三句的输出有何区别? */
+for(i=0; s[i]!='\0', i++)
+    putchar(s[i]);
+for(i=0; i&lt;80; i++)
+    putchar(s[i]);
+for(i=0; i&lt;len; i++)
+    putchar(s[i]);
+                    </code></pre>
+                </section>
+                <section id="7-3-3-4">
+                    <h3>字符串的存储--赋值和输入</h3>
+                    <ul>
+                        <li class="smallft">
+                            数组初始化，如<text style="color:darkblue">static char s[6]="a";</text>(包含两个字符'a'和'\0')
+                        </li>
+                        <li class="smallft">
+                            赋值初始化，如<text style="color:darkblue">s[0]='a'; s[1]='\0';</text>(是一个字符常量)
+                        </li>
+                        <li class="smallft">
+                            输入初始化，但'\0'是空操作，无法输入，会自动加在字符串末尾
+                        </li>
+                    </ul>
+                </section>
+                <section id="7-3-4">
+                    <h3>7.3.4 使用字符串编程</h3>
+                    <p class="smallft">
+                        C语言将字符串作为一个特殊的一维字符数组进行处理<br />
+                        存储时，将字符串放入一维字符数组，对数组进行初始化、赋值和输入<br />
+                        对字符串的操作类似于对字符数组的操作<br />
+                        对一维字符数组的操作，需要区分字符串的有效字符和字符串结束符'\0'
+                    </p>
+                </section>
+                <section id="7-3-4-1">
+                    <h3>统计数字字符个数</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例. 统计数字字符个数</p>
+                    <p>输入一个以回车符为结束标志的字符串(少于80个字符)，统计其中数字字符'0'......'9'的个数</p>
+                </section>
+                <section id="7-3-4-2">
+                    <h3>统计数字字符个数源程序</h3>
+                    <pre style="font-size:60%"><code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 80
+int main()
+{
+    int i, k, count;
+    char str[MAXLINE];
+    printf("Enter a string:");
+    i=0;
+    while((str[i]=getchar())!='\0')
+        i++;
+    str[i]='\0';
+    count=0;
+    for(i=0; str[i]!='\0'; i++){
+        if(str[i]>='0' && str[i]<='0')
+            count++;
+    }
+    printf("count=%d\n", count);
+    return 0;
+}
+                    </code></pre>
+                </section>
+                <section id="7-3-4-3">
+                    <h3>凯撒密码</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-12. 凯撒密码</p>
+                    <p>为防止信息被别人轻易窃取，需要将电码明文通过加密方式变换成为密文。输入一个以回车符为结束标志的字符串(少于80个字符），再输入一个正整数offset，用凯撒密码对其加密后输出。<br />
+                        <text style="font-size:80%">凯撒密码是一种简单的替换加密技术，将明文玉中的所有字母都在字母表上向后偏移offset位后被替换成密文。例如，当偏移量offset是2时，表示所有的字母被向后移动2位后的字母替换，即所有的字母A将被替换成C，字母B变成D，字母Y变成A，字母Z变成B</text>
+                    </p>
+                </section>
+                <section id="7-3-4-4">
+                    <h3>凯撒密码源程序</h3>
+                    <pre style="font-size:37%"><code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 80
+#define M 26  /* 符号常量，表示字母表中大小写字母分别为26个 */
+int main()
+{
+    int i, offset;
+    char str[MAXLINE];
+    printf("Enter a string:");  /* 输入字符串 */
+    i=0;
+    while((str[i]=getchar())!='\n')
+        i++;
+    str[i]='\0';
+    printf("Enter offset:");    /* 输入偏移量 */
+    scanf("%d", &offset);
+    if(offset>=M)
+        offset%=M;
+
+    /* 加密 */
+    for(i=0; str[i]!='\0'; i++){
+        if(str[i]>='A' && str[i]<='Z')
+            str='A'+(str-'A'+offset)%M;
+        else if(str[i]>='a' && str[i]<='z')
+            str='a'+(str-'a'+offset)%M;
+    }
+
+    printf("After being encrypted:");
+    for(i=0; str[i]!='\0'; i++)
+        putchar(str[i]);
+    printf("\n");
+    return 0;
+}
+                    </code></pre>
+                </section>
+                <section id="7-3-4-5">
+                    <h3>字符转换</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-13. 字符转换</p>
+                    <p>输入一个以回车符为结束标志符的字符串(少于10个字符)，提取其中所有的数字字符，将其转换为一个十进制整数输出<br />
+                        如输入a12d3，输出123</p>
+                </section>
+                <section id="7-3-4-6">
+                    <h3>字符转换源程序</h3>
+                    <pre style="font-size:50%"><code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 10
+int main()
+{
+    int i, num;
+    char str[MAXLINE];
+    /* 输入字符串 */
+    printf("Enter a string:");
+    i=0;
+    while((str[i]=getchar())!='\n')
+        i++;
+    str[i]='\0';
+    /* 逐个判断是否为数字字符，并进行转换 */
+    num=0;
+    for(i=0; str[i]!='\0'; i++){
+        if(str[i]>='0' && str[i]<='9')
+            num=num*10+str[i]-'0';
+        /* else break; */
+    }
+    printf("num=%d\n", num);
+    return 0;
+}
+                    </code></pre>
+                </section>
+                <section id="7-3-4-7">
+                    <h3>进制转换</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例7-14. 进制转换</p>
+                    <p>输入一个以'#'为结束标志的字符串(少于10个字符)，滤去所有的非十六进制字符(不区分大小写)，组成一个新的字符串(十六进制形式)，输出该字符串，并将其转换为十进制数后输出<br />
+                        例如，输入字符串：zx1?ma0!kbq#<br />
+                        滤去非十六进制字符后的新字符串：1a0b<br />
+                        转换为十进制数：6667</p>
+                </section>
+                <section id="7-3-4-8">
+                    <h3>进制转换--生成十六进制字符串</h3>
+                    <pre style="font-size:50%"><code class="hljs" data-trim data-line-numbers>
+k=0; /* 新字符串的下标 */
+for(i=0; str[i]!='\0'; i++){
+    if( (str[i]>='0' && str[i]<='9')||
+        (str[i]>='a' && str[i]<='f')||
+        (str[i]>='A' && str[i]<='F')  ){
+            hexs[k]=str[i];
+            k++;
+        }
+}
+hexs[k]='\0';  /* 新字符串结束标记 */
+                    </code></pre>
+                </section>
+                <section id="7-3-4-9">
+                    <h3>进制转换--转换为十进制整数</h3>
+                    <pre style="font-size:60%"><code class="hljs" data-trim data-line-numbers>
+num=0;
+for(i=0; hexs[i]!='\0'; i++){
+    if(hexs[i]>='0' && hexs[i]<='9')
+        num=num*16+hexs[i]-'0';
+    else if(hexs[i]>='a' && hexs[i]<='f')
+        num=num*16+hexs[i]-'a'+10;
+    else if(hexs[i]>='A' && hexs[i]<='F')
+        num=num*16+hexs[i]-'A'+10;
+}
+                    </code></pre>
+                </section>
+                <section id="7-3-4-10">
+                    <h3>进制转换源程序</h3>
+                    <pre style="font-size:27%"><code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 10
+int main()
+{
+    int i, k, num;
+    char hexs[MAXLINE], str[MAXLINE];
+    /* 输入字符串 */
+    printf("Enter a string:");
+    i=0;
+    while((str[i]=getchar())!='#')
+        i++;
+    str[i]='\0';
+    /* 滤去非十六进制字符 */
+    i=0, k=0;
+    while(str[i]!='\0'){
+        if( (str[i]>='0' && str[i]<='9') ||
+            (str[i]>='a' && str[i]<='f') ||
+            (str[i]>='A' && str[i]<='F') ){
+                hexs[k]=str[i];
+                k++;
+            }
+        i++;
+    }
+    hexs[k]='\0';
+
+    /* 输出十六进制字符串 */
+    printf("New string:");
+    for(i=0; hexs[i]!='\0'; i++)
+        putchar(hexs[i]);
+    printf("\n");
+
+    /* 转换为十进制整数 */
+    num=0;
+    for(i=0; hexs[i]!='\0'; i++){
+        if(hexs[i]>='0' && hexs[i]<='9')
+            num=num*16+hexs[i]-'0';
+        else if(hexs[i]>='a' && hexs[i]<='f')
+            num=num*16+hexs[i]-'a'+10;
+        else if(hexs[i]>='A' && hexs[i]<='F')
+            num=num*16+hexs[i]-'A'+10;
+    }
+    printf("Number is %d\n", num);
+    return 0;
+}
+                    </code></pre>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
