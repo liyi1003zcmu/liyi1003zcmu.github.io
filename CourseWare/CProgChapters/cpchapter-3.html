@@ -1,0 +1,1253 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第3章分支结构">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第三章 分支结构</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第3章 分支结构</h2>
+                <p>
+                    <a href="#/3-1">3.1 简单的猜数游戏</a><br />
+                    <a href="#/3-2">3.2 四则运算</a><br />
+                    <a href="#/3-3">3.3 查询自动售货机中商品的价格</a><br />
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>什么是分支结构? 它的作用是什么?</li>
+                    <li>switch语句中的break语句的作用是什么?</li>
+                    <li>逻辑运算和关系运算的相同点是什么?它们的不同之处又是什么?</li>
+                    <li>字符型数据在内存中是如何存储的?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="3-1">
+                    <h2>3.1 简单的猜数游戏</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例3-1. 简单猜数游戏</p>
+                    <p>输入你想猜的整数(假定1~100)，与计算机产生的被猜数相比较，若相等，显示猜中；若不等，显示与被猜数的大小关系
+                    </p>
+                </section>
+                <section id="3-1-1">
+                    <h3>3.1.1 程序解析</h3>
+                    <p class="smallft">例3-1. 简单的猜数游戏<br />输入你想猜的整数yournumber(假定1~100)，与计算机产生的被猜数mynumber相比较，若相等，显示猜中；若不等，显示与被猜数的大小关系
+                    </p>
+                    <p class="smallft">
+                        yournumber vs mynumber有三种情况：<br />
+                    </p>
+                    <ul>
+                        <li class="smallft">yournumber==mynumber，<text style="color:darkred">if(==)</text> ==>Good Guess</li>
+                        <li class="smallft">yournumber&gt;mynumber, <text style="color:darkred">else if(&gt;)</text> ==>Too Big!</li>
+                        <li class="smallft">yournumber&lt;mynumber, <text style="color:darkred">else</text> ==>Too Small!</li>
+                    </ul>
+                </section>
+                <section id="3-1-1-1">
+                    <h3>猜数游戏源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int mynumber=38;
+    int yournumber;
+
+    printf("Input your number: ");
+    scanf("%d", &yournumber);
+    if(yournumber==mynumber)
+    {
+        printf("Good Guess!\n");
+    }
+    else if(yournumber&gt;mynumber)
+    {
+        printf("Too Big!\n");
+    }
+    else
+    {
+        printf("Too Small!\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-weight:bold">
+                        <text style="color:red">多层缩进</text>的书写格式使程序层次分明
+                    </p>
+                </section>
+                <section id="3-1-2">
+                    <h3>3.1.2 二分支结构和if-else语句</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            if(表达式)<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;语句1<br />
+                            else<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;语句2
+                        </p>
+                        <img src="../images/cprog/chap03/3-1.png" />
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            if(表达式)<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;语句1
+                        </p>
+                        <img src="../images/cprog/chap03/3-2.png" />
+                    </div>
+                </section>
+                <section id="3-1-2-1">
+                    <h3>判断数字的奇偶性</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例3-2. 奇偶分家</p>
+                    <p>输入一个正整数n，再输入n个非负整数，统计奇数和偶数各有几个?
+                    </p>
+                    <p class="smallft">
+                        <text style="font-weight:bold">分析</text><br />
+                        判断number的奇偶性：number%2==0
+                    </p>
+                    <pre>
+                        <code data-trim>
+count_odd=0; count_even=0;
+for(i=1; i<=n; i++)
+{
+    //读入一个非负整数number
+    if(number能被2整除)    /* 该数为偶数 */
+        count_odd++;
+    else    /* 该数为奇数 */
+        count_even++;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-1-2-2">
+                    <h3>奇偶分家源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count_odd, count_even, i, n, number;
+    count_odd=0; count_even=0;
+    printf("Enter n: ");
+    scanf("%d", &n);
+    printf("Enter %d numbers: ", n);
+    for(i=1; i<=n; i++)
+    {
+        scanf("%d", &number);
+        if(number%2==0)
+        {
+            count_odd++;
+        }
+        else
+        {
+            count_even++;
+        }
+    }
+    printf("Odd: %d. Even: %d\n", count_odd, count_even);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-1-2-3">
+                    <h3>统计学生的成绩</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例3-3. 统计学生的成绩</p>
+                    <p>输入一个正整数n，再输入n个学生的成绩，计算平均分，并统计不及格成绩的个数。
+                    </p>
+                    <pre>
+                        <code data-trim>
+for(i=1; i<=n; i++)
+{
+    输入1个学生的成绩score
+    累加成绩total
+    统计不及格成绩的个数count
+}
+输出成绩
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-1-2-4">
+                    <h3>统计学生的成绩源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int count, i, n;
+    double score, total;
+    printf("Enter n: ");
+    scanf("%d", &n);
+    total=0; count=0;
+    for(i=1; i<=n; i++)
+    {
+        printf("Enter score #%d:", i);
+        scanf("%lf", &score);
+        total=total+score;
+        if(score&lt;60)
+        {
+            count++;
+        }/* 这里省略了else */
+    }
+    if(n!=0)
+    {
+        printf("Average=%.2f\n", total/n);
+    }
+    else
+    {
+        printf("Average=%.2f\n", 0.0);
+    }
+    printf("Number of failures=%d\n", count);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-1-3">
+                    <h3>3.1.3 多分支结构和else-if语句</h3>
+                    <p class="smallft">
+                        else-if语句是最常用的实现多分支(多路选择)的方法
+                    </p>
+                    <div class="columnleft" style="width:30%">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(表达式1)
+    语句1;
+else if(表达式2)
+    语句2;
+//...
+else if(表达式n-1)
+    语句n-1;
+else
+    语句n;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright" style="width:70%">
+                        <p class="smallft" style="font-size:60%">
+                            n个分支需要n-1次比较
+                        </p>
+                        <img src="../images/cprog/chap03/3-3.png" />
+                    </div>
+                </section>
+                <section id="3-1-3-2">
+                    <h3>更改分段计算水费问题</h3>
+                    <p style="text-align: ceter; font-size: 100%; font-weight: bold;">例3-4. 求分段水费</p>
+                    <p style="text-align:left; font-size: 100%; font-weight: bold:">输入用户的月用水量$x$(吨)，计算并输出该用户应支付的水费$y$(元)(保留2位小数)，其中计算关系修正为下式
+                        $$
+                        y=f(x)=\begin{cases}
+                        0 & x<0\\ \frac{4x}{3} & 0\leq x\leq15\\ 2.5x-10.5 & x\geq15 \end{cases} $$ </p>
+                </section>
+                <section id="3-1-3-3">
+                    <h3>分段计算水费源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double x, y;
+    printf("Enter x:");
+    scanf("%lf", &x);
+    if(x&lt;0)
+    {
+        y=0;
+    }else if(x<=15)
+    {
+        y=4*x/3;
+    }
+    else
+    {
+        y=2.5x-10.5;
+    }
+    printf("f(%.2f)=%.2f\n", x, y);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="3-2">
+                    <h2>3.2 四则运算</h2>
+                    <p style="text-align: center; font-size: 100%; font-weight: bold;">例3-5. 求简单的四则运算表达式</p <p style="text-align:left;">
+                    输入一个形如“<text style="color:darkred">操作数 运算符 操作数</text>”的四则运算表达式，输出运算结果，要求对除数为0的情况作特别处理
+                    </p>
+                </section>
+                <section id="3-2-1">
+                    <h3>3.2.1 程序解析</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            比如：输入3.1+4.8, 输出=7.9<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;输入5.0-3.9, 输出=1.1
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            value1 <text style="color:red">op</text> value2&nbsp;&nbsp;<text style="color:red">(op</text>用于存放一个字符<text style="color:red">+-*/</text>等)<br />
+                            if(op==<text style="color:red">'+'</text>)&nbsp;&nbsp;value1+value2<br />
+                            else if(op==<text style="color:red">'-'</text>)&nbsp;&nbsp;value1-value2<br />
+                            else if(op==<text style="color:red">'*'</text>)&nbsp;&nbsp;value1*value2<br />
+                            else if(op==<text style="color:red">'/'</text>)&nbsp;&nbsp;value1/value2<br />
+                            else "Unknown operator"
+                        </p>
+                    </div>
+                </section>
+                <section id="3-2-1-1">
+                    <h3>四则运算源程序</h3>
+                    <pre style="font-size:33%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double value1, value2;
+    char op;
+    printf("Type in an expression:");
+    scanf("%lf%c%lf", &value1, &op, &value2);
+    if(op=='+')
+    {
+        printf("=%.2f\n", value1+valuew);
+    }
+    else if(op=='-')
+    {
+        printf("=%.2f\n", value1-value2);
+    }
+    else if(op=='*')
+    {
+        printf("=%.2f\n", value1*value2);
+    }
+    else if(op=='/')
+    {
+        if(value2!=0)
+        {
+            printf("=%.2f\n", value1/value2);
+        }
+        else
+        {
+            printf("Divisor cannot be 0!\n");
+        }
+    }
+    else
+    {
+        printf("Unknown operator!\n");
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-2">
+                    <h3>3.2.2 字符型数据</h3>
+                    <div class="columnleft" style="width:60%">
+                        <pre>
+                            <code class="hljs" data-trim>
+char op;
+scanf("%lf%c%lf", &value1, &op, &value2);
+if(op=='+')
+{
+    //...
+}
+else if(op=='-')
+{
+    //...
+}
+else if(op=='*')
+{
+    //...
+}
+else if(op=='/')
+{
+    //...
+}
+else
+{
+    //...
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright" style="width:40%">
+                        <p class="smallft">
+                            字符型数据
+                        </p>
+                        <ul>
+                            <li class="smallft">字符常量: '+' '-' '*' '/'</li>
+                            <li class="smallft">字符变量: <text style="color:red">op</text></li>
+                        </ul>
+                    </div>
+                </section>
+                <section id="3-2-2-1">
+                    <h3>字符常量</h3>
+                    <p class="smallft">
+                        字符常量是指单个字符，用一对单引号及其所括起来的字符表示，如'a', 'A', 'z', 'Z', '0', '9', ' ', '\n'等。每个字符均有唯一的编码值，如ASCII字符集，定义了128个基本字符，扩展ASCII字符集定义了256个字符，包括'0'-'9', 'a'-'z', 'A'-'Z'<br />
+                        <text style="color:red">注意区分数字1和字符'1'</text>
+                    </p>
+                </section>
+                <section id="3-2-2-2">
+                    <h3>ASCII字符码表</h3>
+                    <img src="../images/cprog/chap03/3-4.png" />
+                </section>
+                <section id="3-2-2-3">
+                    <h3>字符变量</h3>
+                    <pre>
+                        <code class="hljs" data-trim>
+char op;  /* 定义字符型变量op, 类型为char, 用于存放字符型数据 */
+op='+';
+
+char op1, op2;
+op1='A';
+op2=op1;
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-3">
+                    <h3>3.2.3 字符型数据的输入和输出</h3>
+                    <ul>
+                        <li class="smallft">用scanf和printf输入输出字符</li>
+                        <pre>
+                            <code class="hljs" data-trim>
+double value1, value2;
+char op;
+printf("Type in an expression:");
+scanf("%lf%c%lf", &value1, &op, &value2);
+printf("%.2f%c%.2f\n", value1, op, value2);
+                            </code>
+                        </pre>
+                        <li class="smallft">用getchar和putchar输入输出<text style="color:red">一个</text>字符</li>
+                        <pre>
+                            <code class="hljs" data-trim>
+char ch;
+ch=getchar();
+putchar(ch);
+putchar('-');
+                            </code>
+                        </pre>
+                    </ul>
+                </section>
+                <section id="3-2-3-1">
+                    <h3>输出一批字符</h3>
+                    <p class="smallft">
+                        输入8个字符，然后将这些字符输出，输出时在字符之间加一个减号，第一个字符的前面和最后一个字符的后面都没有减号<br />
+                        输入:<text style="color:darkred">AMETHYST</text><br />
+                        输出:A-M-E-T-H-Y-S-T
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+for(k=1; k<=8; k++)
+{
+    ch=getchar();
+    if(ch是第一个字符)
+    {
+        putchar(ch);
+    }
+    else
+    {
+        putchar('-');
+        putchar(ch);
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-3-2">
+                    <h3>输出一批字符源程序</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char ch;
+    int first=1, k;  /* first为1表示将要处理第1个字符 */
+    printf("Enter 8 characters:");
+    for(k=1; k<=8; k++)
+    {
+        ch=getchar();
+        if(first==1)
+        {
+            putchar(ch);
+            first=0;  /* first为0表示将要处理第2个及以后的字符 */
+        }
+        else
+        {
+            putchar('-');
+            putchar(ch);
+        }
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-4">
+                    <h3>3.2.4 逻辑运算</h3>
+                    <div>
+                        <div class="columnleft" style="width:30%">
+                            <p style="text-align:center; font-size:80%">
+                                -1<=x<=1 </p>
+                        </div>
+                        <div class="columnright" style="width:70%">
+                            <img src="../images/cprog/chap03/3-5.png" width="80%" />
+                            <p style="text-align:center; font-size:60%">
+                                x>=-1 并且 x
+                                <=1<br />
+                                x>=-1 && x<=1 </p>
+                        </div>
+                    </div>
+                </section>
+                <section id="3-2-4-1">
+                    <h3>判断一个字符是否是英文字符</h3>
+                    <pre>
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    char ch;
+    printf("Enter a character:");
+    ch=getchar(); // scanf("%c", &ch);
+    if((ch>='a' && ch<='z') || (ch>='A' && ch<='Z'))
+    {
+        printf("%c is a letter.\n", ch); //putchar(ch);
+    }
+    else
+    {
+        printf("%c is not a letter.\n", ch); //putchar(ch);
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-4-2">
+                    <h3>三种逻辑运算</h3>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-6.png" />
+                        <figcaption>逻辑与&&</figcaption>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-7.png" />
+                        <figcaption>逻辑或||</figcaption>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-8.png" />
+                        <figcaption>逻辑非!</figcaption>
+                    </div>
+                </section>
+                <section id="3-2-4-3">
+                    <h3>三种逻辑运算符的含义</h3>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-9.png" />
+                        <figcaption>逻辑与&&</figcaption>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-10.png" />
+                        <figcaption>逻辑与||</figcaption>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <img src="../images/cprog/chap03/3-11.png" />
+                        <figcaption>逻辑非!</figcaption>
+                    </div>
+                </section>
+                <section id="3-2-4-4">
+                    <h3>三种逻辑运算符的功能</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>a</th>
+                            <th>b</th>
+                            <th>逻辑与<br />a&&b</th>
+                            <th>逻辑或<br />a||b</th>
+                            <th>逻辑非<br />!a</th>
+                        </tr>
+                        <tr>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:blue">false</text></td>
+                        </tr>
+                        <tr>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:blue">false</text></td>
+                        </tr>
+                        <tr>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:red">true</text></td>
+                            <td><text style="color:red">true</text></td>
+                        </tr>
+                        <tr>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:blue">false</text></td>
+                            <td><text style="color:red">true</text></td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="3-2-4-5">
+                    <h3>逻辑表达式</h3>
+                    <dl>
+                        <dt>逻辑表达式</dt>
+                        <dd>用逻辑运算符将逻辑运算对象连接起来的式子</dd>
+                    </dl>
+                    <p class="smallft">
+                        ch>='a' && ch<='z'==> 判断ch是否为小写字母<br />
+                            (ch>='a' && ch<='z') || (ch>='A' && ch<='Z')==>判断ch是否为英文字母，区分大小写
+                    </p>
+                </section>
+                <section id="3-2-4-6">
+                    <h3>条件的表示</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例3-6.</text> 写出满足下列条件的C表达式
+                    </p>
+                    <ul>
+                        <li class="smallft">ch是空格或者回车<br />
+                            ch==' ' || ch=='\n'</li>
+
+                        <li class="smallft">ch是数字字符<br />
+                            ch>='0' && ch<='9'< /li>
+
+                        <li class="smallft">year是闰年，即year能被4整除但不能被100整除，或者year能被400整除<br />
+                            (year%4==0 && year%100!=0) && (year%400==0)
+                        </li>
+                    </ul>
+                </section>
+                <section id="3-2-4-7">
+                    <h3>分类统计字符</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例3-7.</text> 输入n个字符，统计其中英文字母、数字字符和其它字符的个数
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+for(i=1; i<=n; i++)
+{
+    输入1个字符ch;
+    if(ch是英文字母)
+        letter++;
+    else if(ch是数字字符)
+        digit++;
+    else
+        other++;
+}
+输出分类统计结果
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-2-4-8">
+                    <h3>分类统计字符源程序</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int digit, i, letter, n, other;
+    char ch;
+    digit=letter=other=0;
+    printf("Enter n:");
+    scanf("%d", &n);
+    getchar();
+    printf("Enter %d characters:", n);
+    for(i=1; i<=n; i++)
+    {
+        ch=getchar();
+        if((ch>='a' && ch<='z') || (ch>='A' && ch<='Z'))
+            letter++;
+        else if(ch>='0' && ch<='9')
+            digit++;
+        else
+            other++;
+    }
+    printf("letter=%d, digit=%d, other=%d\n", letter, digit, other);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="3-3">
+                    <h2>3.3 查询自动售货机中商品的价格</h2>
+                    <p style="text-align: center; font-weight:bold; font-size:100%">
+                        例3-8. 查询自动售货机中商品的价格
+                    </p>
+                    <p style="text-align:left; font-size:70%">
+                        假设自动售货机出售4种商品：薯片(crisps)、爆米花(popcorn)、巧克力(chocolate)和可乐(cola)，售价分别是每份3.0、2.5、4.0和3.5元。在屏幕上显示以下菜单(编号和选项)，用户可以连续查询商品的价格，当查询次数超过5次时，自动退出查询；不到5次时，用户可以选择退出。当用户输入编号1~4，显示相应商品的价格(保留1位小数)；输入0，退出查询(输入其它编号，显示价格为0)。<br />
+                        <text style="text-align:left">(1) Select crisps</text><br />
+                        <text style="text-align:left">(2) Select popcorn</text><br />
+                        <text style="text-align:left">(3) Select cola</text><br />
+                        <text style="text-align:left">(4) Select chocolate</text><br />
+                        <text style="text-align:left">(5) Exit</text><br />
+                    </p>
+                </section>
+                <section id="3-3-1">
+                    <h3>3.3.1 程序解析</h3>
+                    <p class="smallft">菜单显示控制</p>
+                    <pre>
+                        <code class="hljs" data-trim>
+显示菜单
+for(i=1; i<=5; i++)
+{
+    输入选项choice
+    if(choice==0)
+        退出循环
+    若choice的值
+        ==1~4 -->price赋单价
+        ==其它 -->price赋0
+    输出单价price
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-1-2">
+                    <h3>售货机源程序</h3>
+                    <pre style="font-size: 40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int choice, i;
+    double price;
+    printf("[1] Select crisps\n");
+    printf("[2] Select popcorn\n");
+    printf("[3] Select chocolate\n");
+    printf("[4] Select cola\n");
+    printf("[0] Exit\n");
+
+    for(i=1; i<=5; i++)
+    {
+        printf("Enter choice:");
+        scanf("%d", &choice);
+        if(choice==0)
+            break;
+        switch(choice)
+        {
+            case 1: price=3.0; break;
+            case 2: price=2.5; break;
+            case 3: price=4.0; break;
+            case 4: price=3.5; break;
+            default: price=0.0; break;
+        }
+        printf("price=%0.1f\n", price);
+    }
+    printf("Thanks\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-2-1">
+                    <h3>3.3.2 Switch语句</h3>
+                    <p class="smallft" style="font-size:75%">
+                        switch用于处理多分支选择问题，面对不同情况有不同的使用方法
+                    </p>
+                    <p class="smallft">
+                        <text style="font-weight:bold">case 1.</text>在switch语句的每个语句段中都使用break语句
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+switch(表达式)
+{
+    case 常量表达式1:
+        语句段1;
+        break;
+    case 常量表达式2:
+        语句段2;
+        break;
+    ...
+    case 常量表达式n:
+        语句段n;
+        break;
+    default:
+        语句段n+1;
+        break;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-2-2">
+                    <h3>switch语句-case 1</h3>
+                    <img src="../images/cprog/chap03/3-12.png" />
+                    <p class="smallft" style="text-align:center; color:red">
+                        常量表达式的值不重复
+                    </p>
+                </section>
+                <section id="3-3-2-3">
+                    <h3>两个数的简单计算器</h3>
+                    <p class="smallft" style="text-align:left;">
+                        <text style="font-weight:bold">例3-9. </text>编写一个简单的计算器程序，可根据输入的运算符，对两个整数进行加、减、乘、除和求余运算，请对除数为0的情况作特别处理。要求使用switch语句编写
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+//value1 op value2
+switch(op)
+{
+    case '+':
+        value1+value2
+    case '-':
+        value1-value2
+    case '*':
+        value1*value2
+    case '/':
+        value1/value2
+    default:
+        "Unknown operator"
+}
+
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-2-4">
+                    <h3>两个数的简单计算器源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int value1, value2;
+    char op;
+    printf("Type in an expression:");
+    scanf("%d%c%d", &value1, &op, &value2);
+    switch(op)
+    {
+        case '+':
+            printf("=%d\n", value1+value2);
+            break;
+        case '-':
+            printf("=%d\n", value1-value2);
+            break;
+        case '*':
+            printf("=%d\n", value1*value2);
+            break;
+        case '/':
+            if(value2!=0)
+                printf("=%d\n", value1/value2);
+            else
+                printf("divisor cannot be 0!\n");
+            break;
+        default:
+            printf("Unknown operator!\n");
+            break;
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-2-5">
+                    <h3>Switch语句</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">case 2.</text>在switch语句中不使用break;
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                        <code class="hljs" data-trim>
+switch(表达式)
+{
+    case 常量表达式1:
+        语句段1;
+    case 常量表达式2:
+        语句段2;
+    ......
+    case 常量表达式n:
+        语句段n;
+    default:
+        语句段n+1;
+}
+                        </code>
+                    </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+switch(choice){
+    case 1: price=3.0;
+    case 2: price=2.5;
+    case 3: price=4.0;
+    case 4: price=3.5;
+    default: price=0.0;
+}
+                            </code>
+                        </pre>
+                        <p class="smallft" style="text-align:center;">
+                            price=?
+                        </p>
+                    </div>
+                </section>
+                <section id="3-3-2-6">
+                    <h3>switch语句-case 2</h3>
+                    <img src="../images/cprog/chap03/3-13.png" />
+                </section>
+                <section id="3-3-2-7">
+                    <h3>Switch语句</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">case 3.</text>在switch的某些语句段中使用break;
+                    </p>
+                    <p class="smallft" style="text-align:left">
+                        <text style="font-weight:bold">例3-10. </text>输入n个字符，分别统计出其中空格或回车、数字字符和其它字符的个数
+                    </p>
+                    <p class="smallft" style="text-align:left;color:darkblue">
+                        比较: <text style="font-weight:bold">例3-7. </text>输入n个字符，统计其中英文字母、数字字符和其它字符的个数
+                    </p>
+                </section>
+                <section id="3-3-2-8">
+                    <h3>统计字符源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int blank, digit, other, i, n;
+    char ch;
+    blank=digit=other=0;
+    printf("Enter n:");
+    scanf("%d", &n);
+    getchar();
+    printf("Enter %d characters:", n);
+    for(i=1; i<=n; i++)
+    {
+        ch=getchar();
+        switch(ch)
+        {
+            case ' ': case'\n':
+                blank++;
+                braek;
+            case '0': case '1': case '2': case '3': case '4':
+            case '5': case '6': case '7': case '8': case '9':
+                digit++;
+                break;
+            default:
+                other++;
+                break;
+        }
+    }
+    printf("blank=%d, digit=%d, other=%d", blank, digit, other);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-3-1">
+                    <h3>3.3.3 多分支结构</h3>
+                    <ul>
+                        <li class="smallft">分支结构一般分为二分支和多分支两种结构</li>
+                        <li class="smallft">二分支结构用基本的if语句实现</li>
+                        <li class="smallft">多分支结构实现方法</li>
+                        <ul>
+                            <li class="smallft">else-if语句</li>
+                            <li class="smallft">switch语句</li>
+                            <li class="smallft">嵌套的if-else语句</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="3-3-3-2">
+                    <h3>嵌套的if-else语句</h3>
+                    <img src="../images/cprog/chap03/3-14.png" />
+                </section>
+                <section id="3-3-3-3">
+                    <h3>嵌套的if-else语句</h3>
+                    <p class="smallft">
+                        嵌套的if-else语句即指if-else条件中的语句也能是if-else语句
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+if(表达式1)
+    if(表达式2) 语句1
+    else 语句2
+else
+    if(表达式3) 语句3
+    else 语句4
+                        </code>
+                    </pre>
+                </section>
+                <section id="3-3-3-4">
+                    <h3>else和if的匹配</h3>
+                    <p class="smallft">
+                        else与最靠近它的、没有与别的else匹配过的if匹配
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(表达式1)
+    if(表达式2) 语句1
+    else 语句2
+else
+    if(表达式3) 语句3
+    else 语句4
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(表达式1)
+    if(表达式2) 语句1
+
+else
+    if(表达式3) 语句3
+    else 语句4
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            上段代码变为
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+if(表达式1)
+    if(表达式2) 语句1
+    else
+        if(表达式3) 语句3
+        else 语句4
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="3-3-3-5">
+                    <h3>改变else和if的配对</h3>
+                    <p class="smallft">
+                        <text style="font-weight:bold">例3-11.</text>改写下列if语句，使else和第1个if配对
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+if(x&lt;2)
+    if(x&lt;1)
+        y=x+1;
+    else
+        y=x+2;
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        思考每条语句的执行条件分别是什么?
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(x&lt;2)
+{
+    if(x&lt;1)
+        y=x+1;
+}
+else
+    y=x+2;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+if(x&lt;2)
+    if(x&lt;1)
+        y=x+1;
+    else;
+else
+    y=x+2;
+                            </code>
+                        </pre>
+                    </div>
+                    </sectinn>
+                </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
