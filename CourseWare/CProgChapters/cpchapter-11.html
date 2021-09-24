@@ -1,0 +1,1211 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第11章指针进阶">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第十一章 指针进阶</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第11章 指针进阶</h2>
+                <p>
+                    <a href="#/11-1">11.1 单词索引</a><br />
+                    <a href="#/11-2">11.2 字符定位</a><br />
+                    <a href="#/11-3">11.3 用链表构建学生信息库</a><br />
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>指针数组和指向指针的指针量如何被定义和使用的?</li>
+                    <li>指针如何作为函数的返回值?</li>
+                    <li>指针函数的指针的意义是什么?</li>
+                    <li>什么是结构的递归定义, 哪种应用需要这种定义方法?</li>
+                    <li>对链表这种数据结构，如何使用动态内存分配操作?</li>
+                    <li>如何建立单向链表并实现插入、删除以及查找操作?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="11-1">
+                    <h2>11.1 单词索引</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-1. 单词索引</p>
+                    <p>一个单词表存放了5个表示颜色的英文单词，输入一个字母，在单词表中查找并输出所有以此字母开头的单词，若没有找到，输出Not Found</p>
+                </section>
+                <section id="11-1-1">
+                    <h3>11.1.1 程序解析</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, flag=0;
+    char ch;
+    const char* color[5]={"red", "blue", "yellow", "green", "black"};  /* 指针数组 */
+
+    printf("INput a letter: ");
+    ch=getchar();
+    for(i=0; i&lt;5; i++)
+    {
+            if(*color[i]==ch){  /* 获得当前的字符 */
+                flag=1;
+                puts(color[i]);  /* 输出数组的第i项，即单词 */
+            }
+    }
+    if(flag==0)
+        printf("Not Found\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-2">
+                    <h3>11.1.2 指针数组的概念</h3>
+                    <p class="smallft">
+                        C语言中的数组可以是任何类型，如果数组的各个元素都是指针类型，用于存放内存地址，这个数组就是<text style="color:darkblue">指针数组</text><br />
+                        一维指针数组的定义一般为<br />
+                        <text style="color:darkred">类型名 *数组名[数组长度]</text><br />
+                        int a[10]; /* a是一个数组，有10个元素，每个元素的类型都是整型 */<br />
+                        char* color[5];  /* color是一个数组，有5个元素，为每个元素的类型都是字符指针 */
+                    </p>
+                </section>
+                <section id="11-1-2-1">
+                    <h3>指针数组解析</h3>
+                    <p class="smallft">
+                        const char* color[5]={"red", "blue", "yellow", "green", "black"};<br />
+                        color是一个数组，有5个元素<br />
+                        每个元素的类型都是指针<br />
+                        数组元素可以处理字符串(<text style="color:darkred">字符串vs字符指针</text>)<br />
+                        const的作用是限定变量的值不能改变，即常量<br />
+                    </p>
+                </section>
+                <section id="11-1-2-2">
+                    <h3>指针数组操作</h3>
+                    <p class="smallft" style="font-size:70%">
+                        <text style="color:darkblue">对指针数组元素的操作和对同类型指针变量的操作完全相同</text>
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;<text style="color:darkred">printf("%s %x\n", color[i], color[i]);</text><br />
+                        继续执行以下语句，功能是什么?<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;<text style="color:darkred">char *tmp;<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;tmp=color[0];<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;color[0]=color[4];<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;color[4]=tmp;</text> <br />
+                    </p>
+                    <ul class="fragment">
+                        <li class="smallft" style="font-size:70%">指针数组可以直接对数组元素进行引用操作，<br />tmp=color[0];</li>
+                        <li class="smallft" style="font-size:70%">也可以间接访问操作数组元素所指向的单元内容: <br />printf("%c", *(color[i]+1));</li>
+                    </ul>
+                </section>
+                <section id="11-1-3">
+                    <h3>指向指针的指针(二级指针)</h3>
+                    <p class="smallft">
+                        指向指针的指针(二级指针)的一般定义为:<br />
+                        <text style="color:darkred">类型名 **变量名;</text><br />
+                        <center>
+                            <text style="color:darkred">int a=10;  int *p=&a;  int **pp=&p;</text>
+                        </center>
+                    </p>
+                    <img src="../images/cprog/chap11/11-1.png" />
+                </section>
+                <section id="11-1-3-1">
+                    <h3>二级指针操作示例</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-2. 二级指针操作</p>
+                    <p style="font-size:60%">对下列变量定义和初始化后，依次执行操作&#9312;-&#9314;后，各变量的值分别为什么?</p>
+                    <div class="columnleft">
+                        <p class="smallft" style="font-size:60%">
+int a=10, b=20; t;<br />
+int *pa=&a, *pb=&b, *pt;<br />
+int **ppa=&pa, **ppb=&pb, **ppt;<br />
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <ul>
+                            <li class="smallft" style="font-size:60%">操作&#9312; <text style="color:darkred">ppt=ppb; ppb=ppa; ppa=ppt;</text></li>
+                            <li class="smallft" style="font-size:60%">操作&#9313; <text style="color:darkred">pt=pb; pb=pa; pa=pt;</text></li>
+                            <li class="smallft" style="font-size:60%">操作&#9314; <text style="color:darkred">t=b; b=a; a=t;</text></li>
+                        </ul>
+                    </div>
+                    <br />
+                    <br />
+                    <br />
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>操作</th>
+                            <th>**ppa</th>
+                            <th>**ppb</th>
+                            <th>*pa</th>
+                            <th>*pb</th>
+                            <th>a</th>
+                            <th>b</th>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>&#9312;</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>&#9313;</td>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>10</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>&#9314;</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>20</td>
+                            <td>10</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="11-1-3-2">
+                    <h3>二级指针操作解析</h3>
+                    <div class="columnleft">
+                        <p class="smallft" style="font-size:60%">
+int a=10, b=20; t;<br />
+int *pa=&a, *pb=&b, *pt;<br />
+int **ppa=&pa, **ppb=&pb, **ppt;<br />
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <ul>
+                            <li class="smallft" style="font-size:60%">操作&#9312; <text style="color:darkred">ppt=ppb; ppb=ppa; ppa=ppt;</text></li>
+                            <li class="smallft" style="font-size:60%">操作&#9313; <text style="color:darkred">pt=pb; pb=pa; pa=pt;</text></li>
+                            <li class="smallft" style="font-size:60%">操作&#9314; <text style="color:darkred">t=b; b=a; a=t;</text></li>
+                        </ul>
+                    </div>
+                    <br />
+                    <br />
+                    <br />
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap11/11-2-1.png" style="width:80%"/>
+                        <img src="../images/cprog/chap11/11-2-3.png" style="width:80%" />
+                    </div>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap11/11-2-2.png" style="width:80%" />
+                        <img src="../images/cprog/chap11/11-2-4.png" style="width:80%" />
+                    </div>
+                </section>
+                <section id="11-1-3-3">
+                    <h3>二维数组的指针形式</h3>
+                        <p class="smallft" style="font-size:80%">
+                            int a[3][4];<br />
+                            可以看成是由a[0],a[1],a[2]组成的一维数组<br />
+                            a[0],a[1],a[2]各自又是一个一维数组<br />
+                            二维数组是数组元素为一维数组的一维数组
+                        </p>
+                        <p class="smallft" style="font-size:80%">
+                            <text style="color:darkred">a</text>: 第0行地址(行地址)<br />
+                            <text style="color:darkred">a+i</text>: 第i行的地址<br />
+                            <text style="color:darkred">*(a+i)/a[i]</text>: 第i行首元素的地址<br />
+                            <text style="color:darkred">*(a+i)+j/a[i]+j</text>: 第i行第j个元素的地址<br />
+                            <text style="color:darkred">**(a+i)/a[i][0]</text>: 第i行首元素的值<br />
+                            <text style="color:darkred">*(*(a+i)+j)/a[i][j]</text>: 第i行第j个元素的值<br />
+                        </p>
+                </section>
+                <section id="11-1-3-4">
+                    <h3>单词索引二级指针实现</h3>
+                    <p style="text-align:left; font-size:80%"><strong>例11-3</strong>. 使用二维指针改写例11-1. </p>
+                    <pre style="font-size:45%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, flag=0;
+    char ch;
+    const char* color[5]={"red", "blue", "yellow", "green", "black"};
+
+    const char** pc;  /* 定义二级指针 */
+    pc=color;  /* 二级指针赋值 */
+    printf("Input a letter: ");
+    ch=getchar();
+    for(i=0; i&lt;5; i++){
+        if(**(pc+i)==ch){  /* 使用二级指针操作数组 */
+            flag=1;
+            puts(*(pc+i));  /* 输出字符串 */
+        }
+    }
+    if(flag==0)
+        printf("Not Found\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-3-5">
+                    <h3>单词索引二级指针解析</h3>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap11/11-3.png" />
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            <text style="color:darkred">pc</text> --> color --> &color[0]<br />
+                            <text style="color:darkred">*pc</text> --> color[0]<br />
+                            <text style="color:darkred">*(pc+i)</text> --> color[0]<br />
+                            <text style="color:darkred">**pc</text> --> *(*pc) --> *color[0]<br />
+                        </p>
+                    </div>
+                </section>
+                <section id="11-1-4">
+                    <h3>11.1.4 用指针数组处理多个字符串</h3>
+                    <p class="smallft">
+                        指针数组与二维数组 --> <text style="color:darkblue">使用指针数组更节省空间</text>
+                    </p>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            char ccolor[][7]={"red", "blue", "yellow", "green", "black"};
+                        </p>
+                        <img src="../images/cprog/chap11/11-4-1.png" />
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            char *pcolor[]={"red", "blue", "yellow", "green", "black"};
+                        </p>
+                        <img src="../images/cprog/chap11/11-4-2.png" />
+                    </div>
+                </section>
+                <section id="11-1-4-1">
+                    <h3>用指针数组操作多个字符串</h3>
+                    <p style="text-align:left; font-size:80%"><strong>例11-4</strong>. 将5个字符串从小到大排序后输出</p>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+void fsort(const char* color[], int n)
+{
+    int k, j;
+    const char *temp;
+    for(k=1; k<=n; k++){
+        for(j=0; j<=n-k; j++){
+            if(strcmp(color[j], color[j+1])&lt;0){
+                temp=color[j];
+                color[j]=color[j+1];
+                color[j+1]=temp;
+            }
+        }
+    }
+}
+
+int main()
+{
+    int i;
+    const char* pcolor[5]={"red", "blue", "yellow", "green", "black"};
+    fsort(pcolor, 5);
+    for(i=0; i&lt;5; i++)
+        printf("%s ", pcolor[i]);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-4-2">
+                    <h3>排序函数对比</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            指针数组排序
+                        </p>
+                        <pre style="font-size:40%">
+                            <code class="language-c" data-trim data-line-numbers>
+void fsort(const char* color[], int n)
+{
+    int k, j;
+    const char *temp;
+    for(k=1; k<=n; k++){
+        for(j=0; j&lt;n-k; j++){
+            if(strcmp(color[j], color[j+1])&lt;0){
+                temp=color[j];
+                color[j]=color[j+1];
+                color[j+1]=temp;
+            }
+        }
+    }
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            整数数组排序
+                        </p>
+                        <pre style="font-size:40%">
+                            <code class="language-c" data-trim data-line-numbers>
+void fsort(int a[], int n)
+{
+    int k, j;
+    int temp;
+    for(k=1; k<=n; k++){
+        for(j=0; j&lt;n-k; j++){
+            if(a[j]>a[j+1]){
+                temp=a[j];
+                a[j]=a[j+1];
+                a[j+1]=temp;
+            }
+        }
+    }
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="11-1-4-3">
+                    <h3>指针数组排序后结果对比</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            排序前
+                        </p>
+                        <img src="../images/cprog/chap11/11-4-2.png" />
+                    </div>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            排序后
+                        </p>
+                        <img src="../images/cprog/chap11/11-4-3.png" />
+                    </div>
+                </section>
+                <section id="11-1-4-4">
+                    <h3>动态输入多个字符串</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-5. 解密英文藏头诗</p>
+                    <p style="font-size:60%">将一首诗的每一句的第一个字连起来，所组成的内容就是该诗的真正含义<br />
+                    输入的藏头读小于20行，每行不超过80个字符，以#作为输入的结束标志，使用动态内存分配方式处理字符串的输入</p>
+                </section>
+                <section id="11-1-4-5">
+                    <h3>藏头诗源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+#include&lt;stdlib.h&gt;
+int main()
+{
+    int i, n=0;
+    char* poem[20], str[80], mean[20];  /* poem用于存放每一行，str用于存放一行输入内容，mean用于存放每一行的第一个字 */
+
+    gets(str);
+    wihle(str[0]!='#'){  /* 一行不以'#'结束，为有效输入 */
+        poem[n]=(char*)malloc(sizeof(char)*(strlen(str)+1));  /* 动态分配一行字符串大小的空间 */
+        strcpy(poem[n], str);  /* 将输入的字符串赋值给动态内存单元 */
+        n++;
+        gets(str);
+    }
+    for(i=0; i&lt;n; i++){
+        mean[i]=*poem[i];  /* 每行取第一个字符 */
+        free(poem[i]);  /* 释放动态分配的内存单元 */
+    }
+    mean[i]='\0';
+    puts(mean);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-4-6">
+                    <h3>指针综合应用</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-6. 随机发牌</p>
+                    <p style="font-size:60%">一副纸牌有52张，4种花色，每种花色13张。用程序模拟随机发牌过程，将52张牌按轮转的方式发放给4人，并输出发牌结果</p>
+                </section>
+                <section id="11-1-4-7">
+                    <h3>随机发牌源程序(1)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;time.h&gt;
+
+struct card{
+    int suit;  /* 花色 */
+    int face;  /* 牌点 */
+};
+void deal(struct card *wdeck)
+{
+    int i, m, t;
+    static int temp[52]={0};  /* 发牌标记，0表示未发，1表示已发 */
+    srand(time(NULL));  /* 设置随机数的产生与系统时钟关联 */
+    for(i=0; i&lt;52; i++){
+        while(1){
+            m=rand()%52;  /* 生成一个随机数，介于0~51之间 */
+            if(temp[m]==0)
+                break;
+            temp[m]=1;
+            /* 4人轮转发牌 */
+            t=(m%4)*13+(i/4);
+            wdeck[t].suit=m/13;
+            wdeck[t].face=m%13;
+        }
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-4-8">
+                    <h3>随机发牌源程序(2)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+    int i;
+    struct card deck[52];
+    const char* suit[]={"Heart", "Diamond", "Club", "Spade"};
+    const char* face[]={"A","K","Q","J","10","9","8","7","6","5","4","3","2"};
+
+    deal(deck);
+    for(i=0; i&lt;52; i++){
+        if(i%13==0)
+            printf("Player %d:\n", i/13+1);
+        printf("%s of %s\n", face[deck[i].face], suit[deck[i].suit]);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-1-5">
+                    <h3>11.1.5 命令行参数</h3>
+                    <ul>
+                        <li class="smallft">C语言源程序经过编译和连接处理，生成可执行程序如text.exe后，才能运行</li>
+                        <li class="smallft">在DOS环境的命令窗口中，输入可执行文件名，就可以以命令方式运行该程序</li>
+                        <li class="smallft">输入这些命令时，在可执行文件(命令)名后可以跟一些参数，这些参数被称为命令行参数<br />
+                        如:<br />
+                        <text style="color:darkred">ping www.baidu.com</text><br />
+                        <text style="color:darkred">ping -t www.baidu.com</text><br />
+                        <text style="color:darkred">ping -n 6 www.baidu.com</text><br />
+                        <text style="color:darkred">ping -h</text></li>
+                    </ul>
+                </section>
+                <section id="11-1-5-1">
+                    <h3>命令行参数的形式</h3>
+                    <p class="smallft">
+                        命令行参数的一般形式为<br />
+                        <text style="color:red">命令名 参数1 参数2 ... 参数n</text><br />
+                        <text style="color:darkblue">命令名和各参数之间用<text style="color:darkred">空格</text>分隔</text>，也可以没有参数<br />
+                        用命令行的程序不能在编译器中执行，需要将源程序经编译、链接成相应的命令文件，回到命令行状态，再在该状态下直接输入命令文件名
+                    </p>
+                </section>
+                <section id="11-1-5-2">
+                    <h3>带参数的main()函数格式</h3>
+                    <p class="smallft">
+                        <text style="color:red">int main(int argc, char* argv[])</text><br />
+                        第1个参数<text style="color:red">argc</text>接收命令行参数的个数(包含命令名)<br />
+                        第2个参数<text style="color:red">argv</text>接收以字符串常量形式存储的命令行参数(包括命令名本身)<br />
+                        如<br />
+                        <text style="color:red;">ping www.baidu.com</text> argc的值为2，argv为"ping", "www.baidu.com"<br />
+                        <text style="color:red">ping -t www.baidu.com</text> argc的值为3，argv为"ping", "-t", "www.baidu.com"<br />
+                        <text style="color:red">ping -n 6 www.baidu.com</text> argc的值为4，argv为"ping", "-n", "6",  "www.baidu.com"<br />
+
+                    </p>
+                </section>
+                <section id="11-1-5-3">
+                    <h3>命令行参数示例</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-7. echo</p>
+                    <p style="font-size:100%">将所有命令行参数在同一行输出</p>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main(int argc, char *argv[])
+{
+    int k;
+    for(k=1; k&lt;argc; k++)
+        printf("%s ", argv[k]);
+    printf("\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="11-2">
+                    <h2>11.2 字符定位</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-8. 字符定位</p>
+                    <p style="font-size:100%">输入一个字符串和一个字符，如果该字符在字符串中，就从该字符首次出现的位置开始输出字符串中的字符。要求定义函数match(char* s, char chp)，在字符串s中查找字符ch，如果找到则返回第一次找到的该字符在字符串中的位置(地址)，否则，返回空指针NULL。如输入字符串program和字符r，输出rogram</p>
+                </section>
+                <section id="11-2-1">
+                    <h3>11.2.1 程序解析</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+char* match(char* s, char ch)  /* match返回值为一个指针 */
+{
+    while(*s!='\0'){
+        if(*s==ch)
+            return s;
+        s++;
+    }
+    return NULL;
+}
+int main()
+{
+    char ch, str[80], *p=NULL;
+    printf("Input the string:");
+    scanf("%s", str);
+    getchar();
+    printf("Input a character:");
+    ch=getchar();
+    if((p=match(str, ch))!=NULL)  /* 指针p接收match的返回值 */
+        printf("%s\n", p);  /* 输出指针所指处的内容，直到'\0' */
+    else
+        printf("Not Found\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-2-2">
+                    <h3>11.2.2 指针作为函数的返回值</h3>
+                    <p class="smallft">
+                        函数返回值的类型可以有：<br />
+                        <text style="color:darkblue">整型</text>, <text style="color:darkblue">浮点型</text>，<text style="color:darkblue">字符型</text>, <text style="color:darkblue">结构类型型</text>，<text style="color:darkred">指针类型</text><br />
+                        在C语言中，函数返回值也可以是指针，定义和调用这类函数的方法与其他函数是一样的
+                    </p>
+                </section>
+                <section id="11-2-2-1">
+                    <h3>指针作为函数返回值解析</h3>
+                    <p class="smallft" style="font-size:60%">
+                        <text style="color:darkred">思考</text>，在例11-8中，如果把str的定义和相应的数据输入都放在函数match()中，结果会如何?
+                    </p>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+char* match()
+{
+    char ch, str[80], *s=str;
+    scanf("%s", str);
+    getchar();
+    ch=getchar();
+    while(*s!='\0'){
+        if(*s==ch)
+            return s;
+        s++;
+    }
+    return NULL;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-size:60%">
+                        不能返回在函数内部定义的局部数据对象的地址，所有的局部数据对象在函数返回时都会消亡，其值不再有效<br />
+                        返回指针的函数一般都返回全局数据对象或主调函数中数据对象的地址
+                    </p>
+                </section>
+                <section id="11-2-3">
+                    <h3>11.2.3 指向函数的指针</h3>
+                    <div class="columnleft" style="width:60%">
+                        <p class="smallft" style="font-size:70%">
+                            每个函数都占用一段内存单元，都有一个<text style="color:darkred">入口地址</text>(起始地址)<br />
+                            C语言中，函数名代表函数的入口地址，因此可定义一个指针变量，接收函数的入口地址，使其指向函数，这就是指向函数的指针，也称为<text style="color:darkred">函数指针</text><br />
+                            通过函数指针可以调用函数，也可以作为函数的参数
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:30%">
+                        <img src="../images/cprog/chap11/11-5.png" />
+                    </div>
+                </section>
+                <section id="11-2-3-1">
+                    <h3>函数指针的定义</h3>
+                    <p class="smallft">
+                        <text style="color:red">类型名 (*变量名)(参数类型表)</text><br />
+                        类型名指定函数返回值的类型，变量名指向函数的指针变量的名称，参数类型表指的函数的参数类型列表，例如<br />
+                        <text style="color:darkblue">int (*funptr)(int, int)</text><br />
+                        定义的是一个函数指针funptr，它可以指向有两个整数类型参数，并且返回类型为int的函数
+                    </p>
+                </section>
+                <section id="11-2-3-2">
+                    <h3>通过函数指针调用函数</h3>
+                    <p class="smallft">
+                        通过函数指针调用函数的一般格式为<br />
+                        <text style="color:red">(*函数指针名)(参数表)</text><br />
+                        例如<br />
+                        <text style="color:darkblue">int fun(int x, int y);</text><br />
+                        <text style="color:darkblue">int (*funptr)(int, int);</text><br />
+                        <text style="color:darkred">funptr=fun;</text><br />
+                        <text style="color:darkred">int num=(*funptr)(3,5);</text><br />
+                    </p>
+                </section>
+                <section id="11-2-3-3">
+                    <h3>函数指针作为函数的参数</h3>
+                    <p class="smallft" style="font-size:60%">
+                        C语言的函数调用中，函数名或已赋值的函数指针也能作为实参，此时，形参就是函数指针，它指向实参所代表函数的入口地址，例如<br />
+                        <text style="color:darkblue">
+                        int fun(int x, int y)<br />
+                        {...}<br />
+                        f(int (*funptr)(int,int))<br />
+                        {...}<br />
+                        void main()<br />
+                        {...<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;int (*funptr)(int, int);<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;funptr=fun;<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;f(funptr);<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                        }
+                        </text><br />
+                    </p>
+                </section>
+                <section id="11-2-3-4">
+                    <h3>指向函数的指针示例</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-9. 函数指针示例</p>
+                    <p style="font-size:60%">编写一个函数calc(f, a, b)，用梯形公式求函数$f(x)$在[a,b]上的数值积分
+                    $$
+                    \int_{b}^{a}f(x)dx=(b-a)/2\times(f(a)+f(b))
+                    $$
+                    然后调用该函数计算下列数值积分(用函数指针作为函数参数示例)<br />
+                    &#9312; $\int_{0}^{1}x^2dx$&nbsp;&nbsp;&nbsp;&nbsp;&#9313;$\int_{1}^{2}\sin{x}/xdx$
+                    </p>
+                </section>
+                <section id="11-2-3-5">
+                    <h3>函数指针示例源代码</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+double calc(double (*funp)(double), double a, double b)
+{
+    double z;
+    z=(b-a)/(2*((*funp)(a)+(*funp)(b)));  /* 调用funp指向的函数 */
+    return z;
+}
+double f1(double x)
+{
+    return x*x;
+}
+double f2(double x)
+{
+    return sin(x)/x;
+}
+int main()
+{
+    double result;
+    double (*funp)(double);
+    result=calc(f1, 0.0, 1.0);  /* 把函数名f1作为函数calc的实参 */
+    printf("1: result=%.4f\n", result);
+    funp=f2;  /* 对函数指针funp赋值 */
+    result=calc(funp, 1.0, 2.0);  /* 函数指针funp作为函数calc的实参 */
+    printf("2: result=%.4f\n", result);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="11-3">
+                    <h2>用链表构建学生信息库</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例11-10. 学生成绩信息库</p>
+                    <p style="font-size:60%">建立一个学生成绩信息的单向链表，包括学号、姓名、成绩等，学生记录按学号由小到大顺序排列，要求实现对成绩信息的插入、修改、删除和遍历操作
+                    </p>
+                    <img src="../images/cprog/chap11/11-6.png" />
+                </section>`
+                <section id="11-3-1">
+                    <h3>11.3.1 程序解析(1)</h3>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;string.h&gt;
+
+struct stud_node{
+    int num;
+    char name[20];
+    int score;
+    struct stud_node *next;
+};
+
+/* 新建链表 */
+struct stud_node* create_stu_Doc()
+{
+    struct stud_node *head, *p;
+    int num, score;
+    char name[20];
+    int size=sizeof(struct stud_node);
+
+    head=NULL;
+    printf("Input num, name and score:");
+    scanf("%d%s%d", &num, name, &score);
+    while(num!=0){
+        p=(struct stud_node*)malloc(size);  /* 动态分配内存 */
+        p->num=num;
+        strcpy(p->name, name);
+        p->score=score;
+        head=insertDoc(head, p);  /* 调用插入函数 */
+        printf("Input num, name and score:");
+        scanf("%d%s%d", &num, name, &score);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-3-1-1">
+                    <h3>程序解析(2)</h3>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+struct stud_node* insertDoc(struct stud_node *head, struct stud_node *stud)
+{
+    struct stud_node *ptr, *ptr1, *ptr2;  /* 插入链表，需要三个指针，分别指向当前，前一个以及后一个 */
+    ptr2=head;
+    ptr=stud;
+
+    /* 原链表为空时插入 */
+    if(head==NULL){
+        head=ptr;
+        head->next=NULL;
+    }else{
+        while((ptr->num&gt;ptr2->num) && (ptr2->next!=NULL)){
+            ptr1=ptr2;  /* ptr1, ptr2分别往后移一个结点 */
+            ptr2=ptr2->next;
+        }
+        if(ptr->num<=ptr2->num){  /* 在ptr1和ptr2之间插入新结点 */
+            if(head==ptr2)
+                head=ptr;
+            else
+                ptr1->next=ptr;
+            ptr->next=ptr2;
+        }
+        else{
+            ptr2->next=ptr;
+            ptr->next=NULL;
+        }
+    }
+    return head;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-3-1-2">
+                    <h3>程序解析(3)</h3>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+struct stud_node* deleteDoc(struct stud_node* head, int num)
+{
+    struct stud_node *ptr1, *ptr2;
+    /* 要被删除的结点为表头结点 */
+    while(head!=NULL && head->num==num){
+        ptr2=head;
+        head=head->next;
+        free(ptr2);
+    }
+    if(head==NULL)  /* 链表空 */
+        return NULL;
+    /* 要被删除的结点为非表头结点 */
+    ptr1=head;
+    ptr2=head->next;  /* 从表头的下一个结点搜索所有符合条件的结点 */
+    while(ptr2!=NULL){
+        if(ptr2->num==num){  /* ptr2指向要删除的结点 */
+            ptr1->next=ptr2->next;
+            free(ptr2);
+        }
+        else{
+            ptr1=ptr2;
+            ptr2=ptr2->next;
+        }
+    }
+    return head;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-3-1-3">
+                    <h3>程序解析(4)</h3>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+void print_stu_doc(struct stud_node *head)
+{
+    struct stud_node *ptr;
+    if(head==NULL){
+        printf("\nNo Records \n");
+        return;
+    }
+    printf("\nThe students' Records are:\n");
+    printf("Num\t Name\t Score \n");
+    for(ptr=head; ptr!=NULL; ptr=ptr->next)
+        printf("%d\t %s\t %d\n", ptr->num, ptr->name, ptr->score);
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-3-1-4">
+                    <h3>程序解析(5)</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+    struct stud_node *head, *p;
+    int choice, name, score;
+    char name[20];
+    int size=sizeof(struct stud_node);
+
+    do{
+        printf("1. Create\n2. Insert\n3. Delete\n4. Print\n0. Exit\n");
+        scanf("%d", &choice);
+        switch(choice){
+            case 1:
+                head=create_stu_Doc();
+                break;
+            case 2:
+                printf("Input num, name and score:\n");
+                scanf("%d%s%d", &num, name, &score);
+                p=(struct stud_node*)malloc(size);
+                p->num=num;
+                strcpy(p->name, name);
+                p->score=score;
+                head=insertDoc(head, p);
+                break;
+            case 3:
+                printf("Input num:\n");
+                scanf("%d", &num);
+                head=deleteDoc(head, num);
+                break;
+            case 4:
+                print_stu_doc(head);
+                break;
+            default:
+                break;
+        }
+    }while(choice!=0);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="11-3-2">
+                    <h3>链表的概念</h3>
+                    <dt style="text-align:left">
+                        链表
+                    </dt>
+                    <dd style="text-align:left">
+                        一种常见而重要的<text style="color:darkblue">动态存储</text>分布的数据结构，是由若干个同一结构类型的<text style="color:darkred">结点</text>依次串接而成，链表分为<text style="color:darkred">单向链表</text>和<text style="color:darkred">双向链表</text>
+                    </dd>
+                    <img src="../images/cprog/chap11/11-7.png" />
+                </section>
+                <section id="11-3-2-1">
+                    <h3>链表定义</h3>
+                    <p class="smallft">
+                        一般使用结构定义单向链表结点的数据类型，采用结构的递归定义<br />
+                        <text style="color:red">struct stud_node</text>{<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int num;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;char name[20];<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int score;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;<text style="color:red">struct stud_node* next;</text><br />
+                        }
+                    </p>
+                </section>
+                <section id="11-3-2-2">
+                    <h3>单向链表VS数组</h3>
+                    <ul>
+                        <li class="smallft">在用数组存放数据时，一般需要事先定义固定长度的数组，在数组元素个数不确定时，可能会浪费内存空间</li>
+                        <li class="smallft">链表为动态存储分布的数据结构，可根据需要动态开辟内存空间，可以比较自由方便地插入新元素(结点)，故使用链表可以节省内存，操作效率高</li>
+                    </ul>
+                </section>
+                <section id="11-3-2-3">
+                    <h3>动态分配相关函数</h3>
+                    <ul>
+                        <li class="smallft"><text style="color:darkblue">void* malloc(unsigned size)</text><br />
+                        功能：在内存的动态存储区中分配一块长度为size的连续空间<br />
+                        返回值：指针，存放被分配内存的起始地址，若未申请到空间，则返回NULL(0)<br />
+                        例如:<br />
+                        <text style="color:darkred">(int*) malloc(sizeof(int));</text><br />
+                        <text style="color:darkred">(struct student*)malloc(sizeof(struct student))</text></li>
+                        <li class="smallft"><text style="color:darkblue">void free(void* ptr)</text><br />
+                        功能：释放由malloc申请的动态内存空间，ptr存放该空间的首地址<br />
+                        返回值：无<br />
+                        例如：<text style="color:darkred">free(p);</text></li>
+                    </ul>
+                </section>
+                <section id="11-3-3">
+                    <h3>11.3.3 单向链表的常用操作</h3>
+                    <p class="smallft">
+                        建立链表
+                    </p>
+                    <img src="../images/cprog/chap11/11-8.png" style="width:35%"/>
+                </section>
+                <section id="11-3-3-1">
+                    <h3>链表的建立</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+head=tail=NULL;
+scanf("%d%s%d", &num, name, &score);
+while(num!=NULL){
+    p=(struct stud_node*)malloc(size);
+    p->num=num;
+    strcpy(p->name, name);
+    p->score=score;
+    scanf("%d%s%d", &num, name, &score);
+}
+                        </code>
+                    </pre>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            尾部插入
+                        </p>
+                        <pre style="font-size:50%">
+                            <code class="language-c" data-trim>
+p->next=NULL;
+if(head==NULL)
+    head=p;
+else
+    tail->next=p;
+tail=p;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            头部插入
+                        </p>
+                        <pre style="font-size:50%">
+                            <code class="language-c" data-trim>
+p->next=head;
+head=p;
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="11-3-3-2">
+                    <h3>链表的遍历</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim>
+for(ptr=head; ptr!=NULL; ptr=ptr->next)
+    printf("%d\t%s\t%d\n", ptr->num, ptr->name, ptr->score);
+                        </code>
+                    </pre>
+                    <img src="../images/cprog/chap11/11-9.png" />
+                </section>
+                <section id="11-3-3-3">
+                    <h3>插入结点</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">先连:</text> s->next=ptr->next<br />
+                        <text style="color:darkred">后断:</text> ptr->next=s;
+                    </p>
+                    <img src="../images/cprog/chap11/11-10.png" />
+                </section>
+                <section id="11-3-3-4">
+                    <h3>删除结点</h3>
+                    <p class="smallft">
+                        ptr2=ptr1->next;<br />
+                        <text style="color:darkred">先接: </text>:</text> ptr1->next=ptr2->next;<br />
+                        <text style="color:darkred">后删: </text>:</text> free(ptr2);
+                    </p>
+                    <img src="../images/cprog/chap11/11-11.png" />
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
