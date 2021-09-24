@@ -1,0 +1,1286 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第9章结构">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第十章 函数与程序结构</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第10章 函数与程序结构</h2>
+                <p>
+                    <a href="#/10-1">10.1 有序表操作</a><br />
+                    <a href="#/10-2">10.2 汉诺塔问题</a><br />
+                    <a href="#/10-3">10.3 长度单位换算</a><br />
+                    <a href="#/10-4">10.4 大程序构成</a>
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>怎样把多个函数组织起来?</li>
+                    <li>怎样用结构化程序设计的思想解决问题?</li>
+                    <li>怎样用函数嵌套求解复杂的问题?</li>
+                    <li>怎样用函数递归解决问题?</li>
+                    <li>如何使用宏?</li>
+                    <li>如何使用多文件模块构建较大规模程序?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="10-1">
+                    <h2>10.1 有序表操作</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-1. 有序表的增删查操作</p>
+                    <p style="text-align:left; font-size: 80%;">首先输入一个无重复元素的、从小到大排序的有充表，并在屏幕上显示以下菜单(编号和选项)，用户可以反复对该有序表进行插入、删除和查找操作，也可以选择结束。当用户输入编号1~3和相关参数时，将分别对该有序表进行插入、删除和查找操作，输入其他编号，则结束操作<br />
+                    [1] Insert<br />
+                    [2] Delete<br />
+                    [3] Query<br />
+                    [Others] End
+                    </p>
+                </section>
+                <section id="10-1-1">
+                    <h3>10.1.1 程序解析</h3>
+                    <p class="smallft">
+                        使用结构化程序设计方法解决复杂的问题
+                    </p>
+                    <ul>
+                        <li class="smallft">将大问题分解成若干小问题，将小问题再进一步分解成若干更小的问题</li>
+                        <li class="smallft">写程序时，用main()解决整个问题，它调用解决小问题的函数</li>
+                        <li class="smallft">这些函数又进一步调用解决更小问题的函数，从而形成函数的嵌套调用</li>
+                    </ul>
+                    <img src="../images/cprog/chap10/10-1.png" />
+                </section>
+                <section id="10-1-1-1">
+                    <h3>程序过程分析</h3>
+                    <ul>
+                        <li class="smallft">输入有序表</li>
+                        <li class="smallft">输入1,2,3选择插入、删除、查找操作，其他输入结束</li>
+                        <ul>
+                            <li class="smallft">设计一个控制函数select()，经它辨别用户输入的编号后，调用相应的函数实现功能，再调用有序表输出函数显示结果</li>
+                        </ul>
+                        <li class="smallft">分别设计函数实现有序表的插入、删除、查找和输入、输出等常规操作</li>
+                    </ul>
+                </section>
+                <section id="10-1-1-2">
+                    <h3>程序结构</h3>
+                    <img src="../images/cprog/chap10/10-2.png" />
+                    <br />
+                    <p class="smallft">
+                        总共定义4层结构，7个函数<Br />
+                        能够降低程序的构思、编写和调试的复杂度，可读性好
+                    </p>
+                </section>
+                <section id="10-1-1-3">
+                    <h3>有序表操作源程序(1)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 100  /* 定义符号变量表示数组a的长度 */
+int Count=0;  /* 用全局变量Count表示数组a中待处理的元素个数 */
+
+void select(int a[], int option, int value)  /*决定对有序数组a进行何种操作的控制函数 */
+{
+    switch(option){
+        case 1:
+            insert(a, value);
+            break;
+        case 2:
+            remove(a, value);
+            break;
+        case 3:
+            query(a, value);
+            break;
+    }
+}
+
+void input_array(int a[])  /* 输入有序数组a的函数 */
+{
+    printf("input the number of array elements:");
+    scanf("%d"< &Count);
+    printf("Input an ordered array of elements:");
+    for(int i=0; i&lt;Count; i++)
+        scanf("%d", &a[i]);
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-1-1-4">
+                    <h3>有序表操作源程序(2)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+void print_array(int a[])  /* 输出有序数组a的函数 */
+{
+    printf("The ordered array is:\n");
+    for(int i=0; i&lt;Count; i++){
+        printf("%d", a[i]);
+        if(i!=Count-1)
+            printf(" ");
+        else
+            printf("\n");
+    }
+}
+
+void insert(int a[], int value)  /* 往有序数组a中插入一个值为value的元素的函数 */
+{
+    int i, j;
+    for(i=0; i&lt;Count; i++){
+        if(value&lt;a[i])
+            break;
+    }
+    for(j==Count-1; j>=i; j==)
+        a[i+1]=a[i];
+    a[i]=value;
+    Count++;
+    print_array(a);
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-1-1-5">
+                    <h3>有序表操作源程序(3)</h3>
+                    <pre style="font-size:30%">
+                        <code class="language-c" data-trim data-line-numbers>
+void remove(int a[], int value)  /* 删除有序数组a中值等于value的元素的函数 */
+{
+    int i, index=-1;
+    for(i=0; i&lt;Count; i++){
+        if(value==a[i]){
+            index=i;
+            break;
+        }
+    }
+    if(index=-1)
+        printf("Failed to find the data, deletion failed\n");
+    else{
+        for(i=index; i&lt;Count-1; i++)
+            a[i]=a[i+1];
+    }
+    Count--;
+    print_array(a);
+}
+
+void query(int a[], int value) /* 用二分法在有序数组a中查换值为value的元素的函数 */
+{
+    int mid, left=0, right=Count-1;
+    while(left<=right){
+        mid=(left+right)/2;
+        if(value&lt;a[mid])
+            right=mid-1;
+        else if(value>a[mid])
+            left=mid+1;
+        else{
+            printf("The index=%d\n", mid);
+            return;
+        }
+    }
+    printf("The element does not exist.\n");
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-1-1-6">
+                    <h3>有序表操作源程序(4)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+int main()
+{
+    int option, value, a[MAXN];
+
+    input_array(a);  /* 调用函数输入数组 */
+    printf("[1] Insert:\n");
+    printf("[2] Delete:\n");
+    printf("[3] Query:\n");
+    printf("[Other] Exit:\n");
+
+    while(1)  /* 循环，注意循环条件 */
+    {
+        printf("Input option:");  /* 输入选项 */
+        scanf("%d", &option);
+        if(option&lt;1 || option&gt;3)  /* 如果1-3以外的编号，退出，结束循环 */
+            break;
+        printf("Input an element:");  /* 显示输入参数 */
+        scanf("%d", &value);  /* 读入用户输入的参数value */
+        select(a, option, value);  /* 执行相应的操作 */
+        printf("\n");
+    }
+    printf("Thanks. Bye!\n");  /* 退出操作 */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-1-2">
+                    <h3>10.1.2 函数的嵌套调用</h3>
+                    <p class="smallft">
+                        函数的顺序调用
+                    </p>
+                    <div class="columnleft">
+                        <pre style="font-size:40%">
+                            <code class="language-c" data-trim>
+int main()
+{
+    ......
+    y=fact(3);
+    ......
+    z=mypow(3.5, 2);
+}
+double fact(int m)
+{
+    ......
+}
+double mypow(double x, int n)
+{
+
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap10/10-3-1.png" />
+                    </div>
+                </section>
+                <section id="10-1-2-1">
+                    <h3>函数的嵌套调用</h3>
+                    <div class="columnleft">
+                        <pre style="font-size:40%">
+                            <code class="language-c" data-trim>
+int main()
+{
+    ......
+    select(a, option, value);
+    ......
+}
+void select(int a[], int option, int value)
+{
+    ......
+    insert(a, value);
+    ......
+}
+void insert(int a[], int value)
+{
+    ......
+    print_array(a);
+    ......
+}
+void print_array(int a[])
+{
+    ......
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap10/10-3-2.png" />
+                    </div>
+                </section>
+                <section id="10-1-2-2">
+                    <h3>函数的嵌套调用</h3>
+                    <p class="smallft">
+                        在一个函数中再调用其它函数的情况称为<strong style="color:darkblue">函数的嵌套调用</strong>
+                    </p>
+                    <ul>
+                        <li class="smallft">如果函数A调用函数B，函数B再调用函数C，一个调用一个地贡大下去，构成函数的嵌套调用</li>
+                        <li class="smallft">具有嵌套调用函数的程序，需要分别定义多个不同的函数体，每个函数体完成不同的功能，它们合起来解决复杂的问题</li>
+                    </ul>
+                </section>
+                <section id="10-1-2-3">
+                    <h3>结构化程序设计方法</h3>
+                    <p class="smallft">
+                        自顶向下，逐步求精，函数实现
+                    </p>
+                    <ul>
+                        <li class="smallft">自顶向下</li>
+                        <ul>
+                            <li class="smallft">先考虑全局目标，后考虑局部目标</li>
+                            <li class="smallft">先考虑总体步骤，后考虑步骤细节</li>
+                            <li class="smallft">先从最上层总目标开始设计，逐步使问题具体化</li>
+                        </ul>
+                        <li class="smallft">逐步求精</li>
+                        <ul>
+                            <li class="smallft">对过于复杂的问题，其中大的操作步骤应该再将其分解为一些子步骤的序列，逐步明晰实现过程</li>
+                        </ul>
+                        <li class="smallft">函数实现</li>
+                        <ul>
+                            <li class="smallft">通过逐步求精，将程序要解决的全局目标分解为局部目标，进一步分解为具体的小目标，将最终的小目标用函数实现</li>
+                            <li class="smallft">问题的逐步分解关系，构成了函数间的调用关系</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="10=1-2-3">
+                    <h3>函数设计时应注意的问题</h3>
+                    <ul>
+                        <li class="smallft">限制函数的长度</li>
+                        <ul>
+                            <li class="smallft">一个函数语句数不宜过多，既便于阅读、理解，也方便程序调试</li>
+                            <li class="smallft">若函数太长，可考虑将函数进一步分解实现</li>
+                        </ul>
+                        <li class="smallft">避免函数功能间的重复</li>
+                        <ul>
+                            <li class="smallft">对于在多处使用的同一个计算或操作过程，应当将其封装成一个独立的函数，以达到一处定义、多处使用的目的，以避免功能模块间的重复</li>
+                        </ul>
+                        <li class="smallft">减少全局变量的使用</li>
+                        <ul>
+                            <li class="smallft">定义局部变量作为函数的临时工作单元，使用参数和返回值作为函数与外部进行数据交换的方式</li>
+                            <li class="smallft">只有当确实需要多个函数共享的数据时，才定义其为全局变量</li>
+                        </ul>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="10-2">
+                    <h2>10.2 汉诺塔问题</h2>
+                    <p style="font-size:80%; text-align:center;"><a href="https://www.webgamesonline.com/towers-of-hanoi/index.php" target="_blank">汉诺塔游戏1</a></p>
+                    <p style="font-size:80%; text-align:center;"><a href="https://www.mathsisfun.com/games/towerofhanoi.html" target="_blank">汉诺塔游戏2</a></p>
+                </section>
+                <section id="10-2-1">
+                    <h3>10.2.1 汉诺塔(Hanoi Tower)问题解析</h3>
+                    <img src="../images/cprog/chap10/10-4.png" />
+                    <p class="smallft">
+                        将n(n=64)个盘子从座A搬到座B，搬动规则如下<br />
+                        (1). 一次只能搬动一个盘子<br />
+                        (2). 盘子只能插在A、B、C三个杆子上<br />
+                        (3). 大盘不能压在小盘上
+                    </p>
+                </section>
+                <section id="10-2-1-1">
+                    <h3>汉诺塔分析</h3>
+                    <p class="smallft">开始状态</p>
+                    <img src="../images/cprog/chap10/10-5-1.png" />
+                    <p class="smallft">中间状态</p>
+                    <img src="../images/cprog/chap10/10-5-2.png" />
+                </section>
+                <section id="10-2-1-2">
+                    <h3>要点解析</h3>
+                    <ul>
+                        <li class="smallft">递归方法的两个要点：</li>
+                        <ul>
+                            <li class="smallft"><strong style="color:red">递归出口: </strong>只有一个盘子时的解决办法</li>
+                            <li class="smallft"><strong style="color:red">递归式: </strong>如何将搬动n个盘子的问题转化成搬动n-1个盘子的问题，直到转换为搬动1个盘子的问题</li>
+                        </ul>
+                        <li class="smallft">将汉诺塔的递归解法归纳成<strong style="color:red">三个</strong>步骤:</li>
+                        <ul>
+                            <li class="smallft">将n-1个盘子从A座搬到C座</li>
+                            <li class="smallft">将第n号盘子从A座搬到B座</li>
+                            <li class="smallft">将n-1个盘子从C座搬到B座</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="10-2-1-3">
+                    <h3>汉诺塔算法描述</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim>
+hanoi(n个盘，A&rarr;B, C为过渡)
+{
+    if(n==1)
+        直接将盘子从A&rarr;B
+    else{
+        hanoi(n-1个盘, A&rarr;C, B为过渡)
+        将第n号盘子从A&rarr;B
+        hanoi(n-1个盘，C&rarr;B, A为过渡)
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-2-2">
+                    <h3>10.2.2 递归函数基本概念</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-2. 用递归函数实现求n!</p>
+                    <p style="font-size:60%">求n!有两种方法</p>
+                    <div class="columnleft">
+                        <p style="text-align:left; font-size:50%">递推法<br />
+                        在学习循环时，计算n!采用的就是递推法
+                        $$
+                        n!=1\times2\times3\times\cdots\times n
+                        $$
+                        用循环语句实现就是
+                        <pre style="font-size:60%"><code class="hljs" data-trim>
+result=1;
+for(i=1; i<=n; i++)
+    result*=i;
+                        </code></pre></p>
+                    </div>
+                    <div class="columnright">
+                        <p style="text-align:left; font-size:50%">递归法<br />
+                        $$\begin{cases}
+                        n!=n\times(n-1)! & n&gt;1\\
+                        1 & n=1 or n=0
+                        \end{cases}$$
+                        求n!可以在(n-1)!的基础上再乘上n，即若将求n!的函数写成fact(n)，则fact(n)的实现依赖于fact(n-1)
+                        </p>
+                    </div>
+                </section>
+                <section id="10-2-2-1">
+                    <h3>递归法求阶乘源程序</h3>
+                    <pre style="font-size:50%"><code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+double fact(int n)  /* 函数定义 */
+{
+    double result;
+    if(n==0 || n==1)  /* 递归出口 */
+        result=1;
+    else{
+        result=n*fact(n-1);  /* 递归调用 */
+    }
+    return result;
+}
+int main()
+{
+    int n;
+    printf("Enter n:");
+    scanf("%d", &n);
+    printf("%d!=%.0lf\n", n, fact(n));
+    return 0;
+}
+                    </code></pre>
+                </section>
+                <section id="10-2-2-2">
+                    <h3>递归函数调用</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <caption>
+                            函数递归调用的两种形式
+                        </caption>
+                        <tr>
+                            <th>函数直接递归调用</th>
+                            <th colspan="2">函数间接递归调用</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                int f(int x)<br />
+                                {<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;int y<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;y=f(x)<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;return y;<br />
+                                }
+                            </td>
+                            <td>
+                                int f(int x)<br />
+                                {<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;int y<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;y=g(x)<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;return y;<br />
+                                }
+                            </td>
+                            <td>
+                                int g(int x)<br />
+                                {<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;int z<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;z=f(x)<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;......<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;return z;<br />
+                                }
+                            </td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                    <p class="smallft">
+                        Compile, Run and Debug!
+                    </p>
+                </section>
+                <section id="10-2-2-3">
+                    <h3>递归函数的实现过程</h3>
+                    <img src="../images/cprog/chap10/10-6.png" />
+                </section>
+                <section id="10-2-3">
+                    <h3>10.2.3 递归程序设计</h3>
+                    <p class="smallft">
+                        能用递归实现的问题，两个条件，缺一不可，也是递归问题求解的两个着眼点
+                    </p>
+                    <ul>
+                        <li class="smallft">问题可以逐步简化成自身较简单的形式，如$n!=n\times(n-1)!$，$\sum_{i=1}^n i=n+\sum_{i=1}^{n-1}i$</li>
+                        <li class="smallft">递归最终能够结束，即需要有递归出口</li>
+                    </ul>
+                </section>
+                <section id="10-2-3-1">
+                    <h3>递归程序设计示例</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-3. 求最大公约数</p>
+                    <p style="font-size:60%">定义函数gcd(m,n)，用递归法求m和n的最大公约数，其中，用辗转相除法求最大公约数的递归算法描述如下:<br />
+                    $$
+                    gcd(m,n)=\begin{cases}
+                    n & m\%n==0\\
+                    gcd(n, m\%n) & m\%n\neq 0
+                    \end{cases}
+                    $$
+                    递归实现的两个关键点:<br />
+                    递归出口为当m%n==0时返回n<br />
+                    递归式子为当m%n!=0时，返回gcd(n, m%n)
+                </p>
+                </section>
+                <section id="10-2-3-2">
+                    <h3>求最大公约数源程序</h3>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+int gcd(int m, int n)
+{
+    if(m%n==0)
+        return n;  /* 递归出口 */
+    else
+        return gcd(n, m%n);  /* 递归条件 */
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-2-3-3">
+                    <h3>整数逆序输出</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-4. 整数逆序输出</p>
+                    <p style="font-size:80%">编写递归函数reverse(int n)实现将整数逆序输出<br />
+                    </p>
+                    <p class="smallft">
+                        将整数n逆序输出，可以用循环实现，将整数的位数作为控制条件<br />
+                        用递归实现，两个关键点分别为:<br />
+                        <strong>递归出口: </strong>如果n为1位数，即0&#8804;n&#8804;9，直接输出n<br />
+                        <strong>递归条件: </strong>如果n为多位数，输出个位数n%10，再递归调用reverse(n/10)输出前n-1位数
+                    </p>
+                </section>
+                <section id="10-2-3-4">
+                    <h3>整数逆序输出源程序</h3>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+void reverse(int n)
+{
+    if(num<=9)
+        printf("%d", n);
+    else{
+        printf("%d", n%10);
+        reverse(n/10);
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-2-3-4">
+                    <h3>汉诺塔源程序</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+void hanoi(int n, char a, char b, char c)
+{
+    if(n==1)
+        printf("%c-->%c\n", a, b);
+    else{
+        hanoi(n-1, a, c, b);
+        printf("%c-->%c\n", a, b);
+        hanoi(n-1, c, b, a);
+    }
+}
+int main()
+{
+    int n;
+    printf("Input the number of disks:");
+    scanf("%d", &n);
+    printf("The steps for %d disks are:\n", n);
+    hanoi(n, 'a', 'b', 'c');
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-2-3-3">
+                    <h3>递归练习</h3>
+                    <p class="smallft">
+                        利用递归函数计算x的n次幂
+                    </p>
+                    <pre class="fragment" style="font-size:60%">
+                        <code class="language-c" data-trim>
+int power(int x, int n)
+{
+    if(n==1)
+        return x;
+    else{
+        return x*power(x, n-1);
+    }
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-2-3-4">
+                    <h3>分治法求解金块问题</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-6. 分治法求解金块问题</p>
+                    <p style="font-size:60%">老板有一袋金块（共n块，2&#8804;n&#8804;100)，两名最优秀的雇员每人可以得到其中的一块，排名第一的得到最重的金块，排名第二的得到袋子中最轻的金块。输入n及n个整数，用分治法求出最重金块和最轻金块
+                    </p>
+                    <p class="smallft">
+                        即定义递归函数找数组的最大值和最小值，函数形式为max(int a[], int m, int n)，即从a[m]到a[n]中找到最大值<br />
+                        <strong>递归出口: </strong>当m==n时，即a中只有1个元素时，返回a[m]<br />
+                        <strong>递归条件：</strong>将数组分为两部分，分别递归来求最大<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;k=(m+n)/2<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;u=max(a, m, k)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;v=max(a, k+1, n)
+                    </p>
+                </section>
+                <section id="10-2-3-5">
+                    <h3>递归求最大值源程序</h3>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+int max(int a[], int m, int n)
+{
+    int k, u, v;
+    if(m==n)
+        return a[m];
+
+    k=(m+n)/2;  /* 计算中间元素的下标k */
+    u=max(a, m, k);  /* 在a[m]~a[k]中找最大值 */
+    v=max(a, k+1, n);  /* 在a[k+1]~a[n]中找最大值 */
+    return (u&gt;v)?u:v;  /* 返回u和v中最大的值 */
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="10-3">
+                    <h2>10.3 长度单位换算</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-7. 单位换算</p>
+                    <p style="font-size:60%">欧美国家长度使用英制单位，1英里=1609米，1尺=30.84厘米，1英寸=2.54厘米，请编写程序进行转换
+                    </p>
+                </section>
+                <section id="10-3-1">
+                    <h3>10.3.1 程序解析</h3>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MILE_TO_METER 1609  /* 1英里=1609米 */
+#define FOOT_TO_CENTIMETER 30.48  /* 1英尺=30.48厘米 */
+#define INCH_TO_CENTIMETER 2.54  /* 1英寸=2.54厘米 */
+int main()
+{
+    float foot, inch, mile;
+    printf("Input miles, feet, and inches:");
+    scanf("%f%f%f", &miles, &feet, &inches);
+    printf("%f miles=%f meters\n", miles, miles*MILE_TO_METER);  /* 英里转换为米 */
+    printf("%f feet=%f centimeters\n", feet, feet*FOOT_TO_CENTIMETER);  /* 英尺转换为厘米 */
+    printf("%f inches=%f centimeters\n", inches, inches*INCH_TO_CENTIMETER);  /* 英寸转换为厘米 */
+
+    return 0;
+}
+
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-3-2">
+                    <h3>10.3.2 宏基本定义</h3>
+                    <p class="smallft">
+                        宏定义的格式是:
+                        <text style="color:darkblue;">#define 宏名标识符 宏定义字符串</text><br />
+                        编译时，将程序源代码中所有与宏名相同的字符串，用宏定义中的字符串替换<br />
+                        #define PI 3.14<br />
+                        #define ARR_SIZE 4<br />
+                    </p>
+                    <ul>
+                        <li class="smallft">宏名一般用大写字母，以与变量名区分</li>
+                        <li class="smallft">宏定义不是C语句，后面不跟分号</li>
+                        <li class="smallft">宏定义可以嵌套<br />
+                        #define PI 3.14<br />
+                        #define S 2*PI*PI</li>
+                        <li class="smallft">宏定义一般用于定义符号常量</li>
+                    </ul>
+                </section>
+                <section id="10-3-2-1">
+                    <h3>宏定义的有效范围</h3>
+                    <p class="smallft" style"font-size:50%">
+                        宏定义可以写在程序中任何位置，其作用范围从定义书写处到文件结尾<br />
+                        可以通过<text style="color:darkblue">#undef</text>强制指定宏的结束范围
+                    </p>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim>
+#define A "This is the first macro"  /* A的有效范围开始，为整个文件 */
+void f1()
+{
+    printf("A\n");
+}
+#define B "This is the second macro"  /* B的有效范围开始 */
+void f2()
+{
+    printf(B);
+}
+#undef B  /* B的有效范围结束 */
+int main()
+{
+    f1();
+    f2();
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-3-3">
+                    <h3>带参数的宏定义</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-8. 简单的带参数的宏定义</p>
+                    <pre style="font-size:59%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAX(a, b) a>b ? a:b
+#define SQR(x) x*x
+int main()
+{
+    int x, y;
+    printf("Enter x, y:");
+    scanf("%d%d", &x, &y);
+    x=MAX(x,y);  /* 引用宏定义 */
+    y=SQR(x);  /* 引用宏定义 */
+    printf("%d %d\n", x, y);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-3-3-1">
+                    <h3>带参数的宏定义示例</h3>
+                    <p style="font-size:60%">例. 寻找三位数中各位数字的立方和等于其自身的数，如$153=1^3+3^3+5^3$</p>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define f(a) (a)*(a)*(a)
+int main()
+{
+    int i, x, y, z;
+    for(i=1; i&lt;1000; i++)
+    {
+        x=i%10; y=i/10%10; z=i/100;
+        if(f(x)+f(y)+f(z)==i)
+            printf("%d\n", i);
+    }
+    return 0;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-size:60%">
+                        括号可以去除吗？
+                    </p>
+                </section>
+                <section id="10-3-3-2">
+                    <h3>用宏实现两个变量值的交换</h3>
+                    <p style="font-size:60%">
+                        定义宏，将两个变量的值交换
+                    </p>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define f(a,b,t) t=a;a=b;b=t;
+int main()
+{
+    int x, y, t;
+    printf("Enter x, y:");
+    scanf("%d%d", &x, &y);
+    f(x,y,t);
+    printf("%d %d\n", x, y);
+    return 0;
+}
+                        </code>
+                    </pre>
+                    <p class="smallft" style="font-size:60%">
+                        带参数的宏定义不是函数，宏与函数是两种不同的概念<br />
+                        但宏可以实现简单的函数功能
+                    </p>
+                </section>
+                <section id="10-3-3-3">
+                    <h3>宏定义示例(1)</h3>
+                    <ul>
+                        <li class="smallft">定义宏<text style="color:darkblue">LOWCASE</text>，判断字符c是否是小写字母</li>
+                        <p class="fragment smallft">
+                            <text style="color:darkblue">#define LOWCASE(c) (((c)>='a') && ((c)<='z'))</text>
+                        </p>
+                        <li class="smallft">定义宏<text style="color:darkblue">CTOD</text>，将数字字符('0'~'9')转换为相对应的十进制整数，-1表示出错</li>
+                        <p class="fragment smallft">
+                            <text style="color:darkblue">#define CTOD(c) (((c)>='0') && ((c)<='9')) ? 'c'-'0':-1</text>
+                        </p>
+                    </ul>
+                </section>
+                <section id="10-3-3-4">
+                    <h3>宏定义示例(2)</h3>
+                    <pre style="font-size:60%">
+                        <code class="language-c" data-trim data-line-numbers>
+#define F(x) x-2
+#define D(x) x*F(x)
+int main()
+{
+    printf("%d, %d", D(3), D(D(3)));
+    return 0;
+}
+                        </code>
+                    </pre>
+                    <p style="font-size:80%; text-align:left">
+                        阅读带宏定义的程序，先全部替换好，再最后统一计算<br />
+                        <text style="color:red">不可一边替换一边加括号，更不可人为添加括号</text><br />
+                        <text class="fragment" style="color:darkblue;font-weight:bold">D(3)=x*F(x)=x*x-2=3*3-2=7<br />
+                        D(D(3))=D(x*x-2)=x*x-2*F(x*x-2)=x*x-2*x*x-2-2=3*3-2*3*3-2-2=-13</text>
+                    </p>
+                </section>
+                <section id="10-3-3-5">
+                    <h3>结果分析</h3>
+                    <p class="smallft" style="font-size:60%">
+                        D(3)=x*F(x)=x*x-2=3*3-2=7<br />
+                        D(D(3))=D(x*x-2)=x*x-2*F(x*x-2)=x*x-2*x*x-2-2=3*3-2*3*3-2-2=-13
+                    </p>
+                </section>
+                <section id="10-3-4">
+                    <h3>10.3.4 文件包含</h3>
+                    <ul>
+                        <li class="smallft">系统文件以stdio.h math.h等形式供编程者调用</li>
+                        <li class="smallft">实用系统往往有自己诸多的宏定义，也以.h的形式组织和调用</li>
+                        <li class="smallft">如何将若干.h头文件连接成一个完整的可执行程序?用include包含</li>
+                    </ul>
+                </section>
+                <section id="10-3-4-1">
+                    <h3>文件包含格式</h3>
+                    <p class="smallft" style="color:darkblue">
+                        #include <需包含的文件名> /* 系统文件夹中的文件 */<br />
+                        #include "需包含的文件名"  /* 自定义的文件，在当前文件夹或系统文件夹 */
+                    </p>
+                    <p class="smallft">
+                        将指定的文件模块内容插入到#include所在的位置，当程序编译连接时，系统会将所有的#include指定的文件拼接成可执行代码<br />
+                        要注意的是，编译预处理命令以#开头<br />
+                        在程序编译时起作用，但不是真正的C语句，因此行尾没有分号
+                    </p>
+                </section>
+                <section id="10-3-4-2">
+                    <h3>头文件定义示例</h3>
+                    <p style="font-size:60%">例10-9. 将例10-7中长度转换的宏，定义成头文件length.h，写出主函数文件</p>
+                    <pre style="font-size:50%">
+                        <code class="language-c" data-trim data-line-numbers>
+/* length.h */
+#define MILE_TO_METER 1609
+#define FOOT_TO_CENTIMETER 30.48
+#define INCH_TO_CENTIMETER 2.54
+
+/* prog.c */
+#include&lt;stdio.h&gt;
+#include "length.h"
+int main()
+{
+    float foot, inch, mile;
+    printf("Input miles, feet, and inches:");
+    scanf("%f%f%f", &miles, &feet, &inches);
+    printf("%f miles=%f meters\n", miles, miles*MILE_TO_METER);  /* 英里转换为米 */
+    printf("%f feet=%f centimeters\n", feet, feet*FOOT_TO_CENTIMETER);  /* 英尺转换为厘米 */
+    printf("%f inches=%f centimeters\n", inches, inches*INCH_TO_CENTIMETER);  /* 英寸转换为厘米 */
+
+    return 0;
+}
+                    </code>
+                    </pre>
+                </section>
+                <section id="10-3-4-3">
+                    <h3>常用标准头文件</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>文件</th>
+                            <th>描述</th>
+                        </tr>
+                        <tr>
+                            <td>ctype.h</td>
+                            <td>字符处理</td>
+                        </tr>
+                        <tr>
+                            <td>math.h</td>
+                            <Td>与数学处理函数有关的说明和定义</Td>
+                        </tr>
+                        <tr>
+                            <td>stdio.h</td>
+                            <td>输入输出函数中使用的有关说明和定义</td>
+                        </tr>
+                        <tr>
+                            <td>string.h</td>
+                            <td>字符串函数的有关说明与定义</td>
+                        </tr>
+                        <tr>
+                            <td>stddef.h</td>
+                            <td>定义某些常用内容</td>
+                        </tr>
+                        <tr>
+                            <td>stdlib.h</td>
+                            <td>杂项说明</td>
+                        </tr>
+                        <tr>
+                            <td>time.h</td>
+                            <td>支持系统时间函数</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="10-3-5">
+                    <h3>10.3.5 编译预处理</h3>
+                    <p class="smallft">
+                        编译预处理是C语言编译程序的组成部分，其用于解释处理C语言程序中的各种预处理命令<br />
+                        文件包含(#include)和宏定义(#define)都是编译预处理命令，二者在形式上都是以"#"开头，不属于C语言中真正的语句<Br />
+                        编译预处理命令增强了C语言的编程功能，改进了C语言程序设计的环境，提高了编程效率
+                    </p>
+                </section>
+                <section id="10-3-5-1">
+                    <h3>编译预处理</h3>
+                    <p class="smallft">
+                        C程序的编译处理，目的是将每一条C语句用若干条机器指令来完成，生成目标程序<br />
+                        由于#define等编译预处理指令不是C语句，不能被编译程序翻译，需要在真正编译之前作一个预处理，解释完成编译预处理指令，从而将预处理指令转换成相应的C程序段，最终成为由纯粹的C语句构成的程序，经编译后得到目标代码
+                    </p>
+                </section>
+                <section id="10-3-5-2">
+                    <h3>编译预处理功能</h3>
+                    <p class="smallft">
+                        编译预处理的主要功能包括：<text style="color:darkblue">文件包含(#include)</text>，<text style="color:darkblue">宏定义(#define)</text>，<text style="color:darkblue">条件编译</text>
+                    </p>
+                    <p class="smallft">
+                        条件编译的形式:<br />
+                        #define FLAG 1<br />
+                        #if FLAG<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;程序段1<br />
+                        #else<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;程序段2<br />
+                        #endif
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="10-4">
+                    <h2>10.4 大程序构成--多文件模块的学生信息库系统</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例10-10. 学生信息库系统</p>
+                    <p style="font-size:60%">请综合例9-1, 例9-2, 例9-3, 分模块设计一个学生信息库系统。该系统包含学生基本信息的建立和输出、计算学生平均成绩、按照学生的平均成绩排序以及查询、修改学生的成绩等功能</p>
+                    <img src="../images/cprog/chap10/10-7.png" />
+                </section>
+                <section id="10-4-1">
+                    <h3>程序文件模块</h3>
+                    <p class="smallft" style="font-size:60%">
+                        所有文件分为5个程序模块，所有文件存放在同一个文件夹下，采用文件包含形式进行连接和调用
+                    </p>
+                    <pre style="font-size:35%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+#define MAXSIZE 50
+#include "input_output.c"
+#include "computing.c"
+#include "update.c"
+#include "search.c"
+struct student{
+    int num;  /* 学号 */
+    char num[10];  /* 姓名 */
+    int computer, english, math;  /* 三门课程成绩 */
+    double average;  /* 平均成绩 */
+}
+
+int Count=0;
+int main()
+{
+    struct student stus[MAXSIZE];  /* 定义学生信息结构数组 */
+    new_student(stus);  /* 输入学生信息结构数组 */
+    output_student(stus);  /* 显示输入的学生信息结构数组 */
+    average(stus);  /* 计算每一个学生的平均成绩 */
+    sort(stus);  /* 按学生的平均成绩排序 */
+    output_student(stus);  /* 显示排序后的结构数组 */
+    modify(stus);  /* 修改指定输入的学生信息 */
+    output_student(stus);  /* 显示修改后的学生信息结构数组 */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-4-1-1">
+                    <h3>程序文件模块(2)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim>
+/* 输入输出程序文件 input_output.c */
+extern int Count;  /* 外部变量声明 */
+void new_student(struct student stus[])  /* 新建学生信息 */
+{
+    ......
+}
+void output_student(struct student stus[])  /* 输出学生信息 */
+{
+    ......
+}
+
+/* 计算平均成绩程序文件 computing.c */
+extern int Count;
+void average(struct student stus[])  /* 计算每个人平均成绩 */
+{
+    ......
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-4-1-2">
+                    <h3>程序文件模块(3)</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim>
+/* 修改排序程序文件 update.c */
+extern int Count;
+void modify(struct student *p) /* 修改学生成绩 */
+{
+    ......
+}
+void sort(struct student stus[])  /* 平均成绩排序 */
+{
+    ......
+}
+
+/* 查询程序文件 search.c */
+extern int Count;
+void search_student(struct student stus[], int num)  /* 查询学生信息 */
+{
+    ......
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="10-4-2">
+                    <h3>10.4.2 C程序文件模块</h3>
+                    <ul>
+                        <li style="text-align:left; font-size:60%">将保存有一部分程序的文件称为<text style="color:dark">程序文件模块</text></li>
+                        <li style="text-align:left; font-size:60%">一个大程序最好是由一组小函数构成</li>
+                        <li style="text-align:left; font-size:60%">如果程序规模很大，需要几个人合作完成的话，每个人所编写的程序会保存在自己的.c文件中</li>
+                        <li style="text-align:left; font-size:60%">为避免一个文件过长，也会将程序分别保存为几个文件</li>
+                        <li style="text-align:left; font-size:60%">一个大程序会由几个文件组成，每一个文件又可能包含若干个函数</li>
+                        <li style="text-align:left; font-size:60%">一个大程序可由几个程序文件模块组成，每一个程序文件模块又可能包含若干个函数。程序文件模块只是函数书写的载体</li>
+                        <li style="text-align:left; font-size:60%">当大程序分成若干文件模块后，可以对各文件模块分别编译，然后通过连接，把编译好的文件模块再合起来，连接生成可执行程序</li>
+                        <li style="text-align:left; font-size:60%">将若干程序模块连接成一个完整的可执行程序，可以通过文件包含，或者利用工程文件，如VS Studio</li>
+                    </ul>
+                </section>
+                <section id="10-4-2-1">
+                    <h3>C程序文件模块</h3>
+                    <p class="smallft">
+                        程序--文件--函数之间的关系：<br />
+                        <text style="font-weight:bold">小程序</text>，由主函数和若干函数构成，一般在一个文件中<br />
+                        <text style="font-weight:bold">大程序</text>，由若干程序文件模块，分布在多个文件中，每个程序文件模块可包含若干个函数，各程序文件模块可分别编译，再进行连接生成<br />
+                        整个程序只允许有一个main()函数
+                    </p>
+                </section>
+                <section id="10-4-3">
+                    <h3>10.4.3 文件模块间的通信</h3>
+                    <p class="smallft">
+                        文件模块与变量间的通信可通过<text style="color:darkred">外部变量</text>和<text style="color:darkred">静态全局变量</text>
+                    </p>
+                </section>
+                <section id="10-4-3-1">
+                    <h3>外部变量</h3>
+                    <ul>
+                        <li class="smallft">全局变量只能在某个模块中定义一次，如果其他模块要使用该全局变量，需要通过外部变量的声明，格式为<br />
+                        <text style="color:darkblue">extern 变量名表;</text></li>
+                        <li class="smallft">如果在每一个文件模块中都定义一次全局变量，模块单独编译时不会发生错误，但一旦把各模块连接在一起时，就会产生对同一个全局变量名多次定义的错误</li>
+                        <li class="smallft">反之，不经声明而直接使用全局变量，程序编译时也会出现"变量未定义"的错误</li>
+                    </ul>
+                </section>
+                <section id="10-4-3-2">
+                    <h3>静态全局变量</h3>
+                    <ul>
+                        <li class="smallft">当一个大的程序由多人合作完成时，每个程序员可能都会定义一些自己使用的全局变量</li>
+                        <li class="smallft">为避免自己定义的全局变量影响其他人编写的模块，即所谓的全局变量副作用，<text style="color:darkblue">静态全局变量可以把变量的作用范围仅限于当前的文件模块中</text></li>
+                        <li class="smallft">即使其他文件模块使用外部变量声明，也不能使用该变量</li>
+                    </ul>
+                </section>
+                <section id="10-4-3-3">
+                    <h3>文件模块与函数的通信</h3>
+                    <ul>
+                        <li class="smallft">外部函数，如果要实现在一个模块中调用另一个模块中的函数时，就需要对函数进行外部声明，声明格式为<br />
+                        <text style="color:darkblue; text-align:center">extern 函数类型 函数名(参数表说明);</text></li>
+                        <li class="smallft">静态函数，将函数的使用范围限制在文件模块内，不使某程序员编写的自用函数影响其他程序员的程序，即使其他文件模块有同名的函数定义，相互间也没有任何关联，能够增加模块的独立性</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
