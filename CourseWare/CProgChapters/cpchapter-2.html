@@ -1,0 +1,1313 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第2章用C语言编写程序">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第二章 用C语言编写程序</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第2章 用C语言编写程序</h2>
+                <p>
+                    <a href="#/2-1">2.1 在屏幕上显示Hello World!</a><br />
+                    <a href="#/2-2">2.2 求华氏温度100&deg;F对应的摄氏温度</a><br />
+                    <a href="#/2-3">2.3 计算分段函数</a><br />
+                    <a href="#/2-4">2.4 输出华氏--摄氏温度转换表</a><br />
+                    <a href="#/2-5-1">2.5 生成乘方表与阶乘表</a>
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>怎样编写程序，在屏幕上显示一些信息?</li>
+                    <li>怎样编写程序，实现简单的数据处理，例如将华氏温度转换为摄氏温度?</li>
+                    <li>怎样使用if语句计算分段函数?</li>
+                    <li>怎样用for语句求1+2+...+100?</li>
+                    <li>如何定义和调用函数生成一张乘方表?</li>
+                </ul>
+            </section>
+            <section id="2-1">
+                <section id="2-1-1">
+                    <h2>2.1 在屏幕上显示Hello World!</h3>
+                        <pre>
+                            <p style="text-align: center; font-size: 200%; font-weight: bold;">例2-1. 在屏幕上显示一个短句：</p>
+                            <p style="text-align: center; font-size: 200%; font-weight: bold;">Hello World!</p>
+                        </pre>
+                </section>
+                <section id="2-1-2">
+                    <h3>在屏幕上显示Hello World!</h3>
+                    <pre><code class="hljs" data-trim data-line-numbers="1|2|3|4,7|5|6">
+/* 显示Hello World! */
+#include&lt;stdio.h&gt;
+int main()                /* 主函数 */
+{
+    printf("Hello World!\n"); /* printf--输出函数, \n--换行符, ;--语句结束 */
+    return 0;
+}
+                        </code></pre>
+                    <ol>
+                        <li class="fragment">任何程序都有<text style="color:darkblue">主函数</text></li>
+                        <li class="fragment">程序由若干语句组成</li>
+                        <li class="fragment">语句由;结束</li>
+                    </ol>
+                </section>
+                <section id="2-1-3">
+                    <h3>在屏幕上显示一些信息</h3>
+                    <pre>
+                            <p style="text-align: center; font-size: 150%; font-weight: bold;">例2-2. 在屏幕上显示一个短句：<br />Programming is fun!<br /> And Programming in C is even more fun!</p>
+                        </pre>
+                    <pre class="fragment"><code class="hljs" data-trim>
+#include&lt;stdio.h&gt;                /* 编译预处理命令 */
+int main()
+{
+    printf("Programming is fun!\n");
+    printf("And Programming in C is even more fun!\n");
+
+    return 0;
+}
+                        </code></pre>
+                    <p class="fragment" style="text-align: center; font-size: 80%; color: darkred">思考：可以用一条语句完成吗? 能否打印一个简单图案？</p>
+                </section>
+            </section>
+            <section id="2-2">
+                <section id="2-2-0">
+                    <h2>2.2 求华氏温度100&deg;F对应的摄氏温度</h2>
+                    <p style="text-align: center;">从华氏温度转换到摄氏温度: $C=\frac{5*(F-32)}{9}$</p>
+                </section>
+                <section id="2-2-1">
+                    <h3>2.2.1 程序解析</h3>
+                    <pre>
+                            <p style="text-align: center; font-size: 150%; font-weight: bold;">例2-3. 求华氏温度100&deg;F对应的摄氏温度<br />摄氏温度 C=5*(F-32)/9<br />输出: fahr=100, celsius=37</p>
+                        </pre>
+                    <pre class="fragment"><code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int celsius, fahr;             /* 变量定义 */
+    fahr=100;
+    celsius=5*(fahr-32)/9;         /* 变量使用 */
+    printf("fahr=%d,celsius=%d\n", fahr, celsius);    /* 输出结果 */
+    return 0;
+}
+                        </code></pre>
+                </section>
+                <section id="2-2-2">
+                    <h3>2.2.2 常量、变量和数据类型</h3>
+                    <pre><code class="hljs" data-trim>
+int celsius, fahr;
+celsius=5*(fahr-32)/9;
+                        </code></pre>
+                    <ul>
+                        <li>数据</li>
+                        <ul>
+                            <li>常量：在程序运行过程中，其值<text style="color:red">不能</text>被改变</li>
+                            <li>变量：在程序运行过程中，其值<text style="color:red">可以</text>被改变</li>
+                        </ul>
+                        <li>数据类型</li>
+                        <ul>
+                            <li>常量：5和9是整型常量(整数)</li>
+                            <li>变量：在定义时指定</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="2-2-2-1">
+                    <h3>变量的定义</h3>
+                    <p>变量定义的一般形式是：</p>
+                    <p style="text-align:center"><text style="color:darkblue">类型名 变量名;</text></p>
+                    <p><br />变量名的定义一般用<text style="color:darkblue">小写字母</text>，做到见名知义</p>
+                    <pre><code class="hljs" data-trim>
+int celsius, fahr; //定义整型变量
+float x; //定义单精度浮点型变量
+double area, height; //定义双精度浮点型变量
+                        </code></pre>
+                    <p>double型数据精度比float型高，取值范围更大</p>
+                </section>
+                <section id="2-2-2-2">
+                    <h3>变量的定义</h3>
+                    <ul>
+                        <li>定义变量时要指定<text style="color:darkblue">变量名</text>和<text style="color:darkblue">数据类型</text></li>
+                        <li>变量名代表内存中的一个存储单元，用于存放该变量的值</li>
+                        <li>存储单元的大小由变量的数据类型决定</li>
+                        <li>C语言中的变量代表保存数据的存储单元</li>
+                        <li>数学中的变量代表未知数，如$x=x+1$</li>
+                    </ul>
+                </section>
+                <section id="2-2-2-3">
+                    <h3>变量的定义与使用</h3>
+                    <ul>
+                        <li>变量必须先<text style="color:red">定义(赋值)</text>，后<text style="color:darkred">使用</text></li>
+                        <li>一个变量名只能定义一次</li>
+                        <li>一般都定义在程序的头上</li>
+                        <li>不能定义在程序的中间或后面</li>
+                    </ul>
+                    <pre><code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int celsius, fahr;
+
+    fahr=100; //变量先赋值
+    celsius=5*(fahr-32)*9; //变量后引用
+    printf("fahr=%d,celsius=%d\n",fahr,celsius);
+
+    return 0;
+}
+                        </code></pre>
+                </section>
+                <section id="2-2-3-1">
+                    <h3>2.2.3 算术运算和赋值运算</h3>
+                    <pre><code class="hljs" data-trim>
+fahr=100;
+celsius=5*(fahr-32)/9;
+                        </code></pre>
+                    <ul class="fragment">
+                        <li class="smallft">算术运算</li>
+                        <ul>
+                            <li class="smallft">双目算术运算符: <text style="color:darkred">+ - * / %</text></li>
+                            <li class="smallft">算术表达式：用<text style="color:darkblue">算术运算符</text>将<text style="color:darkblue">运算对象</text>连接起来的符合C语言语法规则的式子</li>
+                        </ul>
+                    </ul>
+                    <p class="fragment" style="text-align: left; font-size: 80%; color: darkred">思考：</p>
+                    <p class="fragment" style="text-align:left; font-size:60%">数学式：5(f-32)/9 --> C语言表达式：<text class="fragment">5*(f-32)/9</text><text class="fragment"> 或者 </text><text class="fragment">(f-32)*5/9</text></p>
+                    <p class="fragment" style="text-align:left; font-size:60%">数学式：s(s-a)(s-b)(s-c) --> C语言表达式：<text class="fragment">s*(s-a)*(s-b)*(s-c)</text></p>
+                </section>
+                <section id="2-2-3-2">
+                    <h3>算术运算</h3>
+                    <p style="text-align:center; font-size: 80%;">双目运算符两侧操作数的类型要相同</p>
+                    <ul>
+                        <li class="fragment">"/"表示整数除整数，得到结果为整数<br /><text class="fragment">1/2=0, 9/4=2</text><br /><text class="fragment">5*(f-32)/9和5/9*(f-32)等价吗?</text></li>
+                        <li class="fragment">"%"针对整型数据<br /><text class="fragment">5%6=5, 9%4=1, 100%4=0</text></li>
+                    </ul>
+                </section>
+                <section id="2-2-3-3">
+                    <h3>赋值运算</h3>
+                    <ul>
+                        <li>赋值运算符 <text style="color:darkred">=</text></li>
+                        <li>赋值表达式：用 = 将一个<text style="color:darkred">变量</text>和一个<text style="color:darkred">表达式</text>连接起来的式子<br />即<text style="color:darkblue">变量 = 表达式</text><br />要注意，= 的左边<text style="color:darkred">必须</text>是一个变量，如</li>
+                        <pre><code class="hljs" data-trim>
+fahr=100;
+celsius=5*(fahr-32)/9
+                            </code></pre>
+                        <ul>
+                            <li>计算赋值运算符右侧表达式的值</li>
+                            <li>将赋值运算符右侧表达式的值赋给左侧的变量</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="2-2-4-1">
+                    <h3>2.2.4 格式化输出函数printf()</h3>
+                    <p style="text-align:left; font-size:80%">数据输出：用格式化输出函数printf()<br /><text style="color:darkred;">printf</text>(<text style="color:darkblue;">格式控制字符串, 输出参数1, ..., 输出参数n</text>);<br /><text style="color:darkblue;">格式控制字符串</text>:
+                        用双引号括起来，表示输出的格式<br /><text style="color:darkblue;">输出参数1...n</text>: 要输出的数据</p>
+                    <pre><code class="hljs" data-trim>
+printf("Hello World!\n");
+printf("fahr=%d, celsius=%d\n", fahr, celsius);
+                        </code></pre>
+                    <ul>
+                        <li class="smallft">普通字符，按原样输出</li>
+                        <li class="smallft">格式控制说明，按指定格式输出数据，%d为int型，%f为float和double型，如第2行输出为</li>
+                        <p class="smallft" style="text-align:center">fahr=<text style="color:darkred">100</text>, celsius=<text style="color:darkred">37</text></p>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="2-3">
+                    <h2>2.3 计算分段函数</h2>
+                    <p style="text-align: center; font-size: 100%; font-weight: bold;">例2-4. 求分段水费</p>
+                    <p style="text-align:left; font-size: 100%; font-weight: bold:">输入用户的月用水量$x$(吨)，计算并输出该用户应支付的水费$y$(元)(保留2位小数)
+                        $$
+                        y=f(x)=\begin{cases}
+                        \frac{4x}{3} &x\leq 15\\
+                        2.5x-10.5 &x>15
+                        \end{cases}
+                        $$
+                    </p>
+                </section>
+                <section id="2-3-1">
+                    <h3>2.3.1 程序解析</h3>
+                    <p style="text-align: center; font-size: 100%; font-weight: bold;">例2-4. 求分段水费</p>
+                    <p style="text-align:left; font-size: 100%; font-weight: bold:">输入用户的月用水量$x$(吨)，计算并输出该用户应支付的水费$y$(元)(保留2位小数)
+                        $$
+                        y=f(x)=\begin{cases}
+                        \frac{4x}{3} &x\leq 15\\
+                        2.5x-10.5 &x>15
+                        \end{cases}
+                        $$
+                    </p>
+                    <p class="fragment" style="text-align:left;font-size:80%;">
+                        要解决的问题:
+                    </p>
+                    <ul>
+                        <li class="fragment smallft">
+                            输入
+                        </li>
+                        <li class="fragment smallft">
+                            计算分段函数
+                        </li>
+                        <li class="fragment smallft">
+                            输出，并保留2位小数
+                        </li>
+                    </ul>
+                </section>
+                <section id="2-3-1-1">
+                    <h3>2.3.1 程序解析</h3>
+                    <pre style="font-size:45%"><code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double x,y;
+    printf("Enter x(x>=0):\n");        /* 输入提示 */
+    scanf("%lf", &x);                  /* 调用scanf函数输入数据 */
+    if(x<=15)                          /* if-else语句 */
+    {
+        y=4*x/3;
+    }
+    else
+    {
+        y=2.5*x-10.5;
+    }
+    printf("f(%f)=%.2f\n", x, y);
+
+    return 0;
+}
+                            </code>
+                        </pre>
+
+                    <div class="columnleft" style="width:33%">
+                        <p class="smallft">
+                            Enter x(x>=0):<br />
+                            9.5<br />
+                            f(9.500000)=12.67
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <p class="smallft">
+                            Enter x(x>=0):<br />
+                            15<br />
+                            f(15.000000)=20.00
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <p class="smallft">
+                            Enter x(x>=0):<br />
+                            21.3<br />
+                            f(21.300000)=42.75
+                        </p>
+                    </div>
+                </section>
+                <section id="2-3-2-1">
+                    <h3>2.3.2 关系运算</h3>
+                    <p class="smallft">x<=15 比较x和15的大小，比较结果为<text style="color:darkred">真</text>和<text style="color:darkred">假</text></p>
+                    <p class="smallft">当x取值为9.5时，x
+                        <=15的结果是:真<br />当x取值为21.3时，x<=15的结果是:假< /p>
+                            <p class="smallft"><text style="font-weight: bold">关系运算</text>，比较运算，用于比较两个操作数</p>
+                            <ul>
+                                <li class="smallft">关系运算符</li>
+                                <p class="smallft">
+                                    x&lt;y &nbsp; x
+                                    <=y &nbsp; x==y<br />
+                                    x&gt;y &nbsp; x>=y &nbsp; x!=y
+                                </p>
+                                <p class="smallft" style="color:red">
+                                    注意区分=和==
+                                </p>
+                                <li class="smallft">
+                                    关系表达式，用<text style="color:darkred">关系运算符</text>将2个<text style="color:darkred">表达式</text>连接起来的式子，如x<=1< /li>
+                            </ul>
+                </section>
+                <section id="2-3-2-2">
+                    <h3>运用关系表达式</h3>
+                    <table style="align-content:center;font-size: 60%">
+                        <tr>
+                            <th>表示比较的数学式</th>
+                            <th>C关系表达式</th>
+                        </tr>
+                        <tr>
+                            <td>$x\leq 10$</td>
+                            <td>x<=10< /td>
+                        </tr>
+                        <tr>
+                            <td>$x\geq 10$</td>
+                            <td>x>=10</td>
+                        </tr>
+                        <tr>
+                            <td>$x\neq 10$</td>
+                            <td>x!=10</td>
+                        </tr>
+                        <tr>
+                            <td>$x=10$</td>
+                            <td>x==10</td>
+                        </tr>
+                    </table>
+                    <p class="smallft" style="text-align:center">
+                        用关系表达式描述条件
+                    </p>
+                    <ul>
+                        <li class="smallft">
+                            判断x是否为负数: x&lt;0
+                        </li>
+                        <li class="smallft">
+                            判断x是否不为零: x!=0
+                        </li>
+                    </ul>
+                </section>
+                <section id="2-3-3-1">
+                    <h3>2.3.3 if-else语句</h3>
+                    <div class="columnleft">
+                        <pre>
+                                <code class="hljs" data-trim>
+if(表达式)
+    语句1
+else
+    语句2
+                                </code>
+                            </pre>
+
+                        <img src="../images/cprog/chap02/ifloop.png" />
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                                <code class="hljs" data-trim>
+if(x<=15){
+    y=4*x/3;
+}else{
+    y=2.5*x-10.5;
+}
+                                </code>
+                            </pre>
+                        <img src="../images/cprog/chap02/ifloop-spe.png" />
+                    </div>
+                </section>
+                <section id="2-3-3-2">
+                    <h3>计算二分段函数</h3>
+                    <p class="smallft">
+                        函数定义为
+                        $$
+                        f(x)=\begin{cases}
+                        \frac{1}{x} & x\neq 0\\
+                        0 & x=0
+                        \end{cases}
+                        $$
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim>
+if(x!=0){
+    y=1/x;
+}else{
+    y=0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-3-3-3">
+                    <h3>计算二分段函数完整源代码</h3>
+                    <pre style="font-size: 50%">
+                            <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double x, y;
+
+    printf("Enter x:\n");
+    scanf("%lf", &x);
+    if(x!=0)
+    {
+        y=1/x;
+    }
+    else
+    {
+        y=0;
+    }
+    printf("f(%.2f)=%.1f\n", x, y);
+
+    return 0;
+}
+                            </code>
+                        </pre>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            input x:<br />
+                            2.5<br />
+                            f(2.50)=0.4
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            input x:<br />
+                            0<br />
+                            f(0.00)=0.0;
+                        </p>
+                    </div>
+                </section>
+                <section id="2-3-3-4">
+                    <h3>软件测试的基本思想</h3>
+                    <dt class="smallft" style="text-align:left">
+                        软件测试
+                    </dt>
+                    <dd class="smallft" style="text-align:left">
+                        精心设计一批<text style="color:darkred">测试用例</text><text style="color:darkblue">[输入数据，预期输出结果]</text>，然后分别用这些测试用例运行程序，看程序的实际运行结果与预期输出结果是否一致。
+                    </dd>
+                    <p class="smallft">
+                        <a class="columnleft" href="#/2-3-1-1">计算阶梯水费</a>
+                        <a class="columnright" href="#/2-3-3-3">计算二分段函数</a>
+                    </p>
+                </section>
+                <section id="2-3-4-1">
+                    <h3>2.3.4 格式化输入函数scanf()</h3>
+                    <p style="text-align:left;font-size:80%">
+                        数据输入：格式化输入函数scanf()<br />
+                        scanf("%lf", &x);<br />
+                        <text style="color:darkred" ;>printf</text>(
+                        <text style="color:darkblue" ;>格式控制字符串, 输入参数1, ..., 输入参数n</text>
+                        );<br /><text style="color:darkblue;">格式控制字符串</text>: 用双引号括起来，表示输入的格式<br /><text style="color:darkblue;">输入参数1...n</text>: 变量的地址
+                    </p>
+                    <pre><code class="hljs" data-trim>
+scanf("%lf", &x);
+scanf("x=%lf", &x);
+                        </code></pre>
+                    <ul>
+                        <li class="smallft">普通字符，按原样输入，<text style="color:darkred">尽量不要出现普通字符</text></li>
+                        <li class="smallft">格式控制说明，按指定格式输入数据，%d为int型，%f为float型，%lf为double型</li>
+                        <p class="smallft" style="text-align:center">第1行，输入为<text style="color:darkred">9.5</text><br />第2行，输入为<text style="color:darkred">x=9.5</text></p>
+                    </ul>
+                </section>
+                <section id="2-3-4-2">
+                    <h3>改进例2-3的程序</h3>
+                    <p class="smallft" style="text-align:left">例2-3. 求华氏温度100&deg;F对应的摄氏温度<br />摄氏温度 C=5*(F-32)/9<br />输出: fahr=100, celsius=37</p>
+                    <pre><code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+ing main()
+{
+    int celsius, fahr;
+    printf("Enter fahr:\n");
+    scanf("%d", &fahr);
+    celsius=5*(fahr-32)/9;
+    printf("fahr=%d, celsius=%d\n", fahr, celsius);
+
+    return 0;
+}
+                        </code></pre>
+                </section>
+                <section id="2-3-5-1">
+                    <h3>2.3.5 常用数学库函数</h3>
+                    <ul>
+                        <li>库函数</li>
+                        <ul>
+                            <li>C语言处理系统提供事先编好的函数，供用户在编程时调用，如scanf(), printf(), exp()等</li>
+                            <li>在相应的系统文件(头文件)中定义一些必需的信息</li>
+                        </ul>
+                        <li>#include命令</li>
+                        <ul>
+                            <li>用户在调用库函数时，需将相应的头文件包含到源程序中，如</li>
+                            <li>调用scanf, printf时，需要#include&lt;stdio.h&gt;</li>
+                            <li>调用sqrt，需要#include&lt;math.h&gt;</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section id="2-3-5-2">
+                    <h3>常用数学库函数</h3>
+                    <ul>
+                        <li class="smallft">平方根函数 <text style="color:darkred" ;>sqrt(x)</text></li>
+                        <li class="smallft">绝对值函数 <text style="color:darkred" ;>fabs(x)</text>，如fabs(-3.56)的值为3.56</li>
+                        <li class="smallft">幂函数<text style="color:darkred" ;>pow(x,n)</text>，即$x^n$，pow(1.1, 2)的值为1.21</li>
+                        <li class="smallft">指数函数<text style="color:darkred" ;>exp(x)</text>，即$e^x$，exp(2.3)的值为$e^{2.3}$</li>
+                        <li class="smallft">以$e$为底的对数函数<text style="color:darkred" ;>log(x)</text>，即$ln(x)$，log(123.45)的值为4.815836</li>
+                        <li class="smallft">以10为底的对数函数<text style="color:darkred" ;>log10(x)</text>，即$log_{10}(x)$，log10(123.45)的值为2.091491</li>
+                    </ul>
+                </section>
+                <section id="2-3-5-3">
+                    <h3>坚持的力量</h3>
+                    <p style="font-size: 80%;">例2-4. 以第一天的能力值为基数，用initial表示，能力值相比前一天最高的值factor就是努力参数，坚持天数为day，让我们一起来看看坚持的力量。<br />
+                        输入能力的初始值initial、努力参数factor和坚持天数day，根据下列公式计算出坚持努力后达到的能力值，输出时保留两位小数</p>
+                    <p style="font-size: 80%;">
+                        $$
+                        result=initial(1+factor)^{day}
+                        $$
+                    </p>
+                </section>
+                <section id="2-3-5-4">
+                    <h3>例2-4源代码</h3>
+                    <pre style="font-size:50%" ;>
+                            <code class="hljss" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int day;
+    double factor, initial, result;
+
+    printf("Enter initial: ");
+    scanf("%lf", &initial);
+    printf("Enter factor: ");
+    scanf("%lf", &factor);
+    printf("Enter day: ");
+    scanf("%d", &day);
+
+    result=initial*pow(1+factor, day);
+    printf("result=%.2f\n", result);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-3-5-5">
+                    <h3>用scanf函数输入多个数据</h3>
+                    <p class="smallft">
+                        scanf("<text style="color:red">%lf %lf %d</text>", <text style="color:red">&initial</text>, <text style="color:red">&factor</text>, <text style="color:red">&day</text>);<br />
+                        输入: 1 0.01 365<br />
+                        输出: 37.78
+                    </p>
+                    <ul>
+                        <li class="smallft">scanf需要多个输入参数和多个格式控制说明，输入参数的类型、个数和位置要与格式控制说明一一对应<br />
+                            如scanf("%lf %d %lf", &initial, &day, &factor);</li>
+                        <li class="smallft">程序运行时，输入的多个数据之间必须有间隔<br />
+                            scanf("%lf %d %lf", &initial, &day, &factor)该如何输入?</li>
+                    </ul>
+                </section>
+                <section id="2-3-5-6">
+                    <h3>计算存款本息</h3>
+                    <p style="font-size: 80%;">输入存款金额mone、存期year和年利率rate，根据公式计算存款到期时的本息合计sum(税前)，输出时保留两位小数</p>
+                    <p style="font-size: 80%;">
+                        $$
+                        sum=money(1+rate)^{year}
+                        $$
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdio.h&gt;
+int main()
+{
+    int money, year;
+    double rate, sum;
+
+    printf("Enter money, year, rate: ");
+    scanf("%d %d %lf", &money, &year, &rate);
+    sum=money*pow((1+rate), year);
+    printf("sum=%.2f\n", sum);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+            </section>
+            <section>
+                <section id="2-4">
+                    <h2>2.4 输出华氏--摄氏温度转换表</h2>
+                    <p style="text-align:left; font-size:100%;">例2-6. 输入2个整数lower和upper，输出一张华氏--摄氏温度转换表，华氏温度的取值范围是[lowe, upper]，每次增加1&deg;</p>
+                </section>
+                <section id="2-4-1">
+                    <h3>2.4.1程序解析</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-number>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int fahr, lower, upper;
+    double celsius;
+    printf("Enter lower: ");
+    scanf("%d", &lower);
+    printf("Enter upper: ");
+    scanf("%d", &upper);
+    if(lower<=upper)
+    {
+        printf("fahr celsius\n");
+        for(fahr=lower; fahr<=upper; fahr++)
+        {
+            celsius=(5.0/9.0)*(fahr-32);
+            printf("%4d%6.1f\n",  fahr, celsius);
+        }
+    }
+    else
+    {
+        printf("Invalid value\n");
+    }
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-1-1">
+                    <h3>例2-6中的for语句流程</h3>
+                    <pre>
+                            <code class="hljs" data-trim>
+for(fahr=lower; fahr<=upper; fahr++)
+{
+    celsius=(5.0/9.0)*(fahr-32);
+    printf("%4d%6.1f\n",  fahr, celsius);
+}
+                            </code>
+                        </pre>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            Enter lower: <text style="color:red">30</text><br />
+                            Enter upper: <text style="color:red">35</text><br />
+                            fahr&nbsp;&nbsp;celsius<br />
+                            30&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-1.1<br />
+                            31&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-0.6<br />
+                            32&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.0<br />
+                            33&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0.6<br />
+                            34&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.1<br />
+                            35&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.7
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap02/fahrloop.png" style="width:50%" />
+                    </div>
+                </section>
+                <section id="2-4-2-1">
+                    <h3>2.4.2 for语句--循环语句</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            for(<text style="color:darkred">表达式1</text>;<text style="color:darkred">表达式2</text>;<text style="color:darkred">表达式3</text>)<br />
+                            &nbsp;&nbsp;循环体语句
+                        </p>
+                        <p class="smallft">
+                            实现C语句的重复执行<br />
+                            3个表达式、循环体语句<br />
+                            <text style="color:red">!</text>书写顺序和执行顺序不同<br />
+                            <text style="color:red">!</text>表达式1只执行一次
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap02/forloop.png" style="width: 70%" />
+                    </div>
+                </section>
+                <section id="2-4-2-2">
+                    <h3>for语句说明</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">循环</text>(控制)<text style="color:darkred">变量</text>: for语句中，通过改变或判断某个变量的值来控制循环的执行
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim>
+for(fahr=lower; fahr<=upper; fahr++)
+{
+    celsius=(5.0/9.0)*(fahr-32);
+    printf("%4d%6.1f\n",  fahr, celsius);
+}
+                            </code>
+                        </pre>
+                    <ul>
+                        <li class="smallft"><text style="color:darkred">表达式1</text>: 给循环变量赋初值，指定循环的起点，<text style="color:darkred">fahr=lower;</text></li>
+                        <li class="smallft"><text style="color:darkred">表达式2</text>: 给出循环的条件，判断循环是否达到终点，<text style="color:darkred">fahr<=upper;< /text>
+                        </li>
+                        <li class="smallft"><text style="color:darkred">表达式3</text>: 设置循环的步长，改变循环变量的值，从而可改变表达式2的真假性，<text style="color:darkred">fahr++;</text></li>
+                        <li class="smallft"><text style="color:darkred">循环体语句</text>: 被反复执行的语句，一条或多条语句</li>
+                    </ul>
+                </section>
+                <section id="2-4-2-3">
+                    <h3>复合语句{}和空语句</h3>
+                    <pre>
+                            <code class="hljs" data-trim>
+/* 代码1 */
+for(fahr=lower; fahr<=upper; fahr++)
+    celsius=(5.0/9.0)*(fahr-32);
+    printf("%4d%6.1f\n",  fahr, celsius);
+                            </code>
+                        </pre>
+                    <pre>
+                            <code class="hljs" data-trim>
+/* 代码2 */
+for(fahr=lower; fahr<=upper; fahr++);
+    celsius=(5.0/9.0)*(fahr-32);
+    printf("%4d%6.1f\n",  fahr, celsius);
+                            </code>
+                        </pre>
+                    <p class="smallft" style="color: darkred">思考：以上两段代码的执行结果如何? 为什么?</p>
+                </section>
+                <section id="2-4-3">
+                    <h3>2.4.3 指定次数的循环程序设计</h3>
+                    <p style="text-align:left; font-size:100%" ;>例2-7. 输入一个正整数，求$\sum_{i=1}^{n}i$</p>
+                    <p class="smallft">
+                        当n=100时，计算的是1+2+3+...+100的值
+                    </p>
+                    <p class="smallft">
+                        抽取具有共性的算式：sum=sum+i<br />
+                        若sum初值为0，该算式重复100次，i从1变到100，每次增1<br />
+                        <br />
+                        设i为循环变量，则有:<br />
+                        指定循环起点的表达式1: i=1<br />
+                        给出循环条件的表达式2: i
+                        <=100<br />
+                        设置循环步长的表达式3: i++<br />
+                        循环体中的语句: sum=sum+i;
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim>
+for(i=1; i<=100; i++)
+{
+    sum=sum+i;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-1">
+                    <h3>求1+2+3+...+100源程序</h3>
+                    <pre>
+                            <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, sum;
+    sum=0;                /* 设置累加和sum的初值为0 */
+    for(i=1; i<=100; i++) /* 循环重复100次 */
+    {
+        sum=sum+i;        /* 反复累加 */
+    }
+    printf("sum=%d\n", sum);  /* 输出累加和 */
+    return 0;
+}
+                            </code>
+                        </pre>
+                    <p class="smallft" style="color: darkred">思考：循环体能否改为</p>
+                    <pre>
+                            <code class="hljs" data-trim>
+for(int i=1; i<=100; i++)
+{
+    sum=0;
+    sum=sum+i;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-2">
+                    <h3>求1+1/2+1/3+...+1/100</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i;
+    double sum;
+    sum=0;                  /* 设置累加和sum的初值为0 */
+    for(i=1; i<=100; i++)   /* 循环重复100次 */
+    {
+        sum=sum+1.0/i;        /* 反复累加 */
+    }
+    printf("sum=%f\n", sum);    /* 输出累加和 */
+    return 0;
+}
+                            </code>
+                        </pre>
+                    <p class="smallft" style="color: darkred">思考：循环体第9行能否改为<text style="color:red">sum=sum+1/i</text>?</p>
+                </section>
+                <section id="2-4-3-3">
+                    <h3>指定次数的循环程序设计</h3>
+                    <p class="smallft">
+                        指定次数的循环程序设计，一般包含四个部分：
+                    <ul>
+                        <li class="smallft">初始化，指定循环起点</li>
+                        <ul>
+                            <li class="smallft">给循环变量赋初值，如i=1;</li>
+                            <li class="smallft">进入循环之前，设置相关变量的初值，如sum=0;</li>
+                        </ul>
+                        <li class="smallft">条件控制，如只要i<=100，循环就继续< /li>
+                        <li class="smallft">工作，指重复执行的语句(循环体)。</li>
+                        <ul>
+                            <li class="smallft">循环体可以是一条语句，可以是复合语句，也可以是空语句，如sum=sum+i;</li>
+                        </ul>
+                        <li class="smallft">改变循环变量，在每次循环中改变循环变量的值</li>
+                        <ul>
+                            <li class="smallft">如i++，以改变循环条件的真假，一旦i&gt;100，循环就结束</li>
+                        </ul>
+                    </ul>
+                    </p>
+                </section>
+                <section id="2-4-3-4">
+                    <h3>例2-7 求1+2+3+...+n</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, sum;
+    sum=0;
+    printf("Enter n:");
+    scanf("%d", &n);
+
+    for(i=1; i<=n; i++)
+    {
+        sum=sum+i;
+    }
+    printf("sum=%d\n", sum);
+    return 0 ;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-5">
+                    <h3>求1+1/2+1/3+...+1/n</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i;
+    double sum;
+    sum=0;
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=1; i<=n; i++)
+    {
+        sum=sum+1.0/i;
+    }
+    printf("sum=%lf\n", sum);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-6">
+                    <h3>求1+1/3+1/5+...的前n项和</h3>
+                    <p style="text-align:left; font-size:80%" ;>求前n项，即循环n次，每次累加1项<br />
+                        循环中可写成sum=sum+item; 而item=1.0/2*(i-1);</p>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, n;
+    double item, sum;
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    sum=0;
+    for(i=1; i<=n; i++)
+    {
+        item=1.0/(2*i-1);    /* 计算第i项的值 */
+        sum=sum+item;        /* 累加第i项的值 */
+    }
+    printf("sum=%lf\n", sum);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-7">
+                    <h3>求1-1/3+1/5-...的前n项和</h3>
+                    <p class="smallft">
+                        例2-8. 输入一个正整数n，求1-1/3+1/5-...的前n项和
+                    </p>
+                    <p class="smallft">
+                        关键是确定循环体内的结构，item=flat*1.0/2*(i-1); sum=sum+<text style="color:darkred">item</text>，item如何表示?<br />
+                    <pre>
+                                <code class="hljs" data-trim>
+flag=-flag;
+denominator=denominator+2;
+item=flag*1.0/denominator;
+
+sum=sum+item;
+                                </code>
+                            </pre>
+                    </p>
+                </section>
+                <section id="2-4-3-8">
+                    <h3>求1-1/3+1/5-...的前n项和</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int denominator, flag, i, n; /* denominator分母(1,3,5,...), flag(1,-1) */
+    double item, sum;
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    flag=1;
+    denominator=1;
+    item=1;
+    sum=0;
+    for(i=1; i<=n; i++)
+    {
+        sum=sum+item;              /* 累加第i项的值 */
+        flag=-flag;                 /* 准备下一次循环 */
+        denominator=denominator+2;
+        item=flat*1.0/denominator;  /* 计算第i+1项的值 */
+    }
+    printf("sum=%lf\n", sum);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-9">
+                    <h3>求n!的值</h3>
+                    <p class="smallft">
+                        例2-9. 输入一个正整数n，计算n!的值
+                    </p>
+                    <p class="smallft">
+                        循环体内的结构：product=product*item(第i项); item=i;
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim data-line-number>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, n;
+    double product;
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    product=1;              /* 置阶乘product的初始值为1 */
+    for(i=1; i<=n; i++)
+    {
+        product=product*i;   /* 循环重复n次，计算n! */
+    }
+    printf("product=%.0f\n", product);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-4-3-10">
+                    <h3>求$x^n$的值</h3>
+                    <p class="smallft">
+                        输入实数$x$和正整数$n$，计算$x^n$的值
+                    </p>
+                    <p class="smallft">
+                        循环体内的结构：power=power*item(第i项); item=x;
+                    </p>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int i, n;
+    double x, power;
+
+    printf("Enter x, n:\n");
+    scanf("%lf%d", &x, &n);
+    power=1;              /* 置power的初始值为1 */
+    for(i=1; i<=n; i++)
+    {
+        power=power*x;   /* 循环重复n次，计算x的n次幂 */
+    }
+    printf("power=%.0f\n", power);
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+            </section>
+            <section>
+                <section id="2-5-1">
+                    <h2>2.5 生成乘方表和阶乘表</h2>
+                    <p class="smallft">
+                        例2-10. 输入一个正整数n，生成一张2的乘方表，输出$2^0$到$2^n$的值，可以调用幂函数计算2的乘方
+                    </p>
+                    <p class="smallft">
+                        for(i=0; i
+                        <=n; i++){<br />
+                        &nbsp;&nbsp;power=pow(2,n); /* 调用幂函数pow(2,i)计算2的i次方 */<br />
+                        &nbsp;&nbsp;输出power的值;<br />
+                        }
+                    </p>
+                </section>
+                <section id="2-5-2">
+                    <h3>生成乘方表源程序</h3>
+                    <pre>
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;math.h&gt;
+int main()
+{
+    int i, n;
+    double power;
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=0; i<=n; i++)
+    {
+        power=pow(2,i);  /* 调用幂函数pow(2,i)计算2的i次方 */
+        printf("pow(2,%d)=%.0f\n", i, power);
+    }
+    return 0;
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-5-3">
+                    <h3>生成阶乘表</h3>
+                    <p class="smallft">
+                        例2-11. 输入一个正整数n(n<=16)，生成一张阶乘表，输出0!到n!的值。要求定义和调用函数fact(n)计算n!，函数类型是double </p>
+                            <pre>
+                            <code class="hljs" data-trim>
+for(i=0; i<=n; i++)
+{
+    product=fact(i);    /* 调用自定义的函数fact(i)计算 */
+    printf("%f", product);
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-5-4">
+                    <h3>生成阶乘表源程序</h3>
+                    <pre style="font-size:45%;">
+                            <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+double fact(int n);    /* 自定义函数的声明 */
+int main()
+{
+    int i, n;
+    double result;
+
+    printf("Enter n:");
+    scanf("%d", &n);
+    for(i=0; i<=n; i++)
+    {
+        result=fact(i);    /* 调用自定义的耿当fact(i)计算i! */
+        printf("%d!=%.0f\n", i, result);
+    }
+    return 0;
+}
+double fact(int n)       /* 函数首部 */
+{
+    int i;
+    double product;
+    product=1;
+    for(i=1; i<=n; i++)
+    {
+        product=product*i;
+    }
+    return product;       /* 将函数结果回送主函数 */
+}
+                            </code>
+                        </pre>
+                </section>
+                <section id="2-5-5">
+                    <h3>函数的概念</h3>
+                    <ul>
+                        <li class="smallft">C语言中有两种类型的函数</li>
+                        <ul>
+                            <li class="smallft">标准库函数</li>
+                            <li class="smallft">自定义函数</li>
+                        </ul>
+                        <li class="smallft">函数可做到一次定义，多次调用</li>
+                        <li class="smallft">使用自定义函数的程序框架</li>
+                    </ul>
+                    <pre>
+                                <code class="hljs" data-trim>
+/* 声明自定义函数，以分号结束。自定义函数包含函数名、函数参数和函数类型 */
+double fact(int n);
+int main()
+{
+    //......
+    result=fact(i);    /* 调用自定义函数fact(i)计算i! */
+    //......
+}
+
+/* 定义求n!的函数 */
+double fact(int n)
+{
+    //......
+}
+                                </code>
+                            </pre>
+
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
