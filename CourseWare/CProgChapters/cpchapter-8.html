@@ -1,0 +1,1369 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>程序设计基础</title>
+    <meta name="description" content="第8章指针">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+
+    <link rel="stylesheet" href="../../dist/reset.css">
+    <link rel="stylesheet" href="../../dist/reveal.css">
+    <link rel="stylesheet" href="../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../plugin/highlight/monokai.css" id="highligh">
+
+    <style type="text/css">
+        .columnleft {
+            float: left;
+            width: 50%;
+        }
+
+        .columnright {
+            float: right;
+            width: 50%;
+        }
+
+        .columncenter {
+            float: center;
+            width: 33%;
+        }
+
+        li {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        p {
+            text-align: left;
+        }
+
+        .smallft {
+            text-align: left;
+            font-size: 80%;
+        }
+
+        .smcft {
+            font-size: 80%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="titlepage">
+                <h1>程序设计基础</h1>
+                <H2>第八章 指针</H2>
+                
+                <p id="date" style="text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="toc">
+                <h2>第8章 指针</h2>
+                <p>
+                    <a href="#/8-1">8.1 密码开锁</a><br />
+                    <a href="#/8-2">8.2 角色互换</a><br />
+                    <a href="#/8-3">8.3 冒泡排序</a><br />
+                    <a href="#/8-4">8.4 字符串压缩</a><br />
+                    <a href="#/8-5">8.5 任意个整数求和*</a>
+                </p>
+            </section>
+            <section id="chpkeys">
+                <h2>本章要点</h2>
+                <ul>
+                    <li>变量、内存单元和地址之间的关系是什么?</li>
+                    <li>如何定义指针变量，怎样使用指针变量?</li>
+                    <li>什么是指针变量的初始化?</li>
+                    <li>指针变量的基本运算有哪些?如何使用指针操作所指向的变量?</li>
+                    <li>指针作为函数参数的作用是什么?</li>
+                    <li>如何使用指针实现函数调用返回多个值?</li>
+                    <li>如何利用指针实现内存的动态分配?</li>
+                </ul>
+            </section>
+            <section>
+                <section id="8-1">
+                    <h2>8.1 密码开锁</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-1. 密码开锁</p>
+                    <p style="font-size:60%">几位同学去玩密室逃脱游戏，密室门上有一把四位数的数字密码锁，只有在密室中找到开锁密码才能走出密室。密室中整齐地摆放着规格大小完全相同的26个寄存箱，每个寄存箱上按顺序者了有一个英文字母和一个编号，字母从A到Z，编号从001到26.同学们在密室中认真搜寻，在角落里找到一把钥匙，用这把钥匙再打开编号为24的X寄存箱，里面有一张字条，上面写着"5324"，用这四个数字去开密码锁，果然打开了，成功逃脱密室</p>
+                </section>
+                <section id="8-1-1">
+                    <h3>8.1.1 程序解析</h3>
+                    <p class="smallft">关键点分析：<br />
+                        得到线索:&nbsp;&nbsp; 找到一把钥匙，打开<text style="color:darkred">p寄存器</text>(编号为16)<br />
+                        提示地址:&nbsp;&nbsp; 里面是一把<text style="color:darkred">刻着数字24的钥匙</text><br />
+                        找到目标:&nbsp;&nbsp;打开编号为24的<text style="color:darkred">X寄存器</text><br />
+                        取出内容:&nbsp;&nbsp;"5342"
+                    </p>
+                </section>
+                <section id="8-1-1-1">
+                    <h3>寻找密码途径分析</h3>
+                    <ul>
+                        <li style="text-align:left; font-size:60%">密码存放需要一定的存储空间作为存放地，每个存放地都会有地址</li>
+                        <li style="text-align:left; font-size:60%">如果知道了存放地的名字，就能够找到密码</li>
+                        <li style="text-align:left; font-size:60%">如果不知道存放地的名字，知道该存放地的地址也能取出密码</li>
+                        <li style="text-align:left; font-size:60%">如果有另外一个地方存放了该密码存放地的地址，就能顺藤摸瓜，间接找到密码</li>
+                    </ul>
+                    <img src="../images/cprog/chap08/8-1.png" />
+                </section>
+                <section id="8-1-1-2">
+                    <h3>寻找密码源程序</h3>
+                    <pre style="font-size:30%"><code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int x=5342; /* 变量级竽存放密码值5342 */
+    int *p=NULL;  /* 定义整型指针变量p，NULL值为0，代表空指针 */
+    p=&x;  /* 为指针变量赋值，将x的地址存放在指针变量p中 */
+
+    printf("If I know the name of the variable, I can get its value by names: %d\n", x);
+    printf("If I know the address of the variable is %x, then I also can get its value by address: %d\n", p, *p);
+    return 0;
+}
+                    </code></pre>
+                </section>
+                <section id="8-1-2">
+                    <h3>8.1.2 地址和指针</h3>
+                    <div class="columnleft">
+                        <img src="../images/cprog/chap08/8-2.png" />
+                    </div>
+                    <div class="columnright">
+                        <p class="smallft">
+                            <text style="color:darkred">直接访问</text>，通过变量名访问<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int x=20, y=1, z=1;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;printf("%d", x);<br /><br />
+                            <text style="color:darkred">间接访问</text>，通过另一个变量访问<br />
+                            即将变量的地址放在另一个变量中，访问时需先找到该变量取出地址，再访问前者变量<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int x=20; int *p=NULL; p=&x; <br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;printf("%d", *p);<br /><br />
+                            <text style="color:red">指针变量，存放地址的变量</text>
+                        </p>
+                    </div>
+                </section>
+                <section id="8-1-3">
+                    <h3>8.1.3 指针变量的定义</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">类型名 *</text>指针变量名<br />
+                        类型名表明指针变量<text style="color:darkred">所指向变量</text>的类型<br />
+                        <text style="color:darkred">*</text>是指针声明符，表明所指向的变量为指针类型<br />
+                    </p>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim>
+int *p; /* p是整型指针，指向整型变量 */
+float *fp; /* fp是浮点型指针，指向浮点型变量 */
+char *cp; /* cp是字符型指针，指向字符型变量 */
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        注意，在int *p;的定义中，指针变量名是<text style="color:darkred">p</text>，而不是*p
+                    </p>
+                </section>
+                <section id="8-1-4">
+                    <h3>8.1.4 指针的基本运算</h3>
+                    <p class="smallft">
+                        如果指针的值是某个变量的地址，可以通过指针间接访问该变量
+                    </p>
+                    <ul>
+                        <li class="smallft">取地址运算和间接访问运算</li>
+                        <p class="smallft">
+                            & 取地址运算符，将变量的地址赋给指针变量<br />
+                            * 间接访问运算符，访问指针所指向的变量
+                        </p>
+                    </ul>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim>
+int *p, a=3; /* 定义整型指针变量p，以及整型变量a */
+p=&a;  /* 将a的地址赋给p，即p指向a */
+printf("%d", *p);  /* 输出p指向的变量a的值 */
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-1-4-1">
+                    <h3>指针基本运算</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-2. 取地址运算和间接访问运算示例</p>
+                    <p>阅读下列代码，写出运行结果
+                    </p>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim data-line-numbers>
+    #include&lt;stdio.h&gt;
+    int main()
+    {
+        int a=3, *p;
+        p=&a;
+        printf("value of p: %x\n", p);
+        printf("a=%d, *p=%d\n", a, *p);
+        *p=10;  /* 改变地址所指向的内存的内容 */
+        printf("a=%d, *p=%d\n", a, *p);  /* &*p与&a的关系? *&a与a的关系? */
+        printf("Enter a:");
+        scanf("%d", &a);
+        printf("a=%d, *p=%d\n", a, *p);
+
+        (*p)++;
+        printf("a=%d, *p=%d\n", a, *p); /* 为什么? */
+        *p++; /* 等价于*(p++)，实现过程如何? */
+        printf("value of p: %x\n", p);
+        printf("a=%d, *p=%d\n", a, *p);
+    }
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-1-4-2">
+                    <h3>赋值运算</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim>
+int a=3;
+int *p1, *p2;
+p1=&a;  /* 将a的地址赋给p1，p1指向a */
+p2=p1;  /* p2也指向a */
+                        </code>
+                    </pre>
+                    <p style="color:darkblue;text-align:center;font-weight:bold">
+                        相同类型的指针才能相互赋值
+                    </p>
+                </section>
+                <section id="8-1-5">
+                    <h3>8.1.5 指针变量的初始化</h3>
+                    <ul>
+                        <li class="smallft">指针变量在定义后也要先赋值，再引用</li>
+                        <li class="smallft">在定义指针变量时，可以同时对它赋初值，如<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int a;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int *p1=&a;
+                            &nbsp;&nbsp;&nbsp;&nbsp;int *p2=p1;</li>
+                        <li class="smallft">不能用数值作为指针变量的初值，但可以将一个指针变量初始化为一个空指针，如:<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;int *p=1000; //错误<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;p=0;<br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;p=NULL; <br />
+                            &nbsp;&nbsp;&nbsp;&nbsp;p=(int*)1732; /* 使用强制类型转换，但不提倡 */</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section id="8-2">
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-3. 角色互换</p>
+                    <p style="font-size: 80%;">有两个角色分别用变量a和b表示，为实现角色互换，现制定了3套方案，通过函数调用交换变量a和b的值，即swap1(), swap2()和swap3()，请分析这3个函数，哪个函数可以实现这样的功能?
+                    </p>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    int a=1, b=2;
+    int *pa=&a, *pb=&b;
+
+    swap1(a, b);
+    printf("After calling swap1: a=%d, b=%d\n", a, b);
+
+    a=1, b=2;
+    swap2(pa, pb);
+    printf("After calling swap1: a=%d, b=%d\n", a, b);
+
+    a=1, b=2;
+    swap3(pa, pb);
+    printf("After calling swap1: a=%d, b=%d\n", a, b);
+
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-2-1">
+                    <h3>8.2.1 程序解析</h3>
+                    <div class="columnleft" style="width:33%">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap1(a, b);
+void swap1(int x, int y)
+{
+    int t;
+    t=x;
+    x=y;
+    y=t;
+}
+                            </code>
+                        </pre>
+                        <p style="font-size:80%">
+                            a=1, b=2
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap2(&a, &b);
+void swap2(int *px, int *py)
+{
+    int t;
+    t=*px;
+    *px=*py;
+    *py=t;
+}
+                            </code>
+                        </pre>
+                        <p style="font-size:80%">
+                            a=2, b=1
+                        </p>
+                    </div>
+                    <div class="columnleft" style="width:33%">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap3(&a, &b);
+void swap3(int *px, int *py)
+{
+    int *pt;
+    pt=px;
+    px=py;
+    py=pt;
+}
+                            </code>
+                        </pre>
+                        <p style="font-size:80%">
+                            a=1, b=2
+                        </p>
+                    </div>
+                </section>
+                <section id="8-2-2">
+                    <h3>8.2.2 指针作为函数参数</h3>
+                    <ul>
+                        <li class="smallft">函数参数包括<text style="color:darkred">实参</text>和<text style="color:darkred">形参</text>，两者类型一致，指针类型可以作为函数参数</li>
+                        <li class="smallft">如果实参是某个变量的地址，相应的形参就是指针</li>
+                        <li class="smallft">在C语言中，实参和形参之间的数据传递是<text style="color:darkred">单向</text>的<text style="color:darkred">值传递</text></li>
+                    </ul>
+                </section>
+                <section id="8-2-2-1">
+                    <h3>swap1()</h3>
+                    <div class="columnleft">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap1(a, b);
+void swap1(int x, int y)
+{
+    int t;
+    t=x;
+    x=y;
+    y=t;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap08/8-3-1.png" />
+                        <p class="smallft" style="font-size:60%">
+                            在swap1()函数中改变了形参x,y的值，但不会反过来影响到实参的值<br />
+                            即swap1()不能改变main()中实参a和b的值
+                        </p>
+                    </div>
+                </section>
+                <section id="8-2-2-2">
+                    <h3>swap2()</h3>
+                    <div class="columnleft">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap2(&a, &b);
+void swap2(int *px, int *py)
+{
+    int t;
+    t=*px;
+    *px=*py;
+    *py=t;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap08/8-3-2.png" />
+                        <p class="smallft" style="font-size:60%">
+                            在swap2()函数中交换*px和*py的值，主调函数中a和b的值也相应交换了<br />
+                            即值传递，地址未变，但存放的变量值改变了
+                        </p>
+                    </div>
+                </section>
+                <section id="8-2-2-3">
+                    <h3>swap3()</h3>
+                    <div class="columnleft">
+                        <pre style="font-size:45%">
+                            <code class="hljs" data-trim>
+swap3(&a, &b);
+void swap3(int *px, int *py)
+{
+    int *pt;
+    pt=px;
+    px=py;
+    py=pt;
+}
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap08/8-3-3.png" />
+                        <p class="smallft" style="font-size:60%">
+                            在swap3()中直接交换形参指针px和py的值<br />
+                            即值传递，形参指针的改变不会影响实参
+                        </p>
+                    </div>
+                </section>
+                <section id="8-2-2-4">
+                    <h3>指针作为函数参数的应用</h3>
+                    <p class="smallft">
+                        要通过函数调用改变主调函数中某个变量的值，步骤如下:
+                    </p>
+                    <ol>
+                        <li class="smallft">在主调函数中，将该变量的地址或者指向该变量的指针作为实参</li>
+                        <li class="smallft">在衩调函数中，用指针类型形参接受该变量的地址</li>
+                        <li class="smallft">在被调函数中，改变形参所指向变量的值</li>
+                    </ol>
+                </section>
+                <section id="8-2-2-5">
+                    <h3>输出对应年、月、日</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-4. 输出对应年、月、日</p>
+                    <p>
+                        输入年和天数，输出对应的年、月、日。要求定义和调用函数month_day(int year, int yearday, int *pmonth, int *pday)，其中，year是年，yearday是天数，pmonth和pday指向的变量保存计算得到的月和日。例如，输入2000和61，输出2000-3-1，即2000年的第61天是3月1日
+                    </p>
+                </section>
+                <section id="8-2-2-6">
+                    <h3>输出对应年、月、日源程序</h3>
+                    <pre style="font-size:40%">
+                        <code class="language-c" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+
+void month_day(int year, int yearday, int *pmonth, int *pday)
+{
+    int k, leap;
+    int tab[2][13]={
+        {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+        {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+    };
+
+    leap= (year%4==0 && year%100!=0) || (year%400==0);
+    for(k=1; yearday>tab[leap][k]; k++)
+        yearday-=tab[leap][k];
+    *pmonth=k;
+    *pday=yearday;
+}
+
+int main()
+{
+    int day, month, year, yearday;
+    printf("Input year and yeaday:");
+    scanf("%d%d", &year, &yearday);
+    month_day(year, yearday, &month, &day);
+    printf("%d-%d-%d\n", year, month, day);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="8-3">
+                    <h3>8.3 冒泡排序</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-5. 冒泡排序</p>
+                    <p>输入n(n&#8804;10)个正整数，将它们从小到大排序后输出，要求使用冒泡排序算法
+                    </p>
+                    <img src="../images/cprog/chap08/8-4.bubblesort.gif" />
+                </section>
+                <section id="8-3-1">
+                    <h3>8.3.1 程序解析</h3>
+                    <pre style="font-size:30%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 10
+void swap(int *px, int *py)
+{
+    int t;
+    t=*px;
+    *px=*py;
+    *py=t;
+}
+
+void bubble_sort(int a[], int n)
+{
+    int i, j;
+    for(i=1; i&lt;n; i++){
+        for(j=0; j&lt;n-1; j++){
+            if(a[j]&gt;a[j+1]){
+                swap(&a[j], &a[j+1]);
+            }
+        }
+    }
+}
+
+int main()
+{
+    int n, a[MAXN];
+    int i;
+    printf("Enter n(n<=10):");
+    scanf("%d", &n);
+    printf("Enter %d integers:", n);
+    for(i=0; i&lt;n; i++)
+        scanf("%d", &a[i]);
+
+    bubble_sort(a, n);
+    printf("After sort:");
+    for(i=0; i&lt;n; i++)
+        printf("%d ", a[i]);
+    printf("\n");
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-2">
+                    <h3>8.3.2 数组和地址间的关系</h3>
+                    <div class="columnleft">
+                        <p class="smallft">
+                            数组名代表一个地址<br />
+                            其值是数组<text style="color:darkred">首元素的地址(基地址)</text><br />
+                            <text style="color:darkblue">a+i</text>是数组a的基地址的第i个偏移量，代表第i个元素的地址<text style="color:darkred">&a[i]</text>
+                        </p>
+                        <pre>
+                            <code class="hljs" data-trim>
+int a[100];
+int *p;
+p=a;
+int sum=0;
+for(i=0; i&lt;100; i++)
+    sum=sum+*(a+i);
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <img src="../images/cprog/chap08/8-5.png" />
+                    </div>
+                </section>
+                <section id="8-3-2-1">
+                    <h3>指针和数组的关系</h3>
+                    <div class="columnleft" style="width:40%">
+                        <p class="smallft">
+                            任何用数组下标来实现的操作<text style="color:darkred">都能用指针</text>来完成
+                        </p>
+                        <pre style="font-size:60%">
+                            <code class="hljs" data-trim>
+int a[100];
+int *p;
+p=a; /* 或者p=&a[0]; */
+int sum=0;
+for(i=0; i&lt100; i++)
+    sum=sum+p[i];
+
+/* 用指针完成操作 */
+for(p=a; p<=&a[99]; p++)
+    sum=sum+*p;
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright" style="width:60%">
+                        <img src="../images/cprog/chap08/8-6.png" />
+                        <p class="smallft">
+                            &a[i] <==> a+i &nbsp;&nbsp;&nbsp;&nbsp;a[i] <==> *(a+i)<br />
+                                    p+i <==> &p[i] &nbsp;&nbsp;&nbsp;&nbsp;*(p+i) <==> p[i]
+                        </p>
+                    </div>
+                </section>
+                <section id="8-3-2-2">
+                    <h3>用指针作数组计算</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-6. 数组计算</p>
+                    <p>输入n(n&#8804;10)个正整数，分别使用数组和指针计算并输出它们的和
+                    </p>
+                    <pre style="font-size:30%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXN 10
+int main()
+{
+    int i, n, a[MAXN], *p;
+    long sum=0;
+
+    printf("Enter n(n<=10):");
+    scanf("%d", &n);
+    printf("Enter %d integers:", n);
+    for(i=0; i&lt;n; i++)
+        scanf("%d", &a[i]);
+
+    /* 数组计算和 */
+    for(i=0; i&lt;n; i++)
+        sum+=*(a+i);
+    printf("Calculated by array, sum is %ld\n", sum);
+    for(p=a; p&lt;a+n; p++)
+        sum+=*p;
+    printf("Calculated by pointer, sum is %ld\n", sum);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-2-3">
+                    <h3>用指针作数组计算</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-7</p>
+                    <p>使用指针计算数组元素个数和数组元素的存储单元数
+                    </p>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+int main()
+{
+    double a[2], *p, *q;
+
+    p=&a[0]; /* p=a */
+    q=p+1;
+    printf("%d\n", q-p); /* 指针p和q之间的元素个数 */
+    printf("%d\n", (int)q-(int)p); /* 指针p和q之间的字节数 */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-2-4">
+                    <h3>指针的算术运算和比较运算</h3>
+                    <p class="smallft">
+                        定义如前，double *p, *q; p=a, q=p+1;<br />
+                        <text style="font-weight:bold;color:darkblue">q-p</text>，两个相同类型的指针相减，表示它们之间相隔的存储单元的数目(以类型计)<br />
+                        <text style="font-weight:bold;color:darkblue">p+1/q-1</text>，指向下一个/上一个存储单元<Br />
+                        <text style="font-weight:bold;color:darkblue">p&lt;q</text>，两个同类型的指针可以用关系运算符比较大小<br />
+                        <text style="font-weight:bold;color:darkblue">其它操作都是非法</text>
+                    </p>
+                </section>
+                <section id="8-3-3">
+                    <h3>8.3.3 数组名作为函数的参数</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">数组元素</text>作为函数实参时，函数形参为变量，与变量作为函数实参相同，值传递
+                    </p>
+                    <pre style="font-size:40%">
+                        <code class="hljs" data-trim>
+double fact(int n)
+{
+    int i;
+    double result=1;
+    for(i=1; i<=n; i++)
+        result*=i;
+    return result;
+}
+int main()
+{
+    int a[5]={1, 4, 5, 7, 9};
+    int i, n=5;
+    double sum;
+    sum=0;
+    for(i=0; i&lt;n; i++)
+        sum+=fact(a[i]);
+    printf("sum=%d\n", sum);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-3-1">
+                    <h3>数组名作为函数的参数</h3>
+                    <p class="smallft">
+                        <text style="color:darkred">数组名</text>是指针常量，相当于指针作为函数的参数<br />
+                        将<text style="color:darkred">数组名</text>作为实参，形参是<text style="color:darkred">指针变量</text>(数组)
+                    </p>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+int sum(int *a, int n)
+{
+    int i, s=0;
+    for(i=0; i&lt;n; i++)
+        s+=a[i]; /* s+=*(a+i) */
+    return s;
+}
+int main()
+{
+    int b[5]={1, 4, 5, 7, 9};
+    printf("%d\n", sum(b, 5)); /* b[0]+b[1]+b[2]+b[3]+b[4] */
+    printf("%d\n", sum(b, 3)); /* b[0]+b[1]+b[2] */
+    printf("%d\n", sum(b+1, 3)); /* b[1]+b[2]+b[3] */
+    printf("%d\n", sum(&b[2], 3)); /* b[2]+b[3]+b[4] */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-3-2">
+                    <h3>二分查找</h3>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim>
+int binary_search(int *p, int n, int x) /* 二分查找，在数组p中，共有n个元素中查找x */
+{
+    int low, high, mid;
+    low=0, high=n-1;
+    while(low<=high){  /* 开始查找区间为整个数组 */
+        mid=(low+high)/2;  /* 中间位置 */
+        if(x==p[mid])      /* 查找成功，中止循环 */
+            break;
+        else if(x&lt;p[mid])  /* 前半段，high前移 */
+            high=mid-1;
+        else
+            low=mid+1;        /* 后半段，low后移 */
+    }
+    if(low<=high)
+        return mid;       /* 找到，返回下标 */
+    else
+        return -1;        /* 未找到，返回-1 */
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-3-3-3">
+                    <h3>注意事项</h3>
+                    <p class="smallft">
+                        数组名作为函数参数，在函数调用时，将实参数组首元素的地址传给形参(指针变量)，因此，形参也指向实参数组的首元素。如果改变形参所指向单元的值，就是改变实参数组首元素的值<br />
+                        形参数组和实参数组共用一段存储空间，如果形参数组中元素的值发生改变，实参数组中元素的值也同时发生改变
+                    </p>
+                </section>
+                <section id="8-3-4">
+                    <h3>8.3.4 冒泡排序算法分析</h3>
+                    <p class="smallft">
+                        对n个元素的数组利用冒泡排序进行从小到大排序，而数组元素已按从大到小的顺序进行排序，总共需要进行的比较和交换次数为$n(n-1)/2$，如果元素已经按从小到大排序好，需要进行比较的次数也是$n(n-1)/2$
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section id="8-4">
+                    <h2>8.4 字符串压缩</h2>
+
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-8. 字符串压缩</p>
+                    <p>输入一个长度小于80的字符串，现按规则对字符串进行压缩，输出压缩后的字符串。<br />
+                        压缩规则：如果某个字符x连续出现n(n&#8804;1)个，则将这n个字符串替换为"nx"的形式，否则保持不变，如<text style="color:darkred">Mississippi ==> Mi2si2si2pi</text>
+                    </p>
+                    <ul>
+                        <li class="smallft">统计连续重复字符个数n</li>
+                        <li class="smallft">若n&gt;1，则将n转换为字符后复制至新字符串</li>
+                        <li class="smallft">复制该字符至新字符串</li>
+                        <li class="smallft">指针移到下一个待处理的字符</li>
+                        </lki>
+                    </ul>
+                </section>
+                <section id="8-4-1">
+                    <h3>8.4.1 程序解析</h3>
+                    <pre style="font-size:35%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#define MAXLINE 80
+void zip(char *p)
+{
+    char *q=p;
+    int n;
+    while(*p!='\0'){
+        n=1;
+        while(*(p+n)==*p)
+            n++;
+        if(n>10){
+            *q++=n/10+'0';
+            *q++=n%10+'0';
+        }else if(n>=2){
+            *q++=n+'0';
+        }
+        *q++=*(p+n-1);
+        p=p+n;
+    }
+    *q='\0';
+}
+
+int main()
+{
+	char line[MAXLINE];
+	printf("Input the string: ");
+	gets(line);
+	zip(line);
+	puts(line);
+	return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-2">
+                    <h3>8.4.2 字符串和字符指针</h3>
+                    <p class="smallft">
+                        字符串常量，如"array", "point"是一对用双引号括起来的字符序列，可看作是一个特殊的一维字符数组，在内存中连续存放，实质上是一个指向该字符串首字符的指针常量，有<br />
+                        char sa[]="array";<br />
+                        char *sp="point";
+                    </p>
+                </section>
+                <section id="8-4-2-1">
+                    <h3>字符串和字符指针</h3>
+                    <pre style="font-size:60%">
+                        <code class="hljs" data-trim>
+char sa[]="array";
+char *sp="point";
+
+printf("%s\n", sa);
+printf("%s\n", sa+2);
+printf("%s\n", sp);
+printf("%s\n", sp+3);
+printf("%s\n", "string");
+printf("%s\n", "string"+1);
+                        </code>
+                    </pre>
+                    <p class="smallft">
+                        数组名sa，指针sp和字符串"stiring"的值都是<text style="color:darkblue">地址</text>
+                    </p>
+                </section>
+                <section id="8-4-2-2">
+                    <h3>字符数组与字符指针的重要区别</h3>
+                    <img src="../images/cprog/chap08/8-7.png" style="width:90%" />
+                    <p class="smallft" style="font-size:70%">
+                        如果要改变数组sa所代表的字符串，只能改变数组元素的内容<br />
+                        如果要改变指针sp所代表的字符串，通常直接改变指针的值，使其指向一个新的字符串<br />
+                        strcpy(sa, "Hello");<br />
+                        sp="Hello";<br />
+                        sa="Hello"; // 非法，不能对数组名赋值，<text style="color:darkred">数组名是常量</text>
+                    </p>
+                </section>
+                <section id="8-4-2-3">
+                    <h3>字符指针的使用</h3>
+                    <p class="smallft">
+                        定义字符指针后，如果没有对它赋值，指针值是不确定的，因此需要先将其初始值置为<text style="color:red">空(NULL)</text>
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+char *s;
+scanf("%s", s); /* 不能引用未赋值的指针 */
+
+char *s, str[20];
+s=NULL; /* 初始置空值 */
+s=str;
+scanf("%s", s);
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-3">
+                    <h3>8.4.3 常用字符串处理函数</h3>
+                    <p class="smallft">
+                        函数原型定义在头文件<text style="color:darkred">stdio.h</text>或<text style="color:darkred">string.h</text>中
+                    </p>
+                    <table style="align-content:center;font-size: 60%">
+                        <caption>
+                            字符串处理函数
+                        </caption>
+                        <tr>
+                            <th>函数</th>
+                            <th>功能</th>
+                            <th>头文件</th>
+                        </tr>
+                        <tr>
+                            <td>puts(str)</td>
+                            <td>输出字符串</td>
+                            <td rowspan="2">stdio.h</td>
+                        </tr>
+                        <tr>
+                            <td>gets(str)</td>
+                            <td>输入字符串(回车间隔)</td>
+                        </tr>
+                        <tr>
+                            <td>strcpy(s1, s2)</td>
+                            <td>s1 ==> s2</td>
+                            <td rowspan="6">string.h</td>
+                        </tr>
+                        <tr>
+                            <td>strcat(s1, s2)</td>
+                            <td>s1 "+" s2 ==> s1</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">strcmp(s1, s2)</td>
+                            <td>若s1 "==" s2，值为0</td>
+                        </tr>
+                        <Tr>
+                            <td>若s1 ">" s2，值&gt;0</td>
+                        </Tr>
+                        <tr>
+                            <td>若s1 "<" s2，值&lt;0</td>
+                        </tr>
+                        <tr>
+                            <td>strlen(str)</td>
+                            <td>计算字符串的有效长度，不包括'\0'</td>
+                        </tr>
+                        <tr></tr>
+                    </table>
+                </section>
+                <section id="8-4-3-1">
+                    <h3>字符串的输入输出</h3>
+                    <ul>
+                        <li class="smallft">输入字符串: scanf("%s", s) 或 gets(str)</li>
+                        <li class="smallft">输出字符串：printf("%s", s) 或 puts(str)</li>
+                        <li class="smallft">头文件：stdio.h</li>
+                        </li?>
+                    </ul>
+                </section>
+                <section id="8-4-3-2">
+                    <h3>字符串的输入</h3>
+                    <ul>
+                        <li class="smallft">scanf("%s", str)&nbsp;&nbsp;输入参数为字符数组名，不加地址符<br />
+                            遇到回车或空格输入结束，并自动将输入的一串字符和'\0'送入数组中</li>
+                        <li class="smallft">gets(str)&nbsp;&nbsp;遇回车输入结束，自动将输入的一串字符和'\0'送入数组中</li>
+                    </ul>
+                    <pre>
+                        <code class="hljs" data-trim>
+char str[80];
+i=0;
+while((str[i]=getchar())!='\n')
+    i++;
+str[i]='\0';
+
+scanf("%s", str);
+gets(str);
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-3-3">
+                    <h3>字符串的输出</h3>
+                    <ul>
+                        <li class="smallft">printf("%s", str)&nbsp;&nbsp;输出字符串数组，或字符串常量</li>
+                        <li class="smallft">puts(str)&nbsp;&nbsp;输出字符串数组，或字符串常量</li>
+                    </ul>
+                    <pre>
+                        <code class="hljs" data-trim>
+char str[80];
+for(i=0; str[i]!='\0'; i++)
+    putchar(str[i]);
+printf("%s", str);
+printf("%s", "Hello");
+printf("Hello");
+puts(str);
+puts("Hello");
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-3-4">
+                    <h3>字符串的复制</h3>
+                    <p class="smallft">
+                        strcpy(str1, str2)将字符串<text style="color:darkred">str2</text>复制到<text style="color:darkred">str1</text>中
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+static char str1[20];
+static char str2[20]="Happy";
+
+strcpy(str1, str2);
+strcpy(str1, "World");
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+int main()
+{
+    char str1[20], str2[20];
+    printf("Enter str2: ");
+    gets(str2);
+    strcpy(str1, str2);
+    printf("After copy: ");
+    puts(str1);
+    return 0;
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="8-4-3-5">
+                    <h3>字符串连接</h3>
+                    <p class="smallft">
+                        strcat(str1, str2)连接两个字符串str1和str2，将结果放在str1中<br />
+                        <text style="color:red">注意，不能使用str1=str1+str2</text>
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+int main()
+{
+    char str1[80], str2[80];
+    printf("Enter str1:")
+    gets(str1);
+    printf("Enter str2:");
+    gets(str2);
+    strcat(str1, str2);
+    printf("After concatenation:")
+    puts(str1);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-3-6">
+                    <h3>字符串比较</h3>
+                    <p class="smallft" style="font-size:70%">
+                        strcmp(str1, str2)比较两个字符串的大小，比较规则按照字典序(ASCII码序)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;如果str1和str2相等，返回0<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;如果str1大于str2，返回正整数<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;如果str1小于str2，返回负整数
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+static char s1[20]="sea";
+strcmp(s1, "Sea"); /* 返回正整数 */
+strcmp("Sea", "Sea "); /* 返回负整数 */
+strcmp("Sea", "Sea"); /* 返回0 */
+                            </code>
+                        </pre>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+int main()
+{
+    int res;
+    char s1[20], s2[20];
+    gets(s1);
+    gets(s2);
+    res=strcmp(s1, s2);
+    printf("%d\n", res);
+    return 0;
+}
+                            </code>
+                        </pre>
+                    </div>
+                </section>
+                <section id="8-4-3-9">
+                    <h3>字符串比较注意事项</h3>
+                    <p class="smallft">
+                        注意区分比较
+                    </p>
+                    <div class="columnleft">
+                        <pre>
+                            <code class="hljs" data-trim>
+char str1[20], str2[20];
+printf("%d", str1&gt;str2);
+printf("%d", str1&lt;"Hello");
+printf("%d", str1==str2);
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            比较字符串首元素的地址
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <pre>
+                            <code class="hljs" data-trim>
+char str1[20], str2[20];
+strcmp(str1, str2);
+strcmp(str1, "Hello");
+strcmp("Hello", str2)
+                            </code>
+                        </pre>
+                        <p class="smallft">
+                            比较字符串的内容
+                        </p>
+                    </div>
+                </section>
+                <section id="8-4-3-10">
+                    <h3>字符串长度</h3>
+                    <p class="smallft">
+                        strlen(str)计算字符串的有效长度，不包括'\0'
+                    </p>
+                    <pre>
+                        <code class="hljs" data-trim>
+static char str[20]="How are you?"
+printf("strlen%d\n", strlen(str));  /* 12 */
+printf("%d\n", strlen("Hello"));  /* 5 */
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-4-3-11">
+                    <h3>求最小字符串</h3>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-9. 求最小字符串</p>
+                    <p style="text-align:left; font-size: 80%;">输入n个字符串，输出其中最小的字符串
+                    </p>
+                    <pre style="font-size:50%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;string.h&gt;
+int main()
+{
+    int i, n;
+    char sx[80], smin[80];
+    scanf("%d", &n);
+    scanf("%s", sx);
+    strcpy(smin, sx);
+    for(i=1; i&lt;n; i++){
+        scanf("%s", sx);
+        if(strcmp(sx, smin)&lt;0)
+            strcpy(smin, sx);
+    }
+    printf("Min is %s\n", smin);
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+            </section>
+            <section>
+                <section id="8-5">
+                    <h2>8.5 任意个整数求和*</h2>
+                    <p style="text-align:center; font-size: 100%; font-weight:bold">例8-10. 任意个整数求和</p>
+                    <p style="text-align:left; font-size: 100%;">先输入一个正整数n，再输入任意n个整数，计算并输出这n个整数的和。要求使用动态内存分配方法为这n个整数分配空间
+                    </p>
+                </section>
+                <section id="8-5-1">
+                    <h3>8.5.1 程序解析</h3>
+                    <pre style="font-size:45%">
+                        <code class="hljs" data-trim data-line-numbers>
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+int main()
+{
+    int n, sum, i, *p;
+    printf("Enter n:");
+    scanf("%d", &n);
+    /* 为数组p动态分配n个整数类型大小的空间 */
+    if((p=(int*)calloc(n, sizeof(int)))!=NULL){
+        printf("Not able to allocate memory.\n");
+        exit(1);
+    }
+    printf("Enter %d integers:", n);
+    for(i=0; i&lt;n; i++)
+        scanf("%d", p+i);  /* 输入n个数字存入p数组 */
+
+    sum=0;
+    for(i=0; i&lt;n; i++)
+        sum+=*(p+i);
+
+    printf("The sum is %d\n", sum);
+    free(p);        /* 释放动态分配的空间 */
+    return 0;
+}
+                        </code>
+                    </pre>
+                </section>
+                <section id="8-5-2">
+                    <h3>8.5.2 用指针实现内存动态分配</h3>
+                    <ul>
+                        <li class="smallft">变量在使用前必须被定义且安排好存储空间</li>
+                        <li class="smallft"><text style="color:darkred">全局变量、静态局部变量的存储</text>是在<text style="color:darkblue">编译时</text>确定，在程序开始执行前完成</li>
+                        <li class="smallft"><text style="color:darkred">自动变量</text>，在执行进入变量定义所在的复合语句时为它们分配存储，变量的大小也是静态确定的</li>
+                        <li class="smallft">一般情况下，运行中的很多存储要求在写程序时无法确定</li>
+                    </ul>
+                </section>
+                <section id="8-5-2-1">
+                    <h3>动态存储管理</h3>
+                    <p class="smallft">
+                        变量的存储，不是由编译系统分配，而是由用户在程序中通过<text style="color:darkred">动态分配</text>获取<br />
+                        使用动态内存分配能够更有效地使用内存，体现在两点，(1). 使用时申请，(2). 用完就释放。同一段内存可重复使用，且有不同的用途
+                    </p>
+                </section>
+                <section id="8-5-2-2">
+                    <h3>动态内存分配的步骤</h3>
+                    <ol>
+                        <li class="smallft">首先，需要知道需要多少内存空间</li>
+                        <li class="smallft">利用C语言提供的动态分配函数来分配所需要的存储空间</li>
+                        <li class="smallft">使指针指向获得的内存空间，以使用该指针在该空间内进行运算或操作</li>
+                        <li class="smallft">当该内存空间使用完毕后，<text style="color:darkred">必须释放</text>这一空间</li>
+                    </ol>
+                </section>
+                <section id="8-5-2-3">
+                    <h3>动态存储分配函数malloc()</h3>
+                    <p class="smallft">
+                        void *malloc(unsigned size)<br />
+                        在内存的动态存储区中分配一块连续空间，其长度为size<br />
+                        如果申请成功，返回一个<text style="color:darkred">指向该分配内存空间的初始地址的指针</text><br />
+                        如果申请内存空间不成功，则<text style="color:darkred">返回NULL(值为0)</text><br />
+                        返回值类型为<text style="color:darkred">void *</text>，是一个通用指针，可以通过类型转换将其转换为特定指针类型，赋给一个指针
+                    </p>
+                </section>
+                <section id="8-5-2-4">
+                    <h3>malloc示例</h3>
+                    <p class="smallft">
+                        if(<text style="color:red">(p=<text style="color:darkred">(int*)</text><text style="color:blue">malloc(n * sizeof(int))</text>)</text>==NULL){<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;printf("Not able to allocate memory.\n");
+                        &nbsp;&nbsp;&nbsp;&nbsp;exit(1);
+                        }
+                    </p>
+                    <ul>
+                        <li class="smallft">调用malloc时，用sizeof计算存储块大小</li>
+                        <li class="smallft">每次动态分配都要检查是否成功，需要考虑例外情况处理</li>
+                        <li class="smallft">虽然存储块是动态分配的，但其大小在分配后就确定无法改变，不能越界使用</li>
+                    </ul>
+                </section>
+                <section id="8-5-2-5">
+                    <h3>计数动态存储分配函数calloc()</h3>
+                    <p class="smallft">
+                        void *calloc(unsigned n, unsigned size)<br />
+                        在内存的动态存储区中分配n个连续空间，每一存储空间的长度为size，并且分配后还把存储块全部初始化为0<br />
+                        如果申请成功，则返回一个指向被分配内存空间的起始地址的指针<br />
+                        若申请内存空间不成功，返回NULL
+                    </p>
+                    <ul>
+                        <li class="smallft">malloc对所分配的存储块不做任何事情</li>
+                        <li class="smallft">calloc对整个区域进行初始化，初始值为0</li>
+                    </ul>
+                </section>
+                <section id="8-5-2-6">
+                    <h3>动态存储释放函数free()</h3>
+                    <p class="smallft">
+                        void free(void *ptr)<br />
+                        释放由动态存储分配函数申请到的整块内存空间，ptr为指向要释放空间的首地址<br />
+                        当某个动态分配的存储块不再使用时，要及时将其释放，否则该区域会一直不可用
+                    </p>
+                </section>
+                <section id="8-5-2-7">
+                    <h3>分配调整函数realloc()</h3>
+                    <p class="smallft">
+                        void *realloc(void *ptr, unsigned size)<br />
+                        更改以前的存储分配<br />
+                        ptr必须是以前通过动态存储分配得到的指针<br />
+                        参数size为现在需要的空间大小<br />
+                        如果高速失败，返回NULL，同时原来ptr指向存储块的内容不变<br />
+                        如果调整成功，返回一片能存放大小为size的区块，并保证该块的内容与原块一致。如果size小于原块的大小，则内容为原块前size范围内的数据，如果新块更大。则原有数据存在新块的前一部分<br />
+                        如果分配成功，原存储块的内容可能会被改变，因此不允许再通过ptr去使用它
+                    </p>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <script src="../../dist/reveal.js"></script>
+    <script src="../../plugin/zoom/zoom.js"></script>
+    <script src="../../plugin/notes/notes.js"></script>
+    <script src="../../plugin/search/search.js"></script>
+    <script src="../../plugin/markdown/markdown.js"></script>
+    <script src="../../plugin/math/math.js"></script>
+    <script src="../../plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            // display controls in the bottom right corner
+            controls: true,
+
+            // display a presentation progress bar
+            progress: true,
+
+            // set default timing of 2 minutes per slides
+            defaultTiming: 120,
+
+            // Display the page number of the current slides
+            slideNumber: true,
+
+            // Push each slide change to the browser history
+            history: false,
+
+            // Enable keyboard shortcuts for navigation
+            keyboard: true,
+
+            // Enable the slide overview mode
+            overview: true,
+
+            // Vertical centering of slides
+            center: true,
+
+            // Enable touch navigation on devices with touch input
+            touch: true,
+
+            // Loop the presentation
+            loop: false,
+
+            // Change teh presentation direction to be RTL
+            rtl: false,
+
+            // Randomizes the order of slides each time the presentation loads
+            shuffle: false,
+
+            // Turns fragments on and off globally
+            fragment: true,
+
+            // Flags if the presentation is running in an embedded mode,
+            // i.e. contained within a limited portion of the screen
+            embedded: false,
+
+            // Flags if we should show a help overlay when the questionmark key is pressed
+            help: true,
+
+            // Flags if speaker notes should be visible to all viewers
+            showNotes: false,
+
+            // Global override for autoplaying embedded media( video/audio/iframe)
+            // - null: media will only autoplay if data-autopay is present
+            // - true: all media will autoplay, regradless of individual setting
+            // - false: no media will autoplay, regardless of individual setting
+            autoPlayMedia: null,
+
+            // Number of milliseconds between automatically proceeding to the next slide,
+            //disabled when set to 0, this value can be overwritten by
+            // using a data-autoslide attribute on your slides
+            autoSlide: 0,
+
+            // Stop auto-sliding after user input
+            autoSlideStoppable: true,
+
+            // Use this method for navigation when auto-sliding
+            autoSlideMethod: Reveal.navigateNext,
+
+            // Enable slide navigation via mouse wheel
+            mouseWheel: false,
+
+            // Hides the address bar on mobile devices
+            hideAddressBar: true,
+
+            // Opens links in an iframe preview overlay
+            previewLinks: false,
+
+            // Transition style
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+            // Transition speed
+            transitionSpeed: 'default', // default/fast/slow
+
+            // Transition style for full page slide backgrounds
+            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+            // Number of slides away from the current that are visible
+            viewDistance: 3,
+
+            // Parallax background image
+            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+            // Parallax background size
+            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+            // Number of pixels to move the parallax background per slide
+            // - calculated automatically unless specified
+            // - set to 0 to disable movement along an axis
+            parallaxBackgroundHorizontal: null,
+            parallaxBackgroundVertical: null,
+
+            // The display mode that will be used to show slides
+            display: 'block',
+
+            // print to pdf while no slide grows to more than one printed page
+            pdfMaxPagesPerSlide: 1,
+
+            // presentation
+            //width: 1200,
+            //height: 1200,
+
+            //margin: 0.1,
+
+            //minScale: 0.2,
+            //maxScale: 1.5,
+
+            math: {
+                mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+                config: 'TeX-AMS_HTML-full',
+                // pass other options into `MathJax.Hub.Config()`
+                TeX: {
+                    Macros: {
+                        RR: "{\\bf R}"
+                    }
+                }
+            },
+
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        })
+    </script>
+</body>
+
+</html>
