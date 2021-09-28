@@ -12,14 +12,14 @@
 
 Level 1             |  Level 4
 :-------------------------:|:-------------------------:
-![](../images/ch02-lab-gasket_level1.png)  |  ![](../images/ch02-lab-gasket_level4.png)
+![](../../images/cg/chap02/ch02-lab-gasket_level1.png)  | ![](../../images/cg/chap02/ch02-lab-gasket_level4.png) 
 
 
 * 任务b. 绘制三维效果的Sierpinski Gasket, 要求同任务a，也可与任务a集成在同一个界面中。如输入剖分层次分别为1和4，得到效果如下：
 
 Level 1             |  Level 4
 :-------------------------:|:-------------------------:
-![](../images/ch02-lab-gasket3d_level1.png)  |  ![](../images/ch02-lab-gasket3d_level4.png)
+![](../../images/cg/chap02/ch02-lab-gasket3d_level1.png)  | ![](../../images/cg/chap02/ch02-lab-gasket3d_level4.png) 
 
 ### 2.2 根据Sierpinski Gasket的思路，完成以下图案的绘制
 
@@ -27,22 +27,22 @@ Level 1             |  Level 4
 
 Level 1             |  Level 4
 :-------------------------:|:-------------------------:
-![](../images/ch02-lab-triangletesse_level1.png)  |  ![](../images/ch02-lab-triangletesse_level4.png)
+![](../../images/cg/chap02/ch02-lab-triangletesse_level1.png)  | ![](../../images/cg/chap02/ch02-lab-triangletesse_level4.png) 
 
 * 任务d. 任务c中剖分后的三角形添加旋转效果。假设没有旋转时，图中绘制的各个点的坐标分别为$(x,y,z)$，因只涉及二维平面，故有$z=0$。当图案在$xoy$平面上绕原点旋转时，即绕$$z$$轴逆时针旋转角度$\theta$时，新的坐标$(x',y',z')$为$x'=x\cos(\theta)-y\sin(\theta)$, $y'=x\sin(\theta)+y\cos(\theta)$。例如，下图分别为$\theta$为0度和60度时的绘制效果:
 
 No Rotation             |  Rotation 60 deg.
 :-------------------------:|:-------------------------:
-![](../images/ch02-lab-triangletesse_level4.png)  |  ![](../images/ch02-lab-triangletesse_level4-rot60-notwist.png)
+![](../../images/cg/chap02/ch02-lab-triangletesse_level4.png)  | ![](../../images/cg/chap02/ch02-lab-triangletesse_level4-rot60-notwist.png) 
 
 * 任务e. 在任务d中，如果旋转角度根据点到原点的距离$d$设定，即有$x'=x\cos(d\theta)-y\sin(d\theta)$, $y'=x\sin(d\theta)+y\cos(d\theta)$，其中，$d=\sqrt{(x^2+y^2)}$。例如，当$\theta$分别为60度和180度时的绘制图案分别为如下所示:
 
 Rotation 60 deg.       |  Rotation 180 deg.
 :-------------------------:|:-------------------------:
-![](../images/ch02-lab-triangletesse_level4-rot60-twist.png)  |  ![](../images/ch02-lab-triangletesse_level4-rot180-twist.png)
+![](../../images/cg/chap02/ch02-lab-triangletesse_level4-rot60-twist.png)  | ![](../../images/cg/chap02/ch02-lab-triangletesse_level4-rot180-twist.png) 
 
 可以尝试将任务a至任务e集成在一个交互式界面中，不同的任务对应不同的选项及参数设置，用同一套控件完成相应选项及参数的设置。在此基础上，也可自行增加所需的参数和选项，提供额外的绘制功能。
 
 ## 3. 实验提交
 
-实验截止时间10月15日23:59，在自己网站上按照要求建立链接，同时按照要求压缩后上传至ftp的Lab_2目录下
+实验截止时间10月12日23:59，在自己网站上按照要求建立链接
