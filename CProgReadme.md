@@ -20,3 +20,9 @@
 | ---- |
 |[第2章](./CourseWare/CProgChapters/cpchapter-2.html)|
 
+###  第3章
+
+|    |
+| ---- |
+|[第3章](./CourseWare/CProgChapters/cpchapter-3.html)|
+
