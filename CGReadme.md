@@ -43,13 +43,13 @@
 
 |    |    |    |    |
 | ---- | ---- | ---- | ---- |
-|[demo-2-1](./demos/chap2-demo-1.html)|[demo-2-2](../demos/chap2-demo-2.html)|[demo-2-3](../demos/chap2-demo-3.html)|[demo-2-4](../demos/chap2-demo-4.html)|
+|[demo-2-1](./demos/chap2-demo-1.html)|[demo-2-2](./demos/chap2-demo-2.html)|[demo-2-3](./demos/chap2-demo-3.html)|[demo-2-4](./demos/chap2-demo-4.html)|
 
 ### 第3章
 
 |    |    |    |    |
 | ---- | ---- | ---- | ---- |
-|[demo-3-1](./demos/chap3-demo-1.html)|[demo-3-2](../demos/chap3-demo-2.html)|[demo-3-3](../demos/chap3-demo-3.html)|[demo-3-4](../demos/chap3-demo-4.html)|
-|[demo-3-5](./demos/chap3-demo-5.html)|[demo-3-6](../demos/chap3-demo-6.html)|[demo-3-7](../demos/chap3-demo-7.html)|[demo-3-8](../demos/chap3-demo-8.html)|
+|[demo-3-1](./demos/chap3-demo-1.html)|[demo-3-2](./demos/chap3-demo-2.html)|[demo-3-3](./demos/chap3-demo-3.html)|[demo-3-4](./demos/chap3-demo-4.html)|
+|[demo-3-5](./demos/chap3-demo-5.html)|[demo-3-6](./demos/chap3-demo-6.html)|[demo-3-7](./demos/chap3-demo-7.html)|[demo-3-8](./demos/chap3-demo-8.html)|
 |[demo-3-9](./demos/chap3-demo-9.html)| | | |
 
