@@ -7,12 +7,22 @@
 |    |
 | ---- |
 |[第0章](./CourseWare/CProgChapters/cpchapter-0.html)|
-| [Lab0](./CourseWare/CGChapters/Chapter-1-lab0.md)|
 
 ### 第1章
 
 |    | 
 | ---- |
 |[第1章](./CourseWare/CProgChapters/cpchapter-1.html)|
-|[Lab1](./CourseWare/CGChapters/Chapter1/Chapter-1-lab1.md)| 
+
+### 第2章
+
+|    |
+| ---- |
+|[第2章](./CourseWare/CProgChapters/cpchapter-2.html)|
+
+###  第3章
+
+|    |
+| ---- |
+|[第3章](./CourseWare/CProgChapters/cpchapter-3.html)|
 
