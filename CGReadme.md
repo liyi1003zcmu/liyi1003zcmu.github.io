@@ -39,6 +39,14 @@
 |[第4章-5](./CourseWare/CGChapters/Chapter4/chapter-4-5.html)|[第4章-6](./CourseWare/CGChapters/Chapter4/chapter-4-6.html)| | |
 |[Lab4](./CourseWare/CGChapters/Chapter4/Chapter-4-lab4.md)| | | |
 
+### 第5章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[第5章-1](./CourseWare/CGChapters/Chapter5/chapter-5-1.html)|[第5章-2](./CourseWare/CGChapters/Chapter5/chapter-5-2.html)|[第5章-3](./CourseWare/CGChapters/Chapter5/chapter-5-3.html)|[第5章-4](./CourseWare/CGChapters/Chapter5/chapter-5-4.html)|
+|[第5章-5](./CourseWare/CGChapters/Chapter5/chapter-5-5.html)|| | |
+|[Lab5](./CourseWare/CGChapters/Chapter5/Chapter-5-lab5.md)| | | |
+
 
 ## Demos
 
@@ -68,3 +76,10 @@
 | ---- | ---- | ---- | ---- |
 |[demo-4-1](./demos/chap4-demo-1.html)|[demo-4-2](./demos/chap4-demo-2.html)|[demo-4-3](./demos/chap4-demo-3.html)|[demo-4-4](./demos/chap4-demo-4.html)|
 |[demo-4-5](./demos/chap4-demo-5.html)| | | |
+
+
+### 第5章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- |
+|[demo-5-1](./demos/chap5-demo-1.html)|[demo-5-2](./demos/chap5-demo-2.html)|[demo-5-3](./demos/chap4-demo-3.html)||
