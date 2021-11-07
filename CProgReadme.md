@@ -43,3 +43,10 @@
 |    |
 | ---- |
 |[第6章](./CourseWare/CProgChapters/cpchapter-6.html)|
+
+### 第7章
+
+|    |
+| ---- |
+|[第7章](./CourseWare/CProgChapters/cpchapter-7.html)|
+
