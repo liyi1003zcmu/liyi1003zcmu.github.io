@@ -50,3 +50,10 @@
 | ---- |
 |[第7章](./CourseWare/CProgChapters/cpchapter-7.html)|
 
+### 第8章
+
+|    |
+| ---- |
+|[第8章](./CourseWare/CProgChapters/cpchapter-8.html)|
+
+
