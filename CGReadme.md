@@ -109,5 +109,5 @@
 |    |    |    |    |
 | ---- | ---- | ---- | ---- |
 |[demo-7-1](./demos/chap7-demo-1.html)|[demo-7-2](./demos/chap7-demo-2.html)|[demo-7-3](./demos/chap6-demo-3.html)|[demo-7-4](./demos/chap6-demo-4.html)|
-|[demo-7-5](./demos/chap7-demo-5.html)|[demo-7-6](./demos/chap7-demo-6.html)|||
+|[demo-7-5](./demos/chap7-demo-5.html)|[demo-7-6](./demos/chap7-demo-6.html)|[demo-7-9](./demos/chap7-demo-9.html)||
 
