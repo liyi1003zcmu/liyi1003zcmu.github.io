@@ -56,4 +56,8 @@
 | ---- |
 |[第8章](./CourseWare/CProgChapters/cpchapter-8.html)|
 
+### 第9章
 
+|    |
+| ---- |
+|[第9章](./CourseWare/CProgChapters/cpchapter-9.html)|
