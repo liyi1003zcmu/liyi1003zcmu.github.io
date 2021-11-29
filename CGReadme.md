@@ -62,6 +62,14 @@
 |[第7章-4](./CourseWare/CGChapters/Chapter7/chapter-7-4.html)|[第7章-5](./CourseWare/CGChapters/Chapter7/chapter-7-5.html)|[第7章-6](./CourseWare/CGChapters/Chapter7/chapter-7-6.html)|
 
 
+### 第8章
+
+|    |    |    |    |
+| ---- | ---- | ---- | ---- | 
+|[第8章-1](./CourseWare/CGChapters/Chapter8/chapter-8-1.html)|[第8章-2](./CourseWare/CGChapters/Chapter8/chapter-8-2.html)|[第8章-3](./CourseWare/CGChapters/Chapter8/chapter-8-3.html)||[第8章-4](./CourseWare/CGChapters/Chapter8/chapter-8-4.html)|
+
+
+
 ## Demos
 
 ### 第1章
