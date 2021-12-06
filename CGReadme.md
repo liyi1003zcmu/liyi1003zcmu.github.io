@@ -66,7 +66,13 @@
 
 |    |    |    |    |
 | ---- | ---- | ---- | ---- | 
-|[第8章-1](./CourseWare/CGChapters/Chapter8/chapter-8-1.html)|[第8章-2](./CourseWare/CGChapters/Chapter8/chapter-8-2.html)|[第8章-3](./CourseWare/CGChapters/Chapter8/chapter-8-3.html)||[第8章-4](./CourseWare/CGChapters/Chapter8/chapter-8-4.html)|
+|[第8章-1](./CourseWare/CGChapters/Chapter8/chapter-8-1.html)|[第8章-2](./CourseWare/CGChapters/Chapter8/chapter-8-2.html)|[第8章-3](./CourseWare/CGChapters/Chapter8/chapter-8-3.html)|[第8章-4](./CourseWare/CGChapters/Chapter8/chapter-8-4.html)|
+
+### 第9章
+
+|    |    |
+| ---- | ---- |
+|[第9章-1](./CourseWare/CGChapters/Chapter9/chapter-9-1.html)|[第9章-2](./CourseWare/CGChapters/Chapter9/chapter-9-2.html)|
 
 
 
