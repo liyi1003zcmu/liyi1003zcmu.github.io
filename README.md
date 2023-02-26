@@ -3,4 +3,4 @@
 
 [2022级程序设计基础](./CProgReadme.md)
 
-[2020级医信/2021级计算机专升本Java程序设计](./JavaReadme.md)
+[2021级医信/2022级计算机专升本Java程序设计](./JavaReadme.md)
