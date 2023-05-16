@@ -51,3 +51,9 @@
 |    |
 | ---- |
 |[第7章](./CourseWare/JavaChapters/Jchapter-7.html)|
+
+### 第8章 数据库编程
+
+|    |
+| ---- |
+|[第八章](./CourseWare/JavaChapters/Jchapter-9-1.html)|
