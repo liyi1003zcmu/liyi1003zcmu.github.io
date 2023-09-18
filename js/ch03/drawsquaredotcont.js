@@ -50,6 +50,7 @@ function initSquare(){
 			var c = glMatrix.vec4.fromValues( colors[index%7*4], colors[index%7*4+1], colors[index%7*4+2], colors[index%7*4+3]);
 			gl.bufferSubData( gl.ARRAY_BUFFER, 16 * index, new Float32Array( c ) );
 			index++;
+			document.getElementById("pnum").innerHTML=index;
 		}
 	} );
 
