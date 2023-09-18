@@ -60,5 +60,5 @@ function renderSquare(){
 	gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
 
 	// update and render
-	setTimeout( function(){ requestAnimFrame( renderSquare ); }, speed );
+	setTimeout( function(){ window.requestAnimFrame( renderSquare ); }, speed );
 }
