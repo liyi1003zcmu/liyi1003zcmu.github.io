@@ -19,3 +19,9 @@
 |    |    |    |
 | ---- | ---- | ---- |
 |[第2章](./CourseWare/JavaChapters/Jchapter-2.html)|  |[第2章补](./CourseWare/JavaChapters/Jchapter-2-add.html)|
+
+### 第3章 Java数组和字符串
+
+|    |    |    |
+| ---- | ---- | ---- |
+|[第3章-1](./CourseWare/JavaChapters/Jchapter-3-1.html)|  |[第3章-2](./CourseWare/JavaChapters/Jchapter-3-2.html)|
