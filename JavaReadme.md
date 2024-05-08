@@ -50,3 +50,14 @@
 | ---- |
 |[第7章](./CourseWare/JavaChapters/Jchapter-7.html)|
 
+### 第8章 数据库编程
+
+|    |
+| ---- |
+|[第8章](./CourseWare/JavaChapters/Jchapter-9-1.html)|
+
+### 第9章 网络编程
+
+|    |
+| ---- |
+|[第9章](./CourseWare/JavaChapters/Jchapter-9-2.html)|
