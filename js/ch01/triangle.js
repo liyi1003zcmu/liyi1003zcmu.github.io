@@ -5,13 +5,13 @@ var points;
 
 window.onload = function init(){
 	var canvas = document.getElementById( "triangle-canvas" );
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
 
 	// Three Vertices
-	var vertices = [
+	points = new Float32Array([
 		-1.0, -1.0, 
 		 0.0,  1.0, 
 		 1.0, -1.0, 
@@ -24,7 +24,7 @@ window.onload = function init(){
 		 /*-0.5, -0.5,
 		 0.0, 0.5,
 		 0.5, -0.5*/
-	];
+	]);
 
 	// Configure WebGL
 	gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -37,7 +37,7 @@ window.onload = function init(){
 	// Load the data into the GPU
 	var bufferId = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
+	gl.bufferData( gl.ARRAY_BUFFER, points, gl.STATIC_DRAW );
 
 	// Associate external shader variables with data buffer
 	var vPosition = gl.getAttribLocation( program, "vPosition" );
