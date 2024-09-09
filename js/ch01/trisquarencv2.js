@@ -5,13 +5,13 @@ var points;
 
 window.onload = function init() {
     var canvas = document.getElementById("trisquare-canvas");
-    gl = WebGLUtils.setupWebGL(canvas);
+    gl = canvas.getContext("webgl2");
     if (!gl) {
         alert("WebGL isn't available");
     }
 
     // Three Vertices
-    var vertices1 = [
+    var vertices1 = new Float32Array([
         -0.5, 0.5,
         -1.0, -0.5,
         0.0, -0.5,
@@ -19,7 +19,7 @@ window.onload = function init() {
         1.0, -0.5,
         1.0, 0.5,
         0.0, 0.5
-    ];
+    ]);
  
     var tcolor = [
         0.0, 1.0, 0.0
@@ -52,7 +52,7 @@ window.onload = function init() {
     // Load the data into the GPU
     var vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices1), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices1, gl.STATIC_DRAW);
 
     // Associate external shader variables with data buffer
     var vPosition1 = gl.getAttribLocation(program, "aPosition");
