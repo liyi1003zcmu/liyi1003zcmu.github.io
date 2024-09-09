@@ -5,13 +5,13 @@ var points;
 
 window.onload = function init(){
 	var canvas = document.getElementById( "triangle-canvas" );
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
 
 	// Three Vertices
-	var vertices = [
+	var vertices = new Float32Array([
 		-1.0, -1.0, 
 		 1.0, -1.0, 
 		 0.0,  1.0, 
@@ -24,13 +24,13 @@ window.onload = function init(){
 		 /*-0.5, -0.5,
 		 0.0, 0.5,
 		 0.5, -0.5*/
-	];
+	]);
 
-	var vertcolors = [
+	var vertcolors = new Float32Array([
 		1.0, 0.0, 0.0,
 		0.0, 1.0, 0.0,
 		0.0, 0.0, 1.0
-	];
+	]);
 	// Configure WebGL
 	gl.viewport( 0, 0, canvas.width, canvas.height );
 	gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
@@ -42,7 +42,7 @@ window.onload = function init(){
 	// Load the data into the GPU
 	var bufferId = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
+	gl.bufferData( gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW );
 
 	// Associate external shader variables with data buffer
 	var aPosition = gl.getAttribLocation( program, "aPosition" );
@@ -51,7 +51,7 @@ window.onload = function init(){
 
 	var cbufferId = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, cbufferId );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertcolors ), gl.STATIC_DRAW );
+	gl.bufferData( gl.ARRAY_BUFFER, vertcolors, gl.STATIC_DRAW );
 
 	var aColor = gl.getAttribLocation( program, "aColor" );
 	gl.vertexAttribPointer( aColor, 3, gl.FLOAT, false, 0, 0 );
