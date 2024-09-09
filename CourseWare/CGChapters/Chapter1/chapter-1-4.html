@@ -13,26 +13,35 @@
 
     <link rel="stylesheet" href="../../../dist/reset.css">
     <link rel="stylesheet" href="../../../dist/reveal.css">
-    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
 
     <!-- Theme used for syntax highlighting of code -->
     <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
 
-    <script id="vertex-shader" type="x-shader/x-vertex">
-        attribute vec4 vPosition;
-        void main(){
-            gl_Position = vPosition;
-        }
-    </script>
-    <script id="fragment-shader" type="x-shader/x-fragment">
-        precision mediump float;
-        void main(){
-            gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
-        }
-    </script>
+	<script id="vertex-shader" type="x-shader/x-vertex">
+		#version 300 es
+
+		in vec4 vPosition;
+		void main()
+		{
+			gl_Position = vPosition;
+		}
+	</script>
+	<script id="fragment-shader" type="x-shader/x-fragment">
+		#version 300 es
+
+		precision mediump float;
+
+		out vec4  fColor;
+		void main()
+		{
+			fColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+		}
+	</script>
+	
     <script type="text/javascript" src="../../../js/common/webgl-utils.js"></script>
     <script type="text/javascript" src="../../../js/common/initShaders.js"></script>
-    <script type="text/javascript" src="../../../js/common/gl-matrix-min.js"></script>
+    <script type="text/javascript" src="../../../js/common/glMatrix-0.9.5.min.js"></script>
     
     <script type="text/javascript" src="../../../js/ch01/triangle.js"></script>
 </head>
@@ -44,6 +53,11 @@
                 <h1>计算机图形学</h1>
                 <H2>第一章 图形系统和模型(4)</H2>
                 <h3>初识WebGL程序</h3>
+                <p style="font-family: courier">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
                 <p id="date"></p>
                 <script>
                     var now = new Date();
@@ -69,6 +83,7 @@
                         <ul>
                             <li style="text-align:left">所有的代码均可运行于各种主流浏览器，包括Chrome, FireFox, Safari, Edge等</li>
                             <li style="text-align:left">核心代码以JavaScript写成，在浏览器中本地运行，具有良好的跨平台、跨系统性</li>
+							<li style="text-align:left">检查浏览器支持的WebGL版本<a href="https://webglreport.com/">here</a></li>
                         </ul>
                 </section>
             </section>
@@ -93,7 +108,7 @@
                 <section id="testcode">
                     <h2>认识WebGL程序</h2>
                     <h3>HTML Source</h3>
-                    <pre><code class="hljs" style="font-size:large" data-trim data-line-numbers>
+                    <pre style="font-size:40%"><code class="html" data-trim data-line-numbers>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
   &lt;head&gt;
@@ -101,16 +116,23 @@
     &lt;title&gt;First WebGL Demo&lt;/title&gt;
     &lt;!-- 顶点着色器和片元着色器代码 --&gt;
     &lt;script id="vertex-shader" type="x-shader/x-vertex"&gt;
-      attribute vec4 vPosition;
-      void main(){
-        gl_Position = vPosition;
-      }
+		#version 300 es
+
+		in vec4 vPosition;
+		void main()
+		{
+			gl_Position = vPosition;
+		}
     &lt;/script&gt;
     &lt;script id="fragment-shader" type="x-shader/x-fragment"&gt;
-      precision mediump float;
-      void main(){
-        gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
-      }
+		#version 300 es
+
+		precision mediump float;
+		out vec4  fColor;
+		void main()
+		{
+			fColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+		}
     &lt;/script&gt;
     &lt;!-- 一组相关的JS库 --&gt;
     &lt;script type="text/javascript" src="js/common/webgl-utils.js"&gt;&lt;/script&gt;
@@ -128,7 +150,7 @@
                 <section id="jscode">
                     <h2>认识WebGL程序</h2>
                     <h3>JavaScript Source</h3>
-                    <pre><code class="hljs" style="font-size:large" data-trim data-line-numbers>
+                    <pre style="font-size:40%"><code class="javascript" data-trim data-line-numbers>
 "use strict";
 
 var gl;
@@ -136,11 +158,11 @@ var points;
 
 window.onload = function init(){
   var canvas = document.getElementById( "triangle-canvas" );
-  gl = WebGLUtils.setupWebGL( canvas );
+  gl = canvas.getContext("webgl2");
   if( !gl ){
     alert( "WebGL isn't available" );
   }
-
+	
   // Three Vertices
   var vertices = [
      -0.5, -0.5,
