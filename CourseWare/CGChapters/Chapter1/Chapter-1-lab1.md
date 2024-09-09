@@ -17,7 +17,7 @@
 
 * 一款趁手的文本编辑器，如VS Code, Sublime Text, Atom, Notepad++, EditPlus等，不建议用集成开发环境，还是认真打字打基础
 * 相关工具手册和参考资料，如所需的HTML, JavaScript等的手册，相关JS库的帮助说明等，可查阅[W3CSCHOOL](https://www.w3schools.com/), [WebGL官方网站](https://www.khronos.org/webgl)等
-* 一组开发所需的JavaScript库，提供开发WebGL程序运行的支持环境，包括：[webgl-utils.js](https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/common/webgl-utils.js), 用于提供gl的核心功能函数库，[initShaders.js](https://www.cs.unm.edu/~angel/WebGL/6E/Common/initShaders.js), 由作者提供的对于着色器代码执行输入和解析的封装工具，[MV.js](https://www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SEVENTH_EDITION/CODE/Common/MV.js), 用于提供矩阵计算相关功能的库。我选择的矩阵库是[glMatrix.js](https://www.glmatrix.net)
+* 一组开发所需的JavaScript库，提供开发WebGL程序运行的支持环境，包括：[webgl-utils.js](https://github.com/KhronosGroup/WebGL/blob/master/sdk/demos/common/webgl-utils.js), 用于提供gl的核心功能函数库，[initShaders.js](https://www.interactivecomputergraphics.com/8E/Code/Common/initShaders.js), 由作者提供的对于着色器代码执行输入和解析的封装工具，[MV.js](https://www.interactivecomputergraphics.com/8E/Code/Common/MV.js), 用于提供矩阵计算相关功能的库。我选择的矩阵库是[glMatrix.js](https://www.glmatrix.net)
 
 ### 2.3. 绘制三角形
 * 首先，确定程序所在目录，建立程序运行所需环境，保证相关js库已能正常装载
