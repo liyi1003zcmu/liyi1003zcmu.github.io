@@ -5,27 +5,31 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>Chap2 Demo</title>
     <script id="vertex-shader" type="x-shader/x-vertex">
-	attribute vec3 vPosition;
-	attribute vec3 vColor;
-	varying vec4 color;
+	#version 300 es
+	in vec3 vPosition;
+	in vec4 aColor;
+	out vec4 vColor;
 
 	void main(){
 		gl_Position = vec4( vPosition, 1.0 );
-		color = vec4( vColor, 1.0 );
+		vColor = aColor;
 	}
 	</script>
 
     <script id="fragment-shader" type="x-shader/x-fragment">
+	#version 300 es
 	precision mediump float;
-	varying vec4 color;
+	
+	in vec4 vColor;
+	out vec4 fColor;
 	void main(){
-		gl_FragColor = color;
+		fColor = vColor;
 	}
 	</script>
 
     <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
     <script type="text/javascript" src="../js/common/initShaders.js"></script>
-    <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+    <script type="text/javascript" src="../js/common/gl-Matrix.js"></script>
 
     <script type="text/javascript" src="../js/ch02/gasket-3d.js"></script>
 </head>
