@@ -8,16 +8,16 @@ var gl;
 var points = [];
 
 /** Parameters */
-var numTimesToSubdivide = 4;
+var numTimesToSubdivide = 3;
 var theta=60;
-var twist=true;
+var twist=false;
 
 var radius=1.0;
 
 window.onload = function initTriangles(){
 	canvas = document.getElementById( "gl-canvas" );
 
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
