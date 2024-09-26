@@ -1,5 +1,6 @@
 "use strict";
 
+/* import vec3 from glMatrix */
 const { vec3 } = glMatrix;
 
 var gl;
@@ -8,12 +9,12 @@ var canvas;
 var points = [];
 var colors = [];
 
-var numTimesToSubdivide = 3;
+var numTimesToSubdivide = 1;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
 
-    gl = WebGLUtils.setupWebGL(canvas);
+    gl = canvas.getContext("webgl2");
     if (!gl) {
         alert("WebGL isn't available");
     }
@@ -71,9 +72,9 @@ window.onload = function init() {
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    var aColor = gl.getAttribLocation(program, "aColor");
+    gl.vertexAttribPointer(aColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(aColor);
 
     render();
 };
@@ -81,26 +82,26 @@ window.onload = function init() {
 function triangle(a, b, c, color) {
     // add colors and vertices for one triangle
     var baseColor = [
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0, 
+        0.0, 0.0, 0.0, 1.0
     ];
 
-    for (var k = 0; k < 3; k++) {
-        colors.push(baseColor[color * 3 + k]);
+    for (var k = 0; k < 4; k++) {
+        colors.push(baseColor[color * 4 + k]);
     }
     for (var k = 0; k < 3; k++)
         points.push(a[k]);
 
-    for (var k = 0; k < 3; k++) {
-        colors.push(baseColor[color * 3 + k]);
+    for (var k = 0; k < 4; k++) {
+        colors.push(baseColor[color * 4 + k]);
     }
     for (var k = 0; k < 3; k++)
         points.push(b[k]);
 
-    for (var k = 0; k < 3; k++) {
-        colors.push(baseColor[color * 3 + k]);
+    for (var k = 0; k < 4; k++) {
+        colors.push(baseColor[color * 4 + k]);
     }
     for (var k = 0; k < 3; k++)
         points.push(c[k]);
@@ -119,17 +120,17 @@ function divideTetra(a, b, c, d, count) {
         tetra(a, b, c, d);
     } else {
         var ab = vec3.create();
-        vec3.lerp(ab, a, b, 0.5);
+        glMatrix.vec3.lerp(ab, a, b, 0.5);
         var ac = vec3.create();
-        vec3.lerp(ac, a, c, 0.5);
+        glMatrix.vec3.lerp(ac, a, c, 0.5);
         var ad = vec3.create();
-        vec3.lerp(ad, a, d, 0.5);
+        glMatrix.vec3.lerp(ad, a, d, 0.5);
         var bc = vec3.create();
-        vec3.lerp(bc, b, c, 0.5);
+        glMatrix.vec3.lerp(bc, b, c, 0.5);
         var bd = vec3.create();
-        vec3.lerp(bd, b, d, 0.5);
+        glMatrix.vec3.lerp(bd, b, d, 0.5);
         var cd = vec3.create();
-        vec3.lerp(cd, c, d, 0.5);
+        glMatrix.vec3.lerp(cd, c, d, 0.5);
 
         --count;
 
