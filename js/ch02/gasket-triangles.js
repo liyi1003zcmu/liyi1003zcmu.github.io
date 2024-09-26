@@ -7,12 +7,12 @@ var gl;
 
 var points = [];
 
-var numTimesToSubdivide = 4;
+var numTimesToSubdivide = 1;
 
 window.onload = function initTriangles(){
 	canvas = document.getElementById( "gl-canvas" );
 
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
@@ -78,22 +78,24 @@ function divideTriangle( a, b, c, count ){
 		triangle( a, b, c );
 	}else{
 		var ab = vec3.create();
-		vec3.lerp( ab, a, b, 0.5 );
+		vec3.lerp( ab, a, b, 0.5 ); // ab=a*alpha+b*(1-alpha)
 		var bc = vec3.create();
 		vec3.lerp( bc, b, c, 0.5 );
 		var ca = vec3.create();
 		vec3.lerp( ca, c, a, 0.5 );
 
-		--count;
-
 		// three new triangles
-		divideTriangle( a, ab, ca, count );
-		divideTriangle( b, bc, ab, count );
-		divideTriangle( c, ca, bc, count );
+		divideTriangle( a, ab, ca, count-1 );
+		divideTriangle( b, bc, ab, count-1 );
+		divideTriangle( c, ca, bc, count-1 );
+
+		//divideTriangle( ab, bc, ca, count-1 );
 	}
 }
 
 function renderTriangles(){
 	gl.clear( gl.COLOR_BUFFER_BIT );
 	gl.drawArrays( gl.TRIANGLES, 0, points.length/3 );
+
+	//gl.drawArrays( gl.LINES, 0, lineNumber );
 }
