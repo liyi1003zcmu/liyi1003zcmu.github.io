@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="../../../dist/reset.css">
     <link rel="stylesheet" href="../../../dist/reveal.css">
-    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
 
     <!-- Theme used for syntax highlighting of code -->
     <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
@@ -59,9 +59,10 @@
                     <h3>简介</h3>
                     <dl>
                         <dt>顶点着色器</dt>
-                        <dd>对每个顶点进行处理，将顶点的位置从三维世界坐标系转换到二维裁剪后的坐标系，用于流水线的下一阶段的处理，比如用于光栅化。同时还能处理顶点的其它属性，包括位置、颜色、纹理坐标等，但顶点着色器不会增加顶点</dd>
+                        <dd style="text-align:left;font-size:80%">对每个顶点进行处理，将顶点的位置从三维世界坐标系转换到二维裁剪后的坐标系，用于流水线的下一阶段的处理，比如用于光栅化。同时还能处理顶点的其它属性，包括位置、颜色、纹理坐标等，但顶点着色器不会增加顶点</dd>
                         <dt>面片着色器</dt>
-                        <dd>对光栅化后生成的每个面片计算其在窗口中对应像素的颜色及深度值</dd>
+                        
+                        <dd style="text-align:left;font-size:80%">对光栅化后生成的每个面片计算其在窗口中对应像素的颜色及深度值</dd>
                     </dl>
                 </section>
                 <section id="vertexshader">
@@ -128,15 +129,17 @@
                     <h2>着色器基础</h2>
                     <h3>顶点着色器程序</h3>
                     <pre><code class="hljs" data-trim data-line-numbers>
-attribute vec4 vPosition;
+#version 300
+in vec4 vPosition;
 void main()
 {
-gl_Position = vPosition;
+    gl_Position = vPosition;
 }
                     </code></pre>
                     <ul>
-                        <li>line 1. 从应用程序获得属性值输入，这里为顶点的位置，其值必须与某个程序变量相连</li>
-                        <li>line 4. gl_Position为内建变量，用于表示GPU内部的顶点位置，，其类型为四维向量</li>
+							<li style="text-align:left;font-size:80%">line 1. 标明当前应用WebGL环境的版本号，这里为300</li>
+							<li style="text-align:left;font-size:80%">line 2. 从应用程序获得属性值输入，这里为顶点的位置，其值必须与某个程序变量相连</li>
+                        <li>line 5. gl_Position为内建变量，用于表示GPU内部的顶点位置，其类型为四维向量</li>
                     </ul>
                 </section>
                 <section id="vshadermodel">
@@ -149,15 +152,19 @@ gl_Position = vPosition;
                     <h2>着色器基础</h2>
                     <h3>面片着色器程序</h3>
                     <pre><code class="hljs" data-trim data-line-numbers>
+#version 300 es
+			
 precision mediump float;
-void main()
-{
-    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+			
+out vec4 fColor;// out mediump vec4 fColor;
+void main(){
+    fColor = vec4( 1.0, 1.0, 0.0, 1.0 );
 }
                     </code></pre>
                     <ul>
-                        <li>line 1. 声明数据精度，必不可少</li>
-                        <li>line 4. 内建变量，用于表示面片的颜色，其值可以是常量，也可以由外部数据传入</li>
+                      <li style="text-align:left;font-size:80%">line 1. 标明当前应用WebGL环境的版本号，这里为300   
+						<li style="text-align:left;font-size:80%">line 3. 声明数据精度，必不可少</li>
+                        <li style="text-align:left;font-size:80%">line 5. 变量，表示面片的颜色，其值可以是常量，也可以由外部数据传入</li>
                     </ul>
                 </section>
                 <section id="fshadermodel">
@@ -171,12 +178,12 @@ void main()
                     <h2>着色器基础</h2>
                     <h3>数据类型</h3>
                     <ul>
-                        <li style="text-align:left"><strong>C类型</strong>：int, float, bool</li>
-                        <li style="text-align:left"><strong>向量</strong>：浮点向量 float vec2, vec3, vec4, 或是整型向量ivec以及布尔型向量bvec</li>
-                        <li style="text-align:left"><strong>矩阵</strong>：mat2, mat3, mat4，数组按列存储，访问数组元素的标准形式为m[row][column]</li>
-                        <li style="text-align:left"><strong>C++风格的构造器</strong>：vec3 a=vec3(1.0,2.0, 3.0); 或是 vec2 b=vec2(a);</li>
+                        <li style="text-align:left;font-size:80%"><strong>C类型</strong>：int, float, bool</li>
+                        <li style="text-align:left;font-size:80%"><strong>向量</strong>：浮点向量 float vec2, vec3, vec4, 或是整型向量ivec以及布尔型向量bvec</li>
+                        <li style="text-align:left;font-size:80%"><strong>矩阵</strong>：mat2, mat3, mat4，数组按列存储，访问数组元素的标准形式为m[row][column]</li>
+                        <li style="text-align:left;font-size:80%"><strong>C++风格的构造器</strong>：vec3 a=vec3(1.0,2.0, 3.0); 或是 vec2 b=vec2(a);</li>
                     </ul>
-                    <p style="font-size:xx-large"><a href="https://www.khronos.org/opengles/">OpenGL ES Reference</a></p>
+                    <p style="font-size:xx-large"><a href="https://www.khronos.org/opengles/" target="_blank">OpenGL ES Reference</a></p>
                 </section>
                 <section id="nopt">
                     <h2>着色器基础</h2>
@@ -228,23 +235,23 @@ void main()
                         <div class="columnleft" style="width:48%">
                             <p>顶点着色器代码</p>
                             <pre><code class="hljs" data-trim data-line-numbers>
-attribute vec4 vColor;
-varying vec4 fColor;
+#version 300
+in vec4 vPosition;
 void main()
 {
-    gl_Position=vPosition;
-    fColor=vColor;
+    gl_Position = vPosition;
 }
                             </code></pre>
                         </div>
                         <div class="columnright" style="width:48%">
                             <p>对应的面片着色器代码</p>
                             <pre><code class="hljs" data-trim data-line-number>
+#version 300 es	
 precision mediump float;
-varying vec4 fColor;
-void main()
-{
-    gl_FragColor=fColor;
+			
+out vec4 fColor;// out mediump vec4 fColor;
+void main(){
+    fColor = vec4( 1.0, 1.0, 0.0, 1.0 );
 }
                     </code></pre></div>
                     </div>
@@ -274,9 +281,10 @@ gl.uniform4f(colorLoc, color);
 
 // fragment shader( the same in vertex shader )
 uniform vec4 color;
+out vec4 fColor;
 void main()
 {
-    gl_FragColor=color;
+   fColor=color;
 }
                         </code></pre>
                     </div>
