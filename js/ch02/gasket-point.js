@@ -10,7 +10,7 @@ var numPoints = 5000;
 window.onload = function initPoints(){
 	var canvas = document.getElementById( "gl-canvas" );
 
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
