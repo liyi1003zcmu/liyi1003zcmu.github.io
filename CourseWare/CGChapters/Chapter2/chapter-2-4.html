@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="../../../dist/reset.css">
     <link rel="stylesheet" href="../../../dist/reveal.css">
-    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
 
     <!-- Theme used for syntax highlighting of code -->
     <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
@@ -69,30 +69,34 @@
                 <section id="wglhtml">
                     <h2>WebGL程序解析</h2>
                     <h3>HTML文件</h3>
-                    <pre><code class="hljs" style="font-size:x-large" data-trim data-line-numbers="26-28|5-11|12-17|18-23">
+                    <pre><code class="html" style="font-size:x-large" data-trim data-line-numbers="26-28|5-11|12-17|18-23">
 &lt;html&gt;
 &lt;head&gt;
   &lt;meta http-equiv="Content-Type" content="text/html;charset=utf-8"&gt;
   &lt;title&gt;First WebGL Demo&lt;/title&gt;
   &lt;!-- 顶点着色器和片元着色器代码 --&gt;
   &lt;script id="vertex-shader" type="x-shader/x-vertex"&gt;
-    attribute vec4 vPosition;
+    #version 300 es
+    in vec4 vPosition;
     void main(){
-    gl_Position = vPosition;
+        gl_Position = vPosition;
     }
   &lt;/script&gt;
   &lt;script id="fragment-shader" type="x-shader/x-fragment"&gt;
+    #version 300 es	
     precision mediump float;
+			
+    out vec4 fColor;
     void main(){
-    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+        fColor = vec4( 1.0, 1.0, 0.0, 1.0 );
     }
   &lt;/script&gt;
   &lt;!-- 一组相关的JS库 --&gt;
-  &lt;script type="text/javascript" src="../../../js/common/webgl-utils.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="../../../js/common/initShaders.js"&gt;&lt;/script&gt;
-  &lt;script type="text/javascript" src="../../../js/common/glMatrix-0.9.5.min.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/common/webgl-utils.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/common/initShaders.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/common/glMatrix-0.9.5.min.js"&gt;&lt;/script&gt;
   &lt;!-- 绘制三角形的JS代码 --&gt;
-  &lt;script type="text/javascript" src="../../../js/ch01/square.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/ch01/square.js"&gt;&lt;/script&gt;
 &lt;/head&gt;
 
 &lt;body&gt;
@@ -107,7 +111,7 @@
                     <h3>关于Shader的解释</h3>
                     <ul>
                         <li style="text-align:left;">首先，需要分别为两段Shader程序命名并指明其类型，分别为顶点着色器vertex-shader和面片着色器fragment-shader，该命名用于在JS文件中调用</li>
-                        <li style="text-align:left;">着色器之间可传递数据，在当前程序中，用于传递的数据变量为gl_Position和gl_FragColor，实际上并没有做什么</li> 
+                        <li style="text-align:left;">着色器之间可传递数据，在当前程序中，用于传递的数据变量为gl_Position和fColor，实际上并没有做什么</li> 
                         <li style="text-align:left;">两段着色器文件都是完整的程序，注意有main</li>
                         <li style="text-align:left;">向量类型为vec4，为shader的内建向量类型，着色器中同样可以根据数据精度设置对应的数据类型</li>
                     </ul>
@@ -116,13 +120,13 @@
                     <h2>WebGL程序解析</h2>
                     <h3>包含文件</h3>
                     <dl>
-                        <dt>../../../js/common/webgl-utils.js</dt>
+                        <dt>../js/common/webgl-utils.js</dt>
                         <dd>用于设置WebGL环境的工具，对于底层工具进行了封装，便于调用</dd>
-                        <dt>../../../js/common/initShaders.js</dt>
+                        <dt>../js/common/initShaders.js</dt>
                         <dd>包含了对Shader程序进行读取、编译、链接的相关工具代码</dd>
-                        <dt>../../../js/common/glMatrix-0.9.5.min.js</dt>
+                        <dt>../js/common/glMatrix-0.9.5.min.js</dt>
                         <dd>提供了处理矩阵和向量计算的工具</dd>
-                        <dt>../../../js/ch01/square.js</dt>
+                        <dt>../js/ch01/square.js</dt>
                         <dd>应用程序文件</dd>
                     </dl>
                 </section>
@@ -135,48 +139,67 @@
 "use strict";
 
 var gl;
-var points;
 
 window.onload = function init(){
-  var canvas = document.getElementById( "square-canvas" );
-  gl = WebGLUtils.setupWebGL( canvas );
-  if( !gl ){
-    alert( "WebGL isn't available" );
-  }
+    var canvas = document.getElementById( "square-canvas" );
+    gl = canvas.getContext("webgl2");
+    if( !gl ){
+        alert( "WebGL isn't available" );
+    }
 
-  // Four Vertices
-  var vertices = [
-    -0.5, -0.5,
-     0.5, -0.5,
-     0.5,  0.5,
-    -0.5,  0.5
-  ];
+    // Four Vertices
+    var points = new Float32Array([
+        -0.5, -0.5,
+         0.5, -0.5,
+         0.5,  0.5,
+        -0.5,  0.5,
+        //-0.5, -0.5,
+        // 0.5, 0.5
+    ]);
 
-  // Configure WebGL
-  gl.viewport( 0, 0, canvas.width, canvas.height );
-  gl.clearColor( 0.0, 0.0, 0.0, 1.0 );
+    var colors=new Float32Array([
+        0.0, 1.0, 0.0, 1.0,
+        //0.0, 1.0, 0.0, 1.0,
+        //0.0, 0.0, 1.0, 1.0,
+        //1.0, 0.0, 1.0, 1.0
+    ]);
 
-  // Load shaders and initialize attribute buffers
-  var program = initShaders( gl, "vertex-shader", "fragment-shader" );
-  gl.useProgram( program );
+    // Configure WebGL
+    gl.viewport( 0, 0, canvas.width/2, canvas.height/2 );
+    gl.clearColor( 1.0, 0.0, 0.0, 1.0 );
 
-  // Load the data into the GPU
-  var bufferId = gl.createBuffer();
-  gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-  gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
+    // Load shaders and initialize attribute buffers
+    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    gl.useProgram( program );
 
-  // Associate external shader variables with data buffer
-  var vPosition = gl.getAttribLocation( program, "vPosition" );
-  gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
-  gl.enableVertexAttribArray( vPosition );
-  render();
+    // Load the data into the GPU
+    var bufferId = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
+    gl.bufferData( gl.ARRAY_BUFFER, points, gl.STATIC_DRAW );
+
+    // Associate external shader variables with data buffer
+    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition );
+
+    
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+    var vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+    
+    
+    render();
 }
 
 function render(){
-  gl.clear( gl.COLOR_BUFFER_BIT );
-  gl.drawArrays( gl.TRIANGLE_FAN, 0, 4 );
-  //gl.drawArrays( gl.TRIANGLES, 0, 9 );
-  //gl.drawArrays( gl.TRIANGLE_FANS, 3, 6 );
+    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.drawArrays( gl.TRIANGLE_FAN, 0, 4 );
+    //gl.drawArrays( gl.TRIANGLES, 0, 6 );
+    //gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
 }                    
                     </code></pre>
                 </section>
@@ -187,16 +210,16 @@ function render(){
                         <li style="text-align:left;">line 6. 当已经载入所有的代码后，就从该位置开始执行代码</li>
                         <li style="text-align:left;">line 7-8. 从HTML文件中获取WebGL用于渲染的画布环境</li>
                         <li style="text-align:left;">line 13-20. 定义了正方形的四个顶点，为八个浮点数</li>
-                        <li style="text-align:left;">line 21-23. 定义视口，用于绘制的区域，顶点位置会映射到此区域</li>
+                        <li style="text-align:left;">line 29-31. 定义视口，用于绘制的区域，顶点位置会映射到此区域</li>
                     </ul>
                 </section>
                 <section id="jsexp2">
                     <h2>WebGL程序解析</h2>
                     <h3>JavaScript文件说明(续)</h3>
                     <ul>
-                        <li style="text-align:left;">line 25-27. initShaders用于载入、编译、链接着色器程序代码，构建程序对象</li>
-                        <li style="text-align:left;">line 29-37. 通过创建Vertex Buffer Object(VBO)，将顶点位置数据传递给GPU，这里采用的数据类型为与C中相类似的float32，并将传入的顶点数据与着色器程序中的变量相联系，即顶点着色器中的vPosition，注意在第36行，声明了位置的属性为vec2。<strong style="color:red">将变量值赋给着色器变量，需要声明在缓存中的名字、类型和位置</strong></li>
-                        <li style="text-align:left;">line 41-43. 实际渲染代码，将四个顶点的数组以三角扇的形式绘制出来，可同时尝试参数gl.TRIANGLES, gl.TRIANGLE_STRIP</li>
+                        <li style="text-align:left;">line 33-35. initShaders用于载入、编译、链接着色器程序代码，构建程序对象</li>
+                        <li style="text-align:left;">line 37-54. 通过创建Vertex Buffer Object(VBO)，将顶点位置数据传递给GPU，这里采用的数据类型为与C中相类似的float32，并将传入的顶点数据与着色器程序中的变量相联系，即顶点着色器中的vPosition，注意在第36行，声明了位置的属性为vec2。<strong style="color:red">将变量值赋给着色器变量，需要声明在缓存中的名字、类型和位置</strong></li>
+                        <li style="text-align:left;">line 61-64. 实际渲染代码，将四个顶点的数组以三角扇的形式绘制出来，可同时尝试参数gl.TRIANGLES, gl.TRIANGLE_STRIP</li>
                     </ul>
                 </section>
             </section>
@@ -216,14 +239,14 @@ function render(){
                 <section id="camview">
                     <h2>WebGL程序解析</h2>
                     <h3>WebGL相机</h3>
-                    <p style="text-align:left;">WebGL将相机默认放置在物体对象空间的坐标原点，朝向z轴负方向</p>
-                    <p style="text-align:left;">默认的观察空间是以原点为中心，长度为2的立方体</p>
+                    <p style="text-align:left;font-size:80%">WebGL将相机默认放置在物体对象空间的坐标原点，朝向z轴负方向</p>
+                    <p style="text-align:left;font-size:80%">默认的观察空间是以原点为中心，长度为2的立方体</p>
                     <img src="../../images/cg/chap02/ch02-camview.png" style="width:90%">
                 </section>
                 <section id="orthview">
                     <h2>WebGL程序解析</h2>
                     <h3>正交观察</h3>
-                    <p style="text-align:left;">默认的正交观察中，所有的点沿着Z轴正方向投影到平面z=0上</p>
+                    <p style="text-align:left;font-size:80%">默认的正交观察中，所有的点沿着Z轴正方向投影到平面z=0上</p>
                     <div class="columnleft">
                         <img src="../../images/cg/chap02/ch02-viewvolumn.png" style="width:100%">
                     </div>
@@ -236,7 +259,7 @@ function render(){
                     <h3>视口</h3>
                     <dl>
                         <dt style="color:red;font-weight:bold;">视口(Viewport)</dt>
-                        <dd style="font-size:xx-large">
+                        <dd style="font-size:x-large">
                             视口，指的屏幕上的一块矩形区域。一般而言，视口默认为整个窗口区域，但实际上，往往没有必要使用整个窗口，而仅使用其中一部分即可。WebGL中可使用函数gl.viewport(x, y, w, h)进行设置，其值为窗口坐标系里的像素
                         </dd>
                     </dl>
