@@ -13,7 +13,7 @@ function changeDir(){
 
 function initRotSquare(){
 	canvas = document.getElementById( "rot-canvas" );
-	gl = WebGLUtils.setupWebGL( canvas, "experimental-webgl" );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
@@ -24,16 +24,16 @@ function initRotSquare(){
 	var program = initShaders( gl, "rot-v-shader", "rot-f-shader" );
 	gl.useProgram( program );
 
-	var vertices = [
+	var vertices = new Float32Array([
 		 0,  1,  0,
 		-1,  0,  0,
 		 1,  0,  0,
 		 0, -1,  0
-	];
+	]);
 
 	var bufferId = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( vertices ), gl.STATIC_DRAW );
+	gl.bufferData( gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW );
 
 	var vPosition = gl.getAttribLocation( program, "vPosition" );
 	gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
