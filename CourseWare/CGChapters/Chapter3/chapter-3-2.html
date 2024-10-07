@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="../../../dist/reset.css">
     <link rel="stylesheet" href="../../../dist/reveal.css">
-    <link rel="stylesheet" href="../../../dist/theme/mywhite.css" id="theme">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
 
     <!-- Theme used for syntax highlighting of code -->
     <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
@@ -38,6 +38,11 @@
                 <h1>计算机图形学</h1>
                 <H2>第三章 交互和动画</H2>
                 <h3>动画</h3>
+                <p style="font-family: courier">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
                 <p id="date"></p>
                 <script>
                     var now = new Date();
@@ -48,38 +53,50 @@
                 </script>
             </section>
             <section>
-                <section id="callback">
-                    <h2>动画</h2>
-                    <h3>回调</h3>
+				<section id="callback">
+					<h2>动画</h2>
+					<h3>回调</h3>
                     
-                    <p style="text-align:left">API中用用<strong style="color:red">回调函数</strong>或<strong style="color:red">事件监听</strong>实现事件驱动输入</p>
-                    <div class="columnleft">
-                    <ul>
-                        <li style="text-align:left">分别为图形系统能够识别的事件定义回调函数</li>
-                        <li style="text-align:left">浏览器进入事件循环，并响应注册了这些回调函数的事件</li>
-                        <li style="text-align:left">当产生了这些事件时，就执行相应的回调函数</li>
-                    </ul>
-                    </div>
-                    <div class="columnright">
-                        <img src="../../images/cg/chap03/ch03-webglorga.png">
-                    </div>
-                </section>
-                <section id="onload">
-                    <h2>动画</h2>
-                    <h3>Onload事件</h3>
-                    <p style="text-align:left">在包含有图形计算相关代码的js文件中，所有的动作都定义在init()，render()之类的函数中，在JavaScript引擎中，这些函数是无法被执行的</p>
-                    <p style="text-align:left">使用窗口的onload事件调用初始化执行init函数，有window.onload=init; 当所有文件都加载完毕后执行onload事件</p>
+                  <p style="text-align:left">API中用用<strong style="color:red">回调函数</strong>或<strong style="color:red">事件监听</strong>实现事件驱动输入</p>
+                    
+                  <ul>
+					<li style="text-align:left;font-size:80%">分别为图形系统能够识别的事件定义回调函数</li>
+					<li style="text-align:left;font-size:80%">浏览器进入事件循环，并响应注册了这些回调函数的事件</li>
+					<li style="text-align:left;font-size:80%">当产生了这些事件时，就执行相应的回调函数</li>
+					</ul>
+				</section>
+				<section id="callback2">
+					<h2>浏览器执行</h2>
+					<div class="columnleft">
+					<ul>
+					<li style="text-align:left;font-size:80%">载入HTML文件，包含shader</li>
+					<li style="text-align:left;font-size:80%">异步载入并执行js代码</li>
+					<li style="text-align:left;font-size:80%">浏览器进入事件循环并等待事件响应</li>
+					</ul>
+					</div>
+					<div class="columnright">
+					<img src="../../images/cg/chap03/ch03-webglorga.png">
+					</div>
+				</section>
+				<section id="onload">
+					<h2>动画</h2>
+					<h3>Onload事件</h3>
+                  <ul>  
+					<li style="text-align:left;font-size:80%">在包含有图形计算相关代码的js文件中，所有的动作都定义在init()，render()之类的函数中，这些函数需要进行调用，JavaScript引擎不会自动执行这些代码</li>
+					<li style="text-align:left;font-size:80%">因此，需要利用窗口的onload事件调用初始化执行init函数，，当所有文件都加载完毕后就执行onload事件</li>
+					<li style="text-align:left;font-size:80%">有window.onload=init;</li> 
+					</ul>
                 </section>
             </section>
             <section>
-                <section id="rot">
-                    <h2>动画</h2>
-                    <h3>旋转矩形</h3>
-                    <canvas id="rotsquare" width="700" height="500"></canvas>
-                    <script>
-                        var canvas = document.getElementById("rotsquare");
-                        var radius = 200;
-                        var theta = Math.PI / 3;
+				<section id="rot">
+					<h2>动画</h2>
+					<h3>旋转矩形</h3>
+					<canvas id="rotsquare" width="700" height="500"></canvas>
+					<script>
+						var canvas = document.getElementById("rotsquare");
+						var radius = 200;
+						var theta = Math.PI/ 3;
                         var ctx = canvas.getContext("2d");
                         ctx.lineWidth = 5;
                         ctx.beginPath();
@@ -98,13 +115,13 @@
                         ctx.fillText("(sin" + String.fromCharCode(952) + ", -cos" + String.fromCharCode(952) + ")", 350 + radius * Math.sin(theta) + 25, 250 + radius * Math.cos(theta));
                         ctx.fillText("(-cos" + String.fromCharCode(952) + ", -sin" + String.fromCharCode(952) + ")", 350 - radius * Math.cos(theta) - 170, 250 + radius * Math.sin(theta) + 20);
                         ctx.fillText("(-sin" + String.fromCharCode(952) + ", cos" + String.fromCharCode(952) + ")", 350 - radius * Math.sin(theta) - 150, 250 - radius * Math.cos(theta));
-                    </script>
-                    <p style="text-align:left">考虑由上述四点构成的正四边形，实现按角速度&theta;旋转的动画效果</p>
-                </section>
-                <section id="solu1">
-                    <h2>动画</h2>
-                    <h3>简单方法实现</h3>
-                    <pre><code class="hljs" data-trim>
+					</script>
+					<p style="text-align:left;font-size:80%">考虑由上述四点构成的正四边形，实现按角速度&theta;旋转的动画效果</p>
+				</section>
+				<section id="solu1">
+					<h2>动画</h2>
+					<h3>简单方法实现</h3>
+					<pre><code class="javascript" data-trim>
 for(var theta = 0.0; theta &lt; thetaMax; theta +=dtheta){ 
     vertices[0]=vec2( Math.sin(theta),  Math.cos.(theta));
     vertices[1]=vec2( Math.sin(theta), -Math.cos.(theta));
@@ -113,30 +130,38 @@ for(var theta = 0.0; theta &lt; thetaMax; theta +=dtheta){
     gl.bufferSubData(……………………);
     render(); 
 }
-                    </code></pre>
-                </section>
-                <section id="betterway">
-                    <h2>动画</h2>
-                    <h3>更好的方式</h3>
-                    <p style="text-align:left">将原始顶点传入顶点着色器，将旋转角度&theta;作为着色器常量传入顶点着色器，并在顶点着色器内计算新的顶点坐标，逐次更新顶点位置并绘制</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="betterway">
+					<h2>动画</h2>
+					<h3>更好的方式</h3>
+					<ul>
+					<li style="text-align:left;font-size:80%">将原始顶点传入顶点着色器</li>
+					<li style="text-align:left;font-size:80%">将旋转角度&theta;作为着色器常量传入顶点着色器</li>
+					<li style="text-align:left;font-size:80%">在顶点着色器内计算新的顶点坐标，逐次更新顶点位置并绘制</li>
+					<li style="text-align:left;font-size:80%">继续绘制</li>
+					</ul>
+					<pre><code class="javascript" data-trim>
 var thetaLoc = gl.getUniformLocation( program, "uTheta" );
 
 function render()
 {
-    gl.clear( gl。COLOR_BUFFER_BIT);
+    gl.clear( gl.COLOR_BUFFER_BIT);
     uTheta += 0.1;
     gl.uniform1f( thetaLoc, uTheta );
     gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
     render();
 }
                     </code></pre>
-                </section>
-                <section id="reAF">
-                    <h2>动画</h2>
-                    <h3>requestAnimationFrame</h3>
-                    <p style="text-align:left">仅调用render函数会导致栈溢出，无法达到预期效果，更为合理的方式是使用<strong style="color:red">requestAnimationFrame</strong>函数，可以让JS在每次更新后都只执行一次刷新</p>
-                    <pre><code class="hljs" data-trim>
+				</section>
+				<section id="reAF">
+					<h2>动画</h2>
+					<h3>requestAnimationFrame</h3>
+					<ul>  
+						<li style="text-align:left;font-size:80%">仅调用render函数会导致栈溢出，原因是函数调用速度快于函数执行速度</li>
+						<li style="text-align:left;font-size:80%">更为合理的方式是使用<strong style="color:red">requestAnimationFrame</strong>函数，可以让JS在每次更新后只执行一次刷新</li>
+					</ul>
+					<pre><code class="javascript" data-trim>
 function render()
 {
     gl.clear( gl。COLOR_BUFFER_BIT);
@@ -145,13 +170,13 @@ function render()
     gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
     requestAnimationFrame(render);
 }
-                                        </code></pre>
-                </section>
-                <section id="vsh">
-                    <h2>动画</h2>
-                    <h3>Vertex Shader</h3>
-                    <pre><code class="hljs" data-trim>
-attribute vec4 vPosition;
+					</code></pre>
+				</section>
+				<section id="vsh">
+					<h2>动画</h2>
+					<h3>Vertex Shader</h3>
+					<pre><code class="javascript" data-trim>
+in vec4 vPosition;
 uniform float uTheta;
 
 void main()
@@ -161,27 +186,27 @@ void main()
     gl_Position.z = 0.0;
     gl_Position.w = 1.0; 
 }
-                    </code></pre>
-                </section>
-                <section id="dbuffer">
-                    <h2>动画</h2>
-                    <h3>双缓存机制</h3>
-                    <p style="text-align:left;">绘制代码将矩形渲染到缓存中，需要将缓存中的内容显示出来，目前的浏览器采用<text style="color:red">双缓存</text>机制</p>
-                    <ul>
-                        <li style="text-align:left;font-size:80%">两个缓存器，一个用于当前显示，同时在后台将下一帧内容渲染到另一缓存中，当前帧绘制完毕后交互两个缓存</li>
-                        <li style="text-align:left;font-size:80%">可避免显示尚未渲染完毕的缓存</li>
-                        <li style="text-align:left;font-size:80%">浏览器显示频率为60Hz，通过事件触发缓存交换</li>
-                        <ul>
-                            <li style="text-align:left;font-size:80%">设置间隔时间Interval Time，setInterval(render,
-                                interval)，在指定时间过后执行渲染函数，同时交换缓存，如果将时间间隔设置为0，将会在最短时间内完成缓存交换</li>
-                            <li style="text-align:left;font-size:80%">回调函数requestAnimFrame(推荐使用)</li>
-                        </ul>
-                    </ul>
-                </section>
-                <section id="addinter">
-                    <h2>动画</h2>
-                    <h3>Interval Sample</h3>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="dbuffer">
+					<h2>动画</h2>
+					<h3>双缓存机制</h3>
+					<p style="text-align:left;font-size:80%">绘制代码将矩形渲染到缓存中，需要将缓存中的内容显示出来，目前的浏览器采用<text style="color:red">双缓存</text>机制</p>
+					<ul>
+						<li style="text-align:left;font-size:60%">两个缓存器，一个用于当前显示，同时在后台将下一帧内容渲染到另一缓存中，当前帧绘制完毕后交换两个缓存</li>
+						<li style="text-align:left;font-size:60%">可避免显示尚未渲染完毕的缓存</li>
+						<li style="text-align:left;font-size:60%">浏览器显示频率为60Hz，即重复显示一个缓存，并非交换缓存</li>
+						<li style="text-align:left;font-size:60%">sk 可通过事件触发交换缓存，以旋转正方形为例</li>
+                      <ul>
+							<li style="text-align:left;font-size:60%">设置间隔时间Interval Time，setInterval(render,     interval)，在指定时间过后执行渲染函数，同时交换缓存，如果将时间间隔设置为0，将会在最短时间内完成缓存交换，导致栈溢出</li>
+							<li style="text-align:left;font-size:60%">回调函数requestAnimFrame(推荐使用)</li>
+						</ul>
+					</ul>
+				</section>
+				<section id="addinter">
+					<h2>动画</h2>
+					<h3>Interval Sample</h3>
+					<pre><code class="javascript" data-trim>
 function render()
 {
     setTimeout( function(){
@@ -192,70 +217,71 @@ function render()
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
     }, 100 );
 }
-                    </code></pre>
-                </section>
-            </section>
-            <section id="butctl">
-                <h2>动画</h2>
-                <h3>添加交互式控制</h3>
-                <img src="../../images/cg/chap03/ch03-rotsqudemo.png">
-            </section>
-            <section>
-                <section id="addbtn">
-                    <h2>动画</h2>
-                    <h3>添加按钮</h3>
-                    <p style="text-align:left">添加按钮，以以控制旋转方向，并采用一全局变量表示旋转方向，并修改对应render函数</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+			</section>
+			<section id="butctl">
+				<h2>动画</h2>
+				<h3>添加交互式控制</h3>
+				<img src="../../images/cg/chap03/ch03-rotsqudemo.png">
+			</section>
+			<section>
+				<section id="addbtn">
+					<h2>动画</h2>
+					<h3>添加按钮</h3>
+					<p style="text-align:left">添加按钮，用以控制旋转方向，并采用一全局变量表示旋转方向，并修改对应render函数</p>
+					<pre><code class="javascript" data-trim>
 var direction = true;//global initialization
 
 // in render()
 if(direction) uTheta += 0.1;
 else uTheta -= 0.1;
-                    </code></pre>
-                </section>
-                <section id="btninhtml">
-                    <h2>动画</h2>
-                    <h3>HTML中的按钮</h3>
-                    <p style="text-align:left">在HTML文件中添加按钮，当点击按钮时产生相应的click事件</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="btninhtml">
+					<h2>动画</h2>
+					<h3>HTML中的按钮</h3>
+					<p style="text-align:left;font-size:80%">在HTML文件中添加按钮，当点击按钮时产生相应的click事件</p>
+					<pre><code class="javascript" data-trim>
 &lt;button id="DirectionButton"&gt;Change Rotation Direction&lt;/button&gt;
-                    </code></pre>
-                    <p style="text-align:left">JS文件中，相应的事件监听器的实现有如下两种形式：</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+					<p style="text-align:left;font-size:80%">JS文件中，相应的事件监听器的实现有如下两种形式：</p>
+					<pre><code class="javascript" data-trim>
 var myButton = document.getElementById("DirectionButton");
 myButton.addEventListener("click", function(){
     direction = !direction;
 });
                     </code></pre>
-                    <pre><code class="hljs" data-trim>
+                    <pre><code class="javascript" data-trim>
 document.getElementById("Direction").onclick = function(){ direction = !direction;}
                     </code></pre>
-                </section>
-                <section id="btninhtml2">
-                    <h2>动画</h2>
-                    <h3>Onclick实现</h3>
-                    <p style="text-align:left">onclick的其它实现</p>
-                    <pre><code class="hljs" data-trim>
+					<p style="text-align:left;font-size:80%">可以利用CSS或jQuery实现按键更好的视觉效果</p>
+				</section>
+				<section id="btninhtml2">
+					<h2>动画</h2>
+					<h3>Onclick实现</h3>
+					<p style="text-align:left">onclick的其它实现</p>
+					<pre><code class="javascript" data-trim>
 myButton.addEventListener("click", function(){
     if(event.button == 0){direction = !direction;}
 });
-                    </code></pre>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+					<pre><code class="javascript" data-trim>
 myButton.addEventListener("click", function(){
     if(event.shiftKey == 0){ direction=!direction;}
 })
-                    </code></pre>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+					<pre><code class="javascript" data-trim>
 &lt;button onclick="direction=!direction"&gt;&lt;/button&gt;
-                    </code></pre>
-                </section>
-            </section>
-            <section>
-                <section id="rotspeed">
-                    <h2>动画</h2>
-                    <h3>控制交互速度</h3>
-                    <p style="text-align:left">添加代码，控制四边形旋转速度</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+			</section>
+			<section>
+				<section id="rotspeed">
+					<h2>动画</h2>
+					<h3>控制旋转速度</h3>
+					<p style="text-align:left;font-size:80%">添加代码，控制四边形旋转速度</p>
+					<pre><code class="javascript" data-trim>
 var delay = 100;
 function render()
 {
@@ -267,24 +293,24 @@ function render()
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4); 
     }, delay);
 }
-                    </code></pre>
-                </section>
-                <section id="menuspd">
-                    <h2>动画</h2>
-                    <h3>菜单实现</h3>
-                    <p style="text-align:left">在HTML文件中添加菜单元素，菜单中每项为对应的点击事件返回一个整数值</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="menuspd">
+					<h2>动画</h2>
+					<h3>菜单实现</h3>
+					<p style="text-align:left;font-size:80%">在HTML文件中添加菜单元素，菜单中每项为对应的点击事件返回一个整数值，利用“select”元素实现</p>
+					<pre><code class="javascript" data-trim>
 &lt;select id="mymenu" size="3"&gt;
 &lt;option value="0"&gt;Toggle Rotation Direction&lt;/option&gt;
 &lt;option value="1"&gt;Spin Faster&lt;/option&gt;
 &lt;option value="2"&gt;Spin Slower&lt;/option&gt;
 &lt;/select&gt;
-                    </code></pre>
-                </section>
-                <section id="mulis">
-                    <h2>动画</h2>
-                    <h3>菜单监听器</h3>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="mulis">
+					<h2>动画</h2>
+					<h3>菜单监听器</h3>
+					<pre><code class="javascript" data-trim>
 var m=document.getELementById("mymenu");
 m.addEventListener("click", function(){
     switch(m.electedIndex){
@@ -299,13 +325,13 @@ m.addEventListener("click", function(){
             break;
         }
 });
-                    </code></pre>
-                </section>
-                <section id="keyeve">
-                    <h2>动画</h2>
-                    <h3>键盘按键</h3>
-                    <div class="columnleft" style="width:48%">
-                        <pre><code class="hljs" data-trim>
+					</code></pre>
+				</section>
+				<section id="keyeve">
+					<h2>动画</h2>
+					<h3>键盘按键</h3>
+					<div class="columnleft" style="width:48%">
+					<pre><code class="javascript" data-trim>
 window.addEventListener("keydown",function(){
     switch(event.keyCodde){
         case 49: // '1' key
@@ -319,10 +345,10 @@ window.addEventListener("keydown",function(){
             break;
     }
 });
-                        </code></pre>
-                    </div>
-                    <div class="columnright" style="width:48%">
-                        <pre><code class="hljs" data-trim>
+					</code></pre>
+					</div>
+					<div class="columnright" style="width:48%">
+					<pre><code class="javascript" data-trim>
 window.onkeydown = function(event){
     var key = String.fromCharCode(event.keyCode);
     switch(key){
@@ -337,27 +363,34 @@ window.onkeydown = function(event){
             break;
     }
 };
-                        </code></pre>
-                    </div>
-                </section>
-                <section id="slider">
-                    <h2>动画</h2>
-                    <h3>滑杆输入</h3>
-                    <p style="text-align:left">也可通过在HTML页面添加滑杆控制旋转速度</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+					</div>
+				</section>
+				<section id="slider">
+					<h2>动画</h2>
+					<h3>滑杆输入</h3>
+					<p style="text-align:left;font-size:80%">也可通过在HTML页面添加滑杆控制旋转速度</p>
+					<ul>
+						<li style="text-align:left;font-size:60%">为元素命名</li>
+						<li style="text-align:left;font-size:60%"
+						>设置最大和最小值</li>
+						<li style="text-align:left;font-size:60%">设置步长值，用于生成对应事件</li>
+						<li style="text-align:left;font-size:60%">设置初始值</li>
+					</ul>
+					<pre><code class="html" data-trim>
 &lt;div&gt;speed 0
 &lt;input id="slide" type="range" min="0" max="100" step="10" value="50"/&gt;
 100&lt;/div&gt;
-                    </code></pre>
-                    <p style="text-align:left">对应onchange事件监听器</p>
-                    <pre><code class="hljs" data-trim>
+					</code></pre>
+					<p style="text-align:left;font-size:80%">对应onchange事件监听器</p>
+					<pre><code class="javascript" data-trim>
 documet.getElementbyId("slide").onchange=
     function(){ delay = event.srcElement.value; };
-                    </code></pre>
-                </section>
-            </section>
-        </div>
-    </div>
+					</code></pre>
+				</section>
+			</section>
+		</div>
+	</div>
 
     <script src="../../../dist/reveal.js"></script>
     <script src="../../../plugin/zoom/zoom.js"></script>
