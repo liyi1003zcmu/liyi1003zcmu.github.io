@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec2, vec4 } = glMatrix;
+
 var canvas;
 var gl;
 
@@ -19,7 +21,7 @@ var colors = [
 
 function initTriangleCanvas(){
 	canvas = document.getElementById( "tri-canvas" );
-	gl = WebGLUtils.setupWebGL( canvas );
+	gl = canvas.getContext("webgl2");
 	if( !gl ){
 		alert( "WebGL isn't available" );
 	}
@@ -32,11 +34,11 @@ function initTriangleCanvas(){
 		var rect = canvas.getBoundingClientRect();
 		var cx = event.clientX - rect.left;
 		var cy = event.clientY - rect.top; // offset
-		var t = glMatrix.vec2.fromValues( 2 * cx / canvas.width - 1, 2 * ( canvas.height - cy ) / canvas.height - 1 );
+		var t = vec2.fromValues( 2 * cx / canvas.width - 1, 2 * ( canvas.height - cy ) / canvas.height - 1 );
 		gl.bufferSubData( gl.ARRAY_BUFFER, 8 * index, new Float32Array( t ) );
 
 		gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
-		var c = glMatrix.vec4.fromValues( colors[index%7*4], colors[index%7*4+1], colors[index%7*4+2], colors[index%7*4+3]);
+		var c = vec4.fromValues( colors[index%7*4], colors[index%7*4+1], colors[index%7*4+2], colors[index%7*4+3]);
 		gl.bufferSubData( gl.ARRAY_BUFFER, 16 * index, new Float32Array( c ) );
 		index++;
 	} );
