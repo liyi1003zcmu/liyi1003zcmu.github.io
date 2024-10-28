@@ -1,5 +1,7 @@
 "use strict";
 
+const { vec4 } = glMatrix;
+
 var canvas;
 var gl;
 
@@ -18,7 +20,7 @@ var thetaLoc;
 window.onload = function initCube() {
     canvas = document.getElementById("rtcb-canvas");
 
-    gl = WebGLUtils.setupWebGL(canvas);
+	gl = canvas.getContext("webgl2");
     if (!gl) {
         alert("WebGL isn't available");
     }
@@ -70,25 +72,25 @@ window.onload = function initCube() {
 
 function makeCube() {
     var vertices = [
-        glMatrix.vec4.fromValues(-0.5, -0.5, 0.5, 1.0),
-        glMatrix.vec4.fromValues(-0.5, 0.5, 0.5, 1.0),
-        glMatrix.vec4.fromValues(0.5, 0.5, 0.5, 1.0),
-        glMatrix.vec4.fromValues(0.5, -0.5, 0.5, 1.0),
-        glMatrix.vec4.fromValues(-0.5, -0.5, -0.5, 1.0),
-        glMatrix.vec4.fromValues(-0.5, 0.5, -0.5, 1.0),
-        glMatrix.vec4.fromValues(0.5, 0.5, -0.5, 1.0),
-        glMatrix.vec4.fromValues(0.5, -0.5, -0.5, 1.0),
+        vec4.fromValues(-0.5, -0.5, 0.5, 1.0),
+        vec4.fromValues(-0.5, 0.5, 0.5, 1.0),
+        vec4.fromValues(0.5, 0.5, 0.5, 1.0),
+        vec4.fromValues(0.5, -0.5, 0.5, 1.0),
+        vec4.fromValues(-0.5, -0.5, -0.5, 1.0),
+        vec4.fromValues(-0.5, 0.5, -0.5, 1.0),
+        vec4.fromValues(0.5, 0.5, -0.5, 1.0),
+        vec4.fromValues(0.5, -0.5, -0.5, 1.0),
     ];
 
     var vertexColors = [
-        glMatrix.vec4.fromValues(0.0, 0.0, 0.0, 1.0),
-        glMatrix.vec4.fromValues(1.0, 0.0, 0.0, 1.0),
-        glMatrix.vec4.fromValues(1.0, 1.0, 0.0, 1.0),
-        glMatrix.vec4.fromValues(0.0, 1.0, 0.0, 1.0),
-        glMatrix.vec4.fromValues(0.0, 0.0, 1.0, 1.0),
-        glMatrix.vec4.fromValues(1.0, 0.0, 1.0, 1.0),
-        glMatrix.vec4.fromValues(0.0, 1.0, 1.0, 1.0),
-        glMatrix.vec4.fromValues(1.0, 1.0, 1.0, 1.0)
+        vec4.fromValues(0.0, 0.0, 0.0, 1.0),
+        vec4.fromValues(1.0, 0.0, 0.0, 1.0),
+        vec4.fromValues(1.0, 1.0, 0.0, 1.0),
+        vec4.fromValues(0.0, 1.0, 0.0, 1.0),
+        vec4.fromValues(0.0, 0.0, 1.0, 1.0),
+        vec4.fromValues(1.0, 0.0, 1.0, 1.0),
+        vec4.fromValues(0.0, 1.0, 1.0, 1.0),
+        vec4.fromValues(1.0, 1.0, 1.0, 1.0)
     ];
 
     var faces = [
@@ -114,6 +116,7 @@ function render() {
     gl.uniform3fv(thetaLoc, theta);
 
     gl.drawArrays(gl.TRIANGLES, 0, points.length / 3);
+    //gl.drawElements( gl.TRIANGLES, numVertices, gl.UNSIGNED_BYTE, 0 );
 
     requestAnimFrame(render);
 }
