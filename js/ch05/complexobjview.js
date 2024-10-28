@@ -312,7 +312,7 @@ function restoreSliderValue(changePos){
 window.onload = function initWindow(){
     canvas = document.getElementById("gl-canvas");
 
-    gl = WebGLUtils.setupWebGL(canvas);
+    gl = canvas.getContext("webgl2");
     if (!gl) {
         alert("WebGL isn't available");
     }
@@ -491,9 +491,9 @@ function initObj(){
     sy = 2.0/maxScale;
     sz = 2.0/maxScale;
 
-    dx = 0;
-    dy = 0;
-    dz = 0;
+    //dx = 0;
+    //dy = 0;
+    //dz = 0;
 
     updateModelData();
     buildModelViewProj();
@@ -518,6 +518,7 @@ function updateModelData(){
 function updateColor(){
     var bcolor = [];
     for (var i = 0; i < mesh.vertexBuffer.numItems; i++)
+        //bcolor.push(Math.random(), Math.random(), Math.random(), 1.0);
         bcolor.push(currentColor[0], currentColor[1], currentColor[2], currentColor[3]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
@@ -526,6 +527,8 @@ function updateColor(){
     vColor = gl.getAttribLocation(program, "vColor",);
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
+    
+    //gl.uniform4fv(gl.getUniformLocation(program, "fColor"), new Float32Array(bcolor));
 }
 
 function buildModelViewProj(){
@@ -549,15 +552,16 @@ function buildModelViewProj(){
     vec3.set(eye, localRadius * Math.sin(rthe) * Math.cos(rphi), localRadius * Math.sin(rthe) * Math.sin(rphi), localRadius * Math.cos(rthe)); 
 
     mat4.lookAt( mvMatrix, eye, at, up );
-
-    mat4.translate( mvMatrix, mvMatrix, vec3.fromValues( dx, dy, dz ) );
-    
+	
+	mat4.translate(mvMatrix, mvMatrix, vec3.fromValues(dx, dy, dz));
+        
     mat4.rotateZ(mvMatrix, mvMatrix, dzt * Math.PI / 180.0);
     mat4.rotateY(mvMatrix, mvMatrix, dyt * Math.PI / 180.0);
     mat4.rotateX(mvMatrix, mvMatrix, dxt * Math.PI / 180.0);
-
-    //mat4.translate(mvMatrix, mvMatrix, vec3.fromValues(dx, dy, dz));
-    mat4.scale(mvMatrix, mvMatrix, vec3.fromValues(sx, sy, sz));
+	
+	//mat4.translate( mvMatrix, mvMatrix, vec3.fromValues( dx, dy, dz ) );
+    
+    //mat4.scale(mvMatrix, mvMatrix, vec3.fromValues(sx, sy, sz));
 
     modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
     gl.uniformMatrix4fv(modelViewMatrix, false, new Float32Array(mvMatrix));
