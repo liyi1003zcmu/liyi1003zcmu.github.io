@@ -2,253 +2,264 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="UTF-8">
-    <title>计算机图形学--成像</title>
-    <meta name="description" content="认识图形系统和图形学计算模型概述">
-    <meta name="author" content="Liyi">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta charset="UTF-8">
+	<title>计算机图形学--成像</title>
+	<meta name="description" content="认识图形系统和图形学计算模型概述">
+	<meta name="author" content="Liyi">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-    <link rel="stylesheet" href="../../../dist/reset.css">
-    <link rel="stylesheet" href="../../../dist/reveal.css">
-    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+	<link rel="stylesheet" href="../../../dist/reset.css">
+	<link rel="stylesheet" href="../../../dist/reveal.css">
+	<link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
 
-    <!-- Theme used for syntax highlighting of code -->
-    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+	<!-- Theme used for syntax highlighting of code -->
+	<link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
 
-    <style type="text/css">
-        .columnleft {
-            float: left;
-            width: 50%;
-        }
+	<style type="text/css">
+		.columnleft {
+			float: left;
+			width: 50%;
+		}
 
-        .columnright {
-            float: right;
-            width: 50%;
-        }
-    </style>
+		.columnright {
+			float: right;
+			width: 50%;
+		}
+	</style>
 </head>
 
 <body>
-    <div class="reveal">
-        <div class="slides">
-            <section id="titlepage">
-                <h1>计算机图形学</h1>
-                <H2>第五章 成像</H2>
-                <h3>相机</h3>
-                <p id="date"></p>
-                <script>
-                    var now = new Date();
-                    var year = now.getFullYear();
-                    var month = now.getMonth();
-                    var day = now.getDate();
-                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
-                </script>
-            </section>
-            <section id="compview">
-                <h2>相机</h2>
-                <h3>计算机成像</h3>
-                <img src="../../images/cg/chap05/ch05-compterview.png">
-                <p style="text-align:left">管线中处理计算机成像的三方面内容：</p>
-                <ul>
-                    <li style="text-align:left">相机定位，设置模型视图矩阵(Model-view matrix)</li>
-                    <li style="text-align:left">选定镜头，设置投影矩阵，正投影or透视投影</li>
-                    <li style="text-align:left">裁剪，设定有效成像空间(Viewing volume)</li>
-                </ul>
-            </section>
-            <section>
-                <section id="wgcam">
-                    <h2>相机</h2>
-                    <h3>WebGL相机</h3>
-                    <p style="text-align:left;font-size:xx-large">WebGL中，物体和相机的初始状态是一样的，即模型视图矩阵初始为单位矩阵</p>
-                    <p style="text-align:left;font-size:xx-large">相机初始位置位于原点，指向Z轴负方向，初始成像空间为以原点为中心边长为2的立方体</p>
-                    <img src="../../images/cg/chap05/ch05-orview.png" style="width:60%">
-                </section>
-                <section id="movecam">
-                    <h2>相机</h2>
-                    <h3>移动相机</h3>
-                    <p style="text-align:left;font-size:xx-large">如果想同时看到Z轴正方向和负方向的内容</p>
-                    <p style="text-align:left;font-size:xx-large">方法一：沿Z轴正方向移动相机，改变相机坐标</p>
-                    <p style="text-align:left;font-size:xx-large">方法二：沿Z轴负方向移动物体，改变物体坐标</p>
-                    <p style="text-align:left;font-size:xx-large">两者的成像结果是等价的，对应于模型视图矩阵的改变：</p>
-                    <p style="text-align:left;font-size:xx-large">平移: translate(0, 0, -d)(d>0)</p>
-                    <img src="../../images/cg/chap05/ch05-movecamf.png" style="width:80%">
-                </section>
-                <section id="anymovecam">
-                    <h2>相机</h2>
-                    <h3>任意移动相机</h3>
-                    <div class="columnleft">
-                        <p style="text-align:left">可以任意旋转和平移顺序移动相机，如让相机从侧边成像，有</p>
-                        <ul>
-                            <li style="text-align:left">旋转相机</li>
-                            <li style="text-align:left">向后移动相机</li>
-                        </ul>
-                        <p style="text-align:left">对应的模型视图矩阵为:C=TR</p>
-                    </div>
-                    <div class="columnright">
-                        <img src="../../images/cg/chap05/ch05-anymovecam.png">
-                    </div>
-                </section>
-                <section id="wglcode">
-                    <h2>相机</h2>
-                    <h3>WebGL代码</h3>
-                    <pre><code class="hljs" data-trim>
+	<div class="reveal">
+		<div class="slides">
+			<section id="titlepage">
+				<h1>计算机图形学</h1>
+				<H2>第五章 成像</H2>
+				<h3>放置相机</h3>
+				
+				<p id="date"></p>
+				<script>
+					var now = new Date();
+					var year = now.getFullYear();
+					var month = now.getMonth();
+					var day = now.getDate();
+					document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+				</script>
+			</section>
+			<section id="compview">
+				<h2>相机</h2>
+				<h3>计算机成像</h3>
+				<img src="../../images/cg/chap05/ch05-compterview.png">
+				<p style="text-align:left;font-size:80%">管线中处理成像包含三方面工作：</p>
+				<ul>
+					<li style="text-align:left;font-size:80%">相机定位，设置模型视图矩阵(Model-view matrix)</li>
+					<li style="text-align:left;font-size:80%">选定镜头，设置投影矩阵，正投影or透视投影</li>
+					<li style="text-align:left;font-size:80%">裁剪，设定有效成像空间(Viewing volume)</li>
+				</ul>
+			</section>
+			<section>
+				<section id="wgcam">
+					<h2>相机</h2>
+					<h3>WebGL相机</h3>
+					<ul>
+					<li style="text-align:left;font-size:80%">WebGL中，物体和相机的初始状态是一样的，即模型视图矩阵初始为单位矩阵</li>
+					<li style="text-align:left;font-size:80%">相机初始位置位于原点，指向Z轴负方向</li>
+					<li style="text-align:left;font-size:80%">初始成像空间为以原点为中心边长为2的立方体，投影方式默认为正交，投影矩阵为单位矩阵</li>
+					</ul>
+					<img src="../../images/cg/chap05/ch05-orview.png" style="width:60%">
+				</section>
+				<section id="movecam">
+					<h2>相机</h2>
+					<h3>移动相机</h3>
+					<ul>
+					<li style="text-align:left;font-size:80%">如果想同时看到Z轴正方向和负方向的内容</li>
+					<ul>
+					<li style="text-align:left;font-size:80%">方法一：沿Z轴正方向移动相机，即改变相机坐标</li>
+					<li style="text-align:left;font-size:80%">方法二：沿Z轴负方向移动物体，即改变物体坐标</li>
+					</ul>
+					<li style="text-align:left;font-size:80%">两者的成像结果是等价的，对应于模型视图矩阵的改变：</li>
+					<li style="text-align:left;font-size:80%">平移: translate(0, 0, -d)(d>0)</li>
+					</ul>
+					<img src="../../images/cg/chap05/ch05-movecamf.png" style="width:80%">
+				</section>
+				<section id="anymovecam">
+					<h2>相机</h2>
+					<h3>任意移动相机</h3>
+					<div class="columnleft">
+						<ul>
+						<li style="text-align:left;font-size:80%">可以任意旋转和平移顺序移动相机</li>
+						<li style="text-align:left;font-size:80%">如让相机从侧边成像，有</li>
+						<ul>
+							<li style="text-align:left;font-size:80%">旋转相机</li>
+							<li style="text-align:left;font-size:80%">向后移动相机</li>
+							<li style="text-align:left;font-size:80%">对应的模型视图矩阵为:C=TR</li>
+						</ul>
+						</ul>
+					</div>
+					<div class="columnright">
+						<img src="../../images/cg/chap05/ch05-anymovecam.png">
+					</div>
+				</section>
+				<section id="wglcode">
+					<h2>相机</h2>
+					<h3>WebGL代码</h3>
+					<pre><code class="hljs" data-trim>
 var t=translate(0.0, 0.0, -d);
 var ry = rotateY(-90.0);
 var m = mult(t, ry);
 // 以上代码等价于
 var m=mult(translate(0.0, 0.0, -d), rotateY(-90.0));
-                    </code></pre>
-                </section>
-            </section>
-            <section>
-                <section id="lookat">
-                <h2>相机</h2>
-                <h3>LoookAt函数</h3>
-                <img src="../../images/cg/chap05/ch05-lookatfunc.png">
-                <p>lookAt(eye, at, up)</p>
-                </section>
-                <section id="uselookat">
-                <h2>相机</h2>
-                <h3>LookAt示例</h3>
-                <p style="text-align:left">如生成边与各坐标轴平行的立方体等轴测视图，有</p>
-                <pre><code class="hljs" data-trim>
-                var eye=vec3(1.0, 1.0, 1.0);
-                var at=vec3(0.0, 0.0, 0.0);
-                var up=vec3(0.0, 1.0, 0.0);
-                var mv=lookAt((eye, at, up);
-                </code></pre>
-                </div>
-                </section>
-            </section>
-        </div>
-    </div>
+					</code></pre>
+				</section>
+			</section>
+			<section>
+				<section id="lookat">
+				<h2>相机</h2>
+				<h3>LoookAt函数</h3>
+				<img src="../../images/cg/chap05/ch05-lookatfunc.png">
+				<p>lookAt(eye, at, up)</p>
+				</section>
+				<section id="uselookat">
+				<h2>相机</h2>
+				<h3>LookAt示例</h3>
+				<p style="text-align:left;font-size:80%">如生成边与各坐标轴平行的立方体等轴测视图，有</p>
+				<pre><code class="hljs" data-trim>
+				var eye=vec3(1.0, 1.0, 1.0);
+				var at=vec3(0.0, 0.0, 0.0);
+				var up=vec3(0.0, 1.0, 0.0);
+				var mv=lookAt((eye, at, up);
+				</code></pre>
+				</div>
+				</section>
+			</section>
+		</div>
+	</div>
 
-    <script src="../../../dist/reveal.js"></script>
-    <script src="../../../plugin/zoom/zoom.js"></script>
-    <script src="../../../plugin/notes/notes.js"></script>
-    <script src="../../../plugin/search/search.js"></script>
-    <script src="../../../plugin/markdown/markdown.js"></script>
-    <script src="../../../plugin/highlight/highlight.js"></script>
-    <script>
-        Reveal.initialize({
-            // display controls in the bottom right corner
-            controls: true,
+	<script src="../../../dist/reveal.js"></script>
+	<script src="../../../plugin/zoom/zoom.js"></script>
+	<script src="../../../plugin/notes/notes.js"></script>
+	<script src="../../../plugin/search/search.js"></script>
+	<script src="../../../plugin/markdown/markdown.js"></script>
+	<script src="../../../plugin/highlight/highlight.js"></script>
+	<script>
+		Reveal.initialize({
+			// display controls in the bottom right corner
+			controls: true,
 
-            // display a presentation progress bar
-            progress: true,
+			// display a presentation progress bar
+			progress: true,
 
-            // set default timing of 2 minutes per slides
-            defaultTiming: 120,
+			// set default timing of 2 minutes per slides
+			defaultTiming: 120,
 
-            // Display the page number of the current slides
-            slideNumber: true,
+			// Display the page number of the current slides
+			slideNumber: true,
 
-            // Push each slide change to the browser history
-            history: false,
+			// Push each slide change to the browser history
+			history: false,
 
-            // Enable keyboard shortcuts for navigation
-            keyboard: true,
+			// Enable keyboard shortcuts for navigation
+			keyboard: true,
 
-            // Enable the slide overview mode
-            overview: true,
+			// Enable the slide overview mode
+			overview: true,
 
-            // Vertical centering of slides
-            center: true,
+			// Vertical centering of slides
+			center: true,
 
-            // Enable touch navigation on devices with touch input
-            touch: true,
+			// Enable touch navigation on devices with touch input
+			touch: true,
 
-            // Loop the presentation
-            loop: false,
+			// Loop the presentation
+			loop: false,
 
-            // Change teh presentation direction to be RTL
-            rtl: false,
+			// Change teh presentation direction to be RTL
+			rtl: false,
 
-            // Randomizes the order of slides each time the presentation loads
-            shuffle: false,
+			// Randomizes the order of slides each time the presentation loads
+			shuffle: false,
 
-            // Turns fragments on and off globally
-            fragment: true,
+			// Turns fragments on and off globally
+			fragment: true,
 
-            // Flags if the presentation is running in an embedded mode,
-            // i.e. contained within a limited portion of the screen
-            embedded: false,
+			// Flags if the presentation is running in an embedded mode,
+			// i.e. contained within a limited portion of the screen
+			embedded: false,
 
-            // Flags if we should show a help overlay when the questionmark key is pressed
-            help: true,
+			// Flags if we should show a help overlay when the questionmark key is pressed
+			help: true,
 
-            // Flags if speaker notes should be visible to all viewers
-            showNotes: false,
+			// Flags if speaker notes should be visible to all viewers
+			showNotes: false,
 
-            // Global override for autoplaying embedded media( video/audio/iframe)
-            // - null: media will only autoplay if data-autopay is present
-            // - true: all media will autoplay, regradless of individual setting
-            // - false: no media will autoplay, regardless of individual setting
-            autoPlayMedia: null,
+			// Global override for autoplaying embedded media( video/audio/iframe)
+			// - null: media will only autoplay if data-autopay is present
+			// - true: all media will autoplay, regradless of individual setting
+			// - false: no media will autoplay, regardless of individual setting
+			autoPlayMedia: null,
 
-            // Number of milliseconds between automatically proceeding to the next slide, 
-            //disabled when set to 0, this value can be overwritten by
-            // using a data-autoslide attribute on your slides
-            autoSlide: 0,
+			// Number of milliseconds between automatically proceeding to the next slide, 
+			//disabled when set to 0, this value can be overwritten by
+			// using a data-autoslide attribute on your slides
+			autoSlide: 0,
 
-            // Stop auto-sliding after user input
-            autoSlideStoppable: true,
+			// Stop auto-sliding after user input
+			autoSlideStoppable: true,
 
-            // Use this method for navigation when auto-sliding
-            autoSlideMethod: Reveal.navigateNext,
+			// Use this method for navigation when auto-sliding
+			autoSlideMethod: Reveal.navigateNext,
 
-            // Enable slide navigation via mouse wheel
-            mouseWheel: false,
+			// Enable slide navigation via mouse wheel
+			mouseWheel: false,
 
-            // Hides the address bar on mobile devices
-            hideAddressBar: true,
+			// Hides the address bar on mobile devices
+			hideAddressBar: true,
 
-            // Opens links in an iframe preview overlay
-            previewLinks: false,
+			// Opens links in an iframe preview overlay
+			previewLinks: false,
 
-            // Transition style
-            transition: 'slide', // none/fade/slide/convex/concave/zoom
+			// Transition style
+			transition: 'slide', // none/fade/slide/convex/concave/zoom
 
-            // Transition speed
-            transitionSpeed: 'default', // default/fast/slow
+			// Transition speed
+			transitionSpeed: 'default', // default/fast/slow
 
-            // Transition style for full page slide backgrounds
-            backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+			// Transition style for full page slide backgrounds
+			backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
 
-            // Number of slides away from the current that are visible
-            viewDistance: 3,
+			// Number of slides away from the current that are visible
+			viewDistance: 3,
 
-            // Parallax background image
-            parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-../js/reveal-parallax-1.jpg'"
+			// Parallax background image
+			parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
 
-            // Parallax background size
-            parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+			// Parallax background size
+			parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
 
-            // Number of pixels to move the parallax background per slide
-            // - calculated automatically unless specified
-            // - set to 0 to disable movement along an axis
-            parallaxBackgroundHorizontal: null,
-            parallaxBackgroundVertical: null,
+			// Number of pixels to move the parallax background per slide
+			// - calculated automatically unless specified
+			// - set to 0 to disable movement along an axis
+			parallaxBackgroundHorizontal: null,
+			parallaxBackgroundVertical: null,
 
-            // The display mode that will be used to show slides
-            display: 'block',
+			// The display mode that will be used to show slides
+			display: 'block',
 
-            // print to pdf while no slide grows to more than one printed page
-            pdfMaxPagesPerSlide: 1,
+			// print to pdf while no slide grows to more than one printed page
+			pdfMaxPagesPerSlide: 1,
 
-            // presentation
-            width: 900,
-            height: 900,
+			// presentation
+			width: 900,
+			height: 900,
 
-            margin: 0.1,
+			margin: 0.1,
 
-            minScale: 0.2,
-            maxScale: 1.5,
-        })
-    </script>
+			minScale: 0.2,
+			maxScale: 1.5,
+		})
+	</script>
 </body>
 
 </html>
