@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--图形学概述</title>
+
+    <meta name="description" content="关于图形学的概念">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+        </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+
+        <!-- Slide 1: Title -->
+        <section id="titlepage">
+			<h1>计算机图形学</h1>
+			<H2>第一章(1) 图形学概述</H2>
+			<p id="date"></p>
+			<script>
+				var now = new Date();
+				var year = now.getFullYear();
+				var month = now.getMonth();
+				var day = now.getDate();
+				document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+			</script>
+		</section>
+        <!-- B: Bridge-in -->
+        <section>
+            <section>
+                <h2>请看视频</h2>
+                <!-- Insert compelling video here -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; width: 100%; height: 600px;">
+                    <div style="grid-area: 1 / 1 / 2 / 2;">
+                        <h4><small>电影特效 (阿凡达)</small></h4>
+                        <video height="250" controls><source src="https://www.youtube.com/shorts/6cyKWhtVWBI"></video>
+                        <!--https://www.youtube.com/shorts/6cyKWhtVWBI-->
+                    </div>
+                    <div style="grid-area: 1 / 2 / 2 / 3;">
+                        <h4><small>电子游戏(赛博朋克2077)</small></h4>
+                        <video height="250" controls><source src="https://www.youtube.com/watch?v=Xf2QCdScU6o"></video>
+                        <!--https://www.youtube.com/watch?v=Xf2QCdScU6o-->
+                    </div>
+                    <div style="grid-area: 2 / 1 / 3 / 2;">
+                        <h4><small>AI合成数据(NVIDIA)</small></h4>
+                        <video height="250" controls><source src="https://www.youtube.com/watch?v=gPaFgNEF82Q" ></video>
+                        <!--https://www.youtube.com/watch?v=gPaFgNEF82Q-->
+                    </div>
+                    <div style="grid-area: 2 / 2 / 3 / 3;">
+                        <h4><small>科学可视化 (星际穿越)</small></h4>
+                        <video height="250" controls><source src="https://www.youtube.com/watch?v=ABFGKdKKKyg&t=449s"></video>
+                        <!--https://www.youtube.com/watch?v=ABFGKdKKKyg&t=449s-->
+                    </div>
+                </div>
+            </section>
+            <section>
+                <h2><span style="color: cornflowerblue;">Q:</span>这背后的核心技术是什么？</h2>
+                <h1 class="fragment" style="font-size:44pt; color: crimson;">计算机图形学</h1>
+                <p class="fragment">由代码和数学，在计算机中从无到有地创造出的虚拟世界。</p>
+            </section>
+        </section>
+
+        <!-- O: Objective -->
+        <section>
+            <h2>内容提要</h2>
+            <ul>
+                <li class="fragment">认识计算机图形学</li>
+            </ul>
+        </section>
+
+        <!-- P: Pre-assessment -->
+        <section>
+            <section>
+                <h2>看图回答问题</h2>
+                <div style="display: flex; justify-content: space-around; align-items: flex-start;">
+                    <div style="width: 48%;">
+                        <h3 style="font-size: 32pt;">A: 实时渲染</h3>
+                        <div style="height: 400px;">
+                            <img src="./../../images/cg/chap01/ch01-valorant-shot.jpg" alt="Fortnite" style="height: 350px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div style="width: 48%;">
+                        <h3 style="font-size: 32pt;">B: 离线渲染</h3>
+                        <div style="height: 400px;">
+                            <img src="./../../images/cg/chap01/ch01-toy-story-4-shot.jpg" alt="Toy Story 4" style="height: 350px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+                <p>假设用同一台超级计算机，渲染这两张图片</p>
+                <p class="fragment" style="color: crimson">哪一张会花费更长的时间？为什么？</h3>
+            </section>
+        </section>
+
+        <!-- P: Participatory Learning -->
+        <section>
+            <section id="whatiscg">
+                <h2>什么是计算机图形学</h2>
+                <div class="placeholder fragment" style="height: 200px;">
+                    <p class="fragment" style="font-size:80%; text-align:left">研究如何利用计算机<strong style="color:red">生成、处理和显示图像</strong>，其中涵盖了所需的硬件、软件和应用等</blockquote>
+                </div>
+                <div>
+                    <figure>
+                        <img class="fragment" src="../../images/cg/chap01/ch01-bunnystory.png" alt="bunny" style="position:relative;bottom:0px;width:100%;border:0;">
+                        <figcaption class="fragment" style="text-align:center; font-size:0.8em;"><a href="https://www.cc.gatech.edu/~turk/bunny/bunny.html" target="_blank">经典的测试模型：Bunny</a></figcaption>
+                    </figure>
+                </div>
+                <div class="mt-8 text-left mx-auto max-w-4xl">
+                    <p class="fragment"><strong style="color:red">一切皆是像素</strong></p>
+                    <p class="fragment"><strong style="color:darkred">核心过程：从模型到像素</strong></p>
+                </div>
+            </section>
+            <section id="systemquest">
+                <h2>如何获得Bunny的各种效果？</h2>
+                <img class="fragment" src="../../images/cg/chap01/ch01-bunnystory.png" alt="bunny" style="position:relative;bottom:0px;width:100%;border:0;">
+                <p class="fragment" style="text-align:left;font-size:28pt">请思考，要生成这些效果图，需要哪些硬件设备、软件及技术？</p>
+				<p class="fragment" style="text-align:left;font-size:24pt"><a href="https://blog.csdn.net/m0_73804746/article/details/141814954">从代码到文化：《黑神话：悟空》开发背后的技术与知识体系</a></p>
+            </section>
+            <section id="explain">
+                <h2>如何生成图</h2>
+                <ol>
+                    <li class="fragment" style="font-size:24pt">硬件，<strong style="color:red">三维扫描仪</strong>，将实体模型转换为点云数据，用于模型数据获取</li>
+                    <li class="fragment" style="font-size:24pt">硬件，显卡，带<strong style="color:red">图形处理单元(GPU)</strong>，并结合软件实现对各种高级渲染效果的计算及效果图的生成</li>
+                    <li class="fragment" style="font-size:24pt">软件，利用<strong style="color:red">算法</strong>实现从点云数据到模型的重构，并基于<strong style="color:red">OpenGL</strong>的方法实现模型的渲染</li>
+                    <li class="fragment" style="font-size:24pt">硬件，<strong style="color:red">显示器</strong>，将显卡生成的效果图绘制输出</li>
+                </ol>
+            </section>
+        </section>
+        <section>
+            <section id="basic-sys">
+                <h2>基本图形系统</h2>
+                    <img class="fragment" src="../../images/cg/chap01/ch01-gsys.png" alt="Basic Graphics System" style="width:80%; border:0">    
+                    <ul>
+                        <li class="fragment" style="font-size:24pt"><strong>输入设备</strong>：键盘、鼠标、3D扫描仪等</li>
+                        <li class="fragment" style="font-size:24pt"><strong>输出设备</strong>：显示器、VR头显、打印机等</li>
+                        <li class="fragment" style="font-size:24pt"><strong>存储设备</strong>：硬盘、SSD、云存储等</li>
+                        <li class="fragment" style="font-size:24pt"><strong>处理器</strong>：CPU、GPU等</li>
+                        <li class="fragment" style="font-size:24pt"><strong>软件系统</strong>：操作系统、图形API（如OpenGL、DirectX）、渲染引擎（如Unity、Unreal）等</li>
+                    </ul>
+            </section>
+            <section>
+                <h2>图形系统(CPU和GPU)</h2>
+                <img class="fragment" src="../../images/cg/chap01/ch01-gemini-gsys.png" alt="gsys_arch" style="width:70%; border:0">
+                <ul>
+                    <li class="fragment" style="text-align:left;font-size:24pt"><strong>CPU：</strong>通用处理器，适合处理各种任务</li>
+                    <li class="fragment" style="text-align:left;font-size:24pt"><strong>GPU：</strong>专用处理器，擅长并行处理图形渲染任务</li>
+                </ul>                
+            </section>
+            <section id="whatishardware">
+                <h2>图形处理单元(GPU)</h2>
+                <p class="fragment" style="text-align:center;font-size:28pt">是实现从模型到像素的核心</p>
+                <div style="display: flex; justify-content: space-around; align-items: center;">
+                    <div class="fragment" style="width: 50%;">
+                        <div class="placeholder" style="height:300px;">
+                            <img class="fragment" src="../../images/cg/chap01/ch01-rtx-4090.jpg" alt="rtx-4090" style="height: 250px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <ul style="width: 48%;">
+                        <li class="fragment" style="font-size:24pt">大规模并行计算架构</li>
+                        <li class="fragment" style="font-size:24pt">专门为图形渲染中的矩阵和向量运算优化</li>
+                        <li class="fragment" style="font-size:24pt">现代GPU包含可编程的着色器单元，让我们能自定义渲染效果</li>
+                    </ul>
+                </div>
+            </section>
+        </section>
+        <section>
+            <section>
+                <h3>图形学的核心问题：从三维到二维</h3>
+                <p class="fragment" style="font-size:24pt">如何将一个虚拟的<strong>三维场景</strong>，转换成一张<strong>二维图片</strong>？</p>
+                <div class="fragment placeholder" style="height: 600px;">
+                    <figure class="fragment">
+                        <img src="./../../images/cg/chap01/ch01-render-process.png" alt="from-3d-to-2d" style="width:100%; border:0">
+                        <figcaption style="text-align:center; font-size:24pt;"><a href="./tools/render_pipeline.html" target="_blank">从三维到二维</a></figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section>
+                <h3>路径一：光栅化 (Rasterization)</h3>
+                <ul>
+                    <li class="fragment" style="font-size:24pt"><strong>核心思想:</strong> 以物体为中心 (Object-centric)。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>过程:</strong> 把所有三角形“扔”到屏幕上，看它们覆盖了哪些像素。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>关键词:</strong> <span style="color: green;">速度优先</span>, 实时, 近似。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>应用:</strong> 绝大多数电子游戏、UI界面。</li>
+                </ul>
+                <img class="fragment" src="./../../images/cg/chap01/ch01-rasterization-path.png" alt="Rasterization" style="width:80%; background: white; border-radius: 10px;"> 
+            </section>
+            <section>
+                <h3>路径二：光线追踪 (Ray Tracing)</h3>
+                <ul>
+                    <li class="fragment" style="font-size:24pt"><strong>核心思想:</strong> 以像素/眼睛为中心 (Image-centric)。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>过程:</strong> 从眼睛出发，穿过每个像素发射光线，看它“看”到了什么。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>关键词:</strong> <span style="color: blue;">真实感优先</span>, 基于物理, 离线。</li>
+                    <li class="fragment" style="font-size:24pt"><strong>应用:</strong> 电影特效, 建筑可视化, 产品设计。</li>
+                </ul>
+                <img class="fragment" src="./../../images/cg/chap01/ch01-raytracing-path.png" alt="Rasterization" style="width:80%; background: white; border-radius: 10px;"> 
+            </section>
+            <section>
+                <h3>光栅化vs光线追踪</h3>
+                <video height="500" controls><source src="https://www.youtube.com/watch?v=ZFsz0O93c88&t=318s"></video>
+                <!--https://www.youtube.com/watch?v=Xf2QCdScU6o-->
+                <!--https://www.youtube.com/watch?v=ZFsz0O93c88&t=318s-->
+            </section>
+        </section>
+        <section>
+            <section id="course-sys">
+                <h2>课程内容体系</h2>
+                <img src="../../images/cg/chap01/ch01-ClassArch.png" alt="Mindmap of Course Content" style="width:100%; border:0">
+            </section>
+            <section id="course-sys-a">
+                <h2>课程内容体系</h2>
+                <h3>基础模块</h3>
+                <ul>
+                    <li style="text-align:left">图形系统和模型的基础概念，认识图形学的实质，所要解决的问题等</li>
+                    <li style="text-align:left">图形学理论和概念所涉及的各种数学基础，包括向量、矩阵、齐次坐标等</li>
+                    <li style="text-align:left">图形学编程基础知识，包括常见的图形API，OpenGL编程基础知识，WebGL编程基础</li>
+                    <li style="text-align:left">几何对象的表示，二维和三维空间变换规则及相应的计算过程，这是图形学后续各种计算的基础</li>
+                </ul>
+            </section>
+            <section id="course-sys-b">
+                <h2>课程内容体系</h2>
+                <h3>建模与表示</h3>
+                <ul>
+                    <li style="text-align:left">建模，即在计算机中以图形的方式表示真实世界或虚拟世界中的各种对象与信息</li>
+                    <li style="text-align:left">表示，对模型而言，以点、线、面、体等各种几何元素通过不同组合进行表示，在计算机内部，这种表示形式可以有多种不同的格式，其实质是需要记录对象的坐标、几何元素的连接关系所对应的几何与拓扑信息等</li>
+                    <ul>
+                        <li style="text-align:left">简单形体和复杂场景的构建</li>
+                        <li style="text-align:left">AutoCAD、3DsMax，Maya，Blender等建模软件</li>
+                        <li style="text-align:left">如汽车、飞机、火箭等的设计制作</li>
+                    </ul>
+                </ul>
+            </section>
+            <section id="course-sys-c">
+                <h2>课程内容体系</h2>
+                <h3>绘制</h3>
+                <ul>
+                    <li style="text-align:left">绘制，即将计算机中对象的数字几何模型转换为直观形象的图形或图像形式，在显示设备上，即数字几何模型的视觉可视化</li>
+                    <li style="text-align:left">绘制，是图形计算的核心和关键，需要考虑的因素众多，绘制效果越复杂，计算量越大</li>
+                    <li style="text-align:left">绘制过程</li>
+                    <ul>
+                        <li style="text-align:left">应用程序</li>
+                        <li style="text-align:left">几何处理</li>
+                        <li style="text-align:left">像素处理</li>
+                    </ul>
+                </ul>
+            </section>
+            <section id="course-sys-i">
+                <h2>课程内容体系</h2>
+                <h3>交互技术</h3>
+                <ul>
+                    <li>交互, 即针对图形和图像，研究合适的输入方法和操作方法，实现友好的人机界面</li>
+                    <li>交互技术包括</li>
+                    <ul>
+                        <li>定位技术, 菜单技术, 拾取技术, 定值技术, 橡皮筋技术,拖拽技术, 网格与捕捉技术等输入技术</li>
+                        <li>图形用户界面设计技术</li>
+                    </ul>
+                </ul>
+            </section>
+        </section>
+        <section>
+            <section id="imag&grap">
+                <h2>图形与图像</h2>
+                <h3>名词辨析</h3>
+                <dl>
+                    <dt style="color:red;font-weight:bold;">图形(Graphics)</dt>
+                    <dd class="fragment">
+                        指的是由点、线、面等元素构成，具有拓扑结构信息的元素，可以在二维平面或三维空间中表达
+                    </dd>
+                    <dt style="color:red;font-weight:bold">图像(Image)</dt>
+                    <dd class="fragment">
+                        指由像素阵列构成的二维画面，一般可通过绘画或拍照获得，
+                    </dd>
+                </dl>
+            </section>
+            <section id="diff">
+                <h2>图形与图像</h2>
+                <h3>图形和图像的关系</h3>
+                <dl>
+                    <dt style="color:red;font-weight:bold">计算机图形学(Computer Graphics)</dt>
+                    <dd class="fragment">Graphics &rarr; Image, Graphics &rarr; Graphics</dd>
+                    <dt style="color:red;font-weight:bold;">图像处理(Image Processing)</dt>
+                    <dd class="fragment">Image &rarr; Image, Image &rarr; Region</dd>
+                    <dt style="color:red;font-weight:bold;">模式识别(Pattern Recognition)</dt>
+                    <dd class="fragment">Image &rarr; Symbolic Description</dd>
+                    <dt style="color:red;font-weight:bold;">计算机视觉(Computer Vision)</dt>
+                    <dd class="fragment">Image &rarr; Graphics</dd>
+                </dl>
+            </section>
+            <section id="diff-des">
+                <h2>图形与图像</h2>
+                <h3>图形与图像的关系</h3>
+                <p style="text-align:left">假如你有一只猫......</p>
+                <img src="../../images/cg/chap01/ch01-cat.jpg" style="width:100%; border:0">
+            </section>
+        </section>
+
+        <!-- P: Post-assessment -->
+        <section>
+            <section>
+                <h2>情境分析</h2>
+                <div style="font-size: 0.8em;">
+                    <p><strong>场景1:</strong> 一位皮克斯的工程师正在为《疯狂动物城》的续集渲染一个充满毛发细节的树懒角色，单帧画面允许渲染数小时</p>
+                    <p class="fragment"><strong>场景2:</strong> 一位腾讯天美工作室的工程师正在优化《王者荣耀》在新手机上的运行帧率，目标是稳定在120帧/秒</p>
+                </div>
+                <h4 class="fragment">问题：</h4>
+                <p class="fragment">这两位工程师，分别主要依赖哪条技术路径实现？为什么？</p>
+            </section>
+        </section>
+        <!-- S: Summary -->
+        <section>
+            <section>
+                <h2>课程总结</h2>
+                <ul>
+                    <li>图形学的广泛应用</li>
+                    <li>图形系统的构成</li>
+                    <li>两大技术主线：
+                        <ul>
+                            <li><strong>光栅化</strong> (为速度)</li>
+                            <li><strong>光线追踪</strong> (为真实)</li>
+                        </ul>
+                    </li>
+                    <li>图形与图像的关系</li>
+                </ul>
+            </section>
+        </section>
+    </div>
+</div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 900,
+    height: 900,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+            })
+	</script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--图形学概述</title>
+
+    <meta name="description" content="关于图形学的概念">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+        </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第一章(3) 图形绘制系统概述</h2>
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+
+            <!-- B - 导入 (Bridge-in) -->
+            <section>
+                <h2>CPU vs GPU</h2>
+                <div class="placeholder fragment" style="height:500px">
+                    <img class="fragment" src="../../images/cg/chap01/ch01-gemini-gsys.png" alt="CPU vs GPU" style="max-width: 100%; max-height: 500px;">
+                </div>
+                <p class="fragment" style="text-align:left;font-size:24pt">CPU 如何向 (GPU) <strong style="color:#2a76dd;">高效、准确</strong>地下达指令？</p>
+                <p class="fragment" style="text-align:left;font-size:24pt">答案在于理解它们的<strong style="color:#2a76dd;">指挥体系</strong>与<strong style="color:#2a76dd;">内部执行流程</strong></p>
+            </section>
+
+            <!-- O - 目标 (Objective) -->
+            <section>
+                <h2>课程目标</h2>
+                <ul>
+                    <li class="fragment" style="font-size:28pt"><strong>解释</strong>CPU、GPU和API的分工</li>
+                    <li class="fragment" style="font-size:28pt"><strong>描述</strong>渲染流水线的核心步骤</li>
+                </ul>
+            </section>
+
+            <!-- P - 前测 (Pre-assessment) -->
+            <section>
+                <h2>如何画一只兔子？</h3>
+                <p>“CPU”需要向“GPU”传递哪些“数据”和“指令”？</p>
+                <div style="display: flex; justify-content: space-around; margin-top: 40px;">
+                    <div class="fragment">
+                        <h3><small>数据 (Data)</small></h3>
+                        <p style="font-size:24pt">兔子的外观？</p>
+                        <ul>
+                            <li style="font-size:24pt">顶点位置</li>
+                            <li style="font-size:24pt">颜色</li>
+                            <li style="font-size:24pt">贴图...</li>
+                        </ul>
+                    </div>
+                    <div class="fragment">
+                        <h3><small>指令 (Operations)</small></h3>
+                        <p style="font-size:24pt">对兔子进行哪些处理？</p>
+                         <ul>
+                            <li style="font-size:24pt">位置在哪里</li>
+                            <li style="font-size:24pt">旋转多少度</li>
+                            <li style="font-size:24pt">用什么光照...</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="font-size:28pt">整个图形体系结构，就是为了高效地<strong style="color:#2a76dd;">传递数据</strong>和<strong style="color:#2a76dd;">对数据的操作</strong>。</p>
+            </section>
+
+            <!-- P - 参与式学习 (Participatory Learning) -->
+            <section>
+                <!-- 垂直导航的父 Section -->
+                <section>
+                    <h2>图形绘制体系结构</h2>
+                    <p>一个分工明确的“流水线”</p>
+                    
+                    <div class="columnleft fragment">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-gemini-gsys.png" alt="CPU vs GPU" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <div class="columnright fragment">
+                        <ul>
+                            <li class="fragment" style="font-size:20pt">
+                                <strong>应用层 - CPU:</strong>
+                                <p>负责场景管理、物理、AI等，“决定”要画什么，并准备好所有<strong style="color:#2a76dd;">数据</strong></p>
+                            </li>
+                            <li class="fragment" style="font-size:20pt">
+                                <strong>驱动/API层- Graphics API:</strong>
+                                <p>连接CPU和GPU的桥梁。将高级指令翻译成GPU能懂的底层指令，解决<strong style="color:#2a76dd;">软硬件兼容性</strong>问题</p>
+                            </li>
+                            <li class="fragment" style="font-size:20pt">
+                                <strong>图形硬件层 - GPU:</strong>
+                                <p>接收指令和数据，通过内部固化的<strong style="color:#2a76dd;">硬件流水线</strong>执行实际的绘制工作</p>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <p>GPU内部对数据的处理流程</p>
+                    <div class="placeholder">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-graphics-pipeline.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+						 <li class="fragment" style="font-size:24pt;text-align:left">根据应用程序生成对象的顺序依次处理，可考虑局部光照效果</li>
+						 <li class="fragment" style="font-size:24pt;text-align:left">所有的过程处理均在图形计算硬件上实现</li>
+					</ul>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <h3>流水线流程</h3>
+                    <p class="fragment highlight-current-blue current-fragment" data-fragment-index="1" style="font-size:24pt">
+                        <strong>① 顶点输入:</strong> “原材料”进场 (顶点数据)
+                    </p>
+                     <p class="fragment" data-fragment-index="2">↓</p>
+                    <p class="fragment highlight-current-blue current-fragment" data-fragment-index="2" style="font-size:24pt">
+                        <strong>② 顶点着色器 (Vertex Shader):</strong> <strong style="color:#dd992a;">可编程</strong> - 决定顶点在哪
+                    </p>
+                    <p class="fragment" data-fragment-index="3">↓</p>
+                    <p class="fragment highlight-current-blue current-fragment" data-fragment-index="3" style="font-size:24pt">
+                        <strong>③ 光栅化 (Rasterization):</strong> <strong style="color:#888;">固定功能</strong> - 决定覆盖哪些像素
+                    </p>
+                    <p class="fragment" data-fragment-index="4">↓</p>
+                    <p class="fragment highlight-current-blue current-fragment" data-fragment-index="4" style="font-size:24pt">
+                        <strong>④ 片元着色器 (Fragment Shader):</strong> <strong style="color:#dd992a;">可编程</strong> - 决定像素是什么颜色
+                    </p>
+                    <p class="fragment" data-fragment-index="5">↓</p>
+                    <p class="fragment highlight-current-blue current-fragment" data-fragment-index="5" style="font-size:24pt">
+                        <strong>⑤ 帧缓冲操作:</strong> 最后处理，写入显存
+                    </p>
+                    <p class="fragment" style="font-size:24pt">我们通过OpenGL API，主要就是为了控制这两个<strong style="color:#dd992a;">可编程</strong>阶段。</p>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <h3>顶点处理</h3>
+                    <div class="placeholder">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-vertex-processing.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt;text-align:left">流水线的工作之一是将物体的表示从一个坐标系统变换到另一坐标系统，涉及坐标系包括对象坐标系、相机坐标系、屏幕坐标系等</li>
+                        <li class="fragment" style="font-size:24pt;text-align:left">每个坐标系变换等价于矩阵变换</li>
+                        <li class="fragment" style="font-size:24pt;text-align:left">顶点处理还负责计算顶点的颜色</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <h3>顶点处理</h3>
+                    <div class="placeholder">
+                        <img src="../../images/cg/chap01/ch01-vertex-processing.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt;text-align:left">投影的过程，即是通过三维观察，将三维物体对象投射到图形学编程平面上形成二维图像的过程</li>
+                        <ul>
+						    <li class="fragment" style="font-size:24pt;text-align:left">透视投影，所有的投影线会聚于投影中心</li>
+						    <li class="fragment" style="font-size:24pt;text-align:left">平行投影，所有的投影线平行，投影中心位于无穷远处，有投影方向</li>
+						</ul>
+                    </ul>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <h3>顶点处理</h3>
+                    <div class="placeholder">
+                        <img src="../../images/cg/chap01/ch01-vertex-processing.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt;text-align:left">在进行裁剪之前，需要将所有的顶点组装成几何形体，包含线段、多边形、曲线和曲面</li>
+    				    <li class="fragment" style="font-size:24pt;text-align:left">与真实的相机类似，虚拟相机也只能"看见"部分场景，即只保留在相机空间中可见的物体对象，将位于相机空间以外的所有对象去除掉</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <p>光栅化</p>
+                    <div class="placeholder">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-graphics-pipeline.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+						<li class="fragment" style="font-size:24pt;text-align:left">如果对象没有被裁剪，需要为在帧缓存中与该物体对应的像素指定颜色</li>
+						<li class="fragment" style="font-size:24pt;text-align:left">光栅化会为每个对象生成一系列的片元(Fragments)，可理解为潜在的“像素” </li>
+                        <li class="fragment" style="font-size:24pt;text-align:left">每个片元，在缓存中包含的属性有，位置，颜色和深度属性等</li>
+                        <li class="fragment" style="font-size:24pt;text-align:left">在光栅化过程中，对象顶点的属性通过插值计算得到</li>
+					</ul>
+                </section>
+                <section>
+                    <h2>绘制流水线体系</h2>
+                    <p>片元处理</p>
+                    <div class="placeholder">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-graphics-pipeline.png" alt="Rendering Pipeline" style="max-width: 100%; max-height: 400px;">
+                    </div>
+                    <ul>
+						<li class="fragment" style="font-size:24pt;text-align:left">片元处理的目的是确定在帧缓存中对应的像素的颜色，颜色值可以是纹理映射的结果，也可以是对顶点颜色进行插值计算得到的结果</li>
+						<li class="fragment" style="font-size:24pt;text-align:left">片元也会被其它距离相机更近的片元遮挡，对应像素的颜色取决于离相机更近的片元的颜色，称为“隐面消除算法”</li>
+					</ul>
+                </section>
+            </section>
+            <section>
+                <section id="proapi1">
+                    <h2>编程接口</h2>
+                    <h3>概述</h3>
+                    <ul>
+                        <li class="fragment" style="font-size: 24pt; text-align: left;">从应用程序开发者角度看，图形系统是通过一系列软件接口实现的，即应用程序开发者接口(Application Programmer Interface. API)</li>
+                        <li class="fragment" style="font-size: 24pt; text-align: left;">API提供了对图形学编程各阶段功能的支持，包括<strong style="color:red">对象描述、观察者、光源、材质</strong>等，除此之外，还可提供对<strong style="color:red">输入设备、其他系统功能</strong>的支持</li>
+                    </ul>
+                    <img class="fragment" src="../../images/cg/chap01/ch01-gsysapi.png" style="width:100%">
+                </section>
+                <section id="proapi2">
+                    <h2>编程接口</h2>
+                    <h3>对象描述</h3>
+                    <ul>
+                        <li class="fragment" style="font-size: 24pt; text-align: left;">构成对象的基本元素包括：</li>
+                        <ul>
+                            <li class="fragment" style="font-size: 20pt; text-align: left;">点 (0D)</li>
+                            <li class="fragment" style="font-size: 20pt; text-align: left;">线 (1D)</li>
+                            <li class="fragment" style="font-size: 20pt; text-align: left;">多边形 (2D)</li>
+                            <li class="fragment" style="font-size: 20pt; text-align: left;"> 部分曲线和曲面，如二次曲线、参数多项式曲线、贝塞尔曲线等</li>
+                        </ul>
+                        <li class="fragment" style="font-size: 24pt; text-align: left;">所有的基本元素由空间中的位置坐标或顶点定义</li>
+                    </ul>
+                </section>
+                <section id="proapi3">
+                    <h2>编程接口</h2>
+                    <h3>对象描述示例</h3>
+                    <div class="columnleft">
+                        <h4>OpenGL版</h4>
+                        <pre class="fragment" style="font-size:40%">
+                            <code class="language-c" data-trim data-line-numbers>
+//定义对象类型
+glBegin(GL_POLYGON);
+//定义顶点坐标位置
+glVertex3f(0.0f, 0.0f, 0.0f);
+glVertex3f(0.0f, 1.0f, 0.0f);
+glVertex3f(0.0f, 0.0f, 1.0f);
+glEnd();//结束定义
+                            </code>
+                        </pre>
+                        <p class="fragment" style="font-size:50%;text-align: left;">
+                            根据不同参数绘制不同类型的对象，数据在CPU中处理后，再通过管线传递给图形硬件(GPU)
+                        </p>
+                    </div>
+                    <div class="columnright">
+                        <h4>GPU版</h4>
+                        <pre class="fragment" style="font-size: 50%;">
+                            <code class="javascript" data-trim data-line-numbers>
+var points = new Float32Array([
+0.0f, 0.0f, 0.0f,
+0.0f, 1.0f, 0.0f,
+0.0f, 0.0f, 1.0f
+]);
+                            </code>
+                        </pre>
+                        <p class="fragment" style="font-size: 50%; text-align: left;">
+                            将几何顶点存放在数组中，将数组传递给GPU，由GPU负责渲染，渲染结果为三角形
+                        </p>
+                    </div>
+                </section>
+                <section id="proapi4">
+                    <h2>编程接口</h2>
+                    <h3>相机描述</h3>
+                    <div class="columnleft" style="width: 40%">
+                        <img class="fragment" src="../../images/cg/chap01/ch01-camspec.png" style="width:100%">
+                    </div>
+                    <div class="columnright" style="width: 60%">
+                        <p class="fragment" style="font-size: 80%; text-align: center;">
+                            API中需要指定的相机参数包括：
+                        </p>
+                        <ul>
+                            <li class="fragment" style="font-size: 24pt; text-align: left;">相机六自由度，包括镜头中心的位置和方向角度</li>
+                            <li class="fragment" style="font-size: 24pt; text-align: left;">镜头焦距</li>
+                            <li class="fragment" style="font-size: 24pt; text-align: left;">相片大小</li>
+                            <li class="fragment" style="font-size: 24pt; text-align: left;">成像平面方向</li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+
+            <!-- P - 后测 (Post-assessment) -->
+            <section>
+                <h2>知识检验</h2>
+                <p style="text-align:left;font-size:24pt">请将“任务”分配给最适合执行它的“组件”</p>
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th style="font-size:24pt">任务</th>
+                            <th style="font-size:24pt">组件</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-size:24pt"> 响应用户输入，更新游戏角色位置</td>
+                            <td class="fragment" style="font-size:24pt"><strong>CPU (应用层)</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size:24pt"> 翻译高级指令，管理硬件兼容性</td>
+                            <td class="fragment" style="font-size:24pt"><strong>图形 API</strong></td>
+                        </tr>
+                         <tr>
+                            <td style="font-size:24pt"> 将模型的3D坐标转为屏幕2D坐标</td>
+                            <td class="fragment" style="font-size:24pt"><strong>GPU (顶点着色器)</strong></td>
+                        </tr>
+                         <tr>
+                            <td style="font-size:24pt"> 根据光照，计算一个像素的最终颜色</td>
+                            <td class="fragment" style="font-size:24pt"><strong>GPU (片元着色器)</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- S - 总结 (Summary) -->
+            <section>
+                <section>
+                    <h2>课程总结</h2>
+                    <ul>
+                        <li class="fragment" style="font-size:28pt">理解了 <strong style="color:#2a76dd;">CPU, API, GPU</strong> 构成的三层体系结构。</li>
+                        <li class="fragment" style="font-size:28pt">深入了GPU内部，了解了其 <strong style="color:#2a76dd;">流水线体系</strong>。</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 900,
+    height: 900,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>

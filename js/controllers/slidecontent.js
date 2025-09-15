@@ -1,6 +1,7 @@
-import { HORIZONTAL_SLIDES_SELECTOR, VERTICAL_SLIDES_SELECTOR } from '../utils/constants.js'
-import { extend, queryAll, closest } from '../utils/util.js'
+import { extend, queryAll, closest, getMimeTypeFromFile, encodeRFC3986URI } from '../utils/util.js'
 import { isMobile } from '../utils/device.js'
+
+import fitty from 'fitty';
 
 /**
  * Handles loading, unloading and playback of slide
@@ -8,11 +9,14 @@ import { isMobile } from '../utils/device.js'
  */
 export default class SlideContent {
 
+	allowedToPlay = true;
+
 	constructor( Reveal ) {
 
 		this.Reveal = Reveal;
 
 		this.startEmbeddedIframe = this.startEmbeddedIframe.bind( this );
+		this.ensureMobileMediaPlaying = this.ensureMobileMediaPlaying.bind( this );
 
 	}
 
@@ -23,6 +27,10 @@ export default class SlideContent {
 	 * @param {HTMLElement} element
 	 */
 	shouldPreload( element ) {
+
+		if( this.Reveal.isScrollView() ) {
+			return true;
+		}
 
 		// Prefer an explicit global preload setting
 		let preload = this.Reveal.getConfig().preloadIframes;
@@ -46,7 +54,13 @@ export default class SlideContent {
 	load( slide, options = {} ) {
 
 		// Show the slide element
-		slide.style.display = this.Reveal.getConfig().display;
+		const displayValue = this.Reveal.getConfig().display;
+		if( displayValue.includes('!important') ) {
+			const value = displayValue.replace(/\s*!important\s*$/, '').trim();
+			slide.style.setProperty('display', value, 'important');
+		} else {
+			slide.style.display = displayValue;
+		}
 
 		// Media elements with data-src attributes
 		queryAll( slide, 'img[data-src], video[data-src], audio[data-src], iframe[data-src]' ).forEach( element => {
@@ -67,6 +81,11 @@ export default class SlideContent {
 				source.setAttribute( 'data-lazy-loaded', '' );
 				sources += 1;
 			} );
+
+			// Enable inline video playback in mobile Safari
+			if( isMobile && media.tagName === 'VIDEO' ) {
+				media.setAttribute( 'playsinline', '' );
+			}
 
 			// If we rewrote sources for this video/audio element, we need
 			// to manually tell it to load from its new origin
@@ -95,32 +114,52 @@ export default class SlideContent {
 
 				// Images
 				if( backgroundImage ) {
-					backgroundContent.style.backgroundImage = 'url('+ encodeURI( backgroundImage ) +')';
+					// base64
+					if(  /^data:/.test( backgroundImage.trim() ) ) {
+						backgroundContent.style.backgroundImage = `url(${backgroundImage.trim()})`;
+					}
+					// URL(s)
+					else {
+						backgroundContent.style.backgroundImage = backgroundImage.split( ',' ).map( background => {
+							// Decode URL(s) that are already encoded first
+							let decoded = decodeURI(background.trim());
+							return `url(${encodeRFC3986URI(decoded)})`;
+						}).join( ',' );
+					}
 				}
 				// Videos
-				else if ( backgroundVideo && !this.Reveal.isSpeakerNotes() ) {
+				else if ( backgroundVideo ) {
 					let video = document.createElement( 'video' );
 
 					if( backgroundVideoLoop ) {
 						video.setAttribute( 'loop', '' );
 					}
 
-					if( backgroundVideoMuted ) {
+					if( backgroundVideoMuted || this.Reveal.isSpeakerNotes() ) {
 						video.muted = true;
 					}
 
-					// Inline video playback works (at least in Mobile Safari) as
-					// long as the video is muted and the `playsinline` attribute is
-					// present
+					// Enable inline playback in mobile Safari
+					//
+					// Mute is required for video to play when using
+					// swipe gestures to navigate since they don't
+					// count as direct user actions :'(
 					if( isMobile ) {
 						video.muted = true;
-						video.autoplay = true;
 						video.setAttribute( 'playsinline', '' );
 					}
 
 					// Support comma separated lists of video sources
 					backgroundVideo.split( ',' ).forEach( source => {
-						video.innerHTML += '<source src="'+ source +'">';
+						const sourceElement = document.createElement( 'source' );
+						sourceElement.setAttribute( 'src', source );
+
+						let type = getMimeTypeFromFile( source );
+						if( type ) {
+							sourceElement.setAttribute( 'type', type );
+						}
+
+						video.appendChild( sourceElement );
 					} );
 
 					backgroundContent.appendChild( video );
@@ -158,6 +197,27 @@ export default class SlideContent {
 			}
 
 		}
+
+		this.layout( slide );
+
+	}
+
+	/**
+	 * Applies JS-dependent layout helpers for the scope.
+	 */
+	layout( scopeElement ) {
+
+		// Autosize text with the r-fit-text class based on the
+		// size of its container. This needs to happen after the
+		// slide is visible in order to measure the text.
+		Array.from( scopeElement.querySelectorAll( '.r-fit-text' ) ).forEach( element => {
+			fitty( element, {
+				minSize: 24,
+				maxSize: this.Reveal.getConfig().height * 0.8,
+				observeMutations: false,
+				observeWindow: false
+			} );
+		} );
 
 	}
 
@@ -229,7 +289,9 @@ export default class SlideContent {
 	 */
 	startEmbeddedContent( element ) {
 
-		if( element && !this.Reveal.isSpeakerNotes() ) {
+		if( element ) {
+
+			const isSpeakerNotesWindow = this.Reveal.isSpeakerNotes();
 
 			// Restart GIFs
 			queryAll( element, 'img[src$=".gif"]' ).forEach( el => {
@@ -255,6 +317,9 @@ export default class SlideContent {
 
 				if( autoplay && typeof el.play === 'function' ) {
 
+					// In the speaker view we only auto-play muted media
+					if( isSpeakerNotesWindow && !el.muted ) return;
+
 					// If the media is ready, start playback
 					if( el.readyState > 1 ) {
 						this.startEmbeddedMedia( { target: el } );
@@ -264,10 +329,16 @@ export default class SlideContent {
 					else if( isMobile ) {
 						let promise = el.play();
 
+						el.addEventListener( 'canplay', this.ensureMobileMediaPlaying );
+
 						// If autoplay does not work, ensure that the controls are visible so
 						// that the viewer can start the media on their own
 						if( promise && typeof promise.catch === 'function' && el.controls === false ) {
-							promise.catch( () => {
+							promise
+							.then( () => {
+								this.allowedToPlay = true;
+							})
+							.catch( () => {
 								el.controls = true;
 
 								// Once the video does start playing, hide the controls again
@@ -286,29 +357,69 @@ export default class SlideContent {
 				}
 			} );
 
-			// Normal iframes
-			queryAll( element, 'iframe[src]' ).forEach( el => {
-				if( closest( el, '.fragment' ) && !closest( el, '.fragment.visible' ) ) {
-					return;
-				}
+			// Don't play iframe content in the speaker view since we can't
+			// guarantee that it's muted
+			if( !isSpeakerNotesWindow ) {
 
-				this.startEmbeddedIframe( { target: el } );
-			} );
+				// Normal iframes
+				queryAll( element, 'iframe[src]' ).forEach( el => {
+					if( closest( el, '.fragment' ) && !closest( el, '.fragment.visible' ) ) {
+						return;
+					}
 
-			// Lazy loading iframes
-			queryAll( element, 'iframe[data-src]' ).forEach( el => {
-				if( closest( el, '.fragment' ) && !closest( el, '.fragment.visible' ) ) {
-					return;
-				}
+					this.startEmbeddedIframe( { target: el } );
+				} );
 
-				if( el.getAttribute( 'src' ) !== el.getAttribute( 'data-src' ) ) {
-					el.removeEventListener( 'load', this.startEmbeddedIframe ); // remove first to avoid dupes
-					el.addEventListener( 'load', this.startEmbeddedIframe );
-					el.setAttribute( 'src', el.getAttribute( 'data-src' ) );
-				}
-			} );
+				// Lazy loading iframes
+				queryAll( element, 'iframe[data-src]' ).forEach( el => {
+					if( closest( el, '.fragment' ) && !closest( el, '.fragment.visible' ) ) {
+						return;
+					}
+
+					if( el.getAttribute( 'src' ) !== el.getAttribute( 'data-src' ) ) {
+						el.removeEventListener( 'load', this.startEmbeddedIframe ); // remove first to avoid dupes
+						el.addEventListener( 'load', this.startEmbeddedIframe );
+						el.setAttribute( 'src', el.getAttribute( 'data-src' ) );
+					}
+				} );
+
+			}
 
 		}
+
+	}
+
+	/**
+	 * Ensure that an HTMLMediaElement is playing on mobile devices.
+	 *
+	 * This is a workaround for a bug in mobile Safari where
+	 * the media fails to display if many videos are started
+	 * at the same moment. When this happens, Mobile Safari
+	 * reports the video is playing, and the current time
+	 * advances, but nothing is visible.
+	 *
+	 * @param {Event} event
+	 */
+	ensureMobileMediaPlaying( event ) {
+
+		const el = event.target;
+
+		// Ignore this check incompatible browsers
+		if( typeof el.getVideoPlaybackQuality !== 'function' ) {
+			return;
+		}
+
+		setTimeout( () => {
+
+			const playing = el.paused === false;
+			const totalFrames = el.getVideoPlaybackQuality().totalVideoFrames;
+
+			if( playing && totalFrames === 0 ) {
+				el.load();
+				el.play();
+			}
+
+		}, 1000 );
 
 	}
 
@@ -324,8 +435,23 @@ export default class SlideContent {
 			isVisible  		= !!closest( event.target, '.present' );
 
 		if( isAttachedToDOM && isVisible ) {
-			event.target.currentTime = 0;
-			event.target.play();
+			// Don't restart if media is already playing
+			if( event.target.paused || event.target.ended ) {
+				event.target.currentTime = 0;
+				const promise = event.target.play();
+
+				if( promise && typeof promise.catch === 'function' ) {
+					promise
+						.then( () => {
+							this.allowedToPlay = true;
+						} )
+						.catch( ( error ) => {
+							if( error.name === 'NotAllowedError' ) {
+								this.allowedToPlay = false;
+							}
+						} );
+				}
+			}
 		}
 
 		event.target.removeEventListener( 'loadeddata', this.startEmbeddedMedia );
@@ -396,6 +522,10 @@ export default class SlideContent {
 				if( !el.hasAttribute( 'data-ignore' ) && typeof el.pause === 'function' ) {
 					el.setAttribute('data-paused-by-reveal', '');
 					el.pause();
+
+					if( isMobile ) {
+						el.removeEventListener( 'canplay', this.ensureMobileMediaPlaying );
+					}
 				}
 			} );
 
@@ -429,6 +559,17 @@ export default class SlideContent {
 				} );
 			}
 		}
+
+	}
+
+	/**
+	 * Checks whether media playback is blocked by the browser. This
+	 * typically happens when media playback is initiated without a
+	 * direct user interaction.
+	 */
+	isNotAllowedToPlay() {
+
+		return !this.allowedToPlay;
 
 	}
 
