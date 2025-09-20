@@ -60,7 +60,11 @@
             <section id="titlepage">
                 <h1>程序设计基础</h1>
                 <H2>第一章 引言</H2>
-                
+                <p style="text-align: center; font-family:courier">
+                    李懿<br />
+                    医学技术与信息工程学院<br />
+                    浙江中医药大学<br />
+                </p>
                 <p id="date" style="text-align:center"></p>
                 <script>
                     var now = new Date();
@@ -73,14 +77,15 @@
             <section id="toc">
                 <h2>第1章 引言</h2>
                 <p>
-                    <a href="#/1-1">1.1 一个C语言程序</a><br />
+                    <a href="#/1-1">1.1 从一个C语言程序开始</a><br />
                     <a href="#/1-2">1.2 程序与程序设计语言</a><br />
                     &nbsp;&nbsp;<a href="#/1-2-1">1.2.1 程序与指令</a><br />
                     &nbsp;&nbsp;<a href="#/1-2-2">1.2.2 程序设计语言的功能</a><br />
                     &nbsp;&nbsp;<a href="#/1-2-3-1">1.2.3 程序设计语言的语法</a><br />
                     &nbsp;&nbsp;<a href="#/1-2-4-1">1.2.4 程序的编译与编程环境</a><br />
-                    <a href="#/1-3-1">1.3 C语言的发展历史与特点</a><br />
-                    <a href="#/1-4-1">1.4 实现问题求解的过程</a>
+                    <a href="#/1-3-1">1.3 C语言的发展与特点</a><br />
+                    <a href="#/1-4-1">1.4 如何实现问题求解</a><br />
+                    <a href="#/1-5">1.5 本章总结</a>
                 </p>
             </section>
             <section id="chpkeys">
@@ -96,78 +101,109 @@
                 </ul>
             </section>
             <section id="1-1">
-                <h2>1.1 一个C语言程序</h2>
-                <p style="font-size: 60%; text-align: left;">例1-1. 求阶乘问题。输入一个正整数$n$，输出$n!$。比如，输入$n=4$，输出$n!=24$。</p>
-                <pre style="font-size:50%"><code class="hljs" data-trim data-line-numbers>
-#include&lt;stdio.h&gt;                   /* 编译预处理命令 */
-int main()                      /* 主函数 */
-{
-    int n;                          /* 变量定义 */
+                <section id="1-1-1">
+                    <h2>1.1 从一个C语言程序开始</h2>
+                    <p class="fragment" style="font-size: 24pt; text-align: left;">例1-1. 求阶乘问题。输入一个正整数$n$，输出$n!$</p>
+                    <p class="fragment" style="font-size:24pt; text-align: left;">比如，输入<code>4</code>，输出<code>24</code></p>
+                    <pre class="fragment" style="font-size:33%"><code class="C" data-trim data-line-numbers="1|2|3|5-13|14-20|"><script type="text/template">
+    // fractorial.c
+    #include<stdio.h>                  /* 编译预处理命令 */
     int factorial(int n);           /* 函数声明 */
-    scanf("%d", &n);                /* 输入一个整数 */
-    printf("%d\n", factorial(n));   /* 调用函数计算阶乘 */
-    return 0;
-}
-int factorial(int n)                /* 定义计算 n!的函数 */
-{
-    int i, fact=1;
-    for(i=1; i<=n; i++)             /* 循环 */
-    {
-        fact=fact*i;
-    }
-    return fact;
-}
-                    </code></pre>
-                <p style="text-align: center; font-size:60%">C程序由<text style="color:red">函数</text>组成，<text style="color:red">有且只有一个</text>主函数main()</p>
-            </section>
 
+    int main()                      /* 主函数 */
+    {
+        int n, result;                          /* 变量定义 */
+        printf("Please input an number:") /* 输出提示信息 */
+        scanf("%d", &n);                /* 输入一个整数 */
+        result = factorial(n);   /* 调用函数计算阶乘 */
+        printf("%d\n", result);   /* 输出结果 */
+        return 0;
+    }
+    int factorial(int n)                /* 定义计算 n!的函数 */
+    {
+        int i, fact=1;
+        for(i=1; i<=n; i++)             /* 循环 */
+        {
+            fact=fact*i;
+        }
+        return fact;
+    }
+</script></code></pre>
+                </section>
+                <section id="1-1-2">
+                    <h2>1.1 从一个C语言程序开始</h2>
+                    <h3>代码解读</h3>
+                    <ul>
+                        <li class="fragment" style="text-align: left; font-size:24pt"><strong>函数 (function):</strong> C程序由一个或多个<text style="color:red">函数</text>组成，函数是完成特定任务的代码块。<code>main</code>是主函数，<text style="color:red">有且只有一个</text>，函数<code>factorial</code>是我们自己定义的函数</li>
+                        <li class="fragment" style="text-align: left; font-size:24pt"><strong>变量定义 (<code>int n;</code>):</strong> 在内存中预留一个名为"n"的空间，用于存放整数。</li>
+                        <li class="fragment" style="text-align: left; font-size:24pt"><strong>函数声明 (<code>int factorial(int n)</code>):</strong> 提前告诉<code>main</code>函数，“后面有一个叫"factorial"的函数，它是这样用的”，避免“先使用后定义”的编译错误。</li>
+                        <li class="fragment" style="text-align: left; font-size:24pt"><strong>输入 (<code>scanf</code>):</strong> 从键盘读取用户输入。<code>&n</code>表示读取到的值要存放到变量<code>n</code>的地址去。</li>
+                        <li class="fragment" style="text-align: left; font-size:24pt"><strong>循环 (<code>for</code> loop):</strong> 重复执行一段代码。这里用于实现从1到n的连乘。</li>
+                    </ul>
+                    <!--
+                        ************************************************************
+                        * INTERACTIVE PLACEHOLDER: 交互式小测验
+                        * 可以在这里嵌入一个简单的Web应用，提出问题：
+                        * "在上面的代码中，哪一行是函数声明？"
+                        * 选项: A. 第3行  B. 第5行  C. 第15行
+                        ************************************************************
+                    -->
+                </section>
+            </section>
             <section id="1-2">
-                <h2>1.2 程序与程序设计语言</h2>
-                <dl>
-                    <dt>程序</dt>
-                    <dd>人们为解决某种问题用计算机可以识别的代码编排的一系列加工步骤</dd>
-                    <dd>程序的执行过程实际上是对程序所表达的数据进行处理的过程</dd>
-                    <dt>程序设计语言</dt>
-                    <dd>提供了一种表达数据与处理数据的功能</dd>
-                    <dd>要求程序员按照语言的规范编程</dd>
-                </dl>
+                <section id="1-2-1">
+                    <h2>1.2 程序与程序设计语言</h2>
+                    <dl>
+                        <dt style="color:red;font-size:24pt">程序</dt>
+                        <dd class="fragment" style="font-size:24pt">人们为解决某种问题，用计算机可以识别的代码，编排的一系列加工步骤。程序的执行过程实际上是对程序所表达的数据进行处理的过程</dd>
+                        <dt style="color:red;font-size:24pt">程序设计语言</dt>
+                        <dd class="fragment" style="font-size: 24pt;">提供了一种表达数据与处理数据的功能，要求程序员按照语言的规范编程</dd>
+                    </dl>
+                </section>
             </section>
             <section>
                 <section id="1-2-1">
                     <h2>1.2.1 程序与指令</h2>
                     <dl>
-                        <dt>指令</dt>
-                        <dd>计算机的一个最基本的功能，如实现一次加法运算或实现一次大小的判别</dd>
-                        <dt>计算机的指令系统</dt>
-                        <dd>计算机所能实现的指令的集合</dd>
-                        <dt>程序</dt>
-                        <dd>一系列计算机指令的有序组合</dd>
+                        <dt style="color:red;font-size:24pt">指令</dt>
+                         <dd class="fragment" style="font-size: 24pt;">计算机的一个最基本的功能，如实现一次加法运算或实现一次大小的判别</dd>
+                        <dt style="color:red;font-size:24pt">计算机的指令系统</dt>
+                         <dd class="fragment" style="font-size: 24pt;">计算机所能实现的指令的集合</dd>
+                        <dt style="color:red;font-size:24pt">程序</dt>
+                         <dd class="fragment" style="font-size: 24pt;">为完成某个任务而编写的一系列计算机指令的有序组合</dd>
                     </dl>
+                    <div class="fragment" style="border: 2px solid #555; padding: 10px; border-radius: 5px; margin-top: 20px;font-size:20pt">
+                        <p><strong>一份菜谱：</strong></p>
+                        <p>菜谱名 (程序名) -> 番茄炒蛋</p>
+                        <p>指令1 -> 拿出两个鸡蛋</p>
+                        <p>指令2 -> 将鸡蛋打入碗中并搅拌</p>
+                        <p>...</p>
+                    </div>
                 </section>
                 <section id="1-2-1-1">
                     <h2>1.2.1 程序与指令</h2>
                     <p style="font-size: 60%">例1-2. 编写程序，分别求和与乘积，其中指令定义如下：</p>
                     <p class="smallft">虚拟计算机指令系统共定义7条指令</p>
                     <ul>
-                        <li class="smallft">指令1: Input X 将当前输入数据存储到内存的X单元</li>
-                        <li class="smallft">指令2: Output X 将内存X单元的数据输出</li>
-                        <li class="smallft">指令3: Add X Y Z 将内存X单元的数据与Y单元的数据相加，并将结果存储到Z单元，即X+Y&rarr;Z</li>
-                        <li class="smallft">指令4: Sub X Y Z 将内存X单元的数据与Y单元的数据相减，并将结果存储到Z单元，即X-Y&rarr;Z</li>
-                        <li class="smallft">指令5: BranchEq X Y P 比较X与Y，若相等则程序跳转到P处执行，否则继续执行下一条指令</li>
-                        <li class="smallft">指令6: Jump Q 程序跳转到Q处执行</li>
-                        <li class="smallft">指令7: Set X Y 将内存Y单元的值设为X单元的值，即X&rarr;Y</li>
+                        <li class="fragment smallft">指令1: Input X 将当前输入数据存储到内存的X单元</li>
+                        <li class="fragment smallft">指令2: Output X 将内存X单元的数据输出</li>
+                        <li class="fragment smallft">指令3: Add X Y Z 将内存X单元的数据与Y单元的数据相加，并将结果存储到Z单元，即X+Y&rarr;Z</li>
+                        <li class="fragment smallft">指令4: Sub X Y Z 将内存X单元的数据与Y单元的数据相减，并将结果存储到Z单元，即X-Y&rarr;Z</li>
+                        <li class="fragment smallft">指令5: BranchEq X Y P 比较X与Y，若相等则程序跳转到P处执行，否则继续执行下一条指令</li>
+                        <li class="fragment smallft">指令6: Jump Q 程序跳转到Q处执行</li>
+                        <li class="fragment smallft">指令7: Set X Y 将内存Y单元的值设为X单元的值，即X&rarr;Y</li>
                     </ul>
                 </section>
                 <section id="1-2-1-2">
                     <h2>1.2.1 程序与指令</h2>
                     <p style="text-align: left; font-size: 80%">(1) 输入3个数A, B和C, 求A+B+C的结果</p>
                     <ul>
-                        <li class="smallft">Input A; 输入第1个数据到存储单元A中</li>
-                        <li class="smallft">Input B; 输入第2个数据到存储单元B中</li>
-                        <li class="smallft">Input C; 输入第3个数据到存储单元C中</li>
-                        <li class="smallft">Add A B D; 将A, B相加并将结果存储到D中</li>
-                        <li class="smallft">Add C D D; 将C, D相加并将结果存储到D中</li>
-                        <li class="smallft">Output D; 输出D的结果</li>
+                        <li class="fragment smallft">Input A; 输入第1个数据到存储单元A中</li>
+                        <li class="fragment smallft">Input B; 输入第2个数据到存储单元B中</li>
+                        <li class="fragment smallft">Input C; 输入第3个数据到存储单元C中</li>
+                        <li class="fragment smallft">Add A B D; 将A, B相加并将结果存储到D中</li>
+                        <li class="fragment smallft">Add C D D; 将C, D相加并将结果存储到D中</li>
+                        <li class="fragment smallft">Output D; 输出D的结果</li>
                     </ul>
                     <p class="fragment" style="font-size: 80%; color: darkred">思考：如何求A+B-C?</p>
                 </section>
@@ -176,7 +212,7 @@ int factorial(int n)                /* 定义计算 n!的函数 */
                     <p style="text-align: left; font-size: 80%">(2) 输入A, 求A+A+A的结果</p>
                     <div class="columnleft">
                         <p class="smallft">虚拟程序1:</p>
-                        <pre><code class="hljs" data-trim>
+                        <pre class="fragment"><code class="MIPS Assembler" data-trim data-line-numbers>
 Input A;
 Add A A D;
 Add A D D;
@@ -185,7 +221,7 @@ Output D;
                     </div>
                     <div class="columnright">
                         <p class="smallft">虚拟程序2:</p>
-                        <pre><code class="hljs"  data-trim>
+                        <pre class="fragment"><code class="MIPS Assembler"  data-trim data-line-numbers>
 Input A;
 Set 0 Z;
 Add Z A Z;
@@ -199,7 +235,7 @@ Output Z;
                     <h2>1.2.1 程序与指令</h2>
                     <p style="text-align: left; font-size: 80%">(3) 输入2个数A和B，求A*B</p>
                     <p class="fragment" style="text-align: left; font-size: 60%">A*B=A+A+...+A，相当于B个A相加
-                    <pre class="fragment"><code class="hljs" data-trim>
+                    <pre class="fragment"><code class="MIPS Assembler"  data-trim data-line-numbers>
 Input A;
 Input B;
 Set 0 Z;
@@ -224,7 +260,7 @@ Output Z;
                         </ul>
                     </div>
                     <div class="columnright">
-                        <pre class="fragment"><code class="hljs" data-trim data-line-numbers="1-2|3-4|5|9|6-7|8">
+                        <pre class="fragment"><code class="MIPS Assembler" data-trim data-line-numbers="1-2|3-4|5|9|6-7|8">
 Input A;
 Input B;
 Set 0 X;
@@ -236,31 +272,32 @@ Jump 5;
 Output Z;
                             </code></pre>
                     </div>
-
-                    <p class="fragment" style="font-size: 80%; color: darkred">思考：如何求(A+B)*C?</p>
+                <p class="fragment" style="font-size: 80%; color: darkred">思考：如何求(A+B)*C?</p>
                 </section>
             </section>
             <section>
                 <section id="1-2-2">
                     <h2>1.2.2 程序设计语言的功能</h2>
                     <ul>
-                        <li>数据表达：表达所要处理的类型</li>
-                        <li>流程控制：表达数据处理的流程</li>
+                        <li class="fragment" style="font-size:24pt">数据表达：表达所要处理的类型</li>
+                        <li class="fragment" style="font-size:24pt">流程控制：表达数据处理的流程</li>
+                        <li class="fragment" style="font-size:24pt">输入与输出：表达数据的输入与输出</li>
+                        <li class="fragment" style="font-size:24pt">模块化：将代码组织成独立的模块</li>
                     </ul>
                 </section>
                 <section id="1-2-2-1">
                     <h3>数据表达</h3>
                     <dl>
-                        <dt>数据表达</dt>
-                        <dd>一般将数据抽象为若干类型</dd>
-                        <dt>数据类型</dt>
-                        <dd>对某些具有共同特点的数据集合的总称</dd>
+                        <dt style="color:red;font-size:24pt">数据表达</dt>
+                        <dd class="fragment" style="font-size: 24pt;">将数据抽象为若干类型</dd>
+                        <dt style="color:red;font-size:24pt">数据类型</dt>
+                        <dd class="fragment" style="font-size: 24pt;">对某些具有共同特征的数据集合的总称</dd>
                         <ul>
-                            <li>代表的数据(数据类型的定义域)</li>
-                            <li>在这些数据上要做些什么(即操作或称运算)，例如</li>
+                            <li class="fragment" style="font-size:24pt">代表的数据(数据类型的定义域)</li>
+                            <li class="fragment" style="font-size:24pt">在这些数据上要做些什么(即操作或称运算)，例如</li>
                             <ul>
-                                <li>包含的整数，{...,-2,-1,0,1,2,...}</li>
-                                <li>作用在整数上的运算：+, -, *, /等</li>
+                                <li class="fragment" style="font-size:24pt">包含的整数，{...,-2,-1,0,1,2,...}</li>
+                                <li class="fragment" style="font-size:24pt">作用在整数上的运算：+, -, *, /等</li>
                             </ul>
                         </ul>
                     </dl>
@@ -268,60 +305,60 @@ Output Z;
                 <section id="1-2-2-2">
                     <h3>数据表达</h3>
                     <ul>
-                        <li>C语言提供的数据类型</li>
+                        <li class="fragment" style="font-size:24pt">C语言提供的数据类型</li>
                         <ul>
-                            <li>基本数据类型：程序设计语言事先定义好，供程序员直接使用，如整型、实型(浮点型)、字符型等</li>
-                            <li>构造类型：由程序员构造，如数组、结构、文件、指针等</li>
+                            <li class="fragment" style="font-size:24pt">基本数据类型：程序设计语言事先定义好，供程序员直接使用，如整型、实型(浮点型)、字符型等</li>
+                            <li class="fragment" style="font-size:24pt">构造类型：由程序员构造，如数组、结构、文件、指针等</li>
                         </ul>
-                        <li>各种数据类型的常量与变量形式</li>
+                        <li class="fragment" style="font-size:24pt">各种数据类型的常量与变量形式</li>
                         <ul>
-                            <li>常量：常数</li>
-                            <li>变量</li>
+                            <li class="fragment" style="font-size:24pt">常量：常数</li>
+                            <li class="fragment" style="font-size:24pt">变量</li>
                         </ul>
                     </ul>
                 </section>
                 <section id="1-2-2-3">
                     <h3>流程控制</h3>
                     <div class="columnleft">
-                        <p>结构化程序设计方法</p>
+                        <p class="fragment" data-fragment-index="1" style="font-size:24pt">结构化程序设计方法</p>
                         <ul>
-                            <li>将复杂程序划分为若干个相对独立的模块</li>
-                            <li>模块，即一条语句(Statement)，一段程序或一个函数(子程序)等</li>
-                            <li>单入口、单出口</li>
+                            <li class="fragment" data-fragment-index="3" style="font-size:22pt">将复杂程序划分为若干个相对独立的模块</li>
+                            <li class="fragment" data-fragment-index="4" style="font-size:22pt">模块，即一条语句(Statement)，一段程序或一个函数(子程序)等</li>
+                            <li class="fragment" data-fragment-index="5" style="font-size:22pt">单入口、单出口</li>
                         </ul>
                     </div>
                     <div class="columnright">
-                        <img src="../images/cprog/chap01/flowctrl.png" />
+                        <img class="fragment" data-fragment-index="2" src="../images/CProg/chap01/flowctrl.png" style="width:100%"/>
                     </div>
                 </section>
                 <section id="1-2-2-4">
                     <h3>流程控制</h3>
-                    <p>任何程序都可以将模块通过三种基本控制结构进行组合来实现</p>
-                    <div class="columnleft" style="width:20%">
-                        <img src="../images/cprog/chap01/seq.png" style="width:70%" />
-                        <figcaption>顺序结构</figcaption>
+                    <p class="fragment" style="font-size:24pt">任何程序都可以将模块通过<strong style="color:red">三种基本控制结构</strong>进行组合来实现</p>
+                    <div class="fragment columnleft" style="width:25%">
+                        <img src="../images/CProg/chap01/seq.png" style="width:70%" />
+                        <figcaption style="font-size:24pt">顺序结构</figcaption>
                     </div>
-                    <div class="columnleft" style="width:40%">
-                        <img src="../images/cprog/chap01/sel.png" />
-                        <figcaption>分支结构</figcaption>
+                    <div class="fragment columnleft" style="width:40%">
+                        <img src="../images/CProg/chap01/sel.png" />
+                         <figcaption style="font-size:24pt">分支结构</figcaption>
                     </div>
-                    <div class="columnleft" style="width:40%">
-                        <img src="../images/cprog/chap01/sel.png" />
-                        <figcaption>循环结构</figcaption>
+                    <div class="fragment columnleft" style="width:33%">
+                        <img src="../images/CProg/chap01/iter.png" />
+                         <figcaption style="font-size:24pt">循环结构</figcaption>
                     </div>
                 </section>
                 <section id="1-2-2-5">
                     <h3>流程控制</h3>
                     <ul>
-                        <li>语句级控制：包含3种基本控制结构</li>
+                        <li class="fragment" style="font-size:24pt">语句级控制：包含3种基本控制结构</li>
                         <ul>
-                            <li><text style="color:red">顺序</text>控制结构，按语句顺序执行</li>
-                            <li><text style="color:red">分支</text>控制结构(选择结构)，根据不同的条件选择所要执行的模块</li>
-                            <li><text style="color:red">循环</text>控制结构，重复执行某个模块</li>
+                            <li class="fragment" style="font-size:24pt"><text style="color:red">顺序</text>控制结构，按语句顺序执行</li>
+                            <li class="fragment" style="font-size:24pt"><text style="color:red">分支</text>控制结构(选择结构)，根据不同的条件选择所要执行的模块</li>
+                            <li class="fragment" style="font-size:24pt"><text style="color:red">循环</text>控制结构，重复执行某个模块</li>
                         </ul>
-                        <li>单位级控制：函数的定义与调用</li>
+                        <li class="fragment" style="font-size:24pt">单位级控制：函数的定义与调用</li>
                         <ul>
-                            <li>处理复杂问题时，将程序分为若干个相对独立的子程序(函数)</li>
+                            <li class="fragment" style="font-size:24pt">处理复杂问题时，将程序分为若干个相对独立的子程序(函数)</li>
                         </ul>
                     </ul>
                 </section>
@@ -329,26 +366,30 @@ Output Z;
             <section>
                 <section id="1-2-3-1">
                     <h2>1.2.3 程序设计语言的语法</h2>
-                    <p>用程序设计语言所写的程序必须符合相应语言的语法</p>
-                    <p><text style="color:red">源程序(源代码)</text>是一个字符序列，这些字符序列按顺序组成了一系列”单词"，“单词”的组合就形成了语言有意义的<text style="color:red">语法单位</text>，一些简单语法单位的组合又形成了更复杂的语法单位，最后一系列语法单位组合成程序</p>
+                    <p class="fragment" style="font-size:24pt">程序必须符合的“语法规则”，规定了代码该怎么写</p>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt"><text style="color:red">源程序(源代码)</text>是一个字符序列,这些字符序列按顺序组成了一系列”单词"，“单词”的组合就形成了语言有意义的<text style="color:red">语法单位</text></li>
+                        <li class="fragment" style="font-size:24pt">一些简单语法单位的组合又形成了更复杂的语法单位，最后一系列语法单位组合成了程序</li>
+                    </ul>
                 </section>
                 <section id="1-2-3-2">
                     <h3>C语言的主要“单词”</h3>
                     <ul>
-                        <li><text style="color:darkblue">标识符</text>，C语言的标识符规定由<text style="color:red">字母、数字及下划线</text>，且第一个字符必须是<text style="color:red">字母</text>或<text style="color:red">下划线</text></li>
-                        <li><text style="color:darkblue">保留字(关键字)</text>，这是由C语言规定的、赋予它们特定含义、有专门用途的标识符</li>
-                        <li><text style="color:darkblue">自定义标识符</text>，包括在程序中定义的变量名、数据类型名、函数名以及符号常量名，一般用<text style="color:red">一般用有意义的英语单词</text></li>
-                        <li><text style="color:darkblue">常量</text>，常量是有数据类型的，如123为整型、12.34为浮点型</li>
-                        <li><text style="color:darkblue">运算符</text>，代表对各种数据类型实际数据对象的运算，如：+(加), -(减), *(乘), /(除), %(求余), >(大于)等</li>
+                         <li class="fragment" style="font-size:24pt"><text style="color:darkblue">标识符</text>，在程序中定义的变量名、数据类型名、函数名以及符号常量名等。C语言规定，标识符必须由<text style="color:red">字母、数字及下划线</text>组成，且第一个字符必须是<text style="color:red">字母</text>或<text style="color:red">下划线</text>。如”factorial", "n"等，一般用有意义的英语单词</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">保留字(关键字)</text>，C语言规定的、具有特定含义、有专门用途的标识符，如“int", "for", "return"等</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">常量</text>，常量是有数据类型的，如123为整型、12.34为浮点型</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">运算符</text>，代表对各种数据类型实际数据对象的运算，如：+(加), -(减), *(乘), /(除), %(求余), >(大于)等</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkred">分隔符</text>，用于表示代码结构，对语句或模块进行分割的符号，如“{}", "()", ";"等</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">注释</text>，对程序的解释，编译器会忽略</li>
                     </ul>
                 </section>
                 <section id="1-2-3-3">
                     <h3>C语言的主要语法单位</h3>
                     <ul>
-                        <li><text style="color:darkblue">表达式</text>，运算符与运算对象组合形成表达式，如2+3*4</li>
-                        <li><text style="color:darkblue">变量定义</text>，变量有数据类型，在定义变量时需要说明相应变量的类型，如int n;</li>
-                        <li><text style="color:darkblue">语句</text>，语句是程序最基本的执行单位，程序的功能是通过对一系列语句的执行实现</li>
-                        <li><text style="color:darkblue">函数的定义与调用</text></li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">表达式</text>，运算符与运算对象组合形成表达式，如2+3*4</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">变量定义</text>，变量有数据类型，在定义变量时需要说明相应变量的类型，如int n;</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">语句</text>，语句是程序最基本的执行单位，程序的功能是通过对一系列语句的执行实现</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkblue">函数的定义与调用</text></li>
                     </ul>
                 </section>
             </section>
@@ -356,77 +397,137 @@ Output Z;
                 <section id="1-2-4-1">
                     <h2>1.2.4 程序的编译与编程环境</h2>
                     <ul>
-                        <li>程序的编译，即通过编译器将程序(源代码)转变为计算机能够直接理解的指令序列<br />
-                            其中，编译器的功能是，对源程序进行词法分析、语法与语义分析，生成可执行的代码，并能在编译过程中指出程序中存在的语法错误</li>
-                        <li>编程环境，包括编辑程序(Edit)，编译(Compile)，调试(Debug)等过程</li>
-                        <li>掌握程序设计语言，即能够根据语言的语法，用语言表达数据、实现程序的控制，并会使用编程环境</li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkred">程序的编译</text>，即通过编译器将程序(源代码)转变为计算机能够直接理解的指令序列</li>
+                        <ul>
+                            <li class="fragment" style="font-size:24pt">编译器的功能是，对源程序进行词法分析、语法与语义分析，生成可执行的代码，并能在编译过程中指出程序中存在的语法错误</li>
+                        </ul>
+                        <li class="fragment" style="font-size:24pt"><text style="color:darkred">编程环境</text>，包括编辑程序(Edit)，编译(Compile)，调试(Debug)等工具和过程</li>
+                        <li class="fragment" style="font-size:24pt">掌握程序设计语言，即能够根据语言的语法，用语言表达数据、实现程序的控制，并会使用编程环境</li>
                     </ul>
                 </section>
                 <section id="1-2-4-2">
-                    <h2>C语言上机过程</h2>
-                    <img src="../images/cprog/chap01/codeinc.png" />
+                   <h2>C语言编译过程</h2>
+                   <div class="fragment columnleft">
+                        <img src="../images/CProg/chap01/c-flowchart.png" style="width:100%">
+                    </div>
+                   <div class="columnright">
+                    <ul>
+                        <li class="fragment" style="font-size:24pt">编译命令</li>
+                        <ul class="fragment" style="font-size:24pt">
+                            <li>gcc -c test.c</li>
+						    <li>gcc test.o -o test</li>
+						    <li>gcc -o test test.c</li>
+                            <li>gcc -Wall -save-temps test.c –o test</li>
+                        </ul>
+                        <li class="fragment" style="font-size:24pt">各中间步骤和中间文件</li>
+                        <ul style="font-size:24pt">
+                            <li class="fragment" ><text style="color:darkblue">预处理(Preprocessor)</text> <text style="color:darkred">test.i</text>, 去除注释，扩展宏定义、头文件，进行条件编译</li>
+                            <li class="fragment" ><text style="color:darkblue">编译(Compiler)</text> <text style="color:darkred">test.s</text>, 语法检查，生成汇编代码</li>
+                            <li class="fragment" ><text style="color:darkblue">汇编(Assembler)</text> <text style="color:darkred">test.o</text>, 汇编成机器代码，生成目标文件</li>
+                            <li class="fragment" ><text style="color:darkblue">连接(Linker)</text> <text style="color:darkred">test.exe</text>, 将目标文件与库函数(静态库和动态库)连接，生成可执行文件</li>
+                        
+					</ul>
+                   </div>
                 </section>
             </section>
             <section>
-                <section id="1-3-1">
+                <section id="1-3-1-1">
                     <h2>1.3 C语言的发展历史与特点</h2>
-                    <h3>C语言的历史</h3>
-                    <ul>
-                        <li>1972年，由贝尔实验室的Dennis Ritchie在B语言基础上设计并实现了C语言</li>
-                        <li>1978年，B.W.Kernighan和D.Ritchie(简称K&R)合著的《The C Programming Language》是各种C语言版本的基础，称为旧标准C语言</li>
-                        <li>1983年，美国国家标准化协会(ANSI)制定了新的C语言标准，称ANSI C</li>
-                    </ul>
+                    <h3>C语言的诞生</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                         <div>
+                            <ul>
+                                <li class="fragment" style="font-size:24pt"><strong>时间:</strong> 1972年</li>
+                                <li class="fragment" style="font-size:24pt"><strong>地点:</strong> 贝尔实验室 (Bell Labs)</li>
+                                <li class="fragment" style="font-size:24pt"><strong>人物:</strong> 丹尼斯·里奇 (Dennis Ritchie)</li>
+                                <li class="fragment" style="font-size:24pt"><strong>事件:</strong> 为开发UNIX操作系统，在B语言基础上设计并实现</li>
+                            </ul>
+                        </div>
+                        <div class="fragment">
+                            <img src="../images/CProg/chap01/dennis_ritchie_2011.jpg" alt="" style="width: 300px; border-radius: 10px;">
+                        </div>
+                     </div>
+                </section>
+                    <section id="1-3-1-2">
+                    <h2>1.3 C语言的发展历史与特点</h2>
+                    <h3>K&R</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                         <div>
+                            <ul>
+                                <li class="fragment" style="font-size:24pt"><strong>时间:</strong> 1978年</li>
+                                <li class="fragment" style="font-size:24pt"><strong>人物:</strong>布萊恩·克尼汉（Brian Wilson Kernighan， 1942--）和丹尼斯·里奇 (Dennis Ritchie，1941--2011)</li>
+                                <li class="fragment" style="font-size:24pt"><strong>事件:</strong> 合著的《The C Programming Language》是各种C语言版本的基础，称为旧标准C语言</li>
+                            </ul>
+                        </div>
+                        <div class="fragment">
+                            <img src="../images/CProg/chap01/K&R_1st.png" alt="" style="width: 400px; border-radius: 10px;">
+                        </div>
+                     </div>
+                </section>
+                <section id="1-3-1-3">
+                    <h2>1.3 C语言的发展历史与特点</h2>
+                    <h3>ANSI C</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                         <div>
+                            <ul>
+                                <li class="fragment" style="font-size:24pt"><strong>时间:</strong> 1983年</li>
+                                <li class="fragment" style="font-size:24pt"><strong>组织:</strong>美国国家标准化协会(ANSI)</li>
+                                <li class="fragment" style="font-size:24pt"><strong>事件:</strong>制定了新的C语言标准，称ANSI C</li>
+                            </ul>
+                        </div>
+                        <div class="fragment">
+                            <img src="../images/CProg/chap01/K&R_2nd.jpg" alt="" style="width:350px; border-radius: 10px;">
+                        </div>
+                     </div>
                 </section>
                 <section id="1-3-2">
                     <h3>C语言的特点</h3>
                     <ul>
-                        <li>C语言是一种结构化语言</li>
-                        <li>C语言语句简洁、紧凑，使用方便，灵活，共有32个关键字，9种控制语句，程序书写形式自由</li>
-                        <li>C语言程序易于移植，C语言将与硬件有关的因素从语言主体中分离出来，通过库函数或其它实用程序实现它们</li>
-                        <li>C语言有强大的处理能力</li>
-                        <li>生成的目标代码质量高，运行效率高</li>
-                        <li>数据类型检查不严格，表达式易出现二义性，不具备数据越界自动检查功能，运算符的优先级与结合性对初学者难于掌握</li>
-                        <li>C语言中大小写字母代表不同含义</li>
+                        <li class="fragment" style="font-size:24pt"><strong>结构化语言:</strong> 代码以函数为单位组织，逻辑清晰</li>
+                        <li class="fragment" style="font-size:24pt"><strong>高效:</strong> 执行速度快，接近汇编语言</li>
+                        <li class="fragment" style="font-size:24pt"><strong>可移植:</strong> 一次编写，只需少量修改即可在不同平台上编译运行</li>
+                        <li class="fragment" style="font-size:24pt"><strong>强大灵活:</strong> 包含指针，可以直接对内存进行操作</li>
+                        <li class="fragment" style="font-size:24pt"><strong>丰富的库函数:</strong> 提供了大量可以直接使用的标准函数</li>
                     </ul>
                 </section>
             </section>
             <section>
                 <section id="1-4-1">
-                    <h2>1.4 实现问题求解的过程</h2>
-                    <pre><p style="text-align: center; font-size: 200%; font-weight: bold;">问题：求1-100之间所有偶数的和</p></pre>
+                    <h2>1.4 实现问题求解</h2>
+                    <pre class="fragment"><p style="text-align: center; font-size: 32pt; font-weight: bold;">问题：求1-100之间所有偶数的和</p></pre>
                 </section>
                 <section id="1-4-2">
                     <h3>问题分析与算法分析</h3>
                     <ul>
-                        <li>思路 &rarr; 确定算法</li>
-                        <li>算法：一组明确的解决问题的步骤，它产生结果并能<text style="color:red">在有限的时间内终止</text></li>
-                        <li>算法的描述：自然语言；伪代码；流程图，即算法的图形表示</li>
+                        <li class="fragment" style="font-size:24pt">思路<text class="fragment">&rarr;</text><text class="fragment">确定算法</text></li>
+                        <li class="fragment" style="font-size:24pt">算法：一组明确的解决问题的步骤，它产生结果并能<text style="color:red">在有限的时间内终止</text></li>
+                        <li class="fragment" style="font-size:24pt">算法的描述：自然语言；伪代码；流程图，即算法的图形表示</li>
                     </ul>
                 </section>
                 <section id="1-4-3">
                     <h3>思路和算法</h3>
                     <ul>
-                        <li>明确问题：求在一定范围内<text style="color:darkblue">(1-100)</text>，满足一定条件<text style="color:darkblue">(偶数)</text>的若干整数的和，求<text style="color:darkblue">累加和</text></li>
-                        <li><text style="color:red">思路</text>：设置一个变量sum，其初始值为0，然后在1-100的数(i)中寻找偶数，将它们一个一个累加到sum中</li>
-                        <ul>
-                            <li>一步累加：sum=sum+i;</li>
-                            <li>重复累加，用循环语句实现，在循环过程中，</li>
+                        <li class="fragment" style="font-size:24pt">明确问题：<text class="fragment">求在一定范围内<text style="color:darkblue">(1-100)</text>，满足一定条件<text style="color:darkblue">(偶数)</text>的若干整数的和，求<text style="color:darkblue">累加和</text></text></li>
+                        <li class="fragment" style="font-size:24pt"><text style="color:red">思路</text>：<text class="fragment">设置一个变量<text style="color:darkred">sum</text>，其初始值为<text style="color:darkred">0</text>，然后在1-100的数(i)中寻找偶数，将它们一个一个累加到<text style="color:darkred">sum</text>中</text></li>
+                        <ul style="font-size:24pt">
+                            <li class="fragment">一步累加：sum=sum+i;</li>
+                            <li class="fragment">重复累加，用循环语句实现，在循环过程中，</li>
                             <ul>
-                                <li>判断i是不是偶数，用分支控制语句实现</li>
-                                <li>对循环次数进行控制，通过i值的变化</li>
+                                <li class="fragment">用分支控制，判断i是不是偶数，用分支控制语句实现</li>
+                                <li class="fragment">用i值的变化，对循环次数进行控制</li>
                             </ul>
                         </ul>
                     </ul>
                 </section>
                 <section id="1-4-4">
                     <h3>算法描述</h3>
-                    <img src="../images/cprog/chap01/flowct.png" style="width:35%" />
+                    <img src="../images/CProg/chap01/flowct.png" style="width:35%" />
                 </section>
                 <section id="1-4-4">
                     <h3>编辑程序</h3>
-                    <p>用代码编辑器编写生成程序的源文件，C语言源文件的后缀为.c或.cpp</p>
-                    <pre><code class="hljs" data-trim>
-#include&lt;stdio.h&gt;
+                    <p class="fragment" style="font-size:2rpt">用代码编辑器编写生成程序的源文件，C语言源文件的后缀为<text style="color:red">.c</text></p>
+                    <pre class="fragment" style="font-size:50%"><code class="C" data-trim data-line-numbers><script type="text/template">
+#include<stdio.h>
 int main()
 {
     int i, sum=0;
@@ -441,29 +542,60 @@ int main()
     printf("%d", sum);
     return 0;
 }
-
-                        </code></pre>
+</script></code></pre>
                 </section>
                 <section id="1-4-5">
                     <h3>程序编译连接</h3>
-                    <p>编辑程序后，用该语言的编译程序对其进行编译，生成二进制代码表示的目标程序(.obj)，与编程环境提供的库函数进行连接(link)形成可执行的程序(.exe)</p>
-                    <p>编译程序会指出源程序中的语法错误</p>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt">编辑程序后，用该语言的<strong style="color:darkblue">编译程序</strong>对其进行编译，生成二进制代码表示的目标程序(.obj)，与编程环境提供的库函数进行连接(link)形成可执行的程序(.exe)</li>
+                        <li class="fragment" style="font-size:24pt">编译程序会指出源程序中的语法错误</li>
+                    </ul>
                 </section>
                 <section id="1-4-6">
                     <h3>运行与调试</h3>
-                    <p class="smallft">经过编辑、编译、连接、生成可执行文件后，就可以在编程环境或操作系统环境中运行程序<br />
-                        如果程序运行产生的结果不是你想要的结果，表明程序有<text style="color:darkred">语义错误(逻辑错误)</text></p>
-                    <p class="smallft">会区分<text style="color:darkred">语法错误</text>和<text style="color:darkred">逻辑错误</text></p>
-                    <p class="smallft">调试，即在程序中查找错误并修正错误的过程，调试的方法可有</p>
-                    <ul>
-                        <li class="smallft">设置断点</li>
-                        <li class="smallft">单步跟踪</li>
+                    <ul style="font-size:24pt">
+                        <li class="fragment">经过编辑、编译、连接、生成可执行文件后，就可以在编程环境或操作系统环境中运行程序</li>
+                        <li class="fragment">如果程序运行产生的结果不是你想要的结果，表明程序有<text style="color:darkred">语义错误(逻辑错误)</text></li>
+                        <ul>
+                            <li class="fragment">需要会区分<text style="color:darkred">语法错误</text>和<text style="color:darkred">逻辑错误</text></li>
+                        </ul>
+                        <li class="fragment">调试，即在程序中查找错误并修正错误的过程，调试的方法可有</li>
+                        <ul class="fragment">
+                            <li>设置断点</li>
+                            <li>单步跟踪</li>
+                        </ul>
+                        <li class="fragment">调试是一个需要耐心和经验的工作，也是程序设计最基本的因素之一</li>
                     </ul>
-                    <p class="smallft">调试是一个需要耐心和经验的工作，也是程序设计最基本的因素之一</p>
+                    
                 </section>
                 <section id="1-4-7">
-                    <h3>C语言程序编译、编译连接、运行调试步骤示意</h3>
-                    <img src="../images/cprog/chap01/progproc.png" style="width:40%" />
+                    <h3>C语言程序编译、连接、运行调试步骤示意</h3>
+                    <img class="fragment" src="../images/CProg/chap01/progproc.png" style="width:40%" />
+                </section>
+            </section>
+            <section>
+                <section id="1-5">
+                <h2>本章要点总结</h2>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt"><strong>程序:</strong> 为解决问题而设计的一系列指令。</li>
+                        <li class="fragment" style="font-size:24pt"><strong>C程序框架:</strong> 由一个或多个函数组成，必须有`main`主函数。</li>
+                        <li class="fragment" style="font-size:24pt"><strong>C语言特点:</strong> 高效、可移植、强大、结构化。</li>
+                        <li class="fragment" style="font-size:24pt"><strong>编译步骤:</strong> 预处理 -> 编译 -> 汇编 -> 链接。</li>
+                        <li class="fragment" style="font-size:24pt"><strong>结构化控制:</strong> 主要包括顺序、选择(if)、循环(for, while)。</li>
+                        <li class="fragment" style="font-size:24pt"><strong>问题求解:</strong> 核心是先设计算法（如用流程图），再编写代码。</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>课后作业</h2>
+                    <p><strong>问题:</strong> 编写一个C程序，计算从1到n的之间的奇数之和。</p>
+                    <p>(例如: 输入 <code>100</code>, 输出 <code>2500</code>)</p>
+                    <br>
+                    <p><strong>要求:</strong></p>
+                    <ol>
+                        <li>先在纸上画出解决这个问题的流程图。</li>
+                        <li>根据流程图编写C语言代码并成功运行。</li>
+                        <li>提交流程图的照片和代码截图。</li>
+                    </ol>
                 </section>
             </section>
         </div>
