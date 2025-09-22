@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--图形学编程概述</title>
+
+    <meta name="description" content="关于图形学编程的概念">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+        </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第二章(1) 图形学编程概述</h2>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+
+            <!-- B - 导入 (Bridge-in) -->
+            <section>
+                <h3>三十年视觉的革命</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>1996年: 《雷神之锤》</h4>
+                        <img src="./../../images/cg/chap02/ch02-quake-1999.jpg" alt="[雷神之锤的图片]">
+                    </div>
+                    <div>
+                        <h4>2023年: 《赛博朋克2077》</h4>
+                        <img src="./../../images/cg/chap02/ch02-cyberpunk2077-ss.png" alt="[赛博朋克2077的图片]">
+                    </div>
+                </div>
+                <p class="fragment" style="font-size:24pt">驱动这场革命的，不仅是硬件的进步，更是我们与GPU“对话”的<strong>编程思想</strong>的根本变革。</p>
+            </section>
+
+            <!-- O - 目标 (Objective) -->
+            <section>
+                <h3>课程目标</h3>
+                <ul>
+                    <li class="fragment" style="font-size:24pt"><strong>回顾历史:</strong> 从<strong>固定管线</strong>到<strong>可编程管线</strong>的编程思想革命</li>
+                    <!--li class="fragment" style="font-size:24pt"><strong>掌握思想:</strong> 理解现代图形编程的<strong>两大基石：着色器与缓存</strong></li>
+                    <li class="fragment" style="font-size:24pt"><strong>解构代码:</strong> 逐行剖析一个完整的<strong>WebGL应用</strong>是如何配置和运行的</li-->   
+                </ul>
+            </section>
+
+            <!-- P - 前测 (Pre-assessment) -->
+            <section>
+                <h3>如何设计一个“绘图API”？</h3>
+                <div class="two-column">
+                    <div>
+                        <h4>方案A: “保姆式”API</h4>
+                        <pre style="font-size:50%"><code class="javascript" data-trim>
+// 简单易用，一步到位
+drawSphere({
+  position: [0,0,0],
+  radius: 1.0,
+  color: [1,0,0],
+  lighting: true
+});
+                        </code></pre>
+                        <p class="fragment" style="font-size:24pt"><strong style="color: green;">优点:</strong> 简单 <br> <strong style="color: red;">缺点:</strong> 功能固化, 不灵活</p>
+                    </div>
+                    <div>
+                        <h4>方案B: “DIY式”API</h4>
+                        <pre style="font-size:45%"><code class="javascript" data-trim>
+// 复杂但灵活
+let buffer = createBuffer(sphere_data);
+let shader = createShader(shading_code);
+setShader(shader);
+setBuffer(buffer);
+draw();
+                        </code></pre>
+                        <p class="fragment" style="font-size:24pt"><strong style="color: green;">优点:</strong> 灵活, 高性能 <br> <strong style="color: red;">缺点:</strong> 复杂, 学习曲线陡</p>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 20px;font-size:24pt">这两种方案的取舍，完美复现了OpenGL自身的发展史。</p>
+                <aside class="notes">让学生讨论3-5分钟，引导他们说出两种方案的优缺点，然后引出这就是OpenGL的演进之路。</aside>
+            </section>
+
+            <!-- P - 参与式学习 (Participatory Learning) -->
+            <section>
+                <section>
+                    <h2>第一部分: 图形API的演进</h2>
+                </section>
+                <section>
+                    <h3>传统OpenGL: “固定功能管线”时代</h3>
+                    <p class="fragment" style="font-size:24pt"><strong>核心思想:</strong> 你告诉GPU要画<strong>什么</strong>，GPU知道该<strong>怎么</strong>画。</p>
+                    <p class="fragment" style="font-size:24pt"><strong>类比:</strong> 功能强大的<strong>“微波炉”</strong>，你只需按“爆米花”键，无法控制加热细节。</p>
+                    <div class="fragment columnleft">
+                    <figure>
+                        <img src="./../../images/cg/chap02/ch02-fixedopenglpipeline.jpg" alt="[传统OpenGL管线示意图]" style="max-width: 100%; max-height: 400px;">
+                        <figcaption style="font-size:20pt">传统OpenGL“固定功能管线”示意图</figcaption>
+                    </figure>
+                    </div>
+                    <div class="fragment columnright">
+                        <table style="font-size:14pt">
+                            <caption style="font-size:16pt">图形硬件发展时间线</caption>
+                            <thead>
+                                <tr>
+                                    <th>年代</th>
+                                    <th>事件和节点</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1960-1970年代</td>
+                                    <td>计算机图形学诞生，CPU负责所有图形渲染任务。</td>
+                                </tr>
+                                <tr>
+                                    <td>1980年代</td>
+                                    <td>专用图形硬件出现（如Amiga图形芯片），加速部分图形任务。</td>
+                                </tr>
+                                <tr>
+                                    <td>1995年</td>
+                                    <td>3dfx Voodoo Graphics发布，GPU开始分担三维图形渲染任务。</td>
+                                </tr>
+                                <tr>
+                                    <td>1999年</td>
+                                    <td>NVIDIA GeForce 256发布，GPU接管几何计算任务，正式定义GPU。</td>
+                                </tr>
+                                <tr>
+                                    <td>2001年</td>
+                                    <td>可编程着色器出现，GPU从固定功能设备转变为可编程硬件。</td>
+                                </tr>
+                                <tr>
+                                    <td>2006年</td>
+                                    <td>CUDA发布，GPU开始用于通用计算任务。</td>
+                                </tr>
+                                <tr>
+                                    <td>2018年</td>
+                                    <td>NVIDIA RTX系列发布，GPU支持实时光线追踪。</td>
+                                </tr>
+                            </tbody>
+                            
+                        </table>
+                    </div>
+                    <aside class="notes">插一个交互式应用，用于展示CPU和GPU发展的时间线\-\->Appendix</aside>
+                </section>
+                <section id="ogldev">
+                    <h3>传统OpenGL: “固定功能管线”时代</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL最初由建筑评审委员会(Architectural Review Board, ARB)所控制，其成员包括了SGI, Microsoft, NVidia, HP, 3DLabs, IBM等，目前OpenGL由<a href="https://www.khronos.org/">Khronos Group</a>所负责</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL的版本在2.5以前发展基本稳定，具有良好的版本向下兼容性</li>
+                        <li class="fragment" style="text-align:left; font-size:24pt">版本的发展主要为体现新的硬件技术进步，如支持三维纹理映射、纹理对象、顶点和面片程序等，并能通过扩展提供为特定硬件平台的支持</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL 2.0版本引入了可编程着色器的概念，允许用户编写自己的顶点和片元着色器程序</li>
+                    </ul>
+                </section>
+                <section id="ogldevfig">
+                    <h3>传统OpenGL: “固定功能管线”时代</h3>
+                    <a class="fragment" href="https://www.khronos.org/opengl/wiki/History_of_OpenGL" target="_blank"><img src="./../../images/cg/chap02/ch02-gl-history.png"></a>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <p class="fragment" style="font-size:24pt">GPU越来越强大，开发者希望能获得更多对底层的控制权，实现更多更具创造力的视觉效果</p>
+                    <div class="three-column">
+                        <div class="fragment">
+                            <h4>卡通渲染</h4>
+                            <img class="fragment" src="./../../images/cg/chap02/ch02-render-toon.jpg" alt="[卡通渲染效果图]" style="max-width: 100%; max-height: 200px;">
+                        </div>
+                        <div class="fragment">
+                            <h4>体积光渲染</h4>
+                            <img class="fragment" src="./../../images/cg/chap02/ch02-render-vollight.jpg" alt="[体积光渲染效果图]" style="max-width: 100%; max-height: 200px;">
+                        </div>
+                        <div class="fragment">
+                            <h4>非真实感渲染</h4>
+                            <img class="fragment" src="./../../images/cg/chap02/ch02-render-npr.jpg" alt="[非真实感渲染效果图]" style="max-width: 100%; max-height: 200px;">
+                        </div>
+                    </div>
+                    <p class="fragment" style="font-size:24pt"><strong>思想转变:</strong> 从“配置机器”到“为机器编程”</p>
+                </section>
+                <section>
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt"><strong>核心思想:</strong> 你给GPU提供<strong>数据(缓冲)</strong>和<strong>程序(着色器)</strong>，让它自己计算结果。</p>
+                    <p class="fragment" style="text-align:left;font-size:24pt;"><strong>类比:</strong> 你得到了微波炉的<strong>核心零件</strong>(计算单元)和一本<strong>编程手册(GLSL)</strong>，可以实现任何烹饪方式。</p>
+                </section>
+                <section id="modgl">
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <ul>
+                        <li class="fragment" style="font-size:24pt">当代OpenGL的性能主要是通过GPU实现，通过对着色器编程实现对GPU的控制</li>
+                        <li class="fragment" style="font-size:24pt">应用程序的任务是往GPU传递数据，GPU会负责所有的渲染工作</li>
+                    </ul>
+                    <img class="fragment" src="./../../images/cg/chap02/ch02-programmpipeline.jpg" style="width:60%">
+                </section>
+                <section id="twomodes">
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <p class="fragment" style="font-size:28pt"><strong>图形渲染的两种模式</strong></p>
+                    <p  class="fragment" style="text-align:left; font-size:24pt">所有的模型均以顶点表示，顶点可构成基本图元，如线段、多边形、曲线、曲面等</p>
+                    <div class="two-column">
+                        <div>
+                          <dl class="fragment">
+                            <dt style="font-size:24pt">即时模式</dt>
+                            <dd style="font-size:20pt">应用程序定义每个顶点都会立即送到GPU中渲染，这种实现会造成CPU和GPU之间数据传输的瓶颈，在OpenGL3.1及以后的版本和OpenGL ES 2.0中删去</dd>
+                          </dl>  
+                        </div>
+                        <div>
+                            <dl class="fragment">
+                                <dt style="font-size:24pt">保有模式</dt>
+                                <dd style="font-size:20pt">所有顶点及其属性均保存在数组中，将数组传送给GPU进行渲染，但若需要更新，则需更新所有数组中的内容并再次传递给GPU。对于重复渲染，传递数组并储存在GPU中的方式显然效率更高</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                </section>
+                <section id="ogl31">
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <p class="fragment" style="font-size:36pt"><strong style="color:darkred">OpenGL3.1</strong></p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL3.1版本完全基于着色器，并未提供默认的着色器程序，每个应用程序均需提供点元着色器和面片着色器程序</li>
+					    <li class="fragment" style="text-align:left;font-size:24pt">不再提供即时模式，并减少了状态变量的数目</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">不再提供对于大部分2.5版本函数的支持，也不再需要向下兼容，但还是存在兼容性扩展</li>
+					</ul>
+                </section>
+                <section id="oglother">
+                    <h3>现代OpenGL: “着色器核心”时代</h3>
+                    <p class="fragment" style="font-size:36pt"><strong>其它版本</strong></p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><a href="https://www.khronos.org/opengles/" target="_blank">OpenGL ES</a>，面向移动设备和嵌入式设备的OpenGL版本</li>
+                        <ul>
+                            <li class="fragment" style="text-align:left;font-size:24pt">2.0版本是OpenGL3.1的简化版，开始支持可编程着色器，目前最新版本为3.2</li>
+                            <li class="fragment" style="text-align:left;font-size:24pt">3.1版本是一个里程碑，开始在移动设备上支持显卡普适计算</li>
+                        </ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><a href="https://www.khronos.org/webgl/" target="_blank">WebGL</a>，将OpenGL ES的API移植到浏览器环境中运行，提供对JavaScript的支持，能够在浏览器中进行三维绘制。能够支持几乎所有的主流浏览器</li>
+                        <ul>
+                            <li class="fragment" style="text-align:left;font-size:24pt">WebGL 1.0对应于OpenGL ES 2.0版本</li>
+                            <li class="fragment" style="text-align:left;font-size:24pt">WebGL 2.0对应于OpenGL ES 3.0</li>
+                        </ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><a href="https://www.khronos.org/opengl/" target="_blank">OpenGL</a> 4.x...... 不断引入新特征，以实现对新的图形计算硬件的支持，目前最新版本为4.6</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <h3>API的未来</h3>
+                <ul>
+                    <li class="fragment" data-fragment-index="2" style="font-size:24pt">Vulkan, Metal, DirectX 12等</li>
+                    <li class="fragment" data-fragment-index="3" style="font-size:24pt">更底层，更接近硬件,将更多的控制权（如内存管理、多线程）交给开发者，以追求极致的性能</li>
+                    <li class="fragment" data-fragment-index="4" style="font-size:24pt">但其核心编程思想一脉相承：数据 + 程序(着色器)</li>
+                </ul>
+                <img class="fragment" data-fragment-index="1" src="./../../images/cg/chap02/ch02-ogl-vulkan.png" alt="[Vulkan Logo]" style="max-width: 100%;">
+            </section>
+
+            <!-- P - 后测 (Post-assessment) -->
+            <section>
+                <section class="question-slide">
+                    <h3>随堂测验 (1/4)</h3>
+                    <p style="font-size:24pt;text-align: left;">从传统OpenGL（“固定功能管线”）到现代OpenGL（“可编程管线”）<strong>最核心</strong>的思想转变是什么？</p>
+                    <ul>
+                        <li style="font-size:24pt">A. 渲染速度变得更快。</li>
+                        <li style="font-size:24pt">B. 将渲染控制权从固化的硬件功能，转移到由开发者编写的、运行在GPU上的程序（着色器）上。</li>
+                        <li style="font-size:24pt">C. 引入了更多的内置光照模型。</li>
+                        <li style="font-size:24pt">D. 开始支持三维纹理。</li>
+                    </ul>
+                    <div data-fragment-index="1" class="fragment rationale" style="font-size:24pt;text-align:left">
+                        <strong>解析:</strong> 正确！核心变革是从“配置一台现有机器”转变为“为一台可编程的并行计算机编写程序”，将创作的自由度和控制权交还给了开发者。
+                    </div>
+                </section>
+                <section class="question-slide">
+                    <h3>随堂测验 (1/4)</h3>
+                    <p style="font-size:24pt;text-align: left;">关于WebGL，以下哪个描述是正确的？</p>
+                    <ul>
+                        <li style="font-size:24pt">A. 它是一个全新的、与OpenGL无关的图形API。</li>
+                        <li style="font-size:24pt">B. 它是一个可以直接在网页浏览器中运行的、基于OpenGL ES（嵌入式版本）的JavaScript API。</li>
+                        <li style="font-size:24pt">C. 它包含了传统OpenGL的所有固定功能，如glBegin/glEnd。</li>
+                        <li style="font-size:24pt">D. 它比原生的OpenGL或Vulkan性能更高。</li>
+                    </ul>
+                    <div data-fragment-index="1" class="fragment rationale" style="font-size:24pt;text-align:left">
+                        <strong>解析:</strong> 正确！WebGL的本质就是将OpenGL ES的能力通过JavaScript接口暴露给Web开发者，从而实现了在浏览器中进行硬件加速的3D渲染，且无需任何插件。
+                    </div>
+                </section>
+
+                <section class="question-slide">
+                    <h3>随堂测验 (1/4)</h3>
+                    <p style="font-size:24pt;text-align: left;">相较于现代API，传统OpenGL“固定功能管线”的主要局限性是什么？</p>
+                    <ul>
+                        <li style="font-size:24pt">A. 学习曲线过于陡峭。</li>
+                        <li style="font-size:24pt">B. 跨平台兼容性差。</li>
+                        <li style="font-size:24pt">C. 灵活性和可扩展性差，难以实现非传统的、创造性的视觉效果。</li>
+                        <li style="font-size:24pt">D. 无法处理三维模型，只能绘制二维图形。</li>
+                    </ul>
+                    <div data-fragment-index="1" class="fragment rationale" style="font-size:24pt;text-align:left">
+                        <strong>解析:</strong> 正确！由于核心算法（如光照和变换）被固化在硬件中，开发者无法实现如卡通渲染、自定义材质等超越其预设功能的效果，这是其被淘汰的根本原因。
+                    </div>
+                </section>
+
+                <section class="question-slide">
+                    <h3>随堂测验 (1/4)</h3>
+                    <p style="font-size:24pt;text-align: left;">从现代OpenGL到Vulkan、Metal等新一代图形API的发展趋势，进一步体现了什么样的设计哲学？</p>
+                    <ul>
+                        <li style="font-size:24pt">A. 进一步封装硬件细节，让API变得更简单易用。</li>
+                        <li style="font-size:24pt">B. 重新引入固定功能硬件来提升特定任务的性能。</li>
+                        <li style="font-size:24pt">C. 将更多的底层控制权（如内存管理、多线程提交）交给开发者，以压榨极致的硬件性能。</li>
+                        <li style="font-size:24pt">D. 专注于Web端，逐步取代WebGL。</li>
+                    </ul>
+                    <div data-fragment-index="1" class="fragment rationale" style="font-size:24pt;text-align:left">
+                        <strong>解析:</strong> 正确！新一代API的设计哲学是“更少的抽象，更多的控制”，它们通过减少驱动程序的开销，让开发者能够更精细地控制GPU，以实现最大程度的性能优化。
+                    </div>
+                </section>
+            </section>
+
+            <!-- S - 总结 (Summary) -->
+            <section>
+                <section>
+                    <h2>课程总结</h2>
+                    <ul>
+                        <li class="fragment" style="font-size:28pt">理解了 <strong style="color:#2a76dd;">现代图形API</strong>的设计思想。</li>
+                        <li class="fragment" style="font-size:28pt">比较了 <strong style="color:#2a76dd;">不同类型API的功能特点</strong>。</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 900,
+    height: 900,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>

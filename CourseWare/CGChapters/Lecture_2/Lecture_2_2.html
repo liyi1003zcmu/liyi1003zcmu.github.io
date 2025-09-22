@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--图形学编程概述</title>
+
+    <meta name="description" content="关于图形学编程的概念">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+        </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第二章(2) 图形学编程概述</h2>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+
+            <!-- B - 导入 (Bridge-in) -->
+            <section>
+                <h3>在浏览器中调用GPU进行绘制</h3>
+                <div style="width: 80%; margin: auto;" class="fragment">
+                    <p class="fragment" style="font-size:24pt"><a href="https://paveldogreat.github.io/WebGL-Fluid-Simulation/" target="_blank"><img src="./../../images/cg/chap02/ch02-fluid-simul.jpg"></a></p>
+                </div>
+                <p class="fragment" style="font-size:24pt">在浏览器页面中运行程序，需要通过WebGL，借助JavaScript向GPU发送绘制命令</p>
+            </section>
+
+            <!-- O - 目标 (Objective) -->
+            <section>
+                <h3>课程目标</h3>
+                <ul>
+                    <li class="fragment" style="font-size:24pt"><strong>理解宏观框架:</strong> 掌握现代图形编程通用模型</li>
+                    <li class="fragment" style="font-size:24pt"><strong>解构程序结构:</strong> 识别一个WebGL应用各构成部分</li>
+                    <li class="fragment" style="font-size:24pt"><strong>掌握核心语法:</strong> 学习GLSL着色器语言基础</li>
+                    <li class="fragment" style="font-size:24pt"><strong>理解基本概念:</strong> 学习图形绘制基本元素及概念</li>
+                </ul>
+            </section>
+
+            <!-- P - 前测 (Pre-assessment) -->
+            <section>
+                <h3>伪代码挑战</h3>
+                <p class="fragment" style="font-size:24pt">假设你拥有一个神奇的"magic_gpu" 对象，要用它在屏幕上画一个<strong>红色三角形</strong>。请用伪代码写下你认为需要的步骤。</p>
+                <div class="fragment" style="margin-top: 30px; text-align: left; background: #f5f5f5; padding: 15px; border-radius: 5px;font-size:24pt">
+                    <p><strong>思考方向:</strong></p>
+                    <ul>
+                        <li>你需要告诉GPU哪些<strong>信息</strong>？ (形状？位置？颜色？)</li>
+                        <li>按什么<strong>顺序</strong>告诉它？</li>
+                    </ul>
+                </div>
+                <aside class="notes">
+                    这是课堂讨论环节，让学生讨论3-4分钟。引导他们思考需要定义“数据”（顶点坐标）和“程序”（如何上色），从而引出现代图形编程的核心思想。
+                </aside>
+            </section>
+
+            <!-- P - 参与式学习 (Participatory Learning) -->
+            <section>
+                <section>
+                    <h3>第二部分：从OpenGL到WebGL</h3>
+                </section>
+                <section>
+                    <h3>现代图形编程通用架构</h3>
+                    <p class="fragment" style="font-size:24pt">所有现代图形API（OpenGL, WebGL, Vulkan...）都遵循一个相似的模型。</p>
+                    <div class="fragment">
+                         <img src="./../../images/cg/chap02/ch02-programmpipeline.jpg" alt="[图形编程管线示意图]" style="height:450px;">
+                    </div>
+                </section>
+                <section id="olgarch">
+                    <h3>OpenGL体系结构</h3>
+                    <figure class="fragment">
+                        <img src="../../images/cg/chap02/ch02-gsysapi.png" style="width:80%">
+                        <figcaption style="font-size:24pt">OpenGL体系结构</figcaption>
+                    </figure>
+                    
+                    <figure class="fragment">
+                        <img src="../../images/cg/chap02/ch02-softarch.png" style="width:80%">
+                        <figcaption style="font-size:24pt">OpenGL软件体系</figcaption>
+                    </figure>
+                </section>
+                <section>
+                    <h3>OpenGL程序特点</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL是一个状态机，所有的绘制操作都依赖于当前的状态</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL提供系列函数库，所有的操作都是通过调用函数来实现的</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL通过调用函数，直接写着色器控制GPU</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>OpenGL事件循环</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL示例程序中，主函数是以<strong style="color:red">回调函数</strong>或者<strong style="color:red">事件监听</strong>的形式对绘制函数进行调用</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">每个程序都必须定义一个渲染回调函数</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">对于静态绘制应用，只需要执行一次绘制函数即可，而对于动态更新的应用，绘制函数需要多次调用，也可以递归调用，但是每次对输出的重绘都需要由事件触发</li>
+					</ul>
+                </section>
+                <section>
+                    <h3>OpenGL面向过程</h3>
+                    <p style="text-align:left;font-size:24pt">OpenGL是按面向过程的设计，因此对于一些逻辑函数，往往有多种实现，其区别在于不同的类型，如往着色器中传输数值</p>
+                    <ul>
+                        <li style="text-align:left;font-size:24pt">gl.uniform3f</li>
+                        <li style="text-align:left;font-size:24pt">gl.uniform2i</li>
+                        <li style="text-align:left;font-size:24pt">gl.uniform3dv</li>
+                    </ul>
+                    <p style="text-align:left;font-size:24pt">其底层的数据存在模式也同样，因此需要格外关注数据类型及其占用空间大小</p>
+                </section>
+                <section>
+                    <h3>WebGL程序执行</h3>
+                    <div class="fragment">
+                        <img src="./../../images/cg/chap02/ch02-webglorga.png" alt="[WebGL程序执行流程图]" style="width:80%">
+                    </div>
+                </section>
+                <section>
+                    <h3>WebGL vs. 原生OpenGL</h3>
+                    <table style="font-size:24pt">
+                        <thead>
+                            <tr>
+                                <th>特性</th>
+                                <th>WebGL</th>
+                                <th>原生 OpenGL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fragment">
+                                <td><strong>核心思想</strong></td>
+                                <td colspan="2" style="text-align: center;"><strong>完全一致</strong> (可编程管线, 着色器, 缓冲)</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>编程语言</strong></td>
+                                <td>JavaScript</td>
+                                <td>C / C++</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>运行平台</strong></td>
+                                <td>浏览器</td>
+                                <td>操作系统原生</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>环境配置</strong></td>
+                                <td style="color: green;"><strong>零配置</strong></td>
+                                <td style="color: red;">复杂 (库, 驱动, 窗口)</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>基于标准</strong></td>
+                                <td>OpenGL ES (嵌入式版)</td>
+                                <td>完整版 OpenGL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>  
+            </section>
+            <section>
+                <section>
+                    <h3>第三部分：WebGL程序基础</h3>
+                </section>
+                <section>
+                    <h3>WebGL语法</h3>
+                    <p class="fragment" style="font-weight: bold; font-size:24pt">WebGL函数定义</h3>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap02/ch02-wglfunc.png" style="width:100%">
+                    </div>
+                </section>
+                <section>
+                    <h3>WebGL的常量</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left; font-size:24pt">WebGL中的常量都定义在canvas对象中</li>
+                        <li class="fragment" style="text-align:left; font-size:24pt">在桌面版的OpenGL版本中，这些常量定义在头文件中，如gl.h</li>
+                        <li class="fragment" style="text-align:left; font-size:24pt">示例</li>
+                        <ul>
+                            <li class="fragment" style="text-align:left; font-size:24pt">桌面版: glEnable( GL_DEPTH_TEST );</li>
+                            <li class="fragment" style="text-align:left; font-size:24pt">WebGL: gl.enable( gl.DEPTH_TEST );</li>
+                            <li class="fragment" style="text-align:left; font-size:24pt">桌面版：glClear(GL_COLOR_BUFFER_BIT);</li>
+                            <li class="fragment" style="text-align:left; font-size:24pt">WebGL: gl.clear( gl.COLOR_BUFFER_BIT );</li>
+                        </ul>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>第四部分：GLSL基础</h3>
+                </section>
+                <section>
+                    <h3>WebGL和GLSL</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">WebGL需要写着色器，与面向过程的旧版OpenGL模型相比，不需要过多地依赖OpenGL状态机变量。因此，在OpenGL3.1版本以后，状态机变量、属性及其它相关的函数已不再支持</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">WebGL所有的工作都在着色器中完成，应用程序的主要任务就是往GPU中传递数据</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>初识GLSL</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt"><strong style="color:red">GLSL</strong>，全称为Open<strong style="color:red">GL</strong> <strong style="color:red">S</strong>hading <strong style="color:red">L</strong>anguage，是一种与C风格类似的编程语言，提供了预定义的矩阵、向量(2,3,4d)等类型，支持操作符重载，具有C++风格的构造器。与GLSL类似的编程语言还有NVidia的Cg和微软的HLSL。源代码需要送到着色器中编译运行。WebGL中定义的函数其编译、链接运行都在着色器中，可以直接实现对着色器中数据的控制</p>
+                </section>
+                <section>
+                    <h3>着色器编程</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">最早的着色器编程语言类似汇编风格，OpenGL通过扩展添加对顶点着色器和面片着色器的函数支持，主要的着色器编程语言有两种:</p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">Cg(C for Graphics)，是一种类似C风格的语言，可以同时用于OpenGL和DirectX</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">OpenGL Shading Language(GLSL)
+                            <ul>
+                                <li class="fragment" style="text-align:left;font-size:24pt">从OpenGL2.0版本以后开始提供支持，是一种具有C语言风格的高级语言，添加了对新的数据类型的支持，如矩阵、向量、采样等</li>
+                                <li class="fragment" style="text-align:left;font-size:24pt">从OpenGL3.1版本以后，程序都必须提供着色器程序</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>数据类型</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><strong>C类型</strong>：int, float, bool</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><strong>向量</strong>：浮点向量 float vec2, vec3, vec4, 或是整型向量ivec以及布尔型向量bvec</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><strong>矩阵</strong>：mat2, mat3, mat4，数组按列存储，访问数组元素的标准形式为m[row][column]</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt"><strong>C++风格的构造器</strong>：vec3 a=vec3(1.0,2.0, 3.0); 或是 vec2 b=vec2(a);</li>
+                    </ul>
+                    <p class="fragment" style="font-size:24pt"><a href="https://www.khronos.org/opengles/" target="_blank">OpenGL ES Reference</a></p>
+                </section>
+                <section>
+                    <h3>关于指针</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">GLSL中没有定义指针，所有的变量在传递时都按值传递，建立变量的本地副本。并且，因为向量和矩阵都是基本数据类型，可以直接在GLSL函数中作为输入输出使用，如mat3 func(mat3 a)</p>
+                </section>
+                <section>
+                    <h3>修饰符</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">GLSL也定义了许多和C/C++类似的修饰符，如const</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">GLSL程序中，变量可以在不同的图元、不同的顶点、不同的面片以及应用程序的不同阶段都会发生变化</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">在面片着色器中，顶点的属性可以在光栅化阶段通过插值计算得到对应的面片属性值</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>属性修饰符</h3>
+                    <ul>
+                       <li class="fragment" style="text-align:left;font-size:24pt">每个顶点用属性修饰符修饰的变量最多可以改变一次值，有一些如gl_Position之类的内建变量，但是很多已在新版本中不再支持</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">属性修饰符也可用于用户定义的变量，如in float temperature; in vec3 velocity;</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">WebGL 1.0用attribute和varying修饰符区分用于输入着色器和从着色器输出的变量</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>常量修饰符</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">在图元中不会改变的值即为常量，可以在应用程序中修改并将其值传递给着色器，但在着色器内部不能改变。</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">一般常量用于往着色器传递时间、图元的包围盒、变换矩阵等信息</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>变量修饰符</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">变量会在顶点着色器和面片着色器之间传递，在光栅化阶段会自动通过插值计算</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">在WebGL 1.0标准中，在两个着色器中都用<strong>varying</strong>修饰变量，如varying vec4 color;</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">在新的WebGL版本中，在顶点着色器和面片着色器中，分别用<strong>out</strong>和<strong>in</strong>表示变量，如<br>
+                        out vec4 color;//vertex shader<br>
+                        in vec4 color;//fragment shader</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>命名原则</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">一般传递给顶点着色器的变量在应用程序和着色器中命名都以"v"开头，如vPosition, vColor，当然这两者是不同的变量</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">只存在着色器中的变量命名以"f"开头，如fColor，且必须具有相同的命名</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">对于常量，不需要前缀，在应用程序和着色器中可以同名</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>操作符和函数</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">GLSL提供的函数中，有类似C的标准库函数，如三角函数，数学运算函数，一些向量正则化、反射、长度计算等功能函数</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">并且，根据向量和矩阵的不同数据类型，提供了操作符的重载，如</li>
+                    </ul>
+                    <pre class="fragment"><code class="OpenGL Shading Language">
+mat4 a;
+vec4 b, c, d;
+c=b*a; // a column vector stored as a 1d array
+d=a*b; // a row vector stored as a 1d array
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>数组元素交叉访问和选择</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">数组中的元素可以用[]或(.)操作符访问，其中数组中的元素可以用以下三种序列形式：</li>
+                        <ul class="fragment">
+                            <li style="text-align:left;font-size:24pt">x,y,z,w</li>
+                            <li style="text-align:left;font-size:24pt">r,g,b,a</li>
+                            <li style="text-align:left;font-size:24pt">s,t,p,q</li>
+                            <li style="text-align:left;font-size:24pt">如a[2]和a.b, a.z, a.p都是等效的</li>
+                        </ul>
+                    <li class="fragment" style="text-align:left;font-size:24pt">交叉访问操作符可以让用户更自由地操作数组中的元素，如</li>
+                    </ul>
+                    
+                    <pre class="fragment"><code class="OpenGL Shading Language">
+vec4 a, b;
+a.yz=vec2(1.0, 2.0, 3.0, 4.0);
+b=a.yxzw;
+                    </code></pre>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>第五部分：着色器编程</h3>
+                </section>
+                <section>
+                    <h3>顶点着色器和片元着色器</h3>
+                    <dl>
+                        <dt style="color:red;font-weight:bold;">顶点着色器</dt>
+                        <dd class="fragment" style="text-align:left;font-size:24pt">对每个顶点进行处理，将顶点的位置从三维世界坐标系转换到二维裁剪后的坐标系，用于流水线的下一阶段的处理，比如用于光栅化。同时还能处理顶点的其它属性，包括位置、颜色、纹理坐标等，但顶点着色器不会增加顶点</dd>
+                        <dt style="color:red;font-weight:bold;">面片着色器</dt>
+                        
+                        <dd class="fragment" style="text-align:left;font-size:24pt">对光栅化后生成的每个面片计算其在窗口中对应像素的颜色及深度值</dd>
+                    </dl>
+                </section>
+                <section>
+                    <h3>顶点着色器应用</h3>
+                    <div class="fragment columnleft" style="width:33.3%">
+                        <img src="../../images/cg/chap02/ch02-Animated-morphing.gif">
+                        <figurecaption style="font-size:x-large">形变(Morphing)</figurecaption>
+                    </div>
+                    <div class="fragment columnleft" width="width:66.7">
+                        <div class="fragment row">
+                            <img src="../../images/cg/chap02/ch02-water-shader.gif" style="width:90%">
+                            <br>
+                            <figurecaption style="font-size:x-large">波粒运动(Wave motion)</figurecaption>
+                        </div>
+                        <div class="fragment row">
+                            <img src="../../images/cg/chap02/ch02-fractal-julia_dust_big.png" style="width:90%">
+                            <br>
+                            <figurecaption style="font-size:x-large">分形(Fractals)</figurecaption>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>面片着色器应用</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">面片光照计算</p>
+                    <figure class="fragment">
+                        <img class="fragment" src="../../images/cg/chap02/ch02-fragmentlight.png" style="width:100%">
+                        <figcaption style="font-size:24pt"> 顶点光照计算 vs. 面片光照计算 </figcaption>
+                    </figure>
+                </section>
+                <section>
+                    <h3>面片着色器应用(2)</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt;font-weight:bold">纹理映射</p>
+                    <div class="fragment columnleft" style="width:30%">
+                        <img src="../../images/cg/chap02/ch02-teapot-smooth-shading.png">
+                        <figurecaption>平滑渲染</figurecaption>
+                    </div>
+                    <div class="fragment columnleft" style="width:40%">
+                        <img src="../../images/cg/chap02/ch02-teapot-environmapping.png">
+                        <figurecaption>环境映射</figurecaption>
+                    </div>
+                    <div class="fragment columnleft" style="width:30%">
+                        <img src="../../images/cg/chap02/ch02-teapot-bumpmapping.png">
+                        <figurecaption>凹凸映射</figurecaption>
+                    </div>
+                </section>
+                <section>
+                    <h3>顶点着色器执行模型</h3>
+                    <img class="fragment" src="../../images/cg/chap02/ch02-vshadermodel.png" style="width:100%">
+                </section>
+                <section>
+                    <h3>面片着色器执行模型</h3>
+                    <img class="fragment" src="../../images/cg/chap02/ch02-fshadermodel.png" style="width:100%">
+                </section>
+                <section>
+                    <h3>着色器程序链接</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">将着色器程序与应用程序进行连接，需要以下步骤：</p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">读着色器程序</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">编译着色器程序</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">创建程序对象</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">将所有内容链接在一起</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">连接应用程序的变量和着色器中的变量，包括顶点的属性、各种常量等</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>精度声明</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">GLSL中，我们必须为面片着色器中的数据声明精度，这是因为WebGL的版本继承自OpenGL ES，而ES版本必须运行在一些简单嵌入式设备中，可能并不支持32位浮点运算。同时，所有的实现都必须支持mediump。而在面片着色器中，并未对float类型设定默认精度</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">精度定义可以用预处理器(#ifdef)检查，如果没有，需要默认设置为mediump</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>第六部分：多边形</h3>
+                </section>
+                <section>
+                    <h3>图元</h3>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap02/ch02-geoprim.png" style="width:80%"><br>
+                        <figurecaption>OpenGL图元定义</figurecaption>    
+                    </div>
+                </section>
+                <section id="wglprim2">
+                    <h3>图元</h3>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap02/ch02-geoprim2.png" style="width:80%"><br>
+                        <figurecaption>WebGL图元定义</figurecaption>
+                    </div>
+                </section>
+                <section id="polygon1">
+                    <h3>关于多边形</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">多边形，可定义以下三种属性：</p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">简单，即所有的边都不相交</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">凸多边形，连接任意两个多边形顶点的线段上的所有点，均位于多边形内</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">平面多边形，即所有的点都位于同一个平面上</li>
+                    </ul>
+                    
+                    <p class="fragment" style="text-align:left;font-size:24pt">关于WebGL渲染</p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">WebGL只渲染三角形，三角形完全具备以上三种属性，是最简单的多边形</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">若需要渲染多边形，需将多边形分解成若干三角形(三角化)</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">在OpenGL中支持GL_QUADS，即能够支持这种分解，但在WebGL中不行</li>
+                    </ul>
+                </section>
+                <section id="notriangle">
+                    <h3>多边形测试</h3>
+                    <p style="text-align:left;font-size:80%">从概念上讲，测试多边形是否是简单多边形，是否是凸多边形虽然简单，实际实现却很耗时，因此在现在的版本实现中只保留了渲染三角形，而将多边形划分成三角形的工作交由用户完成</p>
+                </section>
+                <section id="triangulate">
+                    <h3>三角化</h3>
+                    <div class="fragment columnleft" style="width:33.3%">
+                        <canvas id="canvas1" width="300" height="300">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("canvas1");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.moveTo(30, 100);
+                            ctx.lineTo(170, 20);
+                            ctx.lineTo(240, 120);
+                            ctx.lineTo(140, 200);
+                            ctx.closePath();
+                            ctx.stroke();
+                        </script>
+                            <p><small>待三角化四边形</small></p>
+                    </div>
+                    <div class="fragment columnleft" style="width:33.3%">
+                        <canvas id="canvas2" width="300" height="300">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("canvas2");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.moveTo(30, 100);
+                            ctx.lineTo(170, 20);
+                            ctx.lineTo(240, 120);
+                            ctx.lineTo(140, 200);
+                            ctx.closePath();
+                            ctx.moveTo(30, 100);
+                            ctx.lineTo(240, 120);
+                            ctx.stroke();
+                        </script>
+                            <p><small>"坏"三角化</small></p>
+                    </div>
+                    <div class="fragment columnleft" style="width:33.3%">
+                        <canvas id="canvas3" width="300" height="300">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("canvas3");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.moveTo(30, 100);
+                            ctx.lineTo(170, 20);
+                            ctx.lineTo(240, 120);
+                            ctx.lineTo(140, 200);
+                            ctx.closePath();
+                            ctx.moveTo(170, 20);
+                            ctx.lineTo(140, 200);
+                            ctx.stroke();
+                        </script>
+                            <p><small>"好"三角化</small></p>
+                    </div>
+                </section>
+                <section id="ruletria">
+                    <h3>三角化原则</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">避免扁长三角形，即内角为钝角的三角形</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">划分可采用最大化最小角原则</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">对于非结构化点集，可采用Delaunay三角划分</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">所有三角形中，等边三角形的绘制速度最快</li>
+                    </ul>
+                </section>
+                <section id="convtria">
+                    <h3>凸多边形三角化</h3>
+                        <canvas id="convTria" width="400" height="400">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("convTria");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(40, 260);
+                            ctx.lineTo(70, 140);
+                            ctx.lineTo(170, 30);
+                            ctx.lineTo(290, 40);
+                            ctx.lineTo(360, 180);
+                            ctx.lineTo(340, 270);
+                            ctx.lineTo(250, 380)
+                            ctx.closePath();
+                            //ab, ac, ad, ae, af...
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(70, 140);
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(170, 30);
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(290, 40);
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(360, 180);
+                            ctx.moveTo(100, 370);
+                            ctx.lineTo(340, 270);
+                            ctx.stroke();
+                            ctx.font = "24px Arial";
+                            ctx.fillText("a", 90, 380);
+                            ctx.fillText("b", 30, 260);
+                            ctx.fillText("c", 60, 135);
+                            ctx.fillText("d", 165, 25);
+                            ctx.fillText("e", 290, 35);
+                            ctx.fillText("f", 370, 180);
+                            ctx.fillText("g", 350, 270);
+                            ctx.fillText("h", 260, 390);
+                        </script>
+                        <p class="fragment" style="text-align:left;font-size:24pt%
+						">凸多边形三角化，从abc开始，拿掉b，加上acd，拿掉c，加上ade......</p>
+                </section>
+                <section id="ncontria">
+                    <h3>非凸多边形三角化</h3>
+                    <div class="fragment columnleft">
+                        <canvas id="nonconv1" width="400" height="400">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("nonconv1");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.setLineDash([]);
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(150, 120);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.setLineDash([5, 10]);
+                            ctx.moveTo(160, 30);
+                            ctx.lineTo(290, 330);
+                            ctx.stroke();
+                            ctx.font = "24px Arial";
+                            ctx.fillText("V" + String.fromCharCode(7522), 10, 220);
+                            ctx.fillText("V" + String.fromCharCode(7522) + String.fromCharCode(8331) + String.fromCharCode(8321), 155, 25);
+                            ctx.fillText("V" + String.fromCharCode(7522) + String.fromCharCode(8330) + String.fromCharCode(8321), 290, 350);
+                        </script>
+                        <p class="fragment" style="font-size:24pt">非凸多边形</p>
+                    </div>
+                    <div class="fragment columnleft">
+                        <canvas id="nonconv2" width="400" height="400">
+                        </canvas>
+                        <script>
+                            var canvas = document.getElementById("nonconv2");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.setLineDash([]);
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(150, 120);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.setLineDash([5, 10]);
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(150, 120);
+                            ctx.stroke();
+                            ctx.font = "24px Arial";
+                            ctx.fillText("V" + String.fromCharCode(7522), 10, 220);
+                            ctx.fillText("V" + String.fromCharCode(7522) + String.fromCharCode(8331) + String.fromCharCode(8321), 155, 25);
+                            ctx.fillText("V" + String.fromCharCode(7522) + String.fromCharCode(8330) + String.fromCharCode(8321), 290, 350);
+                        </script>
+                        <p class="fragment" style="font-size:24pt">非凸多边形分割，从最左边的点开始</p>
+                    </div>
+                </section>
+                <section id="attrib">
+                    <h3>属性</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">属性决定了物体的外观，包括如下几点:</p>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">颜色，点、线、多边形的颜色</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">大小和宽度，点的大小，线的宽度</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">线的点画模式，线段和多边形的边界用的实线还是虚线</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">多边形模式，如填充模式，是纯色填充还是阴影填充？是否绘制边框？是否绘制顶点？等等</li>
+                    </ul>
+                    <p class="fragment" style="text-align:left;font-size:24pt">以上属性在OpenGL中能够得到完整支持，但是在WebGL中只有少部分支持，如<text style="color:darkblue">gl_PointSize</text></p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>第七部分：颜色</h3>
+                </section>
+                <section id="rgbcolor">
+                    <h3>RGB颜色</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">每种颜色分量在帧缓存中都是独立存储，每种颜色各占8位，颜色值用0.0到1.0之间的浮点数表示，对应于非负整型的0到255</p>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap02/ch02-rgbcolor.png" style="width:100%">
+                    </div>
+                </section>
+                <section id="idxcolor">
+                    <h3>颜色索引</h3>
+                    <p class="fragmnet" style="text-align:left;font-size:24pt">颜色通过索引表查找得到，一般用8位索引，适用于内存空间较少的情况，能够表示的颜色较少，无法满足阴影绘制的需要，现在已较少采用</p>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap02/ch02-indexcolor.png" style="width:100%">
+                    </div>
+                </section>
+                <section id="smocolor">
+                    <h3>颜色平滑</h3>
+                    <div class="columnleft" style="width:60%">
+                    <p class="fragment" style="text-align:left;font-size:24pt">颜色平滑处理默认采用<strong>平滑着色(Smooth shading)</strong>，在光栅化阶段，在可见的多边形上对顶点颜色进行插值</p>
+                    <p class="fragment" style="text-align:left;font-size:24pt">另一种为<strong>平面着色(Flat shading)</strong>，多边形的颜色由第一个顶点的颜色决定，并在着色器中处理</p>
+                    </div>
+                    <div class="fragment columnleft" style="width:40%">
+                    <img src="../../images/cg/chap02/ch02-smoothcube.png">
+                    </div>
+                </section>
+                <section id="setcolor">
+                    <h3>设置颜色</h3>
+                    <p class="fragment" style="text-align:left;font-size:24pt">颜色是在<strong>面片着色器</strong>中设置，但其值可以由应用程序或是任一着色器设定</p>
+                    <p class="fragment" style="text-align:left;font-size:24pt">在应用程序中设定颜色，需将颜色值作为常量传递给顶点着色器或作为顶点属性进行传递</p>
+                    <p class="fragment" style="text-align:left;font-size:24pt">在顶点着色器中设定，需将其值作为变量传递给面片着色器</p>
+                    <p class="fragment" style="text-align:left;font-size:24pt">在面片着色器中设定，可通过代码修改</p>
+                </section>
+            </section>
+
+            <!-- S - 总结 (Summary) -->
+            <section>
+                <section>
+                    <h2>课程总结</h2>
+                    <ul>
+                        <li class="fragment" style="font-size:28pt">理解了<strong style="color:#2a76dd;">现代图形编程的通用模型，以及WebGL与原生OpenGL的异同</strong></li>
+                        <li class="fragment" style="font-size:28pt">掌握了<strong style="color:#2a76dd;">GLSL着色器语言的基础语法和核心概念</strong></li>
+                        <li class="fragment" style="font-size:28pt">理解了 <strong style="color:#2a76dd;">图形绘制的基本图元（特别是三角形）和颜色表示方法</strong></li>
+                    </ul>
+                </section>
+                
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 900,
+    height: 900,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>
