@@ -23,9 +23,9 @@
 
 ### 第3章
 
-|    |    |    |
-| ---- | ---- | ---- |
-|[第3章-1](./CourseWare/CGChapters/Lecture_3/Lecture_3_1.html)| | |
+|    | 
+| ---- |
+|[第3章-1](./CourseWare/CGChapters/Lecture_3/Lecture_3_1.html)|
 
 ## Demo
 
