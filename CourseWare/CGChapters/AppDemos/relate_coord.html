@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坐标系变换交互式演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        /* Custom slider styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #374151; /* gray-700 */
+            border-radius: 5px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #38bdf8; /* sky-400 */
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #374151;
+            border-radius: 5px;
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Canvas -->
+        <div class="lg:col-span-2 w-full aspect-video lg:aspect-auto lg:h-full bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 border-2 border-gray-700">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- Control and Display Panel -->
+        <div class="w-full bg-gray-800/80 p-6 rounded-2xl border-2 border-gray-700 backdrop-blur-sm">
+            <h1 class="text-2xl font-bold text-cyan-400 mb-6 border-b-2 border-cyan-500/50 pb-3">控制与显示面板</h1>
+            
+            <!-- Controls -->
+            <div class="space-y-6">
+                <div>
+                    <label for="originX" class="text-lg font-medium">局部原点 X: <span id="originX_val" class="font-mono text-sky-400">50</span></label>
+                    <input type="range" id="originX" min="0" max="400" value="50" class="mt-2">
+                </div>
+                <div>
+                    <label for="originY" class="text-lg font-medium">局部原点 Y: <span id="originY_val" class="font-mono text-sky-400">50</span></label>
+                    <input type="range" id="originY" min="0" max="300" value="50" class="mt-2">
+                </div>
+                <div>
+                    <label for="rotation" class="text-lg font-medium">局部旋转 θ: <span id="rotation_val" class="font-mono text-sky-400">0</span>°</label>
+                    <input type="range" id="rotation" min="-180" max="180" value="0" class="mt-2">
+                </div>
+            </div>
+
+            <!-- Display -->
+            <div class="mt-10 pt-6 border-t-2 border-gray-700 space-y-4">
+                 <h2 class="text-xl font-semibold text-cyan-400">坐标显示</h2>
+                 <div class="bg-gray-900 p-4 rounded-lg">
+                     <p class="text-lg">
+                         P 在<strong class="text-gray-400">世界坐标</strong>: 
+                         <span id="p_world_coords" class="font-mono text-lg text-green-400 float-right"></span>
+                     </p>
+                 </div>
+                 <div class="bg-gray-900 p-4 rounded-lg">
+                     <p class="text-lg">
+                         P 在<strong class="text-red-400">局部坐标</strong>: 
+                         <span id="p_local_coords" class="font-mono text-lg text-yellow-400 float-right"></span>
+                     </p>
+                 </div>
+            </div>
+            
+             <div class="mt-6 text-xs text-gray-500 text-center">
+                <p>调整滑块，观察<strong class="text-red-400">红色局部坐标系</strong>的变化，以及点P相对于它的坐标如何实时更新。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Controls
+        const originXSlider = document.getElementById('originX');
+        const originYSlider = document.getElementById('originY');
+        const rotationSlider = document.getElementById('rotation');
+        
+        // Control Value Displays
+        const originXVal = document.getElementById('originX_val');
+        const originYVal = document.getElementById('originY_val');
+        const rotationVal = document.getElementById('rotation_val');
+
+        // Coordinate Displays
+        const pWorldCoordsEl = document.getElementById('p_world_coords');
+        const pLocalCoordsEl = document.getElementById('p_local_coords');
+
+        // State
+        const pWorld = { x: 100, y: 80 };
+        let localFrame = {
+            origin: { x: 50, y: 50 },
+            rotation: 0 // in degrees
+        };
+        
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth * window.devicePixelRatio;
+            canvas.height = container.clientHeight * window.devicePixelRatio;
+            canvas.style.width = `${container.clientWidth}px`;
+            canvas.style.height = `${container.clientHeight}px`;
+            draw();
+        }
+
+        // --- Drawing Functions ---
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(75, 85, 99, 0.5)';
+            ctx.lineWidth = 1 * window.devicePixelRatio;
+            const gridSize = 50 * window.devicePixelRatio;
+
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawWorldFrame() {
+            // Invert Y for Cartesian-like system
+            const transformAndDraw = (drawFunc) => {
+                ctx.save();
+                ctx.translate(0, canvas.height);
+                ctx.scale(1, -1);
+                drawFunc();
+                ctx.restore();
+            };
+            
+            transformAndDraw(() => {
+                const dpr = window.devicePixelRatio;
+                ctx.strokeStyle = '#9ca3af'; // gray-400
+                ctx.lineWidth = 3 * dpr;
+                
+                // Y-Axis
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, canvas.height);
+                ctx.stroke();
+                // X-Axis
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(canvas.width, 0);
+                ctx.stroke();
+                
+                // Labels
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = `${14 * dpr}px 'Noto Sans SC'`;
+                ctx.scale(1,-1); // Re-invert for text
+                ctx.fillText('Y_w', 5 * dpr, -(canvas.height - 20 * dpr));
+                ctx.fillText('X_w', canvas.width - 30 * dpr, -5 * dpr);
+            });
+        }
+        
+        function drawLocalFrame() {
+            const transformAndDraw = (drawFunc) => {
+                ctx.save();
+                ctx.translate(0, canvas.height);
+                ctx.scale(1, -1);
+                drawFunc();
+                ctx.restore();
+            };
+
+            transformAndDraw(() => {
+                const dpr = window.devicePixelRatio;
+                ctx.save();
+                // 1. Move to origin
+                ctx.translate(localFrame.origin.x * dpr, localFrame.origin.y * dpr);
+                // 2. Rotate
+                ctx.rotate(localFrame.rotation * Math.PI / 180);
+
+                // Draw axes
+                ctx.strokeStyle = '#f87171'; // red-400
+                ctx.lineWidth = 3 * dpr;
+                const axisLength = 60 * dpr;
+                
+                // Local X-Axis
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(axisLength, 0);
+                ctx.stroke();
+                
+                // Local Y-Axis
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, axisLength);
+                ctx.stroke();
+
+                // Labels
+                ctx.fillStyle = '#f87171';
+                ctx.font = `${12 * dpr}px 'Noto Sans SC'`;
+                ctx.scale(1,-1); // Re-invert for text
+                ctx.fillText('y_L', 5 * dpr, -axisLength);
+                ctx.fillText('x_L', axisLength, 15 * dpr);
+
+                ctx.restore();
+            });
+        }
+
+        function drawPointP() {
+            const transformAndDraw = (drawFunc) => {
+                ctx.save();
+                ctx.translate(0, canvas.height);
+                ctx.scale(1, -1);
+                drawFunc();
+                ctx.restore();
+            };
+
+            transformAndDraw(() => {
+                const dpr = window.devicePixelRatio;
+                ctx.beginPath();
+                ctx.arc(pWorld.x * dpr, pWorld.y * dpr, 6 * dpr, 0, 2 * Math.PI);
+                ctx.fillStyle = '#4ade80'; // green-400
+                ctx.fill();
+                
+                // Label
+                ctx.fillStyle = '#4ade80';
+                ctx.font = `${14 * dpr}px 'Noto Sans SC'`;
+                ctx.scale(1,-1);
+                ctx.fillText('P', pWorld.x * dpr - 5*dpr, -(pWorld.y * dpr + 10*dpr));
+            });
+        }
+        
+        // --- Calculation ---
+        function calculateLocalCoordinates() {
+            // Vector from local origin to P in world frame
+            const vecX = pWorld.x - localFrame.origin.x;
+            const vecY = pWorld.y - localFrame.origin.y;
+
+            // Apply inverse rotation to the vector
+            const angleRad = -localFrame.rotation * Math.PI / 180; // Negative angle for inverse
+            const cosA = Math.cos(angleRad);
+            const sinA = Math.sin(angleRad);
+
+            const pLocalX = vecX * cosA - vecY * sinA;
+            const pLocalY = vecX * sinA + vecY * cosA;
+
+            return { x: pLocalX, y: pLocalY };
+        }
+
+        // --- Main Update and Draw Loop ---
+        function update() {
+            // 1. Update state from sliders
+            localFrame.origin.x = Number(originXSlider.value);
+            localFrame.origin.y = Number(originYSlider.value);
+            localFrame.rotation = Number(rotationSlider.value);
+            
+            // 2. Update slider value displays
+            originXVal.textContent = localFrame.origin.x;
+            originYVal.textContent = localFrame.origin.y;
+            rotationVal.textContent = `${localFrame.rotation}°`;
+            
+            // 3. Perform calculations
+            const pLocal = calculateLocalCoordinates();
+
+            // 4. Update display readouts
+            pWorldCoordsEl.textContent = `(${pWorld.x}, ${pWorld.y})`;
+            pLocalCoordsEl.textContent = `(${pLocal.x.toFixed(2)}, ${pLocal.y.toFixed(2)})`;
+            
+            // 5. Redraw canvas
+            draw();
+        }
+
+        function draw() {
+            const dpr = window.devicePixelRatio;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.scale(dpr,dpr); // Scale for high-DPI displays at the end before draw calls if not handled per-call
+
+            // We handle DPR manually in drawing functions, so let's reset scale
+            ctx.restore();
+
+            drawGrid();
+            drawWorldFrame();
+            drawLocalFrame();
+            drawPointP();
+        }
+        
+        // --- Event Listeners ---
+        window.addEventListener('resize', resizeCanvas);
+        originXSlider.addEventListener('input', update);
+        originYSlider.addEventListener('input', update);
+        rotationSlider.addEventListener('input', update);
+
+        // Initial setup
+        resizeCanvas();
+        update(); // Initial update to populate values
+    </script>
+</body>
+</html>

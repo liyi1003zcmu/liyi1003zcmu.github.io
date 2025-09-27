@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--图形学编程概述</title>
+
+    <meta name="description" content="WebGL程序解析">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第二章(3) 图形学编程概述</h2>
+                
+                <p id="date"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section id="copro">
+                <h3>画一个正方形</h3>
+                <img src="../../images/cg/chap02/ch02-demo2.png" style="width:100%">
+            </section>
+
+            <section id="wglcomp">
+                <h3>完整程序内容</h3>
+                <ul>
+                    <li class="fragment" style="text-align:left;font-size:24pt">描述性网页(HTML文件)，提供对WebGL画板的支持，以实现渲染，同时通过网页获取其它所需文件</li>
+                    <li class="fragment" style="text-align:left;font-size:24pt">定义着色器(HTML文件头)，也可以定义在单独的文件中，取决于所采用的浏览器</li>
+                    <li class="fragment" style="text-align:left;font-size:24pt">运算过程描述、数据描述(JavaScript源文件)</li>
+                    <li class="fragment" style="text-align:left;font-size:24pt">将数据送入GPU(JavaScript源文件)</li>
+                    <li class="fragment" style="text-align:left;font-size:24pt">数据渲染(JavaScript文件)</li>
+                </ul>
+            </section>
+            <section>
+                <section id="wglhtml">
+                    <h3>HTML文件</h3>
+                    <pre><code class="HTML" style="font-size:x-large" data-trim data-line-numbers="26-28|5-11|12-17|18-23">
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html;charset=utf-8"&gt;
+  &lt;title&gt;First WebGL Demo&lt;/title&gt;
+  &lt;!-- 顶点着色器和片元着色器代码 --&gt;
+  &lt;script id="vertex-shader" type="x-shader/x-vertex"&gt;
+    #version 300 es
+    in vec4 vPosition;
+    void main(){
+        gl_Position = vPosition;
+    }
+  &lt;/script&gt;
+  &lt;script id="fragment-shader" type="x-shader/x-fragment"&gt;
+    #version 300 es	
+    precision mediump float;
+			
+    out vec4 fColor;
+    void main(){
+        fColor = vec4( 1.0, 1.0, 0.0, 1.0 );
+    }
+  &lt;/script&gt;
+  &lt;!-- 一组相关的JS库 --&gt;
+  &lt;script type="text/javascript" src="../js/common/webgl-utils.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/common/initShaders.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="../js/common/glMatrix-0.9.5.min.js"&gt;&lt;/script&gt;
+  &lt;!-- 绘制三角形的JS代码 --&gt;
+  &lt;script type="text/javascript" src="../js/ch01/square.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+  &lt;canvas id="square-canvas" style="border:none;" width="500" height="500"&gt;&lt;/canvas&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+                    </code></pre>
+                </section>
+                <section id="shader">
+                    <h2>WebGL程序解析</h2>
+                    <h3>关于Shader的解释</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">首先，需要分别为两段Shader程序命名并指明其类型，分别为顶点着色器vertex-shader和面片着色器fragment-shader，该命名用于在JS文件中调用</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">着色器之间可传递数据，在当前程序中，用于传递的数据变量为gl_Position和fColor，实际上并没有做什么</li> 
+                        <li class="fragment" style="text-align:left;font-size:24pt">两段着色器文件都是完整的程序，注意有main</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">向量类型为vec4，为shader的内建向量类型，着色器中同样可以根据数据精度设置对应的数据类型</li>
+                    </ul>
+                </section>
+                <section id="depfiles">
+                    <h2>WebGL程序解析</h2>
+                    <h3>包含文件</h3>
+                    <dl>
+                        <dt style="font-size:24pt">../js/common/webgl-utils.js</dt>
+                        <dd class="fragment" style="font-size:24pt">用于设置WebGL环境的工具，对于底层工具进行了封装，便于调用</dd>
+                        <dt style="font-size:24pt">../js/common/initShaders.js</dt>
+                        <dd class="fragment" style="font-size:24pt">包含了对Shader程序进行读取、编译、链接的相关工具代码</dd>
+                        <dt style="font-size:24pt">../js/common/glMatrix-0.9.5.min.js</dt>
+                        <dd class="fragment" style="font-size:24pt">提供了处理矩阵和向量计算的工具</dd>
+                        <dt style="font-size:24pt">../js/ch01/square.js</dt>
+                        <dd class="fragment" style="font-size:24pt">应用程序文件</dd>
+                    </dl>
+                </section>
+            </section>
+            <section>
+                <section id="jsfile">
+                    <h2>WebGL程序解析</h2>
+                    <h3>JavaScript文件</h3>
+                    <pre><code class="JavaScript" style="font-size:x-large" data-trim data-line-numbers="6|7-8|13-20|21-23|25-27|29-37|41-43">
+"use strict";
+
+var gl;
+
+window.onload = function init(){
+    var canvas = document.getElementById( "square-canvas" );
+    gl = canvas.getContext("webgl2");
+    if( !gl ){
+        alert( "WebGL isn't available" );
+    }
+
+    // Four Vertices
+    var points = new Float32Array([
+        -0.5, -0.5,
+         0.5, -0.5,
+         0.5,  0.5,
+        -0.5,  0.5,
+        //-0.5, -0.5,
+        // 0.5, 0.5
+    ]);
+
+    var colors=new Float32Array([
+        0.0, 1.0, 0.0, 1.0,
+        //0.0, 1.0, 0.0, 1.0,
+        //0.0, 0.0, 1.0, 1.0,
+        //1.0, 0.0, 1.0, 1.0
+    ]);
+
+    // Configure WebGL
+    gl.viewport( 0, 0, canvas.width/2, canvas.height/2 );
+    gl.clearColor( 1.0, 0.0, 0.0, 1.0 );
+
+    // Load shaders and initialize attribute buffers
+    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    gl.useProgram( program );
+
+    // Load the data into the GPU
+    var bufferId = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
+    gl.bufferData( gl.ARRAY_BUFFER, points, gl.STATIC_DRAW );
+
+    // Associate external shader variables with data buffer
+    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vPosition );
+
+    
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+    var vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+    
+    
+    render();
+}
+
+function render(){
+    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.drawArrays( gl.TRIANGLE_FAN, 0, 4 );
+    //gl.drawArrays( gl.TRIANGLES, 0, 6 );
+    //gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
+}                    
+                    </code></pre>
+                </section>
+                <section id="jsexp1">
+                    <h3>JavaScript文件说明</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 6. 当已经载入所有的代码后，就从该位置开始执行代码</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 7-8. 从HTML文件中获取WebGL用于渲染的画布环境</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 13-20. 定义了正方形的四个顶点，为八个浮点数</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 29-31. 定义视口，用于绘制的区域，顶点位置会映射到此区域</li>
+                    </ul>
+                </section>
+                <section id="jsexp2">
+                    <h3>JavaScript文件说明(续)</h3>
+                    <ul>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 33-35. initShaders用于载入、编译、链接着色器程序代码，构建程序对象</li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 37-54. 通过创建Vertex Buffer Object(VBO)，将顶点位置数据传递给GPU，这里采用的数据类型为与C中相类似的float32，并将传入的顶点数据与着色器程序中的变量相联系，即顶点着色器中的vPosition，注意在第36行，声明了位置的属性为vec2。<strong style="color:red">将变量值赋给着色器变量，需要声明在缓存中的名字、类型和位置</strong></li>
+                        <li class="fragment" style="text-align:left;font-size:24pt">line 61-64. 实际渲染代码，将四个顶点的数组以三角扇的形式绘制出来，可同时尝试参数gl.TRIANGLES, gl.TRIANGLE_STRIP</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 900,
+    height: 900,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>

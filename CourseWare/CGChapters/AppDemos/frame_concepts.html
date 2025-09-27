@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图形学核心概念：坐标系、标架与表示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .concept-table th, .concept-table td {
+            border: 1px solid #4a5568; /* gray-700 */
+            padding: 12px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 p-4 sm:p-6 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl lg:text-4xl font-bold text-cyan-400">图形学核心概念辨析</h1>
+            <p class="mt-2 text-lg text-gray-400">理解坐标系 (Coordinate System)、标架 (Frame) 与表示 (Representation)</p>
+        </header>
+
+        <main class="space-y-12">
+            <!-- Main Concepts Table -->
+            <section class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-cyan-400 border-b-2 border-cyan-500/50 pb-2">核心概念详解</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full concept-table border-collapse">
+                        <thead class="bg-gray-700 text-gray-100">
+                            <tr>
+                                <th class="w-1/6">概念</th>
+                                <th class="w-2/6">定义与本质</th>
+                                <th class="w-3/6">特性与实际应用</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-bold text-lg text-green-400">坐标系</td>
+                                <td>一套用于定位点的参考系统，由一组相互正交（通常情况）的<strong>基向量</strong>定义。它只定义了方向和尺度，没有特定的原点。可以把它想象成一张<strong>无限大的、没有“零点”标记的网格纸</strong>。</td>
+                                <td>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>特性:</strong> 抽象，只关心方向。</li>
+                                        <li><strong>应用案例:</strong>
+                                            <br> - <strong>世界坐标系 (World Space):</strong> 描述游戏或虚拟场景中所有对象的全局参考。
+                                            <br> - <strong>模型坐标系 (Object/Model Space):</strong> 艺术家创建3D模型时使用的自身坐标系，例如，人物模型的脚底可能在(0,0,0)。
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-lg text-yellow-400">标架</td>
+                                <td>一个<strong>“锚定”了的坐标系</strong>。它由一个<strong>原点 (Origin)</strong> 和一组<strong>基向量</strong>组成。它提供了定位空间中任何点所需的全部信息。可以想象成<strong>在网格纸上明确标出了原点(0,0)</strong>。</td>
+                                <td>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>特性:</strong> 具体，包含原点和方向，是坐标系的实例。</li>
+                                        <li><strong>应用案例:</strong>
+                                            <br> - <strong>相机标架 (Camera/View Space):</strong> 以相机位置为原点，相机的观察方向为Z轴。所有物体的位置都相对于相机来描述，方便进行投影变换。
+                                            <br> - <strong>机器人手臂的末端执行器:</strong> 它的位置和姿态可以用一个标架来描述，原点在执行器中心，基向量定义了它的方向。
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-lg text-red-400">表示 / 坐标</td>
+                                <td>一个点或向量在<strong>某个特定标架</strong>下的数值描述。它是一组有序的标量（例如 (x, y, z)），表示从该标架原点出发，沿着基向量方向移动多少距离可以到达该点。</td>
+                                <td>
+                                     <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>特性:</strong> 相对性，同一个点在不同标架下的表示（坐标）是不同的。</li>
+                                        <li><strong>应用案例:</strong>
+                                            <br> - <strong>坐标变换:</strong> 核心任务就是计算一个点从一个标架下的表示转换到另一个标架下的表示。例如，将一个顶点的模型坐标，转换为世界坐标，再转换为相机坐标，最后得到屏幕坐标。
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analogy & Visualization Section -->
+            <section class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-cyan-400 border-b-2 border-cyan-500/50 pb-2">游戏开发案例：角色与世界</h2>
+                <div class="flex flex-col lg:flex-row gap-6 items-center">
+                    <div class="flex-grow space-y-4">
+                        <p>想象一个2D游戏场景。整个游戏地图使用一个“世界标架”，其原点在地图左下角。</p>
+                        <p>一个游戏角色有自己的“模型标架”，其原点通常在角色的脚底中心。角色的眼睛在这个“模型标架”下的坐标（表示）可能是固定的，例如 <strong>(0, 1.7)</strong>，代表在角色脚底中心正上方1.7个单位。</p>
+                        <p>当角色在地图上移动到世界坐标 <strong>(50, 20)</strong> 时：</p>
+                        <ul class="list-disc list-inside text-gray-300">
+                            <li>角色眼睛的<strong>模型坐标表示</strong>仍然是 <span class="text-red-400 font-mono">(0, 1.7)</span>。</li>
+                            <li>但它在<strong>世界标架</strong>下的坐标（表示）就变成了 <span class="text-green-400 font-mono">(50, 21.7)</span>。</li>
+                        </ul>
+                        <p>这个从模型坐标到世界坐标的转换，正是图形学中最基本也是最重要的运算之一。</p>
+                    </div>
+                    <div class="flex-shrink-0 w-full lg:w-1/3">
+                        <svg viewBox="0 0 200 150" class="bg-gray-900 rounded-lg border-2 border-gray-700 w-full">
+                            <!-- World Frame Axes -->
+                            <line x1="10" y1="140" x2="190" y2="140" stroke="#a78bfa" stroke-width="1"/>
+                            <text x="185" y="135" fill="#a78bfa" font-size="6">X_w</text>
+                            <line x1="10" y1="140" x2="10" y2="10" stroke="#a78bfa" stroke-width="1"/>
+                            <text x="15" y="15" fill="#a78bfa" font-size="6">Y_w</text>
+                            <text x="12" y="145" fill="#a78bfa" font-size="6">(0,0)</text>
+
+                            <!-- Character at (50, 20) in World Frame -->
+                            <g transform="translate(60, 120) scale(1, -1)">
+                                <!-- Character Body -->
+                                <rect x="-5" y="0" width="10" height="20" fill="#fb923c"/>
+                                <!-- Character's Eye -->
+                                <circle cx="0" cy="17" r="1.5" fill="#f87171"/>
+                                <text x="5" y="18" fill="#f87171" font-size="5" transform="scale(1, -1)">Eye: (0, 1.7) in model frame</text>
+                                
+                                <!-- Character Model Frame Axes -->
+                                <line x1="0" y1="0" x2="15" y2="0" stroke="#60a5fa" stroke-width="0.5" />
+                                <text x="16" y="2" fill="#60a5fa" font-size="4" transform="scale(1, -1)">x_m</text>
+                                <line x1="0" y1="0" x2="0" y2="15" stroke="#60a5fa" stroke-width="0.5" />
+                                <text x="2" y="15" fill="#60a5fa" font-size="4" transform="scale(1, -1)">y_m</text>
+                                <text x="-20" y="-2" fill="#60a5fa" font-size="5" transform="scale(1, -1)">Character Frame</text>
+                            </g>
+                            
+                            <!-- Annotation Lines -->
+                            <path d="M 10 120 L 60 120" stroke="gray" stroke-width="0.5" stroke-dasharray="2,2" />
+                            <text x="30" y="125" fill="gray" font-size="5">50</text>
+                            <path d="M 60 140 L 60 120" stroke="gray" stroke-width="0.5" stroke-dasharray="2,2" />
+                            <text x="62" y="130" fill="gray" font-size="5">20</text>
+                            
+                            <circle cx="60" cy="103" r="1" fill="#f87171"/>
+                            <text x="65" y="103" fill="#f87171" font-size="5">Eye's World Position: (50, 21.7)</text>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Summary Table -->
+            <section class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-cyan-400 border-b-2 border-cyan-500/50 pb-2">总结：异同点速查</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full concept-table border-collapse">
+                         <thead class="bg-gray-700 text-gray-100">
+                            <tr>
+                                <th>方面</th>
+                                <th>坐标系</th>
+                                <th>标架</th>
+                                <th>表示 (坐标)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-bold">本质</td>
+                                <td>定义方向的<strong>抽象规则</strong></td>
+                                <td>定义位置和方向的<strong>具体参考</strong></td>
+                                <td>描述点或向量的<strong>一组数值</strong></td>
+                            </tr>
+                             <tr>
+                                <td class="font-bold">组成</td>
+                                <td>一组基向量</td>
+                                <td>一个原点 + 一组基向量</td>
+                                <td>一组标量</td>
+                            </tr>
+                             <tr>
+                                <td class="font-bold">关系</td>
+                                <td>标架是坐标系的一个实例</td>
+                                <td>点/向量在标架下有其表示</td>
+                                <td>依赖于标架而存在</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

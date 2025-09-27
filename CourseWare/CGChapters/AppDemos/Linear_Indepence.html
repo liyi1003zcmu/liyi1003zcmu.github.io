@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线性无关性可视化工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            touch-action: none;
+        }
+        .info-panel {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
+
+    <div class="w-full max-w-5xl mx-auto flex flex-col lg:flex-row gap-6">
+        
+        <!-- Canvas and controls -->
+        <div class="flex-grow flex flex-col items-center">
+            <h1 class="text-2xl lg:text-3xl font-bold text-cyan-400 mb-4">线性空间基与线性无关性</h1>
+            <div class="relative w-full aspect-square max-w-xl bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 overflow-hidden border-2 border-gray-700">
+                <canvas id="vectorCanvas"></canvas>
+                <div id="status" class="absolute top-2 left-2 text-lg font-bold px-4 py-2 rounded-lg transition-all duration-300"></div>
+                 <div class="absolute bottom-2 right-2 text-xs text-gray-400">
+                    拖动 <span class="text-red-400">v1</span> 和 <span class="text-blue-400">v2</span> 的箭头进行探索
+                </div>
+            </div>
+             <button id="resetBtn" class="mt-4 px-6 py-2 bg-gray-700 hover:bg-cyan-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                重置向量
+            </button>
+        </div>
+
+        <!-- Explanation Panel -->
+        <div class="w-full lg:w-96 flex-shrink-0">
+            <div class="bg-gray-800/50 info-panel p-6 rounded-2xl border-2 border-gray-700 h-full">
+                <h2 class="text-xl font-bold mb-4 border-b-2 border-cyan-500 pb-2">概念解释</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-semibold text-cyan-400">线性组合</h3>
+                        <p class="text-sm text-gray-300">
+                            向量 <span class="font-mono text-green-400">w</span> 是 <span class="font-mono text-red-400">v1</span> 和 <span class="font-mono text-blue-400">v2</span> 的线性组合，如果 <span class="font-mono text-green-400">w</span> = <span class="font-mono text-yellow-400">c1</span>*<span class="font-mono text-red-400">v1</span> + <span class="font-mono text-yellow-400">c2</span>*<span class="font-mono text-blue-400">v2</span>。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold text-cyan-400">线性无关 (Linearly Independent)</h3>
+                        <p class="text-sm text-gray-300">
+                            一组向量是线性无关的，当且仅当它们的唯一零组合是所有系数都为零。即：<span class="font-mono text-yellow-400">c1</span>*<span class="font-mono text-red-400">v1</span> + <span class="font-mono text-yellow-400">c2</span>*<span class="font-mono text-blue-400">v2</span> = 0 仅在 <span class="font-mono text-yellow-400">c1</span>=0, <span class="font-mono text-yellow-400">c2</span>=0 时成立。
+                        </p>
+                        <div id="independent-info" class="mt-2 text-sm p-3 bg-green-900/50 rounded-lg border border-green-500/50 hidden">
+                            <p><strong>当前状态:</strong> 向量 <span class="font-mono text-red-400">v1</span> 和 <span class="font-mono text-blue-400">v2</span> 指向不同方向。它们可以张成整个二维平面，构成一组<strong>基 (Basis)</strong>。平面内任何向量都可以由它们唯一地表示。</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-cyan-400">线性相关 (Linearly Dependent)</h3>
+                        <p class="text-sm text-gray-300">
+                            一组向量是线性相关的，如果存在不全为零的系数使得它们的线性组合为零向量。
+                        </p>
+                         <div id="dependent-info" class="mt-2 text-sm p-3 bg-red-900/50 rounded-lg border border-red-500/50 hidden">
+                             <p><strong>当前状态:</strong> 向量 <span class="font-mono text-red-400">v1</span> 和 <span class="font-mono text-blue-400">v2</span> 在同一直线上（共线）。它们无法张成整个平面，只能表示该直线上的向量。它们不能作为二维空间的基。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-gray-700">
+                         <h3 class="font-semibold text-cyan-400">行列式检验</h3>
+                         <p class="text-sm text-gray-300">
+                             由向量 <span class="font-mono text-red-400">v1</span>=<span id="v1_coords_text"></span> 和 <span class="font-mono text-blue-400">v2</span>=<span id="v2_coords_text"></span> 构成的矩阵的行列式可以判断相关性。
+                         </p>
+                         <div class="mt-2 text-center p-2 bg-gray-900 rounded-md text-lg font-mono" id="determinant-display">
+                             det(A) = 0
+                         </div>
+                         <p class="text-xs text-center mt-1 text-gray-400">行列式不为零，则线性无关；行列式为零，则线性相关。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('vectorCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusEl = document.getElementById('status');
+        const independentInfo = document.getElementById('independent-info');
+        const dependentInfo = document.getElementById('dependent-info');
+        const v1CoordsText = document.getElementById('v1_coords_text');
+        const v2CoordsText = document.getElementById('v2_coords_text');
+        const determinantDisplay = document.getElementById('determinant-display');
+        const resetButton = document.getElementById('resetBtn');
+
+        let width, height, centerX, centerY, scale;
+        
+        let v1 = { x: 2, y: 1 };
+        let v2 = { x: -1, y: 2 };
+
+        let dragging = null;
+        let isPointerDown = false;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth, container.clientHeight);
+            canvas.width = size * window.devicePixelRatio;
+            canvas.height = size * window.devicePixelRatio;
+            canvas.style.width = `${size}px`;
+            canvas.style.height = `${size}px`;
+            
+            width = canvas.width;
+            height = canvas.height;
+            centerX = width / 2;
+            centerY = height / 2;
+            scale = width / 10;
+            draw();
+        }
+        
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(75, 85, 99, 0.5)'; // gray-600 with opacity
+            ctx.lineWidth = 1 * window.devicePixelRatio;
+            
+            // Draw grid lines
+            for (let i = -5; i <= 5; i++) {
+                // Vertical lines
+                ctx.beginPath();
+                ctx.moveTo(centerX + i * scale, 0);
+                ctx.lineTo(centerX + i * scale, height);
+                ctx.stroke();
+                // Horizontal lines
+                ctx.beginPath();
+                ctx.moveTo(0, centerY + i * scale);
+                ctx.lineTo(width, centerY + i * scale);
+                ctx.stroke();
+            }
+
+            // Draw axes
+            ctx.strokeStyle = 'rgba(156, 163, 175, 0.8)'; // gray-400
+            ctx.lineWidth = 2 * window.devicePixelRatio;
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+        }
+
+        function drawVector(vec, color, label) {
+            const headX = centerX + vec.x * scale;
+            const headY = centerY - vec.y * scale;
+
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 4 * window.devicePixelRatio;
+
+            // Line
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(headX, headY);
+            ctx.stroke();
+
+            // Arrowhead
+            const angle = Math.atan2(headY - centerY, headX - centerX);
+            const headlen = 12 * window.devicePixelRatio;
+            ctx.beginPath();
+            ctx.moveTo(headX, headY);
+            ctx.lineTo(headX - headlen * Math.cos(angle - Math.PI / 7), headY - headlen * Math.sin(angle - Math.PI / 7));
+            ctx.lineTo(headX - headlen * Math.cos(angle + Math.PI / 7), headY - headlen * Math.sin(angle + Math.PI / 7));
+            ctx.closePath();
+            ctx.fill();
+
+            // Label
+            ctx.font = `${16 * window.devicePixelRatio}px 'Noto Sans SC'`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const labelX = headX + (20 * window.devicePixelRatio) * Math.cos(angle);
+            const labelY = headY + (20 * window.devicePixelRatio) * Math.sin(angle);
+            ctx.fillText(label, labelX, labelY);
+        }
+        
+        function checkLinearIndependence() {
+            const determinant = v1.x * v2.y - v1.y * v2.x;
+            
+            v1CoordsText.textContent = `(${v1.x.toFixed(2)}, ${v1.y.toFixed(2)})`;
+            v2CoordsText.textContent = `(${v2.x.toFixed(2)}, ${v2.y.toFixed(2)})`;
+            determinantDisplay.textContent = `det(A) = ${determinant.toFixed(2)}`;
+
+            if (Math.abs(determinant) < 0.05) { // Threshold for dependency
+                statusEl.textContent = '线性相关';
+                statusEl.className = 'absolute top-2 left-2 text-lg font-bold px-4 py-2 rounded-lg bg-red-500/80 text-white';
+                dependentInfo.style.display = 'block';
+                independentInfo.style.display = 'none';
+                determinantDisplay.classList.add('text-red-400');
+                determinantDisplay.classList.remove('text-green-400');
+            } else {
+                statusEl.textContent = '线性无关';
+                statusEl.className = 'absolute top-2 left-2 text-lg font-bold px-4 py-2 rounded-lg bg-green-500/80 text-white';
+                dependentInfo.style.display = 'none';
+                independentInfo.style.display = 'block';
+                determinantDisplay.classList.add('text-green-400');
+                determinantDisplay.classList.remove('text-red-400');
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            drawGrid();
+            drawVector(v1, '#f87171', 'v1'); // red-400
+            drawVector(v2, '#60a5fa', 'v2'); // blue-400
+            checkLinearIndependence();
+        }
+        
+        function getMousePos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (evt.clientX - rect.left) * window.devicePixelRatio,
+                y: (evt.clientY - rect.top) * window.devicePixelRatio
+            };
+        }
+        
+        function handlePointerDown(e) {
+            e.preventDefault();
+            isPointerDown = true;
+            const pos = getMousePos(e);
+            
+            const v1Head = { x: centerX + v1.x * scale, y: centerY - v1.y * scale };
+            const v2Head = { x: centerX + v2.x * scale, y: centerY - v2.y * scale };
+            
+            const distV1 = Math.hypot(pos.x - v1Head.x, pos.y - v1Head.y);
+            const distV2 = Math.hypot(pos.x - v2Head.x, pos.y - v2Head.y);
+            
+            const grabRadius = 20 * window.devicePixelRatio;
+
+            if (distV1 < grabRadius) {
+                dragging = v1;
+            } else if (distV2 < grabRadius) {
+                dragging = v2;
+            } else {
+                dragging = null;
+            }
+        }
+        
+        function handlePointerMove(e) {
+            if (!isPointerDown || !dragging) return;
+            e.preventDefault();
+            const pos = getMousePos(e);
+            
+            const newX = (pos.x - centerX) / scale;
+            const newY = -(pos.y - centerY) / scale;
+            
+            // Snap to grid
+            dragging.x = Math.round(newX * 4) / 4;
+            dragging.y = Math.round(newY * 4) / 4;
+            
+            draw();
+        }
+        
+        function handlePointerUp(e) {
+            isPointerDown = false;
+            dragging = null;
+        }
+
+        function resetVectors() {
+            v1 = { x: 2, y: 1 };
+            v2 = { x: -1, y: 2 };
+            draw();
+        }
+
+        // Event Listeners
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+        resetButton.addEventListener('click', resetVectors);
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Initial setup
+        resizeCanvas();
+    </script>
+</body>
+</html>

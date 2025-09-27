@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D变换与齐次坐标</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            color: #e5e7eb; /* gray-200 */
+            background-color: #111827; /* gray-900 */
+        }
+        .scene-container {
+            width: 100%;
+            height: 400px;
+            background-color: #1f2937; /* gray-800 */
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #374151; /* gray-700 */
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .btn:disabled {
+            background-color: #1f2937; /* gray-800 */
+            color: #6b7280; /* gray-500 */
+            cursor: not-allowed;
+        }
+        .matrix-display {
+            font-family: monospace;
+            background-color: #1f2937;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            white-space: pre;
+            text-align: center;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            letter-spacing: 0.1em;
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body class="p-4 lg:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-cyan-400">3D变换: 3x3矩阵 vs 4x4齐次矩阵</h1>
+            <p class="mt-2 text-gray-400">交互式探索3x3变换矩阵的局限性以及齐次坐标如何解决平移问题。</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Side: 3D Transforms (3x3 Matrix) -->
+            <div>
+                <h2 class="text-xl font-semibold mb-2 text-center">3D变换 (模拟3x3矩阵)</h2>
+                <div id="scene-left" class="scene-container"></div>
+                <div class="flex justify-center gap-2 mb-4">
+                    <button id="rotate-left" class="btn">旋转 (Rotate)</button>
+                    <button id="scale-left" class="btn">缩放 (Scale)</button>
+                    <button id="translate-left" class="btn" disabled>平移 (Translate)</button>
+                </div>
+                 <p class="text-xs text-center text-red-400 mb-2">平移按钮被禁用，因为3x3矩阵无法表示平移。</p>
+                <div class="flex justify-center mb-4">
+                    <button id="reset-left" class="btn bg-indigo-600 hover:bg-indigo-500">重置 (Reset)</button>
+                </div>
+                <h3 class="font-semibold mb-2 text-center">当前变换矩阵 (3x3部分)</h3>
+                <div id="matrix-left" class="matrix-display"></div>
+            </div>
+
+            <!-- Right Side: Homogeneous Coords (4x4 Matrix) -->
+            <div>
+                <h2 class="text-xl font-semibold mb-2 text-center">齐次坐标 (4x4矩阵)</h2>
+                <div id="scene-right" class="scene-container"></div>
+                <div class="flex justify-center gap-2 mb-4">
+                    <button id="rotate-right" class="btn">旋转 (Rotate)</button>
+                    <button id="scale-right" class="btn">缩放 (Scale)</button>
+                    <button id="translate-right" class="btn">平移 (Translate)</button>
+                </div>
+                 <p class="text-xs text-center text-transparent mb-2 hidden md:block">所有变换都可用。</p> <!-- Placeholder for alignment -->
+                <div class="flex justify-center mb-4">
+                     <button id="reset-right" class="btn bg-indigo-600 hover:bg-indigo-500">重置 (Reset)</button>
+                </div>
+                <h3 class="font-semibold mb-2 text-center">当前变换矩阵 (4x4)</h3>
+                <div id="matrix-right" class="matrix-display"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Helper Functions ---
+        function formatMatrix(elements, size) {
+            let result = '';
+            for (let i = 0; i < size; i++) {
+                let row = '[';
+                for (let j = 0; j < size; j++) {
+                    // Access in column-major order to get row-major output
+                    const val = elements[j * 4 + i];
+                    row += val.toFixed(2).padStart(6, ' ');
+                    if (j < size - 1) row += ', ';
+                }
+                row += ']';
+                result += row + '\n';
+            }
+            return result.trim();
+        }
+
+        function initScene(containerId) {
+            const container = document.getElementById(containerId);
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1f2937);
+
+            const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(2, 3, 5);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight.position.set(3, 5, 4);
+            scene.add(directionalLight);
+
+            const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+            const material = new THREE.MeshStandardMaterial({ color: 0x0891b2 }); // cyan-600
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+            
+            // Axes Helper
+            const axesHelper = new THREE.AxesHelper( 2 );
+            scene.add( axesHelper );
+
+            const onResize = () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            };
+            
+            // Use ResizeObserver for better resize handling
+            new ResizeObserver(onResize).observe(container);
+
+            return { scene, camera, renderer, controls, cube };
+        }
+
+        // --- Initialization ---
+        const left = initScene('scene-left');
+        const right = initScene('scene-right');
+
+        // Initial matrix display
+        document.getElementById('matrix-left').textContent = formatMatrix(left.cube.matrix.elements, 3);
+        document.getElementById('matrix-right').textContent = formatMatrix(right.cube.matrix.elements, 4);
+
+        // --- Event Listeners ---
+        const rotation = new THREE.Matrix4().makeRotationY(Math.PI / 6);
+        const scale = new THREE.Matrix4().makeScale(1.2, 1.2, 1.2);
+        const translation = new THREE.Matrix4().makeTranslation(0.5, 0, 0);
+
+        // Left side
+        document.getElementById('rotate-left').addEventListener('click', () => {
+            left.cube.applyMatrix4(rotation);
+            document.getElementById('matrix-left').textContent = formatMatrix(left.cube.matrix.elements, 3);
+        });
+
+        document.getElementById('scale-left').addEventListener('click', () => {
+            // We create a "pure" scale matrix without translation component for the 3x3 demo
+            const pureScale = new THREE.Matrix4().makeScale(1.2, 1.2, 1.2);
+            left.cube.applyMatrix4(pureScale);
+            document.getElementById('matrix-left').textContent = formatMatrix(left.cube.matrix.elements, 3);
+        });
+        
+        document.getElementById('reset-left').addEventListener('click', () => {
+            left.cube.matrix.identity(); // Reset matrix
+            left.cube.matrix.decompose(left.cube.position, left.cube.quaternion, left.cube.scale); // Update object properties
+            document.getElementById('matrix-left').textContent = formatMatrix(left.cube.matrix.elements, 3);
+        });
+
+        // Right side
+        document.getElementById('rotate-right').addEventListener('click', () => {
+            right.cube.applyMatrix4(rotation);
+            document.getElementById('matrix-right').textContent = formatMatrix(right.cube.matrix.elements, 4);
+        });
+
+        document.getElementById('scale-right').addEventListener('click', () => {
+            right.cube.applyMatrix4(scale);
+            document.getElementById('matrix-right').textContent = formatMatrix(right.cube.matrix.elements, 4);
+        });
+
+        document.getElementById('translate-right').addEventListener('click', () => {
+            right.cube.applyMatrix4(translation);
+            document.getElementById('matrix-right').textContent = formatMatrix(right.cube.matrix.elements, 4);
+        });
+
+        document.getElementById('reset-right').addEventListener('click', () => {
+            right.cube.matrix.identity();
+            right.cube.matrix.decompose(right.cube.position, right.cube.quaternion, right.cube.scale);
+            document.getElementById('matrix-right').textContent = formatMatrix(right.cube.matrix.elements, 4);
+        });
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            left.controls.update();
+            right.controls.update();
+
+            left.renderer.render(left.scene, left.camera);
+            right.renderer.render(right.scene, right.camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

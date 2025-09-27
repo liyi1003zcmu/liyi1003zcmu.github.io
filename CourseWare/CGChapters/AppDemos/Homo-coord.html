@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>齐次坐标交互式演示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            touch-action: none; /* Disable panning and zooming on mobile */
+        }
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            font-family: monospace;
+            text-align: center;
+        }
+        .matrix span {
+            padding: 4px;
+            background-color: #1f2937; /* gray-800 */
+            border-radius: 4px;
+        }
+        .vector {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            font-family: monospace;
+            text-align: center;
+        }
+        .vector span {
+            padding: 4px;
+            background-color: #1f2937; /* gray-800 */
+            border-radius: 4px;
+        }
+        .radio-label {
+            padding: 8px 16px;
+            border: 2px solid #374151; /* gray-700 */
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #0891b2; /* cyan-600 */
+            border-color: #0e7490; /* cyan-700 */
+            color: white;
+        }
+        .bracketed {
+            position: relative;
+            padding: 0 12px; /* space for brackets */
+        }
+
+        .bracketed::before,
+        .bracketed::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            bottom: -4px;
+            width: 8px; /* thickness of the bracket */
+            border-style: solid;
+            border-color: #6b7280; /* gray-500 */
+        }
+
+        .bracketed::before {
+            left: 0;
+            border-width: 2px 0 2px 2px; /* top, right, bottom, left */
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .bracketed::after {
+            right: 0;
+            border-width: 2px 2px 2px 0; /* top, right, bottom, left */
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4 overflow-hidden">
+
+    <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Canvas -->
+        <div class="w-full aspect-square bg-gray-800 rounded-2xl shadow-2xl shadow-cyan-500/10 border-2 border-gray-700 relative">
+            <canvas id="mainCanvas"></canvas>
+            <div class="absolute bottom-2 left-2 text-xs text-gray-400">拖动点 P 和向量 V 进行探索</div>
+        </div>
+
+        <!-- Control and Display Panel -->
+        <div class="w-full bg-gray-800/80 p-6 rounded-2xl border-2 border-gray-700 backdrop-blur-sm overflow-y-auto" style="max-height: 90vh;">
+            <h1 class="text-2xl font-bold text-cyan-400 mb-4 border-b-2 border-cyan-500/50 pb-2">齐次坐标变换</h1>
+            
+            <div class="mb-6">
+                <p class="text-sm text-gray-400">齐次坐标通过增加一个额外的维度 `w`，使得平移、旋转、缩放等变换都可以用统一的矩阵乘法来表示。</p>
+            </div>
+
+            <!-- Selector -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">1. 选择变换对象</h2>
+                <div class="flex gap-4">
+                    <input type="radio" name="target" id="target_point" value="point" class="hidden" checked>
+                    <label for="target_point" class="radio-label flex-1 text-center">点 P (位置)</label>
+                    
+                    <input type="radio" name="target" id="target_vector" value="vector" class="hidden">
+                    <label for="target_vector" class="radio-label flex-1 text-center">向量 V (方向)</label>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-2">2. 调整平移变换</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="translateX" class="font-medium">平移 Tx: <span id="translateX_val" class="font-mono text-sky-400">0</span></label>
+                        <input type="range" id="translateX" min="-100" max="100" value="0" class="w-full mt-1">
+                    </div>
+                    <div>
+                        <label for="translateY" class="font-medium">平移 Ty: <span id="translateY_val" class="font-mono text-sky-400">0</span></label>
+                        <input type="range" id="translateY" min="-100" max="100" value="0" class="w-full mt-1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display -->
+            <div class="pt-4 border-t-2 border-gray-700">
+                 <h2 class="text-lg font-semibold text-cyan-400 mb-2">3. 观察计算过程与结果</h2>
+                 <div class="flex items-center justify-center gap-4 text-lg">
+                    <!-- Matrix -->
+                    <div class="bracketed">
+                        <div class="matrix">
+                            <span>1</span><span>0</span><span id="matrix_tx">0</span>
+                            <span>0</span><span>1</span><span id="matrix_ty">0</span>
+                            <span>0</span><span>0</span><span>1</span>
+                        </div>
+                    </div>
+                    <span>×</span>
+                    <!-- Vector -->
+                    <div class="bracketed">
+                        <div class="vector" id="homogeneous_coords">
+                            <span>0</span>
+                            <span>0</span>
+                            <span>1</span>
+                        </div>
+                    </div>
+                    <span>=</span>
+                     <!-- Result -->
+                    <div class="bracketed">
+                        <div class="vector text-yellow-400" id="result_coords">
+                             <span>0</span>
+                             <span>0</span>
+                             <span>1</span>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="mt-4 p-4 bg-gray-900 rounded-lg">
+                    <div id="explanation">
+                        <h3 class="font-bold text-green-400">对点(w=1)应用平移:</h3>
+                        <p class="text-sm mt-1">由于 w 分量为 1，平移量 Tx 和 Ty 被加到了 x 和 y 坐标上，因此点的位置发生了改变。</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // --- DOM Elements ---
+        const txSlider = document.getElementById('translateX');
+        const tySlider = document.getElementById('translateY');
+        const txVal = document.getElementById('translateX_val');
+        const tyVal = document.getElementById('translateY_val');
+        const targetRadios = document.querySelectorAll('input[name="target"]');
+        
+        const matrixTxEl = document.getElementById('matrix_tx');
+        const matrixTyEl = document.getElementById('matrix_ty');
+        const homogeneousCoordsEl = document.getElementById('homogeneous_coords');
+        const resultCoordsEl = document.getElementById('result_coords');
+        const explanationEl = document.getElementById('explanation');
+
+        // --- State ---
+        let width, height, dpr;
+        let pt = { x: 60, y: 80 };
+        let vec = { x: 50, y: 50 }; // A vector (dx, dy)
+        let v_origin = { x: 150, y: 50 }; // Anchor point for drawing the vector
+        let transform = { tx: 0, ty: 0 };
+        let selectedTarget = 'point'; // 'point' or 'vector'
+        let dragging = null;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth, container.clientHeight);
+            dpr = window.devicePixelRatio;
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = `${size}px`;
+            canvas.style.height = `${size}px`;
+            width = size;
+            height = size;
+            update();
+        }
+
+        // --- Drawing ---
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(75, 85, 99, 0.5)';
+            ctx.lineWidth = 1 * dpr;
+            const gridSize = 50;
+
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x * dpr, 0);
+                ctx.lineTo(x * dpr, height * dpr);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * dpr);
+                ctx.lineTo(width * dpr, y * dpr);
+                ctx.stroke();
+            }
+        }
+
+        function drawAxes() {
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(0, height * dpr / 2);
+            ctx.lineTo(width * dpr, height * dpr / 2);
+            ctx.moveTo(width * dpr / 2, 0);
+            ctx.lineTo(width * dpr / 2, height * dpr);
+            ctx.stroke();
+        }
+
+        function drawPoint(point, color, radius, label) {
+            ctx.beginPath();
+            ctx.arc(point.x * dpr, point.y * dpr, radius * dpr, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+            if(label) {
+                ctx.fillStyle = color;
+                ctx.font = `${14 * dpr}px 'Noto Sans SC'`;
+                ctx.fillText(label, (point.x + 5) * dpr, (point.y - 5) * dpr);
+            }
+        }
+        
+        function drawVector(origin, vector, color, label) {
+            const headX = (origin.x + vector.x) * dpr;
+            const headY = (origin.y + vector.y) * dpr;
+            const startX = origin.x * dpr;
+            const startY = origin.y * dpr;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3 * dpr;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(headX, headY);
+            ctx.stroke();
+
+            const angle = Math.atan2(headY - startY, headX - startX);
+            const headlen = 8 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(headX, headY);
+            ctx.lineTo(headX - headlen * Math.cos(angle - Math.PI / 7), headY - headlen * Math.sin(angle - Math.PI / 7));
+            ctx.lineTo(headX - headlen * Math.cos(angle + Math.PI / 7), headY - headlen * Math.sin(angle + Math.PI / 7));
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            if(label) {
+                ctx.fillStyle = color;
+                ctx.font = `${14 * dpr}px 'Noto Sans SC'`;
+                ctx.fillText(label, headX + 5 * dpr, headY);
+            }
+        }
+
+        // --- Main Update Loop ---
+        function update() {
+            // 1. Update state from controls
+            transform.tx = Number(txSlider.value);
+            transform.ty = Number(tySlider.value);
+            txVal.textContent = transform.tx;
+            tyVal.textContent = transform.ty;
+
+            // 2. Perform calculations & update UI text
+            let originalCoords, resultCoords, w;
+            if (selectedTarget === 'point') {
+                originalCoords = pt;
+                w = 1;
+                resultCoords = { x: pt.x + transform.tx, y: pt.y + transform.ty };
+                explanationEl.innerHTML = `<h3 class="font-bold text-green-400">对点(w=1)应用平移:</h3><p class="text-sm mt-1">由于 w 分量为 1，平移量 Tx 和 Ty 被加到了 x 和 y 坐标上，因此点的位置发生了改变。</p>`;
+            } else { // vector
+                originalCoords = vec;
+                w = 0;
+                resultCoords = { x: vec.x, y: vec.y }; // Translation doesn't affect vectors
+                explanationEl.innerHTML = `<h3 class="font-bold text-red-400">对向量(w=0)应用平移:</h3><p class="text-sm mt-1">由于 w 分量为 0，平移量 Tx 和 Ty 在矩阵乘法中被忽略，因此向量的方向和大小保持不变。向量只代表方向，不代表位置。</p>`;
+            }
+
+            matrixTxEl.textContent = transform.tx;
+            matrixTyEl.textContent = transform.ty;
+            homogeneousCoordsEl.innerHTML = `<span>${originalCoords.x}</span><span>${originalCoords.y}</span><span>${w}</span>`;
+            resultCoordsEl.innerHTML = `<span>${resultCoords.x}</span><span>${resultCoords.y}</span><span>${w}</span>`;
+            
+            // 3. Redraw canvas
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Flip Y-axis to match standard Cartesian coordinates
+            ctx.save();
+            ctx.translate(width*dpr / 2, height*dpr / 2);
+            ctx.scale(1, -1);
+            ctx.translate(-width*dpr/2, -height*dpr/2);
+
+            drawGrid();
+            
+            // Draw original objects
+            drawPoint(pt, 'rgba(4, 120, 87, 0.5)', 6, "P"); // Dim Green
+            drawVector(v_origin, vec, 'rgba(159, 18, 57, 0.5)', "V"); // Dim Red
+
+            // Draw transformed objects
+            if(selectedTarget === 'point') {
+                const p_transformed = { x: pt.x + transform.tx, y: pt.y + transform.ty };
+                drawPoint(p_transformed, '#4ade80', 7, "P'"); // Bright Green
+                // Dashed line
+                ctx.beginPath();
+                ctx.setLineDash([5*dpr, 5*dpr]);
+                ctx.moveTo(pt.x * dpr, pt.y * dpr);
+                ctx.lineTo(p_transformed.x * dpr, p_transformed.y * dpr);
+                ctx.strokeStyle = 'gray';
+                ctx.lineWidth = 1 * dpr;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else { // vector - draw on top to show no change
+                drawVector(v_origin, vec, '#f87171', "V'"); // Bright Red
+            }
+
+            ctx.restore();
+        }
+
+        // --- Event Handlers ---
+        function handlePointerDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Un-transform coordinates
+            const canvasX = (x - width/2) ;
+            const canvasY = -(y - height/2) + height;
+
+            const distToP = Math.hypot(canvasX - pt.x, canvasY - pt.y);
+            const distToV = Math.hypot(canvasX - (v_origin.x + vec.x), canvasY - (v_origin.y + vec.y));
+            
+            if (distToP < 15) {
+                dragging = pt;
+            } else if (distToV < 15) {
+                dragging = vec;
+            } else {
+                dragging = null;
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!dragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const canvasX = (x - width/2);
+            const canvasY = -(y - height/2) + height;
+            
+            if (dragging === pt) {
+                pt.x = Math.round(canvasX);
+                pt.y = Math.round(canvasY);
+            } else if (dragging === vec) {
+                vec.x = Math.round(canvasX - v_origin.x);
+                vec.y = Math.round(canvasY - v_origin.y);
+            }
+            update();
+        }
+
+        function handlePointerUp() {
+            dragging = null;
+        }
+        
+        // A minor change in the drawVector function signature
+        // from drawVector(origin, vec, color, label) to drawVector(origin, vector, color, label)
+        // to avoid conflict with the global 'vec' variable if it was not changed.
+        // It's a good practice even after renaming 'v' to 'vec'.
+        txSlider.addEventListener('input', update);
+        tySlider.addEventListener('input', update);
+        targetRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                selectedTarget = e.target.value;
+                update();
+            });
+        });
+        
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    </script>
+</body>
+</html>
+

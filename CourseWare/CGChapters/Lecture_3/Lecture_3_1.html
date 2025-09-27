@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--变换</title>
+
+    <meta name="description" content="WebGL程序解析">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第三章(1) 变换</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            
+            <section>
+                <!-- 导入第一页：提出问题，建立宏观背景 -->
+                <section data-transition="zoom-in fade-out">
+                    <h3>我们如何赋予数字角色生命与活力？</h3>
+                    <div class="fragment">                        
+                        <video style="height: 400px; border-radius: 10px;" loop controls>
+                            <!--source src="../../images/cg/chap03/videos/ch03-motin-anim.mp4" type="video/mp4"-->
+                        </video>
+                    </div>
+                    <p class="fragment">从角色的奔跑、跳跃，到镜头的推拉、摇移……</p>
+                    <p class="fragment">这一切复杂运动的背后，都是采用“变换”的基本原理实现，可以精确地<strong>描述</strong>、<strong>控制</strong>并<strong>组合</strong>这些运动</p>
+                </section>
+
+                <!-- 导入第二页：给出学习蓝图，预告三课时内容 -->
+                <section data-transition="fade-in slide-out">
+                    <h3>三部曲：精通变换</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: flex-start; margin-top: 40px; text-align: center;">
+                        <div class="fragment" style="width: 30%;">
+                            <h4 style="font-size:24pt">第一部分：变换的数学基础</h4>
+                            <p style="font-size: 0.8em;">掌握描述空间和运动的数学工具：<strong>向量、矩阵、坐标系等</strong></p>
+                        </div>
+                        <div class="fragment" style="width: 30%;">
+                            <h4 style="font-size: 24pt;">第二部分：基础变换</h4>
+                            <p style="font-size: 0.8em;">利用数学工具，准确描述三种基础变换：<strong>平移</strong>、<strong>旋转</strong>和<strong>缩放</strong></p>
+                        </div>
+                        <div class="fragment" style="width: 30%;">
+                            <h4 style="font-size:24pt;">第三部分：复合变换</h4>
+                            <p style="font-size: 0.8em;">将基础变换进行组合，在<strong>二维平面/三维空间</strong>中，实现复杂的<strong>复合变换</strong></p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>第一部分：变换的数学基础</h3>
+                    <p style="font-weight:bold; font-size:28pt; text-align:center">本部分内容：</p>
+                    <ul>
+                        <li>几何基础</li>
+                        <li>坐标系</li>
+                        <li>向量、矩阵</li>
+                    </ul>
+                </section>
+                <section data-transition="slide-in fade-out">
+                    <h3>模型如何表示？</h3>
+                    <p class="fragment">这是一个在3D软件中创建的静态模型。</p>
+                    <div class="fragment" style="display: flex; justify-content: center; align-items: center;">
+                         <img style="height: 350px;" src="../../images/cg/chap03/ch03-t-pose.png" alt="[一个T-pose状态的三维角色模型]">
+                    </div>
+                    <p class="fragment">该如何用精确的、计算机能理解的<strong>语言</strong>，来描述和控制它的所有运动？</p>
+                </section>
+                
+                <section>
+                    <h3>课堂目标：构建变换的数学基础</h3>
+                    <p style="text-align:center">课程结束时，你将能够：</p>
+                    <ul>
+                        <li class="fragment"><strong>描述</strong> 模型在图形学中的表示形式</li>
+                        <li class="fragment"><strong>解释</strong> 向量与矩阵在图形学中的几何意义</li>
+                        <li class="fragment"><strong>区分</strong> 几种核心的坐标系</li>
+                        <li class="fragment"><strong>阐述</strong> 引入齐次坐标的必要性</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <h3>一个问题：统一运算</h4>
+                <p class="fragment">一个点 P(x, y)，我们希望对它进行两种操作：</p>
+                <ul style="list-style-type: none;">
+                    <li class="fragment"><strong>平移：</strong> P = P + T  (加法)</li>
+                    <li class="fragment"><strong>旋转/缩放：</strong> P' = M * P (乘法)</li>
+                </ul>
+                <p class="fragment" style="margin-top: 30px;">
+                    <strong>问题：</strong> 我们有没有可能找到一种<strong>统一的数学形式</strong>，让“平移”和“旋转”都能用同一种运算（例如“矩阵乘法”）来表示？如果将点换成一个形体呢？
+                </p>
+                <aside class="notes">让学生思考和讨论，这个问题的答案就是引入齐次坐标的动机。</aside>
+            </section>
+            <section>
+                <section>
+                    <h3>三维形体的基本构成</h4>
+                    <p class="fragment">在计算机的世界里，如何被描述和存储一个复杂的三维图形？</p>
+                    <p class="fragment">它由三个最基本的图元构成：</p>
+                    <ul style="list-style-type: none;">
+                        <li class="fragment"><strong>点 (Points)</strong>，称之为<strong>顶点 (Vertices)</strong>：定义了形状在空间中的各个位置。</li>
+                        <li class="fragment"><strong>线 (Lines)</strong>，称之为<strong>边 (Edges)</strong>：连接两个顶点，构成了形状的骨架。</li>
+                        <li class="fragment"><strong>面 (Faces)</strong>，称之为<strong>多边形(Polygons)</strong>：由三条或更多边闭合构成，形成了物体的表面。</li>
+                    </ul>
+
+                    <div class="fragment" style="margin-top: 30px; text-align: center;">
+                        <p><strong style="color:darkred">核心思想</strong>：所有复杂的三维曲面，都是由无数个微小的、简单的<strong>平面多边形</strong>拼接而成的。</p>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>三角面片 (Triangle Patch)</h3>
+                    <p class="fragment">在所有多边形中，<strong>三角形</strong>是最为重要的一种多边形</p>
+                    <div class="fragment" style="display: flex; justify-content: center; align-items: center;">
+                         <img style="height: 300px;" src="../../images/cg/cha../../chap03/ch03-stanford-bunnies.png" alt="[stanford bunny]">
+                    </div>
+                    <p class="fragment">三角面片，是用于表示所有三维表面的<strong>最小单元</strong></p>
+                </section>
+                <section>
+                    <h3>三角面片 (Triangle Patch)</h3>
+                    <div class="fragment" style="display: flex; justify-content: center; align-items: center;">
+                        <img style="height: 400px;" src="../../images/cg/cha../../chap03/ch03-bunny-wireframe.svg" alt="[一个三维模型被分解为顶点、边和面的示意图]">
+                   </div>
+                   <ul>
+                        <li class="fragment">该模型由<strong>2503个顶点，4965个三角形</strong>拼接而成。</li>
+                        <li class="fragment">这些顶点的坐标位置，决定了三角形在空间中的位置和形状。</li>
+                   </ul>
+                </section>
+                <section>
+                    <h4>为什么是三角形？</h4>
+                    <p>将所有多边形都分解为三角形有三大优势：</p>
+                    <ul>
+                        <li class="fragment"><strong>保证平面性：</strong> 空间中的任意三点，永远处于同一个平面上。这极大地简化了后续的渲染计算。</li>
+                        <li class="fragment"><strong>结构最简单：</strong> 三角形是构成多边形的最简形式，便于进行统一和标准化的处理。</li>
+                        <li class="fragment"><strong>硬件原生支持：</strong> 现代GPU的硬件流水线被高度优化，能够以惊人的速度并行处理海量的三角形。</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 30px;">
+                        因此，这种由顶点和三角形构成的结构，就是计算机图形学中表示三维模型最基本、最重要的方式——<strong>三角形网格 (Triangle Mesh)</strong>。我们后续所有的变换，都是对这些顶点进行的数学运算。
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>描述世界的“基本元素”</h3>
+                    <p class="fragment">为了在计算机中构建三维世界，我们需要一套最基本的“图元”来描述所有物体。</p>
+                    <p class="fragment">这些图元由三种最基本的几何元素构成：</p>
+                    <ul>
+                        <li class="fragment"><strong>标量 (Scalars)</strong>: 只有大小，没有几何属性的数值 (例如：长度、时间)</li>
+                        <li class="fragment"><strong>向量 (Vectors)</strong>: 具有<strong>大小</strong>和<strong>方向</strong>的量 (例如：速度、力、位移)</li>
+                        <li class="fragment"><strong>点 (Points)</strong>: 描述空间中的一个<strong>位置</strong></li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>“点”的表示</h3>
+                    <p class="fragment">点，表示空间中的位置</p>
+                    <ul>
+                        <li class="fragment">点与点相减，可得到一个向量，即$v=P-Q$</li>
+                        <li class="fragment">点与向量相加，可得到另一个点，即$P=v+Q$</li>
+                    </ul>
+                    <div class="placeholder fragment">
+                        <canvas id="vpts1" width="300px" height="300px"></canvas>
+                    </div>
+                    
+                    <script>
+                        var c = document.getElementById( "vpts1" );
+                        var ctx = c.getContext( "2d" );
+                        ctx.lineWidth = 5;
+                        ctx.translate(10, 250);
+                        ctx.rotate(-35 * Math.PI / 180);
+                        ctx.beginPath();
+                        ctx.moveTo(0,20);
+                        ctx.lineTo(250,20);
+                        ctx.stroke();
+
+                        ctx.moveTo(250,20);
+                        ctx.lineTo(230,10);
+                        ctx.lineTo(230,30);
+                        ctx.closePath();
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.arc(0, 20, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+
+                        ctx.beginPath();
+                        ctx.arc(250, 20, 10, 0, 2 * Math.PI);
+                        ctx.fillStyle = "black";
+                        ctx.fill();
+
+                        ctx.translate(0,0);
+                        ctx.rotate(35*Math.PI/180);
+                        ctx.font = "24px Arial";
+                        ctx.fillText("Q", 0,0);
+                        ctx.fillText("P", 220,-140);
+                        ctx.fillText("v", 110,-70);
+                    </script>
+                </section>
+                <section>
+                    <h3>“点”的表示</h3>
+                    <dl>
+						<dt class="fragment">仿射空间</dt>
+						<dd class="fragment">由点和向量构成的空间，在空间中能够执行的操作包括:
+                            <ul>
+                                <li>向量相加，如$w=u+v$</li>
+                                <li>标题和向量相乘，如$u'=t\times u$</li>
+                                <li>点和向量相加，例如$Q=P+v$</li>
+                                <li>标量和标量间运算，如$t'=t_1-t_2$</li>
+                                <li style="color:red;font-weight: bold;">注意，点和点之间不能直接相加</li>
+                            </ul>
+                            <br \>
+                            且对任意点定义有
+						</dd>
+                        <div class="fragment" style="font-size:24pt">
+                            \[\begin{aligned}
+                            1\cdot\mathbf{P}=\mathbf{P}\\
+                            0\cdot\mathbf{P}=\mathbf{0}
+                        \end{aligned}\]
+                        </div>
+                        <dt class="fragment">仿射和</dt>
+                        <dd class="fragment">其形式为$P=\alpha_1P_1+\alpha_2P_2+\cdots+\alpha_nP_n$，其中$\alpha_1+\alpha_2+\cdots+\alpha_n=1$，称为$P$在点$P_1,P_2,\ldots,P_n$上的仿射和</dd>
+					</dl>
+                </section>
+                <section>
+                    <h3>“线”的表示</h3>
+                    <p class="fragment">对所有的点形如:</p>
+                    <p class="fragment" style="text-align:center">$P(\alpha)=P_0+\alpha d$</p>
+                    <p class="fragment">有，这些点都位于通过点$P_0$且沿着方向$d$的射线上</p>
+                    <p class="fragment">这称为<strong>参数方程</strong>。通过改变标量 $\alpha$ 的值，我们可以得到直线上所有的点</p>
+                    <div class="placeholder fragment">
+                         <img src="../../images/cg/chap03/ch03-lineinaff.png" style="width:60%">
+                    </div>
+                </section>
+                <section>
+                    <h3>“线”的表示</h3>
+                    <p class="fragment">直线参数方程形式</p>
+                    <p class="fragment" style="text-align:center">$P(\alpha)=\alpha P_0+(1-\alpha)P_1$</p>
+                    <ul>
+                        <li class="fragment">若$\alpha\geq 0$，则$P(\alpha)$为沿着$d$方向远离$P_0$的射线</li>
+						<li class="fragment">若用两个点$R$和$Q$定义$v$，则有$P(\alpha)=Q+\alpha(R-Q)=Q+\alpha v=\alpha R+(1-\alpha)Q$。此时，对于$0\leq\alpha\leq 1$，定义的为所有位于线段$RQ$上的点</li>
+                    </ul>
+                    <img class="fragment" src="../../images/cg/chap03/ch03-line-twops.png" style="width:60%">
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <p>平面有两种定义方式：</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">一个点和两个向量</p>
+                            <figure class="fragment">
+                                <img src="../../images/cg/chap03/ch03-plnv1.png" style="width:80%">
+                                <figurecaption style="font-size:16pt">$P(\alpha,\beta)=R+\alpha \vec{u}+\beta \vec{v}$ </figurecaption>
+                            </figure>
+                        </div>
+                        <div>
+                            <p class="fragment">三个点</p>
+                            <figure class="fragment">
+                                <img src="../../images/cg/chap03/ch03-plnv2.png" style="width:80%">
+                                <figurecaption style="font-size:16pt">$P(\alpha,\beta)=R+\alpha(Q-R)+\beta(P-Q)$，其中，$\vec{u}=Q-P$ 和 $\vec{v}=R-P$</figurecaption>
+                            </figure>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <p class="fragment">三角形</p>
+                    <img class="fragment" src="../../images/cg/chap03/ch03-triangle.png" style="width:60%">
+                    <p class="fragment">图中，$S(\alpha)$为$P$和$Q$的仿射和，$T(\alpha,\beta)$为$S(\alpha)$和$R$的仿射和，若$0\leq\alpha,\beta\leq 1$，则所有的点都定义在三角形$PQR$内部</p>    
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <p class="fragment">凸形</p>
+                    <p class="fragment">一个形体是凸的，当且仅当形体内连接任意两个点的线段都在形体内部时成立</p>
+                    <div class="two-column">
+                        <div class="fragment">
+                            <canvas id="conv1" width="400px" height="400px"></canvas>
+                            <p style="text-align: center;">凸多边形</p>
+                        </div>
+                        <div class="fragment">
+                            <canvas id="conv2" width="400px" height="400px"></canvas>
+                            <p style="text-align:center;">非凸多边形</p>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        var canvas = document.getElementById("conv1");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.fillStyle = "#B3D3C0";
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            ctx.moveTo(270,260);
+                            ctx.lineTo(220,70);
+                            ctx.stroke();
+
+                            ctx.fillStyle="black";
+                            ctx.font = "24px Arial";
+                            ctx.fillText("Q", 280, 280 );
+                            ctx.fillText("P", 210,60 );
+                    </script>
+                    <script>
+                        var canvas = document.getElementById("conv2");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(30, 220);
+                            ctx.lineTo(160, 30);
+                            ctx.lineTo(350, 40);
+                            ctx.lineTo(150, 120);
+                            ctx.lineTo(370, 260);
+                            ctx.lineTo(290, 330);
+                            ctx.closePath();
+                            ctx.fillStyle = "#B3D3C0";
+                            ctx.fill();
+                            
+                            ctx.moveTo(270, 260);
+                            ctx.lineTo(220, 70);
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = "black";
+                            ctx.font = "24px Arial";
+                            ctx.fillText("Q", 280, 280);
+                            ctx.fillText("P", 210, 60);
+                    </script>
+
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <p class="fragment">凸包</p>
+                    <p class="fragment">如果对所有的点，其仿射和的系数，都满足$\alpha_i\geq 0$，则称这些点构成点集$P_1,P_2,\ldots,P_n$上的<strong>凸包(Convex Hull)</strong></p>
+                    <p class="fragment">点集$P_1,P_2,\ldots,P_n$上的凸包，定义为<strong>能够包围点集中所有点的最小的凸形</strong></p>
+                    <div>
+                    <canvas class="fragment" id="chull" width="500px" height="400px"></canvas>
+                    </div>
+                    <script>
+
+                        var canvas = document.getElementById("chull");
+                            var ctx = canvas.getContext("2d");
+                            ctx.beginPath();
+                            ctx.lineWidth=3;
+                            ctx.moveTo(70, 100);
+                            ctx.lineTo(180, 30);
+                            ctx.lineTo(480, 60);
+                            ctx.lineTo(430, 320);
+                            ctx.lineTo(290, 380);
+                            ctx.lineTo(90, 290);
+                            ctx.closePath();
+                            ctx.strokeStyle="#69A583";
+                            ctx.stroke();
+
+                            ctx.fillStyle="black";
+                            ctx.beginPath();
+                            ctx.arc(70,100, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(180,30, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(480,60, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(430,320, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(290,380, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(90,290, 10, 0, 2 * Math.PI);
+                            ctx.fill();
+
+                            
+                            ctx.beginPath();
+                            ctx.arc(140,80,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(200,110,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(340,70,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(400,90,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(370,120,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(410,150,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(230,300,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(310,350,10,0,2*Math.PI);
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.arc(400,300,10,0,2*Math.PI);
+                            ctx.fill();
+                    </script>
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <dt class="fragment" style="text-align:left;">三角形的重心坐标</dt>
+                    <dd class="fragment" style="text-align:left;">三角形为凸形，所有位于其内部的点均可表示成仿射和的形式，有      $$P(\alpha_1,\alpha_2,\alpha_3)=\alpha_1P+\alpha_2Q+\alpha_3R$$
+                    有$\alpha_1+\alpha_2+\alpha_3=1, \alpha_i\geq 0$，这种形式就称为<strong>重心坐标</strong>(Barycentric Coordinate)表示</dd>
+                    <p class="fragment" style="text-align:left;">重心坐标在<strong>纹理映射</strong>和<strong>顶点属性插值</strong>等高级技术中极为重要</p>
+                </section>
+                <section>
+                    <h3>“面”的表示</h3>
+                    <p class="fragment" data-fragment-index="1">法线</p>
+                    <dt class="fragment" data-fragment-index="2" style="text-align:left;font-size:24pt">法向量</dt>
+					<dd class="fragment" data-fragment-index="3" style="text-align:left;font-size:20pt">在三维空间中，对每个平面都有一个向量$n$与其垂直，或与其正交，该向量称为<strong>法向量</strong>(normal vector)</dd>
+                    <div class="two-column">
+                        <div>
+                        <p class="fragment" data-fragment-index="5" style="font-size:20pt">对由一点和两向量构成的平面
+					\[P(\alpha,\beta)=P+\alpha u+\beta v\]</p>
+                        <p class="fragment" data-fragment-index="6" style="font-size:20pt">
+					可利用叉积(cross product)计算对应的法向量
+					\[n=u\times v\]</p>
+                        <p class="fragment" data-fragment-index="7" style="font-size:20pt">
+					对应于
+					\[(P(\alpha,\beta)-P)\cdot n=0\]</p>
+                        </div>
+                        <div>
+                        <img class="fragment" data-fragment-index="4" src="../../images/cg/chap03/ch03-normal.png" style="width:80%">
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>物体在“哪里”？</h3>
+                    <h4 class="fragment">一个根本问题</h4>
+                    <p class="fragment">我们如何在计算机中，精确地描述一个物体的位置？</p>
+                    <div class="fragment" style="display: flex; justify-content: space-around; align-items: center; margin-top: 40px;">
+                        <div>
+                            <p>“这个茶壶在这里”</p>
+                            <img style="height: 250px;" src="../../images/cg/cha../../chap03/ch03-utah-teapot-2008.png" alt="[犹他茶壶的图片]">
+                        </div>
+                        <div>
+                            <p class="fragment">... 这句话对于计算机来说毫无意义</p>
+                            <p class="fragment">需要一个严谨的数学框架来定义“这里”是哪里</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>什么是“线性无关”？</h3>
+                    <p class="fragment">一组向量 $(\vec{v_1}, \vec{v_2}, \dots, \vec{v_n})$ 是<strong>线性无关</strong>的，如果其中任何一个向量都<strong>不能</strong>被其他向量的线性组合（即缩放和相加）所表示。即有：</p>
+                    <p class="fragment">\[\alpha_1v_1+\alpha_2v_2+\cdots+\alpha_nv_n=0 \iff \alpha_1=\alpha_2=\cdots=\alpha_n=0\]</p>
+                    <p class="fragment">通俗地说：</p>
+                    <ul>
+                        <li class="fragment">在二维空间中，两个向量只要<strong>不在同一条直线上</strong>，它们就是线性无关的</li>
+                        <li class="fragment">在三维空间中，三个向量只要<strong>不在同一个平面上</strong>，它们就是线性无关的</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 20px;">
+                        线性无关的向量构成了描述一个空间的“最小集合”，它们是构建一个有效<strong>坐标系</strong>的基石
+                    </p>
+                    <a href="../AppDemos/Linear_Indepence.html" target="_blank" class="fragment">点击这里查看线性无关的交互式演示</a>
+                </section>
+                <section>
+                    <h3>维度与基</h3>
+                    <p class="fragment">精确定义一个空间的“大小”</p>
+                    <ul>
+                        <li class="fragment">
+                            <strong>维度 (Dimension)</strong>: 一个向量空间 $V$ 的维度，是该空间中<strong>线性无关向量的最大数目</strong>
+                            <ul>
+                                <li class="fragment" style="font-size: 0.8em;">例如，在二维平面上，最多只能找到2个线性无关的向量。任何第3个向量都可以被前两个表示出来。因此，二维平面的维度是2</li>
+                                <li class="fragment" style="font-size: 0.8em;">同理，三维空间的维度是3</li>
+                            </ul>
+                        </li>
+                        <li class="fragment">
+                            <strong>基 (Basis)</strong>: 如果一个向量空间 $V$ 的维度是 $n$，那么任何一组由 $n$ 个<strong>线性无关</strong>的向量 $\{\vec{v_1}, \vec{v_2}, \dots, \vec{v_n}\}$ 构成的集合，都称为该空间的一个<strong>基</strong>。
+                        </li>
+                        <li class="fragment">
+                        空间中任意向量$v$均可写成
+					\[v=\alpha_1\vec{v_1}+\alpha_2\vec{v_2}+\cdots+\alpha_n\vec{v_n}\]
+                    其中$\{\alpha_i\}$各不相同
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>坐标系 (Coordinate System)</h4>
+                    <p class="fragment">一个$n$维坐标系，由$n$个线性无关的<strong>基向量</strong>$(\vec{v_1}, \vec{v_2}, \dots, \vec{v_n})$ 构成</p>
+                    <p class="fragment">定义了空间中的“<strong>方向</strong>”和“<strong>尺度</strong>”。</p>
+                    <p class="fragment"><strong>作用：</strong> 空间中的任何向量 $\vec{v}$ 都可以表示为这些基向量的线性组合：</p>
+                    <p class="fragment">$\vec{v} = \alpha_1 \vec{v_1} + \alpha_2 \vec{v_2} + \dots + \alpha_n \vec{v_n}$</p>
+                    <p class="fragment">坐标系本身没有“起点”，因此它只能描述<strong>向量</strong>（方向），无法描述一个绝对的<strong>点</strong>（位置）</p>
+                </section>
+                <section>
+                    <h3>坐标系 (Coordinate System)</h3>
+                    <p class="fragment">对于向量$\vec{v}$，有</p>
+                    <p class="fragment">$\vec{v} = \alpha_1 \vec{v_1} + \alpha_2 \vec{v_2} + \dots + \alpha_n \vec{v_n}$</p>
+                    <p class="fragment">称常量$\{\alpha_1,\alpha_2,\cdots,\alpha_n\}$为向量$v$相对于基的表示，可写为
+                    \[\mathbf{a}=[\alpha_1 \alpha_2 \cdots \alpha_n]^{T}=\begin{bmatrix}\alpha_1\\\alpha_2\\\cdots\\\alpha_n\end{bmatrix}\]</p>
+                    <p class="fragment">例如：$v=2v_1+3v_2-4v_3$，有$\mathbf{a}=[2\ 3\ -4]^{T}$</p>
+                </section>
+                <section>
+                    <h3>坐标系 (Coordinate System)</h3>
+                    <p class="fragment">下列两个坐标系表示，哪个是正确的</p>
+                    <div class="fragment columnleft">
+                        <img src="../../images/cg/chap03/ch03-coordrt1.png">
+                    </div>
+                    <div class="fragment columnright">
+                        <img src="../../images/cg/chap03/ch03-coordrt2.png">
+                    </div>
+					<p class="fragment fade-up" style="text-align:center;">两个都对，因为向量没有固定位置</p>
+                </section>
+                <section>
+                    <h3>标架 (Frame)</h3>
+                    <p class="fragment">坐标系只能描述<strong>向量</strong>，无法描述<strong>点</strong></p>
+                    <p class="fragment">为了确定点的位置，必须在坐标系的基础上，再指定一个<strong>原点 (Origin)</strong> $P_0$，构成标架 (Frame)</p>
+                    <p class="fragment" style="margin-top: 30px; background-color: #f0f0f0; padding: 20px; border-radius: 10px;">
+                        <strong>标架 = 原点 + 基向量</strong> $\implies (P_0, \vec{v_1}, \vec{v_2}, \dots, \vec{v_n})$
+                    </p>
+                    <p class="fragment">一个“标架”才构成了一个完整的参考系。</p>
+                    <p class="fragment"><strong>作用：</strong> 在一个标架中，空间中的任何一个点 $P$ 都可以被唯一地表示：</p>
+                    <p class="fragment">\[P = P_0 + \beta_1 \vec{v_1} + \beta_2 \vec{v_2} + \dots + \beta_n \vec{v_n}\]</p>
+                    <p class="fragment">空间中的任意一个向量$\vec{v}$可写成：</p>
+                    <p class="fragment">
+                    \[\vec{v}=\alpha_1\vec{v_1}+\alpha_2\vec{v_2}+\cdots+\alpha_n\vec{v_n}\]</p>
+                </section>
+                <section>
+                    <h3>区分点和向量</h3>
+                    <p class="fragment">从前面的描述中，可以看到，点和向量的表示类似，有
+					\[\mathbf{P}=[\beta_1\ \beta_2\ \beta_3]\]
+					\[\mathbf{\vec{v}}=[\alpha_1\ \alpha_2\ \alpha_3]\]
+					但是，<strong style="color:red">点有位置，向量没有位置</strong></p>
+                    <img class="fragment" src="../../images/cg/chap03/ch03-pandv.png" style="width:40%">
+                </section>
+                <section>
+                    <h3>表示 (Representation)</h3>
+                    <p class="fragment">给定一个标架 $(P_0, \vec{v_1}, \dots, \vec{v_n})$，一个点 $P$ 的坐标 $(\beta_1, \dots, \beta_n)$ 就是它在该标架下的**表示**。</p>
+                    <p class="fragment" style="color: red; margin-top: 30px;">
+                        <strong>核心思想：</strong> 一个物体在空间中的位置是<strong>绝对</strong>的，但它在不同标架下的坐标<strong>表示</strong>是<strong>相对</strong>的
+                    </p>
+                    <p class="fragment">同一个点，在不同的标架（参考系）下，会有完全不同的坐标表示</p>
+                    <p><a href="../AppDemos/relate_coord.html" target="_blank" class="fragment">点击这里查看坐标表示的相对性</a></p>
+                </section>
+                <section>
+                    <h3>坐标系--标架--表示</h3>
+                    <p><a href="../AppDemos/frame_concepts.html" target="_blank" class="fragment">点击这里查看坐标系、标架和表示三概念之间的联系和异同</a></p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>点和向量？</h3>
+                    <p class="fragment">我们已经知道，在一个标架 $(P_0, \vec{v_1}, \vec{v_2}, \vec{v_3})$ 中：</p>
+                    <p class="fragment">一个<strong>向量</strong> $\vec{v}$ 的表示为：$\vec{v} = \alpha_1 \vec{v_1} + \alpha_2 \vec{v_2} + \alpha_3 \vec{v_3}$</p>
+                    <p class="fragment">一个<strong>点</strong>$P$的表示为：$P = P_0 + \beta_1 \vec{v_1} + \beta_2 \vec{v_2} + \beta_3 \vec{v_3}$</p>
+                    <p class="fragment" style="margin-top: 30px;">
+                    <strong>问题：</strong> 点和向量的坐标表示 $[\alpha_1, \alpha_2, \alpha_3]^T$ 和 $[\beta_1, \beta_2, \beta_3]^T$ 都是三维列向量，形式上完全一样。如何仅从数学表示上能将这二者区分开？
+                    </p>
+                </section>
+                <section>
+                    <h3>解决方案：升维</h4>
+                    <p class="fragment">为坐标增加一个额外的维度<strong>$w$</strong>来解决这个问题</p>
+                    <p class="fragment">对于三维空间，我们将其坐标扩展到四维：</p>
+                    <ul style="list-style-type: none; margin-top: 30px;">
+                        <li class="fragment" style="background-color: #e7f5ff; padding: 15px; border-radius: 8px;">
+                            <strong>向量</strong> $\vec{v} = [\alpha_1, \alpha_2, \alpha_3]$ &rarr; 齐次坐标表示为 $[\alpha_1, \alpha_2, \alpha_3, \bf{0}]^{T}$
+                        </li>
+                        <li class="fragment" style="background-color: #fff4e7; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                             <strong>点</strong> $P = [\beta_1, \beta_2, \beta_3]$ &rarr; 齐次坐标表示为 $[\beta_1, \beta_2, \beta_3, \bf{1}]^{T}$</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 30px;">新增的<strong>$w$</strong>分量，类似一个<strong>类型标记</strong>，<strong>$w=0$</strong>代表向量，<strong>$w=1$</strong>代表点。</p>
+                </section>
+                <section>
+                    <h3>齐次坐标和计算机图形学</h3>
+                    <p class="fragment">齐次坐标，是计算机图形学中极为重要的基本概念，广泛应用于各种图形算法中：</p>
+                    <ul>
+                        <li class="fragment">硬件流水线管理的实现采用4维矩阵和向量处理</li>
+                        <li class="fragment">通过矩阵运算，统一处理点和向量的变换，包括平移、旋转、缩放等，采用$4\times 4$的矩阵相乘实现</li>
+                        <li class="fragment">简化投影变换的计算</li>
+                        <li class="fragment">实现透视除法，处理深度信息</li>
+                        <li class="fragment">支持齐次坐标插值，提升渲染质量</li>
+                        <li class="fragment">便于处理无穷远点，实现平行投影</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>齐次坐标的定义</h3>
+                    <p class="fragment">在标架 $(P_0, \vec{v_1}, \vec{v_2}, \vec{v_3})$ 中，我们可以将点和向量的表示统一成一个矩阵形式：</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">$\vec{v} = [\vec{v_1}\ \vec{v_2}\ \vec{v_3}\ P_0] \begin{bmatrix} \alpha_1 \\ \alpha_2 \\ \alpha_3 \\ 0 \end{bmatrix}$</p>
+                        </div>
+                        <div>
+                            <p class="fragment">$P = [\vec{v_1}\ \vec{v_2}\ \vec{v_3}\ P_0] \begin{bmatrix} \beta_1 \\ \beta_2 \\ \beta_3 \\ 1 \end{bmatrix}$</p>
+                        </div>
+                    </div>
+                    <p class="fragment">称这4维的列向量为点或向量的<strong>齐次坐标表示</strong></p>
+                </section>
+                <section>
+                    <h3>齐次坐标的核心优势</h3>
+                    <p class="fragment"><strong>核心优势：</strong> 它使得所有标准的几何变换（平移、旋转、缩放），都可以用<strong>统一的 $4 \times 4$ 矩阵乘法</strong>来实现，为计算机图形学带来了革命性的突破</p>
+                    <p class="fragment">这对于设计和实现GPU的硬件渲染流水线至关重要</p>
+                    <p class="fragment"><a href="../AppDemos/uniform_trans.html" target="_blank">点击这里查看齐次坐标的优势</a></p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment">想象一下，我们有两个标架：世界标架 $F_W$ 和相机标架 $F_C$</p>
+                    <p class="fragment">一个点在世界标架下的表示为 $P_W$，在相机标架下的表示为 $P_C$</p>
+                    <p class="fragment">我们可以通过一个 $4 \times 4$ 的<strong>变换矩阵</strong> $M$，在两种表示之间进行转换：</p>
+                    <p class="fragment">$P_C = M \cdot P_W$</p>
+                    <p class="fragment">这个矩阵 $M$ 就是我们常说的<strong>模型-视图矩阵 (Model-View Matrix)</strong></p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment">先改变“坐标系”</p>
+                    <p class="fragment">考虑同一个向量，在两组不同的基下有两组不同的表示，分别为</p>
+                    <p class="fragment">
+                        \[\mathbf{a}=[\alpha_1\ \alpha_2\ \alpha_3]\] \[\mathbf{b}=[\beta_1\ \beta_2\ \beta_3]\] 
+                    </p>
+					<p class="fragment">有</p>
+                    <p class="fragment">\[\begin{aligned}
+					\vec{v}=\alpha_1\vec{v_1}+\alpha_2\vec{v_2}+\alpha_3\vec{v_3}=[\alpha_1\ \alpha_2\ \alpha_3][\vec{v_1}\ \vec{v_2}\ \vec{v_3}]^{T}\\
+                    =\beta_1\vec{u_1}+\beta_2\vec{u_2}+\beta_3\vec{u_3}=[\beta_1\ \beta_2\ \beta_3][\vec{u_1}\ \vec{u_2}\ \vec{u_3}]^{T}\end{aligned}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" data-fragment-index="1">第二组基$(\vec{u_1},\vec{u_2},\vec{u_3})$若用第一组基$(\vec{v_1},\vec{v_2},\vec{v_3})$表示，有</p>
+                    <div class="fragment columnleft" data-fragment-index="3">
+					<p style="text-align:left;font-size:70%">
+                    \[\begin{aligned}
+                    \vec{u_1}=\gamma_{11}\vec{v_1}+\gamma_{12}\vec{v_2}+\gamma_{13}\vec{v_3}\\
+                    \vec{u_2}=\gamma_{21}\vec{v_1}+\gamma_{22}\vec{v_2}+\gamma_{23}\vec{v_3}\\
+                    \vec{u_3}=\gamma_{31}\vec{v_1}+\gamma_{32}\vec{v_2}+\gamma_{33}\vec{v_3}
+                    \end{aligned}\]
+					</p>
+                    </div>
+                    <div class="fragment columnright" data-fragment-index="2">
+                        <img src="../../images/cg/chap03/ch03-framechange.png" style="width:80%">
+                    </div>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment">这些参数写成$3\times 3$的矩阵形式有</p>
+                    <p class="fragment">
+                    \[M=\begin{bmatrix}
+                    \gamma_{11}\ \gamma_{12}\ \gamma_{13}\\
+                    \gamma_{21}\ \gamma_{22}\ \gamma_{23}\\
+                    \gamma_{31}\ \gamma_{32}\ \gamma_{33}
+                    \end{bmatrix}\]</p>
+                    <p class="fragment">可进一步写成</p>
+                    <p class="fragment">
+                    \[\mathbf{u}=\mathbf{M}\mathbf{v}\]</p>
+                    <p class="fragment">其中$\mathbf{u}=[\vec{u_1}\ \vec{u_2}\ \vec{u_3}]^{T}$，$\mathbf{v}=[\vec{v_1}\ \vec{v_2}\ \vec{v_3}]^{T}$</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">假设有向量$\vec{w}$在基$(\vec{v_1},\vec{v_2},\vec{v_3})$下有表示$[\alpha_1, \alpha_2, \alpha_3]$，即</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\vec{w}=\alpha_1\vec{v_1}+\alpha_2\vec{v_2}+\alpha_3\vec{v_3}=\mathbf{a}^{T}\mathbf{v}\]</p>
+                    <p class="fragment" style="font-size:20pt">在基$(\vec{u_1},\vec{u_2},\vec{u_3})$下，有表示$[\beta_1, \beta_2, \beta_3]$，即</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\vec{w}=\beta_1\vec{u_1}+\beta_2\vec{u_2}+\beta_3\vec{u_3}=\mathbf{b}^{T}\mathbf{u}\]</p>
+                    <p class="fragment" style="font-size:20pt">有</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\mathbf{a}^{T}\mathbf{v}=\mathbf{b}^{T}\mathbf{u}=\mathbf{b}^{T}\mathbf{M}\mathbf{v}\]</p>
+                    <p class="fragment" style="font-size:20pt">因此，有</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\mathbf{a}=\mathbf{M}^{T}\mathbf{b}\]</p>
+                    <p class="fragment" style="font-size:20pt">再令$\mathbf{T}=(\mathbf{M}^{T})^{-1}$</p>
+                    <p class="fragment" style="font-size:20pt">有</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{b}=\mathbf{T}\mathbf{a}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">有\[a=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\]</p>
+                    <p class="fragment" style="font-size:20pt">其对应的基为$(\vec{v_1},\vec{v_2},\vec{v_3})$，即有</p>
+                    <p class="fragment" style="font-size:20pt">\[\vec{w}=\vec{v_1}+2\vec{v_2}+3\vec{v_3}\]</p>
+                    <p class="fragment" style="font-size:20pt">有另一组其$(\vec{u_1},\vec{u_2},\vec{u_3})$，其中</p>
+                    <p class="fragment" style="font-size:20pt">\[\begin{aligned}\vec{u_1}=\vec{v_1}\\ \vec{u_2}=\vec{v_1}+\vec{v_2}\\ \vec{u_3}=\vec{v_1}+\vec{v_2}+\vec{v_3}\end{aligned}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">矩阵$\mathbf{M}$为</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{M}=\begin{bmatrix}1&0&0\\1&1&0\\1&1&1\end{bmatrix}\]</p>
+                    <p class="fragment" style="font-size:20pt">有</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{T}=(\mathbf{M}^{T})^{-1}=\begin{bmatrix}1&-1&0\\0&1&-1\\0&0&1\end{bmatrix}\]</p>
+                    <p class="fragment" style="font-size:20pt">有</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{b}=\mathbf{T}\mathbf{a}=\begin{bmatrix}1&-1&0\\0&1&-1\\0&0&1\end{bmatrix}\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}=\begin{bmatrix}-1\\ -1\\ 3\end{bmatrix}\]</p>
+                    <p class="fragment" style="font-size:20pt">即有</p>
+                    <p class="fragment" style="font-size:20pt">\[\vec{w}=-\vec{u_1}-\vec{u_2}+3\vec{u_3}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">再看标架</p>
+                    <p class="fragment" style="font-size:20pt">有两个标架，分别为$(\vec{v_1}, \vec{v_2}, \vec{v_3}, P_0)$和$(\vec{u_1}, \vec{u_2}, \vec{u_3}, Q_0)$</p>
+                    <p class="fragment" style="font-size:20pt">两个标架间的关系为</p>
+                    <p class="fragment" style="font-size:20pt">
+                    \[\begin{aligned}
+                    u_1=\gamma_{11}v_1+\gamma_{12}v_2+\gamma_{13}v_3\\
+                    u_2=\gamma_{21}v_1+\gamma_{22}v_2+\gamma_{23}v_3\\
+                    u_3=\gamma_{31}v_1+\gamma_{32}v_2+\gamma_{33}v_3\\
+                    Q_0=\gamma_{41}v_1+\gamma_{42}v_2+\gamma_{43}v_3+\gamma_{44}P_0
+                    \end{aligned}\]
+                    </p>
+                    <p class="fragment" style="font-size:20pt">可写为</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\begin{bmatrix}\vec{u_1}\\ \vec{u_2}\\ \vec{u_3}\\ Q_0 \end{bmatrix} = M \begin{bmatrix}\vec{v_1}\\ \vec{v_2}\\ \vec{v_3}\\ P_0\end{bmatrix}\]
+                    </p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">对应的$4\times 4$矩阵为</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{M}=\begin{bmatrix}
+                    \gamma_{11}&\gamma_{12}&\gamma_{13}&0\\
+                    \gamma_{21}&\gamma_{22}&\gamma_{23}&0\\ 
+                    \gamma_{31}&\gamma_{32}&\gamma_{33}&0\\
+                    \gamma_{41} &\gamma_{42}&\gamma_{43}&1
+                    \end{bmatrix}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">利用$M$计算两个标架之间的变换，同样考虑向量$w$在两个标架下的不同表示</p>
+                    <p class="fragment" style="font-size:20pt">在标架$(\vec{v_1},\vec{v_2},\vec{v_3},P_0)$下有表示$[\alpha_1, \alpha_2, \alpha_3, 0]$，即</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\vec{w}=\alpha_1\vec{v_1}+\alpha_2\vec{v_2}+\alpha_3\vec{v_3}=\mathbf{a}^{T}\mathbf{v}\]</p>
+                    <p class="fragment" style="font-size:20pt">在标架$(\vec{u_1},\vec{u_2},\vec{u_3},Q_0)$下，有表示$[\beta_1, \beta_2, \beta_3, 0]$，即</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\vec{w}=\beta_1\vec{u_1}+\beta_2\vec{u_2}+\beta_3\vec{u_3}=\mathbf{b}^{T}\mathbf{u}\]</p>
+                    <p class="fragment" style="font-size:20pt">同样可得到</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\mathbf{a}=\mathbf{M}^{T}\mathbf{b}\]</p>
+                    <p class="fragment" style="font-size:20pt">其中</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[\mathbf{M}^{T}=
+                        \begin{bmatrix}
+                        \gamma_{11}&\gamma_{12}&\gamma_{13}&\gamma_{14}\\
+                        \gamma_{21}&\gamma_{22}&\gamma_{23}&\gamma_{24}\\
+                        \gamma_{31}&\gamma_{32}&\gamma_{33}&\gamma_{34}\\
+                        0&0&0&1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">同样，利用前面的示例</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[
+                        \begin{aligned}
+                        u_1=v_1\\
+                        u_2=v_1+v_2\\
+                        u_3=v_1+v_2+v_3\\
+                        \end{aligned}
+                        \]
+                    </p>
+                    <p class="fragment" style="font-size:20pt">标架参考点不变，$Q_0=P_0$</p>
+                    <p class="fragment" style="font-size:20pt">则对应的矩阵$\mathbf{M}$为</p>
+                    <p class="fragment" style="font-size:20pt">\[\mathbf{M}=\begin{bmatrix}1&0&0&0\\1&1&0&0\\1&1&1&0\\0&0&0&1\end{bmatrix}\]</p>
+                </section>
+                <section>
+                    <h3>应用：改变标架</h3>
+                    <p class="fragment" style="font-size:20pt">如果改变参考点位置，有</p>
+                    <p class="fragment" style="font-size:20pt">
+                        \[Q_0=P_0+v_1+2v_2+3v_3\]
+                    </p>
+                    <p class="fragment" style="font-size:20pt">则对应的矩阵为</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="font-size:20pt">\[\mathbf{M}^{T}=\begin{bmatrix}1&1&1&1\\0&1&1&2\\0&0&1&3\\0&0&0&1\end{bmatrix}\]</p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt">\[\mathbf{T}=(\mathbf{M}^{T})^{-1}=\begin{bmatrix}1&-1&0&-1\\0&1&-1&-1\\0&0&1&-3\\0&0&0&1\end{bmatrix}\]</p>
+                        </div>
+                    </div>
+                    <p class="fragment" style="font-size:20pt">有$\mathbf{a}=\begin{bmatrix}1&2&3&0\end{bmatrix}^{T}$, 则$\mathbf{b}=\begin{bmatrix}-1&-1&3&0\end{bmatrix}^{T}$</p>
+                    </p>
+                </section>
+                <section>
+                    <h3>使用表示</h3>
+                    <p class="fragment" style="font-size:20pt">在任意两个标架之间，所有的点和向量都可以用两个标架的基分别表示</p>
+                    <p class="fragment" style="font-size:20pt">假设有第一个标架$$\mathbf{a}=[\alpha_1\ \alpha_2\ \alpha_3\ \alpha_4]$$</p>
+                    <p class="fragment" style="font-size:20pt">
+					第二个标架$$\mathbf{b}=[\beta_1\ \beta_2\ \beta_3\ \beta_4]$$</p>
+                    <p class="fragment" style="font-size:20pt">
+					当有$\alpha_4=\beta_4=1$时为点，当$\alpha_4=\beta_4=0$时为向量，且有
+                    $$\mathbf{a}=\mathbf{M}^{T}\mathbf{b},\mathbf{b}=\mathbf{T}\mathbf{a},\mathbf{T}=(\mathbf{M}^{T})^{-1}$$</p>
+                    <p class="fragment" style="font-size:20pt">
+                    该矩阵$\mathbf{M}$是一个$4\times 4$的矩阵，表示齐次坐标的仿射变换</p>
+                </section>
+                <section>
+                    <h3>仿射变换</h3>
+                    <ul>
+					<li class="fragment">每个线性变换都等价于标架的变换</li>
+                    <li class="fragment">每个仿射变换都能维持线性特征不变</li>
+                    <li class="fragment">仿射变换只有12个自由度，矩阵中其它4个元素是固定的，仿射变换也是所有可能的$4\times 4$线性变换的一个子集</li>
+					</ul>
+                </section>
+                <section>
+                    <h3>世界坐标系和相机坐标系</h3>
+                    <li class="fragment">在课程内容中，坐标系和标架会混用，一般用坐标系表示，但要知道指的是标架(Frame)，即包含基和原点</li>
+                    <li class="fragment">当讨论表示（坐标值）时，讨论的是n元组，或是n维常量，所有的标架变换用齐次矩阵表示，定义为$4\times 4$的矩阵</li>
+					<li class="fragment">在OpenGL中，最基本的坐标系是世界坐标系，通过模型-视图矩阵，将世界坐标系中的对象变换到相机坐标系中</li>
+					<li class="fragment">在系统初始化时，所有的坐标系默认都相同，即有$\mathbf{M}=I$</li>
+                </section>
+                <section>
+                    <h3>移动相机</h3>
+                    <p class="fragment">情况1</p>
+                    <p class="fragment">如果在平面$z=0$两侧都有物体，通常需要将相机移动距离$d$到合适的位置</p>
+                    <div class="fragment columnleft" style="width:70%">
+                        <img src="../../images/cg/chap03/ch03-camframe.png" style="width:100%">
+                    </div>
+                    <div class="fragment columnright" style="width:30%;font-size:70%">
+                        $$\mathbf{M}=\begin{bmatrix}
+                        1\quad 0\quad 0\quad 0\\
+                        0\quad 1\quad 0\quad 0\\
+                        0\quad 0\quad 1\ -d\\
+                        0\quad 0\quad 0\quad 1
+                        \end{bmatrix}$$
+                    </div>
+                    <p class="fragment"><a href="../AppDemos/model-view-matrix-demo.html" target="_blank">模型视图矩阵示例</a></p>
+                    </section>
+                    <section>
+                        <h3>移动相机</h3>
+                        <p class="fragment">情况2</p>
+                        <img class="fragment" src="../../images/cg/cha../../chap03/ch03-camera-view.png" style="width:40%">
+                        
+                        <p class="fragment" style="font-size:18pt">
+                                \[(\mathbf{M}^{T})^{-1}=\begin{bmatrix}
+                                    u^T\\ v^T\\ n^T\\ 0&0&0&1
+                                \end{bmatrix}=\begin{bmatrix}
+                                    1&0&-1&1\\
+                                    0&1&0&0\\
+                                    -1&0&-1&1\\
+                                    0&0&0&1
+                                    \end{bmatrix}^{-1}=\begin{bmatrix}
+                                    \frac{1}{2}&0&-\frac{1}{2}&0\\
+                                    0&1&0&0\\
+                                    -\frac{1}{2}&0&-\frac{1}{2}&1\\
+                                    0&0&0&1
+                                    \end{bmatrix}
+                                \]
+                                </p>
+                    </section>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>
