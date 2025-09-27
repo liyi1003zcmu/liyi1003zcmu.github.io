@@ -1,7 +1,7 @@
 "use strict";
 
 /* import vec3 from glMatrix */
-const {vec3} = glMatrix;
+const { vec3 } = glMatrix;
 
 var gl;
 var canvas;
