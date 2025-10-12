@@ -23,9 +23,9 @@
 
 ### 第3章
 
-|    | 
-| ---- |
-|[第3章-1](./CourseWare/CGChapters/Lecture_3/Lecture_3_1.html)|
+|    |    |
+| ---- | ---- |
+|[第3章-1](./CourseWare/CGChapters/Lecture_3/Lecture_3_1.html)|[第3章-2](./CourseWare/CGChapters/Lecture_3/Lecture_3_2.html)|
 
 ## Demo
 
@@ -42,3 +42,10 @@
 | ---- | ---- | ---- |
 |[Chap2-demo1](./demos/chap2-demo-1.html)|[Chap2-demo2](./demos/chap2-demo-2.html)|[Chap2-demo3](./demos/chap2-demo-3.html)|
 |[Chap2-demo4](./demos/chap2-demo-4.html)|[Chap2-demo5](./demos/chap2-demo-5.html)| |
+
+### 第3章
+
+|    |    |     |
+| ---- | ---- | ---- | 
+|[Chap3-demo1](./demos/chap3-demo-1.html)|[Chap3-demo2](./demos/chap3-demo-2.html)|[Chap3-demo3](./demos/chap3-demo-3.html)|
+|[Chap3-demo4](./demos/chap3-demo-4.html)| | |

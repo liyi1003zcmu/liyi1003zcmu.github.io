@@ -1,0 +1,1684 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--变换</title>
+
+    <meta name="description" content="基本变换">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+         #scaling-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #scaling-canvas:active {
+            cursor: grabbing;
+        }
+        #translation-canvas { border: 1px solid #ccc; border-radius: 8px; cursor: grab; }
+        #translation-canvas:active { cursor: grabbing; }
+        .reason-box { background-color: #f8f9fa; border-left: 5px solid #ffc107; padding: 15px; margin-top: 20px; }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第三章(2) 变换</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <!-- 导入，提出问题，从“静态照片”到“动态世界”-->
+                    <h3>从“静”到“动”</h3>
+                    <div class="fragment placeholder">
+                        <img src="../../images/cg/chap03/ch03-static-square.png" height="100%">
+                    </div>
+                    <ul>
+                    <li class="fragment">如何准确地告诉GPU，让这个静止的正方形<strong>动起来</strong>？</li>
+                    <li class="fragment">如何用<strong>数学</strong>和<strong>代码</strong>精确地描述它的运动变化？</li>
+                    </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>第二部分：基础变换</h3>
+                    <p style="font-weight:bold; font-size:28pt; text-align:center">本部分内容：</p>
+                    <ul>
+                        <li>旋转</li>
+                        <li>缩放</li>
+                        <li>平移</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>课程目标</h3>
+                    <ul>
+                            <li class="fragment"><strong>解释</strong> 2D平移、旋转和缩放变换的几何意义</li>
+                            <li class="fragment"><strong>推导</strong> 并 <strong>写出</strong> 2D旋转和缩放的2x2矩阵</li>
+                            <li class="fragment"><strong>阐明</strong> 平移变换的特殊性，以及为何需要统一的表示方法</li>
+                            <li class="fragment"><strong>解释</strong> 齐次坐标的定义及其在图形学中的核心作用</li>
+                            <li class="fragment"><strong>使用</strong> 3x3的齐次矩阵来统一表示2D变换</li>
+                        </ul>
+                </section>
+            </section>
+            <section>
+                <h3>一个问题：统一表示</h3>
+                <p class="fragment">我们已经知道，2D空间中有三种基本变换：</p>
+                <ul>
+                    <li class="fragment">旋转</li>
+                    <li class="fragment">平移</li>
+                    <li class="fragment">缩放</li>
+                </ul>
+                <p class="fragment">都能统一用矩阵和向量的计算表示，如何表示？</p>
+            </section>
+            <section>
+                <section>
+                    <h3>变换的概念</h3>
+                    <p class="fragment"><strong>变换</strong>，指的是建立<strong>点与点</strong>或<strong>向量与向量</strong>之间的<strong>映射</strong>，如下图中所示，有映射关系$v=T(u)$，$Q=T(P)$</p>
+                    <img class="fragment" src="./../../images/cg/chap03/ch03-generaltrans.png" height="100%">
+                </section>
+                <section>
+                    <h3>仿射变换</h3>
+                    <p class="fragment"><strong>仿射变换</strong>，能够维持物体的线性属性，其中包含了物理上的重要的变换，如</p>
+                    <ul>
+                        <li class="fragment"><strong>刚性变换(Rigid-body transformation)</strong>：包括旋转(Rotation)、平移(Translation)</li>
+                        <li class="fragment"><strong>非刚性变换(Non-rigid transformation)</strong>：缩放(Scaling)、错切(Shear)</li>
+                    </ul>
+                    <p class="fragment">在计算机图形学中，仿射变换是非常重要的，仿射变换能保持拓扑结构不变，即点、线、面之间的相对关系保持不变</p>
+                </section>
+                <section>
+                    <h3>仿射变换流水线实现</h3>
+                    <div class="fragment">
+                        <img src="./../../images/cg/chap03/ch03-afftransimple.png" height="100%">
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>旋转</h3>
+                    <canvas class="fragment" id="rotsquare" width="700" height="500"></canvas>
+                    <script>
+                        var canvas = document.getElementById("rotsquare");
+                        var radius = 200;
+                        var theta = Math.PI/ 3;
+                        var ctx = canvas.getContext("2d");
+                        ctx.lineWidth = 5;
+                        ctx.beginPath();
+                        ctx.arc(350, 250, radius, 0, 2 * Math.PI);
+                        ctx.stroke();
+                        ctx.strokeStyle = "#6495ED";
+                        ctx.beginPath();
+                        ctx.moveTo(350 + radius * Math.cos(theta), 250 - radius * Math.sin(theta));
+                        ctx.lineTo(350 + radius * Math.sin(theta), 250 + radius * Math.cos(theta));
+                        ctx.lineTo(350 - radius * Math.cos(theta), 250 + radius * Math.sin(theta));
+                        ctx.lineTo(350 - radius * Math.sin(theta), 250 - radius * Math.cos(theta));
+                        ctx.closePath();
+                        ctx.stroke();
+                        ctx.font = "24px Arial";
+                        ctx.fillText("(cos" + String.fromCharCode(952) + ", sin" + String.fromCharCode(952) + ")", 350 + radius * Math.cos(theta) + 25, 250 - radius * Math.sin(theta));
+                        ctx.fillText("(sin" + String.fromCharCode(952) + ", -cos" + String.fromCharCode(952) + ")", 350 + radius * Math.sin(theta) + 25, 250 + radius * Math.cos(theta));
+                        ctx.fillText("(-cos" + String.fromCharCode(952) + ", -sin" + String.fromCharCode(952) + ")", 350 - radius * Math.cos(theta) - 170, 250 + radius * Math.sin(theta) + 20);
+                        ctx.fillText("(-sin" + String.fromCharCode(952) + ", cos" + String.fromCharCode(952) + ")", 350 - radius * Math.sin(theta) - 150, 250 - radius * Math.cos(theta));
+                    </script>
+                    <p class="fragment">考虑由上述四点构成的正四边形，若要实现按角速度$\theta$绕原点逆时针旋转的<a href="./demos/chap3-demo-1.html" target="_blank">动画效果</a></p>
+                    <p class="fragment">即求点$P(x,y)$旋转$\theta$度后的新坐标$P'(x',y')$</p>
+                </section>
+                <section>
+                    <h3>推导过程</h3>
+                    <p class="fragment">核心工具是，<strong>三角函数</strong></p>
+                    <ol>
+                        <li class="fragment">首先，用极坐标表示点 $P(x, y)$。设OP长度为 $r$，初始角度为 $\alpha$</li>
+                        <li class="fragment">则有
+                        \[
+                        \begin{cases}
+                        x=r\cos{\alpha}\\
+                        y=r\sin{\alpha}
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">绕原点<strong>逆时针</strong>旋转$\theta$角度后，新点$P'$的角度变为$(\alpha + \theta)$，半径 $r$ 不变</li>
+                        <li class="fragment">因此有：
+                        \[
+                        \begin{cases}
+                        x'=r\cos{(\alpha + \theta)}\\
+                        y'=r\sin{(\alpha + \theta)}
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">接下来，我们需要展开这两个和角公式...</li>
+                    </ol>
+                </section>
+                <section>
+                    <h3>推导过程续</h3>
+                    <ol start="6">
+                        <li class="fragment">根据和角公式，有：
+                        \[
+                        \begin{cases}
+                        \cos{(\alpha + \theta)}=\cos{\alpha}\cos{\theta}-\sin{\alpha}\sin{\theta}\\
+                        \sin{(\alpha + \theta)}=\sin{\alpha}\cos{\theta}+\cos{\alpha}\sin{\theta}
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">将其代入$x',y'$的表达式，得到：
+                        \[
+                        \begin{cases}
+                        x'=r\cos{(\alpha + \theta)}=r\cos{\alpha}\cos{\theta}-r\sin{\alpha}\sin{\theta}\\
+                        y'=r\sin{(\alpha + \theta)}=r\sin{\alpha}\cos{\theta}+r\cos{\alpha}\sin{\theta}
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">回忆一下，$x=r\cos{\alpha}$，$y=r\sin{\alpha}$，将其代入上式，得到：
+                        \[
+                        \begin{cases}
+                        x'=x\cos{\theta}-y\sin{\theta}\\
+                        y'=x\sin{\theta}+y\cos{\theta}
+                        \end{cases}
+                        \]
+                        </li>
+                    </ol>
+                </section>
+                <section>
+                    <h3>推导过程续(2)</h3>
+                    <ol start="9">
+                        <li class="fragment">将上式改写成矩阵形式：
+                        \[
+                        \begin{bmatrix}
+                        x'\\y'
+                        \end{bmatrix}=  \begin{bmatrix}
+                        \cos{\theta} & -\sin{\theta}\\
+                        \sin{\theta} & \cos{\theta}
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                        x\\y
+                        \end{bmatrix}
+                        \]
+                        </li> 
+                    </ol>
+                    <p class="fragment" style="text-align:center">该矩阵即为在二维平面点$P$绕原点逆时针旋转$\theta$度的<strong>旋转矩阵</strong></p>
+                </section>
+                <section>
+                    <h3>旋转矩阵可视化</h3>
+                    <div class="interactive-container">
+                        <!-- Left Panel: Controls and Formulas -->
+                        <div class="controls-formulas">
+                            <h4>控制与公式</h4>
+                            <label for="theta-slider">旋转角 &theta;: <span id="theta-value">45</span>°</label>
+                            <input type="range" id="theta-slider" min="0" max="360" value="45" style="width: 100%;">
+                            <hr>
+                            <div class="formula-display">
+                                <p style="font-size:20pt"><b>新坐标 x' 的推导:</b></p>
+                                <p style="font-size:16pt">$x' = r \cos(\alpha + \theta) = r\cos\alpha\cos\theta - r\sin\alpha\sin\theta$</p>
+                                <p class="formula-highlight-x" style="font-size:16pt">$x' = x \cdot \cos\theta - y \cdot \sin\theta$</p>
+                                <p id="x-prime-calc" style="font-size:16pt"></p>
+                                <br>
+                                <p style="font-size:20pt"><b>新坐标 y' 的推导:</b></p>
+                                <p style="font-size:16pt">$y' = r \sin(\alpha + \theta) = r\sin\alpha\cos\theta + r\cos\alpha\sin\theta$</p>
+                                <p class="formula-highlight-y" style="font-size:16pt">$y' = x \cdot \sin\theta + y \cdot \cos\theta$</p>
+                                <p id="y-prime-calc" style="font-size:16pt"></p>
+                            </div>
+                            <!--p style="margin-top:10px; font-size: 0.9em; color: #666;">提示：拖动画布中的蓝色点P来改变初始位置。</p-->
+                        </div>
+                        <!-- Right Panel: Canvas -->
+                        <div class="canvas-container">
+                            <canvas id="rotation-canvas" width="600" height="450"></canvas>
+                        </div>
+                    </div>
+                    <script>
+                        const rcanvas = document.getElementById('rotation-canvas');
+                        const rctx = rcanvas.getContext('2d');
+                        const slider = document.getElementById('theta-slider');
+                        const thetaValueSpan = document.getElementById('theta-value');
+                        const xPrimeCalcSpan = document.getElementById('x-prime-calc');
+                        const yPrimeCalcSpan = document.getElementById('y-prime-calc');
+
+                        const origin = { x: rcanvas.width / 2, y: rcanvas.height / 2 };
+                        let pointP = { x: 150, y: 60 };
+                        
+                        let isDragging = false;
+
+                        function draw() {
+                            const thetaRad = (slider.value * Math.PI) / 180;
+                            const cosTheta = Math.cos(thetaRad);
+                            const sinTheta = Math.sin(thetaRad);
+
+                            const pointP_prime = {
+                                x: pointP.x * cosTheta - pointP.y * sinTheta,
+                                y: pointP.x * sinTheta + pointP.y * cosTheta
+                            };
+
+                            // Clear canvas
+                            rctx.clearRect(0, 0, rcanvas.width, rcanvas.height);
+                            
+                            // Draw grid
+                            drawGrid();
+
+                            // --- Visualization Components ---
+                            const x_comp1 = {x: pointP.x * cosTheta, y: 0};
+                            const x_comp2 = {x: -pointP.y * sinTheta, y: 0};
+                            const y_comp1 = {x: 0, y: pointP.x * sinTheta};
+                            const y_comp2 = {x: 0, y: pointP.y * cosTheta};
+
+                            // Projections for y'
+                            drawVector(y_comp2, "#00c46a", `y·cosθ`); // y·cosθ
+                            drawVector(y_comp1, "#ff8f00", `x·sinθ`, y_comp2); // x·sinθ
+                            
+                            // Projections for x'
+                            drawVector(x_comp1, "#0d99ff", `x·cosθ`); // x·cosθ
+                            drawVector(x_comp2, "#e543ff", `-y·sinθ`, x_comp1); // -y·sinθ
+
+                            // Draw main vectors
+                            drawVector(pointP, '#007bff', 'P(x,y)', null, true);
+                            drawVector(pointP_prime, '#dc3545', "P'(x',y')", null, true);
+
+                            // Draw dashed lines from P' to axes
+                            rctx.setLineDash([2, 3]);
+                            rctx.strokeStyle = '#6c757d';
+                            rctx.beginPath();
+                            rctx.moveTo(origin.x + pointP_prime.x, origin.y - pointP_prime.y);
+                            rctx.lineTo(origin.x + pointP_prime.x, origin.y);
+                            rctx.stroke();
+                            rctx.beginPath();
+                            rctx.moveTo(origin.x + pointP_prime.x, origin.y - pointP_prime.y);
+                            rctx.lineTo(origin.x, origin.y - pointP_prime.y);
+                            rctx.stroke();
+                            rctx.setLineDash([]);
+                            
+                            // Update formula display
+                            thetaValueSpan.textContent = slider.value;
+                            xPrimeCalcSpan.innerHTML = `= ${pointP.x.toFixed(0)}·${cosTheta.toFixed(2)} - ${pointP.y.toFixed(0)}·${sinTheta.toFixed(2)} = ${pointP_prime.x.toFixed(2)}`;
+                            yPrimeCalcSpan.innerHTML = `= ${pointP.x.toFixed(0)}·${sinTheta.toFixed(2)} + ${pointP.y.toFixed(0)}·${cosTheta.toFixed(2)} = ${pointP_prime.y.toFixed(2)}`;
+                        }
+
+                        function drawVector(p, color, label, start = {x:0, y:0}, isMain = false) {
+                            // FIX: Handle cases where start might be explicitly passed as null.
+                            if (start === null) {
+                                start = {x:0, y:0};
+                            }
+                            
+                            rctx.save();
+                            rctx.translate(origin.x, origin.y);
+
+                            rctx.beginPath();
+                            rctx.moveTo(start.x, -start.y);
+                            rctx.lineTo(start.x + p.x, -(start.y + p.y));
+                            rctx.strokeStyle = color;
+                            rctx.lineWidth = isMain ? 3 : 2;
+                            rctx.stroke();
+                            
+                            // Arrowhead
+                            rctx.save();
+                            rctx.translate(start.x + p.x, -(start.y + p.y));
+                            rctx.rotate(-Math.atan2(p.y, p.x));
+                            rctx.beginPath();
+                            rctx.moveTo(0, 0);
+                            rctx.lineTo(-10, 5);
+                            rctx.lineTo(-10, -5);
+                            rctx.closePath();
+                            rctx.fillStyle = color;
+                            rctx.fill();
+                            rctx.restore();
+
+                            if (label) {
+                                rctx.fillStyle = color;
+                                rctx.font = '14px sans-serif';
+                                rctx.textAlign = 'center';
+                                rctx.fillText(label, start.x + p.x / 2 - 10, -(start.y + p.y / 2) - 8);
+                            }
+                            rctx.restore();
+                        }
+
+                        function drawGrid() {
+                            rctx.strokeStyle = '#e9ecef';
+                            rctx.lineWidth = 1;
+                            // X-axis
+                            rctx.beginPath();
+                            rctx.moveTo(0, origin.y);
+                            rctx.lineTo(rcanvas.width, origin.y);
+                            rctx.stroke();
+                            // Y-axis
+                            rctx.beginPath();
+                            rctx.moveTo(origin.x, 0);
+                            rctx.lineTo(origin.x, rcanvas.height);
+                            rctx.stroke();
+                        }
+                        
+                        slider.addEventListener('input', draw);
+                        
+                        rcanvas.addEventListener('mousedown', e => {
+                            const rect = rcanvas.getBoundingClientRect();
+                            const mouseX = e.clientX - rect.left - origin.x;
+                            const mouseY = origin.y - (e.clientY - rect.top);
+                            const dist = Math.sqrt((mouseX - pointP.x)**2 + (mouseY - pointP.y)**2);
+                            if (dist < 15) {
+                            isDragging = true;
+                            }
+                        });
+
+                        rcanvas.addEventListener('mousemove', e => {
+                            if (isDragging) {
+                                const rect = rcanvas.getBoundingClientRect();
+                                pointP.x = e.clientX - rect.left - origin.x;
+                                pointP.y = origin.y - (e.clientY - rect.top);
+                                draw();
+                            }
+                        });
+                        
+                        rcanvas.addEventListener('mouseup', () => isDragging = false);
+                        rcanvas.addEventListener('mouseout', () => isDragging = false);
+
+                        draw();
+                    </script>
+                    <aside class="notes">
+                        这个交互式应用是本课件的核心。它将抽象的公式与直观的几何图形完美结合，让学生“看到”公式的推导过程。
+                    </aside>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>缩放</h3>
+                    <canvas class="fragment" id="scale-intro-sscanvas" width="700" height="350" style="border-radius: 8px;"></canvas>
+                    <script>
+                        (function() {
+                            const sscanvas = document.getElementById('scale-intro-sscanvas');
+                            if (!sscanvas) return;
+                            const ssctx = sscanvas.getContext('2d');
+                            const width = sscanvas.width;
+                            const height = sscanvas.height;
+                            const origin = { x: 40, y: height - 40 };
+
+                            const shape = { w: 180, h: 180 };
+                            const sx = 2.5;
+                            const sy = 1.5;
+                            const scaledShape = { w: shape.w * sx, h: shape.h * sy };
+
+                            // Clear and setup
+                            ssctx.clearRect(0, 0, width, height);
+                            ssctx.font = '18px sans-serif';
+
+                            // Draw Scaled Rectangle first (so it's in the background)
+                            ssctx.fillStyle = 'rgba(220, 53, 69, 0.4)';
+                            ssctx.strokeStyle = 'rgba(220, 53, 69, 1)';
+                            ssctx.lineWidth = 2;
+                            ssctx.beginPath();
+                            ssctx.rect(origin.x, origin.y - scaledShape.h, scaledShape.w, scaledShape.h);
+                            ssctx.fill();
+                            ssctx.stroke();
+
+                            // Draw Original Square
+                            ssctx.fillStyle = 'rgba(0, 123, 255, 0.6)';
+                            ssctx.strokeStyle = 'rgba(0, 123, 255, 1)';
+                            ssctx.lineWidth = 2;
+                            ssctx.beginPath();
+                            ssctx.rect(origin.x, origin.y - shape.h, shape.w, shape.h);
+                            ssctx.fill();
+                            ssctx.stroke();
+
+                            // Draw Axes
+                            ssctx.strokeStyle = '#333';
+                            ssctx.fillStyle = '#333';
+                            ssctx.lineWidth = 1.5;
+                            // Y-axis
+                            ssctx.beginPath();
+                            ssctx.moveTo(origin.x, height);
+                            ssctx.lineTo(origin.x, 10);
+                            ssctx.lineTo(origin.x - 6, 22);
+                            ssctx.moveTo(origin.x, 10);
+                            ssctx.lineTo(origin.x + 6, 22);
+                            ssctx.stroke();
+                            ssctx.fillText('Y', origin.x - 25, 25);
+                            // X-axis
+                            ssctx.beginPath();
+                            ssctx.moveTo(0, origin.y);
+                            ssctx.lineTo(width - 10, origin.y);
+                            ssctx.lineTo(width - 22, origin.y - 6);
+                            ssctx.moveTo(width - 10, origin.y);
+                            ssctx.lineTo(width - 22, origin.y + 6);
+                            ssctx.stroke();
+                            ssctx.fillText('X', width - 28, origin.y + 25);
+
+                            // Draw Labels and Arrow
+                            ssctx.fillStyle = '#007bff';
+                            ssctx.fillText('原始形状', origin.x + 5, origin.y - shape.h - 8);
+
+                            // Arrow
+                            const arrowStart = { x: origin.x + shape.w , y: origin.y - shape.h };
+                            const arrowEnd = { x: origin.x + scaledShape.w, y: origin.y - scaledShape.h  };
+                            ssctx.beginPath();
+                            ssctx.moveTo(arrowStart.x, arrowStart.y);
+                            ssctx.lineTo(arrowEnd.x, arrowEnd.y);
+                            ssctx.lineWidth = 2.5;
+                            ssctx.strokeStyle = '#28a745';
+                            ssctx.stroke();
+                            // Arrowhead
+                            ssctx.save();
+                            ssctx.translate(arrowEnd.x, arrowEnd.y);
+                            ssctx.rotate(Math.atan2(arrowEnd.y - arrowStart.y, arrowEnd.x - arrowStart.x));
+                            ssctx.beginPath();
+                            ssctx.moveTo(0, 0);
+                            ssctx.lineTo(-12, 6);
+                            ssctx.lineTo(-12, -6);
+                            ssctx.closePath();
+                            ssctx.fillStyle = '#28a745';
+                            ssctx.fill();
+                            ssctx.restore();
+
+                            ssctx.fillStyle = '#dc3545';
+                            ssctx.fillText('缩放后', arrowEnd.x + 15, arrowEnd.y + 6);
+                            ssctx.fillStyle = '#28a745';
+                            ssctx.font = 'bold 18px sans-serif';
+                            ssctx.fillText(`Sx=${sx.toFixed(1)}, Sy=${sy.toFixed(1)}`, (arrowStart.x + arrowEnd.x) / 2 - 50, arrowStart.y - 5);
+                        })();
+                    </script>
+                    <aside class="notes">
+                        这个问题比旋转更直观。关键在于建立新旧坐标之间的直接乘法关系。
+                    </aside>
+                    <p class="fragment" style="font-size:20pt">如何让一个点 $P(x, y)$，以原点为中心，在水平方向上放大 $S_x$ 倍，在垂直方向上放大 $S_y$ 倍，得到新的坐标 $P'(x', y')$？</p>
+                </section>
+                <section>
+                    <h3>推导过程</h3>
+                    <p class="fragment">缩放的逻辑非常直接：</p>
+                    <ol>
+                        <li class="fragment">新的x坐标 $x'$ 是旧的x坐标 $x$ 乘以水平缩放因子 $S_x$</li>
+                        <li class="fragment formula-highlight">$x' = S_x x$</li>
+                        <li class="fragment">同理，新的y坐标 $y'$ 是旧的y坐标 $y$ 乘以垂直缩放因子 $S_y$</li>
+                        <li class="fragment formula-highlight">$y' = S_y y$</li>
+                        <li class="fragment">这两个简单的方程就是缩放变换的核心！</li>
+                    </ol>
+                </section>
+                <section>
+                    <h3>推导过程续</h3>
+                    <ol start="6">
+                        <li class="fragment">将上面两个方程合并：
+                        \[
+                        \begin{cases}
+                        x' = S_x x\\
+                        y' = S_y y
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">为了统一成矩阵形式，我们可以将它们看作是 $x$ 和 $y$ 的线性组合，其中一些系数为0
+                        \[
+                        \begin{cases}
+                        x' = S_x x + {\color{gray}0 \cdot y}\\
+                        y' = {\color{gray}0 \cdot x} + S_y y
+                        \end{cases}
+                        \]
+                        </li>
+                        <li class="fragment">将上式改写成矩阵形式：
+                        \[
+                        \begin{bmatrix}
+                        x'\\y'
+                        \end{bmatrix}=  \begin{bmatrix}
+                        S_x & 0\\
+                        0 & S_y
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                        x\\y
+                        \end{bmatrix}
+                        \]
+                        </li>
+                    </ol>
+                    <p class="fragment" style="text-align:center">该矩阵即为在二维平面点$P$以原点为中心按比例$S_x$和$S_y$缩放的<strong>缩放矩阵</strong></p>
+                </section>
+                <section>
+                    <h3>缩放矩阵可视化</h3>
+                    <div class="interactive-container">
+                        <!-- Left Panel: Controls and Formulas -->
+                        <div class="controls-formulas">
+                            <h4>控制与公式</h4>
+                            <label for="sx-slider">水平缩放 $S_x$: <span id="sx-value">1.5</span></label>
+                            <input type="range" id="sx-slider" min="0.1" max="3" value="1.5" step="0.1" style="width: 100%;">
+                            <label for="sy-slider">垂直缩放 $S_y$: <span id="sy-value">0.8</span></label>
+                            <input type="range" id="sy-slider" min="0.1" max="3" value="0.8" step="0.1" style="width: 100%;">
+                            <hr>
+                            <div class="formula-display">
+                                <p style="font-size:20pt"><b>新坐标推导:</b></p>
+                                <p class="formula-highlight" style="font-size:16pt">$x' = S_x \cdot x$</p>
+                                <p id="x-prime-calc-2" style="font-size:16pt"></p>
+                                <br>
+                                <p class="formula-highlight" style="font-size:16pt">$y' = S_y \cdot y$</p>
+                                <p id="y-prime-calc-2" style="font-size:16pt"></p>
+                            </div>
+                        </div>
+                        <!-- Right Panel: Canvas -->
+                        <div class="canvas-container">
+                            <canvas id="scaling-canvas" width="600" height="450"></canvas>
+                        </div>
+                    </div>
+                    <script>
+                        const scaleCanvas = document.getElementById('scaling-canvas');
+                        const scaleCtx = scaleCanvas.getContext('2d');
+                        const sxSlider = document.getElementById('sx-slider');
+                        const sySlider = document.getElementById('sy-slider');
+                        const sxValueSpan = document.getElementById('sx-value');
+                        const syValueSpan = document.getElementById('sy-value');
+                        const scaleXPrimeCalc2 = document.getElementById('x-prime-calc-2');
+                        const scaleYPrimeCalc2 = document.getElementById('y-prime-calc-2');
+
+                        const scaleOrigin = { x: scaleCanvas.width / 2, y: scaleCanvas.height / 2 };
+                        let scalePointP = { x: 100, y: 100 };
+                        
+                        let isScaleDragging = false;
+
+                        function drawScale() {
+                            const sx = sxSlider.value;
+                            const sy = sySlider.value;
+
+                            const pointP_prime = {
+                                x: scalePointP.x * sx,
+                                y: scalePointP.y * sy
+                            };
+
+                            scaleCtx.clearRect(0, 0, scaleCanvas.width, scaleCanvas.height);
+                            drawScaleGrid();
+
+                            // Draw main vectors
+                            drawScaleVector(scalePointP, '#007bff', 'P(x,y)', true);
+                            drawScaleVector(pointP_prime, '#dc3545', "P'(x',y')", true);
+
+                            // Draw dashed lines from P and P' to axes
+                            drawDashedLines(scalePointP, '#007bff');
+                            drawDashedLines(pointP_prime, '#dc3545');
+                            
+                            // Update formula display
+                            sxValueSpan.textContent = parseFloat(sx).toFixed(2);
+                            syValueSpan.textContent = parseFloat(sy).toFixed(2);
+                            scaleXPrimeCalc2.innerHTML = `= ${parseFloat(sx).toFixed(2)} · ${scalePointP.x.toFixed(0)} = ${pointP_prime.x.toFixed(2)}`;
+                            scaleYPrimeCalc2.innerHTML = `= ${parseFloat(sy).toFixed(2)} · ${scalePointP.y.toFixed(0)} = ${pointP_prime.y.toFixed(2)}`;
+                        }
+
+                        function drawDashedLines(p, color) {
+                            scaleCtx.setLineDash([2, 3]);
+                            scaleCtx.strokeStyle = color;
+                            scaleCtx.lineWidth = 1;
+                            // Line to X axis
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(scaleOrigin.x + p.x, scaleOrigin.y - p.y);
+                            scaleCtx.lineTo(scaleOrigin.x + p.x, scaleOrigin.y);
+                            scaleCtx.stroke();
+                            // Line to Y axis
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(scaleOrigin.x + p.x, scaleOrigin.y - p.y);
+                            scaleCtx.lineTo(scaleOrigin.x, scaleOrigin.y - p.y);
+                            scaleCtx.stroke();
+                            scaleCtx.setLineDash([]);
+                        }
+
+                        function drawScaleVector(p, color, label, isMain = false) {
+                            scaleCtx.save();
+                            scaleCtx.translate(scaleOrigin.x, scaleOrigin.y);
+                            // Draw vector line
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(0, 0);
+                            scaleCtx.lineTo(p.x, -p.y);
+                            scaleCtx.strokeStyle = color;
+                            scaleCtx.lineWidth = isMain ? 3 : 2;
+                            scaleCtx.stroke();
+                            
+                            // Arrowhead
+                            scaleCtx.save();
+                            scaleCtx.translate(p.x, -p.y);
+                            scaleCtx.rotate(-Math.atan2(p.y, p.x));
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(0, 0);
+                            scaleCtx.lineTo(-10, 5);
+                            scaleCtx.lineTo(-10, -5);
+                            scaleCtx.closePath();
+                            scaleCtx.fillStyle = color;
+                            scaleCtx.fill();
+                            scaleCtx.restore();
+
+                            if (label) {
+                                scaleCtx.fillStyle = color;
+                                scaleCtx.font = '14px sans-serif';
+                                scaleCtx.fillText(label, p.x / 2, -p.y / 2 - 8);
+                            }
+                            scaleCtx.restore();
+                        }
+
+                        function drawScaleGrid() {
+                            scaleCtx.strokeStyle = '#e9ecef';
+                            scaleCtx.lineWidth = 1;
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(0, scaleOrigin.y);
+                            scaleCtx.lineTo(scaleCanvas.width, scaleOrigin.y);
+                            scaleCtx.stroke();
+                            scaleCtx.beginPath();
+                            scaleCtx.moveTo(scaleOrigin.x, 0);
+                            scaleCtx.lineTo(scaleOrigin.x, scaleCanvas.height);
+                            scaleCtx.stroke();
+                        }
+                        
+                        sxSlider.addEventListener('input', drawScale);
+                        sySlider.addEventListener('input', drawScale);
+                        
+                        scaleCanvas.addEventListener('mousedown', e => {
+                            const rect = scaleCanvas.getBoundingClientRect();
+                            const mouseX = e.clientX - rect.left - scaleOrigin.x;
+                            const mouseY = scaleOrigin.y - (e.clientY - rect.top);
+                            const dist = Math.sqrt((mouseX - scalePointP.x)**2 + (mouseY - scalePointP.y)**2);
+                            if (dist < 15) {
+                            isScaleDragging = true;
+                            }
+                        });
+
+                        scaleCanvas.addEventListener('mousemove', e => {
+                            if (isScaleDragging) {
+                                const rect = scaleCanvas.getBoundingClientRect();
+                                scalePointP.x = e.clientX - rect.left - scaleOrigin.x;
+                                scalePointP.y = scaleOrigin.y - (e.clientY - rect.top);
+                                drawScale();
+                            }
+                        });
+                        
+                        scaleCanvas.addEventListener('mouseup', () => isScaleDragging = false);
+                        scaleCanvas.addEventListener('mouseout', () => isScaleDragging = false);
+
+                        drawScale();
+                    </script>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>平移</h3>
+                    <br>
+                    <canvas class="fragment" id="translate-intro-canvas" width="700" height="350"></canvas>
+                    <script>
+                        (function() {
+                            const tscanvas = document.getElementById('translate-intro-canvas');
+                            if (!tscanvas) return;
+                            const tsctx = tscanvas.getContext('2d');
+                            const p = {x: 150, y: 250};
+                            const t = {x: 300, y: -150};
+                            const p_prime = {x: p.x + t.x, y: p.y + t.y};
+                            tsctx.font = '18px sans-serif';
+
+                            // Draw vector OP
+                            tsctx.beginPath(); tsctx.moveTo(0,0); tsctx.lineTo(p.x, p.y);
+                            tsctx.strokeStyle = "#007bff"; tsctx.lineWidth = 3; tsctx.stroke();
+                            tsctx.fillStyle = "#007bff"; tsctx.fillText("P(x,y)", p.x - 70, p.y + 15);
+
+                            // Draw vector OP'
+                            tsctx.beginPath(); tsctx.moveTo(0,0); tsctx.lineTo(p_prime.x, p_prime.y);
+                            tsctx.strokeStyle = "#dc3545"; tsctx.lineWidth = 3; tsctx.stroke();
+                            tsctx.fillStyle = "#dc3545"; tsctx.fillText("P'(x',y')", p_prime.x + 10, p_prime.y);
+
+                            // Draw translation vector T
+                            tsctx.setLineDash([5, 5]);
+                            tsctx.beginPath(); tsctx.moveTo(p.x, p.y); tsctx.lineTo(p_prime.x, p_prime.y);
+                            tsctx.strokeStyle = "#28a745"; tsctx.lineWidth = 2; tsctx.stroke();
+                            tsctx.setLineDash([]);
+                            
+                            // Arrowhead for T
+                            tsctx.save(); tsctx.translate(p_prime.x, p_prime.y); tsctx.rotate(Math.atan2(t.y, t.x));
+                            tsctx.beginPath(); tsctx.moveTo(0, 0); tsctx.lineTo(-12, 6); tsctx.lineTo(-12, -6); tsctx.closePath();
+                            tsctx.fillStyle = "#28a745"; tsctx.fill();
+                            tsctx.restore();
+                            tsctx.fillText(`T(tx, ty)`, p.x + t.x/2 - 20, p.y + t.y/2 + 20);
+                        })();
+                    </script>
+                    <p class="fragment">如何将一个点$P(x,y)$平移一段固定的距离$(t_x,t_y)$，到达新的位置$P'(x',y')$?</p> 
+                </section>
+                <section>
+                    <h3>用数学表达</h3>
+                    <p class="fragment">从数学上看，平移是最简单的操作，就是坐标的加法：</p>
+                    <div class="formula">
+                        <p class="fragment">
+                        \[
+                        \begin{cases}
+                        x' = x + t_x \\
+                        y' = y + t_y
+                        \end{cases}
+                        \]
+                        </p>
+                    </div>
+                    <p class="fragment">问题来了：能像旋转和缩放一样，用一个<strong>$2\times 2$</strong>的矩阵来表示这个加法操作吗？</p>
+                    <p class="fragment">
+                        \[
+                        
+                        \begin{bmatrix}
+                        x' \\
+                        y'
+                        \end{bmatrix}
+                        = \begin{bmatrix}
+                        a & b \\
+                        c & d
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                        x \\
+                        y
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>$2\times 2$矩阵的局限性</h3>
+                    <p class="fragment">如果能构建矩阵，则有</p>
+                    <p class="fragment">
+                        \[
+                        \begin{cases}
+                        x'=ax+by\\
+                        y'=cx+dy
+                        \end{cases}
+                        \]
+                    </p>
+                    <p class="fragment">会发现，无论如何选择$a,b,c,d$，都无法制造出一个独立的加法项$t_x$或$t_y$</p>
+                    <div class="reason-box fragment">
+                        <p><strong>核心原因：</strong>$2\times 2$矩阵只能表示相对原点不变的<strong>线性变换</strong>，包括旋转、缩放和错切等。而平移是一种<stong>仿射变换</stong></p>
+                    </div>
+                </section>
+                <section>
+                    <h3>使用齐次坐标和齐次矩阵</h3>
+                    <p class="fragment">为了表示平移，需要扩展表示的维度，使用<strong>齐次坐标</strong>表示点，并使用<strong>齐次矩阵</strong>表示平移</p>
+                    <p class="fragment">
+                        $$ P(x,y)\Rightarrow P_h(x,y,{\color{red}1} )$$
+                    </p>
+                </section>
+                <section>
+                    <h3>计算$3\times 3$矩阵</h3>
+                    <p class="fragment">目标是，找到一个$3\times 3$的矩阵，满足</p>
+                    <p class="fragment formular">
+                        \[
+                        \begin{bmatrix}
+                        x' \\
+                        y' \\
+                        1
+                        \end{bmatrix}
+                        =
+                        \begin{bmatrix}
+                        ? & ? & ? \\
+                        ? & ? & ? \\
+                        ? & ? & ?
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                        x \\
+                        y \\
+                        1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">计算后满足</p>
+                    <p class="fragment">
+                        \[
+                        \begin{cases}
+                        x' = x + t_x \\
+                        y' = y + t_y \\
+                        1 = 1
+                        \end{cases}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>计算$3\times 3$矩阵</h3>
+                    <p class="fragment">根据矩阵乘法计算规则展开，可以得到</p>
+                    <ul>
+                       <li class="fragment">
+                        \[
+                        x'=?x+?y+?1={\color{red}1}\cdot x + {\color{red}0}\cdot y + {\color{red}t_x}\cdot 1
+                        \]
+                       </li>
+                       <li class="fragment">
+                        \[
+                        y'=?x+?y+?1={\color{red}0}\cdot x + {\color{red}1}\cdot y + {\color{red}t_y}\cdot 1
+                        \]
+                       </li>
+                       <li class="fragment">
+                        \[
+                        1=?x+?y+?1={\color{red}0}\cdot x + {\color{red}0}\cdot y + {\color{red}1}\cdot 1
+                        \]
+                       </li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>齐次平移矩阵</h3>
+                    <p class="fragment">因此，齐次平移矩阵为</p>
+                    <p class="fragment">
+                        \[
+                        M=\begin{bmatrix}
+                        1 & 0 & {\color{red}t_x} \\
+                        0 & 1 & {\color{blue}t_y} \\
+                        0 & 0 & 1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">
+                        \[
+                        \begin{bmatrix}
+                        x' \\ y' \\ 1
+                        \end{bmatrix}
+                        =\begin{bmatrix}
+                        x+x_t\\
+                        y+y_t\\
+                        1
+                        \end{bmatrix}
+                        = \begin{bmatrix}
+                        1 & 0 & {\color{red}t_x} \\
+                        0 & 1 & {\color{blue}t_y} \\
+                        0 & 0 & 1
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                        x \\ y \\ 1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">观察平移矩阵的结构，可以发现</p>
+                    <ul>
+                        <li class="fragment">平移矩阵的左上角为$2\times 2$的单位矩阵，保证坐标系的不变性</li>
+                        <li class="fragment">最后一列前两项$(t_x, t_y)$为平移的距离</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>平移矩阵可视化</h3>
+                    <div class="interactive-container">
+                        <div class="controls-formulas">
+                            <h4>控制与公式</h4>
+                            <label>平移量 t_x: <span id="tx-value">150</span></label>
+                            <input type="range" id="tx-slider" min="-250" max="250" value="150" step="1" style="width: 100%;">
+                            <label>平移量 t_y: <span id="ty-value">80</span></label>
+                            <input type="range" id="ty-slider" min="-200" max="200" value="80" step="1" style="width: 100%;">
+                            <hr>
+                            <div class="formula-display" style="font-size: 16pt; line-height: 1.5;">
+                                $\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} 1 & 0 & \color{red}{t_x} \\ 0 & 1 & \color{blue}{t_y} \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}$
+                                <p id="prime-calc"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas id="translation-canvas" width="600" height="450"></canvas>
+                    </div>
+                    <script>
+                        const transCanvas = document.getElementById('translation-canvas');
+                        const transCtx = transCanvas.getContext('2d');
+                        const txSlider = document.getElementById('tx-slider');
+                        const tySlider = document.getElementById('ty-slider');
+                        const txValueSpan = document.getElementById('tx-value');
+                        const tyValueSpan = document.getElementById('ty-value');
+                        const primeCalc = document.getElementById('prime-calc');
+
+                        const transOrigin = { x: transCanvas.width / 2, y: transCanvas.height / 2 };
+                        let transPointP = { x: 50, y: -60 };
+                        let isTransDragging = false;
+
+                        function drawTranslation() {
+                            const tx = parseInt(txSlider.value);
+                            const ty = parseInt(tySlider.value);
+
+                            const p_prime = {
+                                x: transPointP.x + tx,
+                                y: transPointP.y + ty
+                            };
+
+                            transCtx.clearRect(0, 0, transCanvas.width, transCanvas.height);
+                            // Draw Grid
+                            transCtx.strokeStyle = '#e9ecef';
+                            transCtx.lineWidth = 1;
+                            transCtx.beginPath(); transCtx.moveTo(0, transOrigin.y); transCtx.lineTo(transCanvas.width, transOrigin.y); transCtx.stroke();
+                            transCtx.beginPath(); transCtx.moveTo(transOrigin.x, 0); transCtx.lineTo(transOrigin.x, transCanvas.height); transCtx.stroke();
+
+                            // Draw Point P and P'
+                            drawPoint(transPointP, '#007bff', 'P(x,y)');
+                            drawPoint(p_prime, '#dc3545', "P'(x',y')");
+                            
+                            // Draw translation vector
+                            transCtx.save();
+                            transCtx.translate(transOrigin.x, transOrigin.y);
+                            transCtx.setLineDash([4, 4]);
+                            transCtx.beginPath();
+                            transCtx.moveTo(transPointP.x, -transPointP.y);
+                            transCtx.lineTo(p_prime.x, -p_prime.y);
+                            transCtx.strokeStyle = "#28a745";
+                            transCtx.lineWidth = 2;
+                            transCtx.stroke();
+                            transCtx.setLineDash([]);
+                            
+                            // Arrowhead for T
+                            transCtx.save();
+                            transCtx.translate(p_prime.x, -p_prime.y);
+                            transCtx.rotate(Math.atan2(-ty, tx));
+                            transCtx.beginPath(); transCtx.moveTo(0, 0); transCtx.lineTo(-10, 5); transCtx.lineTo(-10, -5); transCtx.closePath();
+                            transCtx.fillStyle = "#28a745";
+                            transCtx.fill();
+                            transCtx.restore();
+
+                            transCtx.restore();
+                            
+                            // Update UI
+                            txValueSpan.textContent = tx;
+                            tyValueSpan.textContent = ty;
+                            primeCalc.innerHTML = `x' = ${transPointP.x} + <span style="color:red">${tx}</span> = ${p_prime.x}<br>y' = ${transPointP.y} + <span style="color:blue">${ty}</span> = ${p_prime.y}`;
+                        }
+
+                        function drawPoint(p, color, label) {
+                            transCtx.fillStyle = color;
+                            transCtx.beginPath();
+                            transCtx.arc(transOrigin.x + p.x, transOrigin.y - p.y, 6, 0, Math.PI * 2);
+                            transCtx.fill();
+                            transCtx.font = '14px sans-serif';
+                            transCtx.fillText(label, transOrigin.x + p.x + 8, transOrigin.y - p.y + 5);
+                        }
+                        
+                        txSlider.addEventListener('input', drawTranslation);
+                        tySlider.addEventListener('input', drawTranslation);
+                        
+                        transCanvas.addEventListener('mousedown', e => {
+                            const rect = transCanvas.getBoundingClientRect();
+                            const mouseX = e.clientX - rect.left - transOrigin.x;
+                            const mouseY = transOrigin.y - (e.clientY - rect.top);
+                            const dist = Math.sqrt((mouseX - transPointP.x)**2 + (mouseY - transPointP.y)**2);
+                            if (dist < 15) isTransDragging = true;
+                        });
+                        transCanvas.addEventListener('mousemove', e => {
+                            if (isTransDragging) {
+                                const rect = transCanvas.getBoundingClientRect();
+                                transPointP.x = e.clientX - rect.left - transOrigin.x;
+                                transPointP.y = transOrigin.y - (e.clientY - rect.top);
+                                drawTranslation();
+                            }
+                        });
+                        transCanvas.addEventListener('mouseup', () => isTransDragging = false);
+                        transCanvas.addEventListener('mouseout', () => isTransDragging = false);
+
+                        drawTranslation();
+                    </script>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>三种变换矩阵</h3>
+                    <p class="fragment">到目前为止的三种基本变换矩阵分别对应：</p>
+                    <div class="three-column">
+                        <div class="fragment">
+                            <p style="text-align: center;">缩放变换($2\times 2$)</p>
+                            <p style="text-align:center">\[
+                                \begin{bmatrix} s_x & 0 \\ 0 & s_y \end{bmatrix}
+                            \]</p>
+                        </div>
+                        <div class="fragment">
+                            <p style="text-align:center">旋转变换($2\times 2$)</p>
+                            <p>\[\begin{bmatrix} \cos \theta & -\sin \theta\\ \sin \theta & \cos \theta \end{bmatrix}\]</p>
+                        </div>
+                        <div class="fragment">
+                            <p style="text-align:center">平移变换($3\times 3$)</p>
+                            <p>\[\begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1 \end{bmatrix}\]</p>
+                        </div>
+                    </div>
+                    <p class="fragment">是否可以将旋转和缩放也“升级”到$3\times 3$矩阵呢？</p>
+                    <div class="reason-box fragment">
+                        <p><strong>核心思想：</strong>使用齐次坐标和齐次矩阵的概念，将 $2\times 2$ 的线性变换矩阵嵌入到 $3\times 3$ 的矩阵中</p>
+                    </div>
+                </section>
+                <section>
+                    <h3>缩放矩阵</h3>
+                    <p class="fragment">将$2\times 2$的缩放矩阵变成$3\times 3$的齐次矩阵有：</p>
+                    <p class="fragment">
+                        \[
+                        \begin{bmatrix}
+                        x'\\ y'\\ 1
+                        \end{bmatrix}
+                        =
+                        \begin{bmatrix}
+                        s_x & 0 & ? \\ 0 & s_y & ? \\ ? & ? & ? \end{bmatrix} \begin{bmatrix} x\\ y\\ 1 \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">将矩阵展开后求解，可得到：</p>
+                    <p class="fragment"> \[
+                        M=\begin{bmatrix}
+                        s_x & 0 & 0 \\ 0 & s_y & 0 \\ 0 & 0 & 1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>旋转矩阵</h3>
+                    <p class="fragment">将$2\times 2$的旋转矩阵变成$3\times 3$的齐次矩阵有：</p>
+                    <p class="fragment">
+                        \[
+                        \begin{bmatrix}
+                        x'\\ y'\\ 1
+                        \end{bmatrix}
+                        =
+                        \begin{bmatrix}
+                        \cos \theta & -\sin \theta & ? \\ \sin \theta & \cos \theta & ? \\ ? & ? & ?
+                        \end{bmatrix} \begin{bmatrix} x\\ y\\ 1 \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">将矩阵展开后求解，可得到：</p>
+                    <p class="fragment">
+                        \[
+                        M=\begin{bmatrix}
+                        \cos \theta & -\sin \theta & 0 \\ \sin \theta & \cos \theta & 0 \\ 0 & 0 & 1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>齐次矩阵统一表示</h3>
+                    
+                    <p class="fragment">现在我们有了三种基本变换的齐次矩阵表示：</p>
+                    <div class="three-column">
+                        <div class="fragment">
+                            <p style="text-align:center;">缩放变换($3\times 3$)</p>
+                            <p style="text-align:center;font-size:16pt">
+                                \[
+                                S_{(s_x, s_y)}=\begin{bmatrix}
+                                s_x & 0 & 0 \\
+                                0 & s_y & 0 \\
+                                0 & 0 & 1  \end{bmatrix}
+                                \]
+                            </p>
+                    </div>
+                    
+                    <div class="fragment">
+                        <p style="text-align:center">旋转变换($3\times 3$)</p>
+                        <p style="text-align:center;font-size:16pt">\[
+                            R_{(\theta)}=\begin{bmatrix}
+                            \cos \theta & -\sin \theta & 0 \\
+                            \sin \theta & \cos \theta & 0 \\
+                            0 & 0 & 1
+                            \end{bmatrix}\]</p>
+                    </div> 
+                    <div class="fragment">
+                        <p style="text-align:center">平移变换($3\times 3$)</p>
+                        <p style="text-align:center;font-size:16pt">\[
+                            T_{(t_x, t_y)}=\begin{bmatrix}
+                            1 & 0 & t_x \\
+                            0 & 1 & t_y \\
+                            0 & 0 & 1
+                            \end{bmatrix}\]</p>
+                </section>
+                <section>
+                    <h4>变换可视化</h4>
+                    <div class="app-container">
+                        <div class="controls-panel">
+                            <div class="control-group">
+                                <h5>1. 添加新变换</h5>
+                                <select id="transform-type">
+                                    <option value="translate">平移 (Translate)</option>
+                                    <option value="rotate">旋转 (Rotate)</option>
+                                    <option value="scale">缩放 (Scale)</option>
+                                </select>
+                                <button id="add-transform-btn">添加</button>
+                            </div>
+                            <div class="control-group">
+                                <h5>2. 变换序列 (可拖拽排序)</h5>
+                                <ul id="transform-list"></ul>
+                            </div>
+                            <div class="control-group">
+                                <h5>3. 最终复合矩阵 M = M_n * ... * M_1</h5>
+                                <div id="final-matrix-display" class="matrix-display">
+                                    <span>1.00</span><span>0.00</span><span>0.00</span>
+                                    <span>0.00</span><span>1.00</span><span>0.00</span>
+                                    <span>0.00</span><span>0.00</span><span>1.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="canvas-panel">
+                            <canvas id="composite-canvas"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+        // Self-executing function to encapsulate the app logic
+        (function() {
+            const compcanvas = document.getElementById('composite-canvas');
+            // FIX: check if compcanvas exists on the current slide before proceeding
+            if (!compcanvas) return; 
+            const compctx = compcanvas.getContext('2d');
+            
+            // DOM Elements
+            const typeSelector = document.getElementById('transform-type');
+            const addBtn = document.getElementById('add-transform-btn');
+            const transformList = document.getElementById('transform-list');
+            const matrixDisplay = document.getElementById('final-matrix-display');
+
+            // App state
+            let transformations = [];
+            let baseShape = [];
+
+            // Matrix utilities
+            const mat = {
+                identity: () => [1, 0, 0, 0, 1, 0, 0, 0, 1],
+                multiply: (m1, m2) => {
+                    const result = mat.identity();
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            let sum = 0;
+                            for (let k = 0; k < 3; k++) {
+                                sum += m1[i * 3 + k] * m2[k * 3 + j];
+                            }
+                            result[i * 3 + j] = sum;
+                        }
+                    }
+                    return result;
+                },
+                transformPoint: (m, p) => {
+                    return {
+                        x: m[0] * p.x + m[1] * p.y + m[2],
+                        y: m[3] * p.x + m[4] * p.y + m[5]
+                    };
+                },
+                createTranslation: (tx, ty) => [1, 0, tx, 0, 1, ty, 0, 0, 1],
+                createRotation: (deg) => {
+                    const rad = deg * Math.PI / 180;
+                    const c = Math.cos(rad);
+                    const s = Math.sin(rad);
+                    return [c, -s, 0, s, c, 0, 0, 0, 1];
+                },
+                createScale: (sx, sy) => [sx, 0, 0, 0, sy, 0, 0, 0, 1]
+            };
+
+            function initialize() {
+                // Resize compcanvas to fit container
+                const parent = compcanvas.parentElement;
+                if (!parent) return;
+                compcanvas.width = parent.clientWidth;
+                compcanvas.height = parent.clientHeight;
+                
+                // Define a house shape
+                baseShape = [
+                    {x: -30, y: -30}, {x: 30, y: -30}, {x: 30, y: 30}, {x: 0, y: 50}, {x: -30, y: 30}, {x: -30, y: -30}
+                ];
+                
+                addBtn.addEventListener('click', addTransform);
+                transformList.addEventListener('input', updateTransform);
+                transformList.addEventListener('click', handleListClick);
+                
+                // Drag and Drop Logic
+                let draggedItem = null;
+                transformList.addEventListener('dragstart', e => {
+                    draggedItem = e.target;
+                    setTimeout(() => e.target.classList.add('dragging'), 0);
+                });
+                 transformList.addEventListener('dragend', e => {
+                    e.target.classList.remove('dragging');
+                });
+                transformList.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(transformList, e.clientY);
+                    const currentDragged = document.querySelector('.dragging');
+                    if (afterElement == null) {
+                        transformList.appendChild(currentDragged);
+                    } else {
+                        transformList.insertBefore(currentDragged, afterElement);
+                    }
+                });
+                transformList.addEventListener('drop', e => {
+                    e.preventDefault();
+                    reorderTransformations();
+                    updateAndRender();
+                });
+
+                updateAndRender();
+            }
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function addTransform() {
+                const type = typeSelector.value;
+                let newTransform;
+                switch (type) {
+                    case 'translate': newTransform = { id: Date.now(), type: '平移', params: { tx: 50, ty: 0 }, matrixFunc: mat.createTranslation }; break;
+                    case 'rotate': newTransform = { id: Date.now(), type: '旋转', params: { angle: 30 }, matrixFunc: mat.createRotation }; break;
+                    case 'scale': newTransform = { id: Date.now(), type: '缩放', params: { sx: 1.2, sy: 1.2 }, matrixFunc: mat.createScale }; break;
+                }
+                transformations.push(newTransform);
+                renderList();
+                updateAndRender();
+            }
+
+            function handleListClick(e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    const id = parseInt(e.target.closest('li').dataset.id);
+                    transformations = transformations.filter(t => t.id !== id);
+                    renderList();
+                    updateAndRender();
+                }
+            }
+
+            function updateTransform(e) {
+                 if (e.target.tagName !== 'INPUT') return;
+                 const id = parseInt(e.target.closest('li').dataset.id);
+                 const transform = transformations.find(t => t.id === id);
+                 const paramName = e.target.dataset.param;
+                 transform.params[paramName] = parseFloat(e.target.value) || 0;
+                 updateAndRender();
+            }
+            
+            function reorderTransformations() {
+                const newOrderIds = [...transformList.querySelectorAll('li')].map(li => parseInt(li.dataset.id));
+                transformations.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+            }
+
+            function renderList() {
+                transformList.innerHTML = '';
+                transformations.forEach(t => {
+                    const li = document.createElement('li');
+                    li.dataset.id = t.id;
+                    li.draggable = true;
+                    let inputs = '';
+                    if (t.type === '平移') {
+                        inputs = `<label>tx:</label><input type="number" data-param="tx" value="${t.params.tx}"> <label>ty:</label><input type="number" data-param="ty" value="${t.params.ty}">`;
+                    } else if (t.type === '旋转') {
+                        inputs = `<label>角度:</label><input type="number" data-param="angle" value="${t.params.angle}">`;
+                    } else if (t.type === '缩放') {
+                        inputs = `<label>sx:</label><input type="number" step="0.1" data-param="sx" value="${t.params.sx}"> <label>sy:</label><input type="number" step="0.1" data-param="sy" value="${t.params.sy}">`;
+                    }
+                    li.innerHTML = `<span style="font-size:12pt">${t.type}</span><div class="param-inputs" style="font-size:12pt">${inputs}</div><button class="delete-btn">&times;</button>`;
+                    transformList.appendChild(li);
+                });
+            }
+            
+            function updateAndRender() {
+                // Calculate final matrix
+                let finalMatrix = mat.identity();
+                transformations.forEach(t => {
+                    let m;
+                    if (t.type === '平移') m = t.matrixFunc(t.params.tx, t.params.ty);
+                    else if (t.type === '旋转') m = t.matrixFunc(t.params.angle);
+                    else if (t.type === '缩放') m = t.matrixFunc(t.params.sx, t.params.sy);
+                    finalMatrix = mat.multiply(m, finalMatrix);
+                });
+
+                // Display matrix
+                matrixDisplay.innerHTML = finalMatrix.map(v => `<span>${v.toFixed(2)}</span>`).join('');
+
+                // Draw scene
+                drawScene(finalMatrix);
+            }
+            
+            function drawScene(transformMatrix) {
+                if (compcanvas.width === 0 || compcanvas.height === 0) {
+                    const parent = compcanvas.parentElement;
+                    if (!parent) return;
+                    compcanvas.width = parent.clientWidth;
+                    compcanvas.height = parent.clientHeight;
+                }
+                compctx.clearRect(0, 0, compcanvas.width, compcanvas.height);
+                compctx.save();
+                compctx.translate(compcanvas.width / 2, compcanvas.height / 2);
+
+                // Draw axes
+                compctx.strokeStyle = '#ccc';
+                compctx.lineWidth = 1;
+                compctx.beginPath(); compctx.moveTo(-compcanvas.width / 2, 0); compctx.lineTo(compcanvas.width / 2, 0); compctx.stroke();
+                compctx.beginPath(); compctx.moveTo(0, -compcanvas.height / 2); compctx.lineTo(0, compcanvas.height / 2); compctx.stroke();
+                
+                // Draw original shape
+                compctx.strokeStyle = '#a0a0a0';
+                compctx.setLineDash([2, 2]);
+                compctx.lineWidth = 1;
+                compctx.beginPath();
+                baseShape.forEach((p, i) => {
+                    if (i === 0) compctx.moveTo(p.x, p.y);
+                    else compctx.lineTo(p.x, p.y);
+                });
+                compctx.stroke();
+                compctx.setLineDash([]);
+
+                // Draw transformed shape
+                const transformedShape = baseShape.map(p => mat.transformPoint(transformMatrix, p));
+                compctx.strokeStyle = '#007bff';
+                compctx.fillStyle = 'rgba(0, 123, 255, 0.2)';
+                compctx.lineWidth = 2;
+                compctx.beginPath();
+                transformedShape.forEach((p, i) => {
+                    if (i === 0) compctx.moveTo(p.x, p.y);
+                    else compctx.lineTo(p.x, p.y);
+                });
+                compctx.closePath();
+                compctx.stroke();
+                compctx.fill();
+
+                compctx.restore();
+            }
+
+            // Defer initialization until reveal.js is ready
+            Reveal.on('ready', function(event) {
+                // Check if the current slide contains our compcanvas before initializing
+                if(document.querySelector('.present #composite-canvas')) {
+                    initialize();
+                }
+            });
+            
+            // Re-initialize if the slide changes to the one with our compcanvas
+            Reveal.on('slidechanged', function(event) {
+                if (event.currentSlide.querySelector('#composite-canvas')) {
+                    initialize();
+                }
+            });
+
+        })();
+    </script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+	</script>
+</body>
+</html>
