@@ -1,72 +1,52 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<meta http-equiv="Content-type" content="text/html;charset=utf-8">
-	<title>Chap4 Demo</title>
-	<script id="vertex-shader" type="x-shader/x-vertex">
+    <meta charset="UTF-8">
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
 	#version 300 es
 	in vec4 vPosition;
 	in vec4 vColor;
 	out vec4 aColor;
 
-	uniform vec3 theta;
+	uniform mat4 modelViewMatrix;
+	uniform mat4 projectionMatrix;
 
 	void main()
 	{
-		//compute the sins and cos of theta for each of the three axis in one computation
-		vec3 angles = radians( theta );
-		vec3 cost = cos( theta );
-		vec3 sint = sin( theta );
-
-		mat4 rx = mat4(  1.0,  0.0,  0.0, 0.0,
-						 0.0,  cost.x,  sint.x, 0.0,
-						 0.0,  -sint.x,  cost.x, 0.0,
-						 0.0,  0.0,  0.0, 1.0
-						 );
-
-		mat4 ry = mat4(  cost.y,  0.0, -sint.y,  0.0,
-						 0.0,  1.0,  0.0,  0.0,
-						 sint.y,  0.0,  cost.y,  0.0,
-						 0.0,  0.0,  0.0,  1.0
-						 );
-
-		mat4 rz = mat4(  cost.z,  sint.z,  0.0,  0.0,
-						 -sint.z,  cost.z,  0.0,  0.0,
-						 0.0,  0.0,  1.0,  0.0,
-						 0.0,  0.0,  0.0,  1.0
-						 );
-
-		aColor = vColor;
-		gl_Position = rz * ry * rx * vPosition;
-		gl_Position.z = -gl_Position.z;
+		gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+		aColor = vColor;	
 	}
 	</script>
 
-	<script id="fragment-shader" type="x-shader/x-fragment">
+    <script id="fragment-shader" type="x-shader/x-fragment">
 	#version 300 es
 	precision mediump float;
+
 	in vec4 aColor;
 	out vec4 fColor;
-	
+
 	void main()
 	{
 		fColor = aColor;
 	}
 	</script>
-	<script type="text/javascript" src="../js/common/webgl-utils.js"></script>
-	<script type="text/javascript" src="../js/common/initShaders.js"></script>
-	<script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
-	
-	<script type="text/javascript" src="../js/ch04/rotcubev.js"></script>
-</head>
-<body>
-<h1>旋转的立方体-元素数组</h1>
-<canvas id="gl-canvas" width="512" height="512">
-你的浏览器不支持HTML5 canvas元素
-</canvas>
 
-<button id="xbutton">Rotate X</button>
-<button id="ybutton">Rotate Y</button>
-<button id="zbutton">Rotate Z</button>
+    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../js/common/initShaders.js"></script>
+    <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+    
+    <script type="text/javascript" src="../js/ch04/persproj.js"></script>
+</head>
+
+<body onload="initCube()">
+    <h1>立方体透视投影视图--按键控制</h1>
+
+    <canvas id="gl-canvas" width="512" height="512">
+        你的浏览器不支持HTML5 canvas元素
+    </canvas>
+
 </body>
+
 </html>

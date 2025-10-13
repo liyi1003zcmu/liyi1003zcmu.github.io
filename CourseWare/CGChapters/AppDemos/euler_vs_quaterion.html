@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>欧拉角 vs 四元数插值对比</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+    }
+    .main-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+    .controls-panel {
+        width: 280px;
+        padding: 20px;
+        background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        border-right: 1px solid #e0e0e0;
+    }
+    .views-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+    .canvas-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    h1, h2 {
+        text-align: center;
+        margin: 0;
+        padding: 15px;
+        background-color: #fafafa;
+        border-bottom: 1px solid #eee;
+    }
+    h1 { font-size: 22px; color: #1a1a1a; }
+    h2 { font-size: 16px; color: #444; }
+    .canvas-container {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+    canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+    }
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    label {
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+    }
+    input[type="range"] {
+        width: 100%;
+        cursor: pointer;
+    }
+    .info {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.6;
+    }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="controls-panel">
+        <h1>插值对比</h1>
+        
+        <div class="control-group">
+            <label for="interpolation-slider">插值进度 (t): <span id="t-value">0.00</span></label>
+            <input type="range" id="interpolation-slider" min="0" max="100" value="0">
+        </div>
+        
+        <div class="info">
+            <p>拖动滑块观察两种插值方式在旋转过程中的路径差异。</p>
+            <p><b>欧拉角插值</b>对每个角度分量独立进行线性计算，当旋转角度大时，可能导致不自然的抖动或绕远路径。</p>
+            <p><b>四元数插值 (Slerp)</b> 总能找到两个姿态之间最短的球面路径，动画更平滑、自然。</p>
+        </div>
+    </div>
+
+    <div class="views-area">
+        <div class="canvas-wrapper">
+            <h2>欧拉角线性插值 (Lerp)</h2>
+            <div class="canvas-container">
+                <canvas id="canvas-euler" width="600" height="400"></canvas>
+            </div>
+        </div>
+        <div class="canvas-wrapper">
+            <h2>四元数球面插值 (Slerp)</h2>
+            <div class="canvas-container">
+                <canvas id="canvas-quaternion" width="600" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Shaders (Same for both canvases) ---
+    const vertexShaderSource = `
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        uniform mat4 u_matrix;
+        varying vec4 v_color;
+        void main() {
+            gl_Position = u_matrix * a_position;
+            v_color = a_color;
+        }`;
+
+    const fragmentShaderSource = `
+        precision mediump float;
+        varying vec4 v_color;
+        void main() {
+            gl_FragColor = v_color;
+        }`;
+
+    // --- Math Libraries ---
+    const m4 = { /* ... (Matrix library from previous example) ... */ 
+        create: function() { return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]); },
+        multiply: function(a, b) {
+            const out = this.create();
+            const a00=a[0],a01=a[1],a02=a[2],a03=a[3],a10=a[4],a11=a[5],a12=a[6],a13=a[7],a20=a[8],a21=a[9],a22=a[10],a23=a[11],a30=a[12],a31=a[13],a32=a[14],a33=a[15];
+            let b0=b[0],b1=b[1],b2=b[2],b3=b[3];
+            out[0]=b0*a00+b1*a10+b2*a20+b3*a30; out[1]=b0*a01+b1*a11+b2*a21+b3*a31; out[2]=b0*a02+b1*a12+b2*a22+b3*a32; out[3]=b0*a03+b1*a13+b2*a23+b3*a33;
+            b0=b[4];b1=b[5];b2=b[6];b3=b[7];
+            out[4]=b0*a00+b1*a10+b2*a20+b3*a30; out[5]=b0*a01+b1*a11+b2*a21+b3*a31; out[6]=b0*a02+b1*a12+b2*a22+b3*a32; out[7]=b0*a03+b1*a13+b2*a23+b3*a33;
+            b0=b[8];b1=b[9];b2=b[10];b3=b[11];
+            out[8]=b0*a00+b1*a10+b2*a20+b3*a30; out[9]=b0*a01+b1*a11+b2*a21+b3*a31; out[10]=b0*a02+b1*a12+b2*a22+b3*a32; out[11]=b0*a03+b1*a13+b2*a23+b3*a33;
+            b0=b[12];b1=b[13];b2=b[14];b3=b[15];
+            out[12]=b0*a00+b1*a10+b2*a20+b3*a30; out[13]=b0*a01+b1*a11+b2*a21+b3*a31; out[14]=b0*a02+b1*a12+b2*a22+b3*a32; out[15]=b0*a03+b1*a13+b2*a23+b3*a33;
+            return out;
+        },
+        perspective: function(fov, aspect, near, far) {
+            const f=1/Math.tan(fov/2),r=1/(near-far);
+            return new Float32Array([f/aspect,0,0,0, 0,f,0,0, 0,0,(near+far)*r,-1, 0,0,near*far*r*2,0]);
+        },
+        translation: function(tx,ty,tz) { return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, tx,ty,tz,1]); },
+        xRotation: function(rad) {const c=Math.cos(rad),s=Math.sin(rad); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);},
+        yRotation: function(rad) {const c=Math.cos(rad),s=Math.sin(rad); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);},
+        zRotation: function(rad) {const c=Math.cos(rad),s=Math.sin(rad); return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]);},
+    };
+
+    const quat = {
+        create: function() { return new Float32Array([0, 0, 0, 1]); }, // x, y, z, w
+        fromEuler: function(x, y, z, order = 'ZYX') {
+            const c1 = Math.cos(x / 2); const c2 = Math.cos(y / 2); const c3 = Math.cos(z / 2);
+            const s1 = Math.sin(x / 2); const s2 = Math.sin(y / 2); const s3 = Math.sin(z / 2);
+            let q = this.create();
+            // Assuming ZYX order for this conversion
+            q[0] = s1 * c2 * c3 - c1 * s2 * s3; q[1] = c1 * s2 * c3 + s1 * c2 * s3;
+            q[2] = c1 * c2 * s3 - s1 * s2 * c3; q[3] = c1 * c2 * c3 + s1 * s2 * s3;
+            return q;
+        },
+        toRotationMatrix(q) {
+            const x=q[0], y=q[1], z=q[2], w=q[3], x2=x+x, y2=y+y, z2=z+z;
+            const xx=x*x2, xy=x*y2, xz=x*z2, yy=y*y2, yz=y*z2, zz=z*z2;
+            const wx=w*x2, wy=w*y2, wz=w*z2;
+            return new Float32Array([1-(yy+zz),xy+wz,xz-wy,0, xy-wz,1-(xx+zz),yz+wx,0, xz+wy,yz-wx,1-(xx+yy),0, 0,0,0,1]);
+        },
+        slerp(a, b, t) {
+            let out=this.create(),ax=a[0],ay=a[1],az=a[2],aw=a[3],bx=b[0],by=b[1],bz=b[2],bw=b[3];
+            let cosTheta = ax*bx + ay*by + az*bz + aw*bw;
+            if (cosTheta < 0) { bx=-bx; by=-by; bz=-bz; bw=-bw; cosTheta=-cosTheta; }
+            if (cosTheta > 0.9995) {
+                out[0]=ax+t*(bx-ax); out[1]=ay+t*(by-ay); out[2]=az+t*(bz-az); out[3]=aw+t*(bw-aw);
+                return this.normalize(out);
+            }
+            const theta=Math.acos(cosTheta), sinTheta=Math.sin(theta);
+            const scaleA=Math.sin((1-t)*theta)/sinTheta, scaleB=Math.sin(t*theta)/sinTheta;
+            out[0]=scaleA*ax+scaleB*bx; out[1]=scaleA*ay+scaleB*by;
+            out[2]=scaleA*az+scaleB*bz; out[3]=scaleA*aw+scaleB*bw;
+            return out;
+        },
+        normalize(q) {
+            let len=Math.sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+q[3]*q[3]);
+            if (len > 0) { len=1/len; q[0]*=len; q[1]*=len; q[2]*=len; q[3]*=len; }
+            return q;
+        }
+    };
+    
+    // --- Main Application ---
+    function main() {
+        const slider = document.getElementById('interpolation-slider');
+        const tValue = document.getElementById('t-value');
+
+        const startEuler = { x: 0, y: 0, z: 0 };
+        const endEuler = { x: 170, y: -170, z: 170 };
+        
+        const degToRad = Math.PI / 180;
+        const startEulerRad = { x: startEuler.x * degToRad, y: startEuler.y * degToRad, z: startEuler.z * degToRad };
+        const endEulerRad = { x: endEuler.x * degToRad, y: endEuler.y * degToRad, z: endEuler.z * degToRad };
+
+        const startQuat = quat.fromEuler(startEulerRad.x, startEulerRad.y, startEulerRad.z);
+        const endQuat = quat.fromEuler(endEulerRad.x, endEulerRad.y, endEulerRad.z);
+
+        const eulerApp = setupWebGL('canvas-euler');
+        const quatApp = setupWebGL('canvas-quaternion');
+
+        function update() {
+            const t = slider.value / 100;
+            tValue.textContent = t.toFixed(2);
+
+            const lerpX = startEulerRad.x*(1-t) + endEulerRad.x*t;
+            const lerpY = startEulerRad.y*(1-t) + endEulerRad.y*t;
+            const lerpZ = startEulerRad.z*(1-t) + endEulerRad.z*t;
+            let eulerModelMatrix = m4.zRotation(lerpZ);
+            eulerModelMatrix = m4.multiply(eulerModelMatrix, m4.yRotation(lerpY));
+            eulerModelMatrix = m4.multiply(eulerModelMatrix, m4.xRotation(lerpX));
+            
+            const slerpQuat = quat.slerp(startQuat, endQuat, t);
+            const quatModelMatrix = quat.toRotationMatrix(slerpQuat);
+
+            drawScene(eulerApp, eulerModelMatrix);
+            drawScene(quatApp, quatModelMatrix);
+        }
+
+        slider.addEventListener('input', update);
+        update();
+    }
+
+    function setupWebGL(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const gl = canvas.getContext('webgl');
+        if (!gl) { alert('WebGL not supported'); return; }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader);
+
+        return {
+            gl, program,
+            locations: {
+                position: gl.getAttribLocation(program, 'a_position'),
+                color: gl.getAttribLocation(program, 'a_color'),
+                matrix: gl.getUniformLocation(program, 'u_matrix'),
+            },
+            buffer: createGeometryBuffer(gl)
+        };
+    }
+
+    function createGeometryBuffer(gl) {
+        const axisData = [
+            // position(x,y,z), color(r,g,b)
+             0, 0, 0,  1, 0, 0,   1.5, 0, 0,  1, 0, 0, // X axis
+             0, 0, 0,  0, 1, 0,   0, 1.5, 0,  0, 1, 0, // Y axis
+             0, 0, 0,  0, 0, 1,   0, 0, 1.5,  0, 0, 1  // Z axis
+        ];
+
+        const w = 0.4, h = 1.0, d = 0.1;
+        const vertices = [
+            [-w, -h,  d], [w, -h,  d], [w,  h,  d], [-w,  h,  d], // front
+            [-w, -h, -d], [w, -h, -d], [w,  h, -d], [-w,  h, -d], // back
+        ];
+
+        const R = [1, 0.4, 0.4], G = [0.4, 1, 0.4], B = [0.4, 0.4, 1];
+        const R_l = [1, 0.7, 0.7], G_l = [0.7, 1, 0.7], B_l = [0.7, 0.7, 1];
+
+        const createFace = (v_indices, color) => {
+            const v = v_indices.map(i => vertices[i]);
+            return [...v[0],...color, ...v[1],...color, ...v[2],...color, ...v[0],...color, ...v[2],...color, ...v[3],...color];
+        };
+
+        const cuboidData = [
+            ...createFace([0, 3, 2, 1], B),   // Front
+            ...createFace([4, 5, 6, 7], B_l), // Back
+            ...createFace([3, 7, 6, 2], G),   // Top
+            ...createFace([0, 1, 5, 4], G_l), // Bottom
+            ...createFace([1, 2, 6, 5], R),   // Right
+            ...createFace([4, 7, 3, 0], R_l), // Left
+        ];
+
+        const combinedData = new Float32Array([...axisData, ...cuboidData]);
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, combinedData, gl.STATIC_DRAW);
+        return buffer;
+    }
+
+    function drawScene(app, modelMatrix) {
+        const { gl, program, locations, buffer } = app;
+        
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clearColor(0.95, 0.96, 0.98, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+        gl.useProgram(program);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        const stride = 6 * 4; // 6 floats per vertex
+        gl.enableVertexAttribArray(locations.position);
+        gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, stride, 0);
+        gl.enableVertexAttribArray(locations.color);
+        gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, stride, 3 * 4);
+
+        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+        const projectionMatrix = m4.perspective(Math.PI / 3, aspect, 1, 100);
+        const cameraMatrix = m4.translation(0, 0.4, -5); // Y-offset to center the view
+        const viewMatrix = m4.multiply(m4.create(), cameraMatrix);
+        
+        let viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+        let mvpMatrix = m4.multiply(viewProjectionMatrix, modelMatrix);
+
+        gl.uniformMatrix4fv(locations.matrix, false, mvpMatrix);
+        
+        gl.lineWidth(2.0);
+        gl.drawArrays(gl.LINES, 0, 6); // Draw axes
+        
+        // 36 vertices for the cuboid (6 faces * 2 triangles * 3 vertices)
+        gl.drawArrays(gl.TRIANGLES, 6, 36); // Draw cuboid
+    }
+    
+    // --- Utility Functions ---
+    function createShader(gl, type, source) {
+        const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { console.error('Shader error:', gl.getShaderInfoLog(shader)); gl.deleteShader(shader); return null; }
+        return shader;
+    }
+    function createProgram(gl, vs, fs) {
+        const program = gl.createProgram(); gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { console.error('Program error:', gl.getProgramInfoLog(program)); gl.deleteProgram(program); return null; }
+        return program;
+    }
+
+    main();
+</script>
+
+</body>
+</html>
+

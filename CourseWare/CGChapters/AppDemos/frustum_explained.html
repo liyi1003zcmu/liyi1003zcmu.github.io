@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>透视投影矩阵推导</title>
+<style>
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5; color: #333;
+    }
+    .main-container {
+        display: flex; width: 100%; height: 100%;
+    }
+    .canvas-container {
+        flex-grow: 1; display: flex;
+        flex-direction: column; /* Set layout to vertical */
+    }
+    canvas {
+        display: block; width: 100%; height: 50%; /* Each canvas takes full width and half height */
+    }
+    .controls-panel {
+        width: 400px; padding: 20px; background-color: #ffffff;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; border-left: 1px solid #e0e0e0;
+    }
+    h1 { font-size: 22px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    h2 { font-size: 16px; margin: 15px 0 10px 0; padding-top: 10px; border-top: 1px solid #eee; }
+    .control-group { margin-bottom: 15px; }
+    label { font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; margin-bottom: 5px; }
+    input[type="range"] { width: 100%; }
+    .matrix-display { font-family: 'Courier New', monospace; white-space: pre; background-color: #f4f4f5; padding: 8px; border-radius: 4px; font-size: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="canvas-container">
+        <canvas id="canvas-left"></canvas>
+        <canvas id="canvas-right"></canvas>
+    </div>
+    <div class="controls-panel">
+        <h1>透视投影变换</h1>
+        
+        <h2>相机参数</h2>
+        <div class="control-group">
+            <label for="fovy">视野 (Fovy): <span id="fovy-val">45</span>°</label>
+            <input type="range" id="fovy" min="10" max="120" value="45">
+        </div>
+        <div class="control-group">
+            <label for="aspect">宽高比 (Aspect): <span id="aspect-val">1.0</span></label>
+            <input type="range" id="aspect" min="0.1" max="3" value="1.0" step="0.01">
+        </div>
+        <div class="control-group">
+            <label for="near">近裁剪面 (Near): <span id="near-val">1.0</span></label>
+            <input type="range" id="near" min="0.1" max="10" value="1" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="far">远裁剪面 (Far): <span id="far-val">10.0</span></label>
+            <input type="range" id="far" min="2" max="50" value="10" step="0.1">
+        </div>
+
+        <h2>上帝视角相机 (左侧视图)</h2>
+        <div class="control-group">
+            <label for="cam-x">相机 X: <span id="cam-x-val">0.0</span></label>
+            <input type="range" id="cam-x" min="-20" max="20" value="0" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="cam-y">相机 Y: <span id="cam-y-val">4.0</span></label>
+            <input type="range" id="cam-y" min="-20" max="20" value="4" step="0.1">
+        </div>
+        <div class="control-group">
+            <label for="cam-z">相机 Z: <span id="cam-z-val">12.0</span></label>
+            <input type="range" id="cam-z" min="-20" max="20" value="12" step="0.1">
+        </div>
+
+        <h2>变换进度</h2>
+        <div class="control-group">
+             <label for="progress">进度 (0: 视锥, 1: 变换为长方体, 2: 归一化): <span id="progress-val">0.0</span></label>
+            <input type="range" id="progress" min="0" max="2" value="0" step="0.01">
+        </div>
+
+        <h2>计算矩阵</h2>
+        <div class="control-group">
+            <label>1. 透视->正交 变换矩阵 (P)</label>
+            <div class="matrix-display" id="matrix-p"></div>
+        </div>
+        <div class="control-group">
+            <label>2. 正交归一化 矩阵 (M_ortho)</label>
+            <div class="matrix-display" id="matrix-ortho"></div>
+        </div>
+        <div class="control-group">
+            <label>最终投影矩阵 (M_proj = M_ortho * P)</label>
+            <div class="matrix-display" id="matrix-final"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Shaders ---
+    const vsSource = `attribute vec4 a_position; attribute vec4 a_color; uniform mat4 u_mvp; varying vec4 v_color; void main() { gl_Position = u_mvp * a_position; v_color = a_color; }`;
+    const fsSource = `precision mediump float; varying vec4 v_color; void main() { gl_FragColor = v_color; }`;
+
+    // --- Matrix Lib ---
+    const m4 = {
+        create: function(){return new Float32Array(16)},
+        identity: function(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])},
+        multiply: function(a,b){const o=this.create(),a00=a[0],a01=a[1],a02=a[2],a03=a[3],a10=a[4],a11=a[5],a12=a[6],a13=a[7],a20=a[8],a21=a[9],a22=a[10],a23=a[11],a30=a[12],a31=a[13],a32=a[14],a33=a[15],b00=b[0],b01=b[1],b02=b[2],b03=b[3],b10=b[4],b11=b[5],b12=b[6],b13=b[7],b20=b[8],b21=b[9],b22=b[10],b23=b[11],b30=b[12],b31=b[13],b32=b[14],b33=b[15];o[0]=a00*b00+a10*b01+a20*b02+a30*b03;o[1]=a01*b00+a11*b01+a21*b02+a31*b03;o[2]=a02*b00+a12*b01+a22*b02+a32*b03;o[3]=a03*b00+a13*b01+a23*b02+a33*b03;o[4]=a00*b10+a10*b11+a20*b12+a30*b13;o[5]=a01*b10+a11*b11+a21*b12+a31*b13;o[6]=a02*b10+a12*b11+a22*b12+a32*b13;o[7]=a03*b10+a13*b11+a23*b12+a33*b13;o[8]=a00*b20+a10*b21+a20*b22+a30*b23;o[9]=a01*b20+a11*b21+a21*b22+a31*b23;o[10]=a02*b20+a12*b21+a22*b22+a32*b23;o[11]=a03*b20+a13*b21+a23*b22+a33*b23;o[12]=a00*b30+a10*b31+a20*b32+a30*b33;o[13]=a01*b30+a11*b31+a21*b32+a31*b33;o[14]=a02*b30+a12*b31+a22*b32+a32*b33;o[15]=a03*b30+a13*b31+a23*b32+a33*b33;return o},
+        translation: function(v){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,v[0],v[1],v[2],1])},
+        lookAt: function(eye,c,up){const z0=eye[0]-c[0],z1=eye[1]-c[1],z2=eye[2]-c[2];let l=1/Math.hypot(z0,z1,z2);const z=[z0*l,z1*l,z2*l];const x0=up[1]*z[2]-up[2]*z[1],x1=up[2]*z[0]-up[0]*z[2],x2=up[0]*z[1]-up[1]*z[0];l=1/Math.hypot(x0,x1,x2);const x=[x0*l,x1*l,x2*l];const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*eye[0]+x[1]*eye[1]+x[2]*eye[2]),-(y[0]*eye[0]+y[1]*eye[1]+y[2]*eye[2]),-(z[0]*eye[0]+z[1]*eye[1]+z[2]*eye[2]),1])},
+        perspective: function(fov,a,n,f){const p=1/Math.tan(fov/2),nf=1/(n-f);return new Float32Array([p/a,0,0,0,0,p,0,0,0,0,(f+n)*nf,-1,0,0,2*f*n*nf,0])},
+        orthographic: function(l,r,b,t,n,f){const lr=1/(r-l),bt=1/(t-b),nf=1/(f-n);return new Float32Array([2*lr,0,0,0,0,2*bt,0,0,0,0,-2*nf,0,-(r+l)*lr,-(t+b)*bt,-(f+n)*nf,1])},
+    };
+
+    // --- Main ---
+    const controls = {};
+    const views = {};
+    let geometries;
+    
+    function init() {
+        document.querySelectorAll('.controls-panel input').forEach(el => {
+            controls[el.id] = el;
+            const valueSpan = document.getElementById(`${el.id}-val`);
+            if (valueSpan) {
+                el.addEventListener('input', () => valueSpan.textContent = parseFloat(el.value).toFixed(1));
+                valueSpan.textContent = parseFloat(el.value).toFixed(1);
+            }
+        });
+
+        ['left', 'right'].forEach(id => {
+            const canvas = document.getElementById(`canvas-${id}`);
+            const gl = canvas.getContext('webgl', { antialias: true });
+            const program = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, vsSource), createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+            views[id] = { gl, program, locations: { position: gl.getAttribLocation(program, 'a_position'), color: gl.getAttribLocation(program, 'a_color'), mvp: gl.getUniformLocation(program, 'u_mvp') } };
+        });
+
+        geometries = setupGeometries(views.left.gl);
+        
+        Object.values(controls).forEach(slider => slider.addEventListener('input', drawAll));
+        window.addEventListener('resize', drawAll);
+        drawAll();
+    }
+
+    function drawAll() {
+        const fovy = controls.fovy.value * Math.PI / 180;
+        const aspect = parseFloat(controls.aspect.value);
+        const near = parseFloat(controls.near.value);
+        const far = parseFloat(controls.far.value);
+        const progress = parseFloat(controls.progress.value);
+
+        // --- Calculate and Display Matrices ---
+        const pMatrix = new Float32Array([
+            near, 0, 0, 0,
+            0, near, 0, 0,
+            0, 0, near + far, -1,
+            0, 0, near * far, 0
+        ]);
+        const top = near * Math.tan(fovy / 2);
+        const right = top * aspect;
+        const orthoMatrix = new Float32Array([
+            1/right, 0, 0, 0,
+            0, 1/top, 0, 0,
+            0, 0, -2 / (far - near), 0,
+            0, 0, -(far + near) / (far - near), 1
+        ]);
+        const finalMatrix = m4.multiply(orthoMatrix, pMatrix);
+        
+        const format = m => Array.from(m).map((n,i)=>n.toFixed(2).padStart(7,' ')+((i+1)%4===0?'\n':'')).join('');
+        document.getElementById('matrix-p').textContent = format(pMatrix);
+        document.getElementById('matrix-ortho').textContent = format(orthoMatrix);
+        document.getElementById('matrix-final').textContent = format(finalMatrix);
+
+        // --- Draw Left View (World Space) ---
+        const leftView = views.left;
+        resizeCanvas(leftView.gl.canvas);
+        leftView.gl.viewport(0, 0, leftView.gl.canvas.width, leftView.gl.canvas.height); // Correct viewport
+        leftView.gl.clearColor(0.2, 0.22, 0.25, 1.0);
+        leftView.gl.clear(leftView.gl.COLOR_BUFFER_BIT | leftView.gl.DEPTH_BUFFER_BIT);
+        leftView.gl.enable(leftView.gl.DEPTH_TEST);
+
+        const eye = [
+            parseFloat(controls['cam-x'].value),
+            parseFloat(controls['cam-y'].value),
+            parseFloat(controls['cam-z'].value)
+        ];
+        const viewMat = m4.lookAt(eye, [0, 0, 0], [0, 1, 0]);
+        const projMat = m4.perspective(45 * Math.PI / 180, leftView.gl.canvas.clientWidth / leftView.gl.canvas.clientHeight, 0.1, 100);
+        
+        drawObject(leftView, geometries.axes, m4.identity(), viewMat, projMat);
+        drawObject(leftView, geometries.teapot, m4.translation([0, 0, -(near + (far - near) / 4)]), viewMat, projMat);
+        drawObject(leftView, getFrustumBufferInfo(leftView.gl, fovy, aspect, near, far), m4.identity(), viewMat, projMat);
+
+        // --- Draw Right View (Transformation Space) ---
+        const rightView = views.right;
+        resizeCanvas(rightView.gl.canvas);
+        rightView.gl.viewport(0, 0, rightView.gl.canvas.width, rightView.gl.canvas.height); // Correct viewport
+        rightView.gl.clearColor(0.25, 0.22, 0.2, 1.0);
+        rightView.gl.clear(rightView.gl.COLOR_BUFFER_BIT | rightView.gl.DEPTH_BUFFER_BIT);
+        rightView.gl.enable(rightView.gl.DEPTH_TEST);
+
+        const t = Math.min(1, progress); 
+        const s = Math.max(0, progress - 1);
+        
+        const frustumVerts = getFrustumVerts(fovy, aspect, near, far);
+        const orthoBoxVerts = getOrthoVerts(frustumVerts, near);
+        const lerpedFrustum = lerpGeometry(frustumVerts, orthoBoxVerts, t);
+        const finalFrustum = lerpGeometry(lerpedFrustum, getNdcVerts(), s);
+        
+        const teapotModelMatrix = m4.translation([0, 0, -(near + (far - near) / 4)]);
+        const initialTeapotVerts = transformVerts(teapotVerts, teapotModelMatrix);
+
+        const teapotAfterP = transformVerts(initialTeapotVerts, pMatrix);
+        const lerpedTeapot = lerpGeometry(initialTeapotVerts, teapotAfterP, t);
+
+        const teapotAfterOrtho = transformVerts(teapotAfterP, orthoMatrix);
+        const finalTeapot = lerpGeometry(lerpedTeapot, teapotAfterOrtho, s);
+
+
+        const rightViewMat = m4.lookAt([0, 0, 5], [0, 0, 0], [0, 1, 0]);
+        const rightProjMat = m4.orthographic(-3, 3, -3, 3, 0.1, 100);
+
+        drawObject(rightView, createBufferInfo(rightView.gl, finalFrustum, rightView.gl.LINES), m4.identity(), rightViewMat, rightProjMat);
+        drawObject(rightView, createBufferInfo(rightView.gl, finalTeapot), m4.identity(), rightViewMat, rightProjMat);
+    }
+
+    function drawObject(view, geom, modelMat, viewMat, projMat) {
+        const { gl, program, locations } = view;
+        gl.useProgram(program);
+        gl.bindBuffer(gl.ARRAY_BUFFER, geom.buffer);
+        gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, geom.stride, 0);
+        gl.enableVertexAttribArray(locations.position);
+        gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, geom.stride, 3 * 4);
+        gl.enableVertexAttribArray(locations.color);
+
+        const mvp = m4.multiply(projMat, m4.multiply(viewMat, modelMat));
+        gl.uniformMatrix4fv(locations.mvp, false, mvp);
+        gl.drawArrays(geom.primitive, 0, geom.vertexCount);
+    }
+    
+    // --- Geometry & Transformations ---
+    let teapotVerts; // Cache raw teapot vertices
+    function setupGeometries(gl) {
+        teapotVerts = getTeapotData();
+        return {
+            axes: createBufferInfo(gl, getAxesData(), gl.LINES),
+            teapot: createBufferInfo(gl, teapotVerts),
+        };
+    }
+    function createBufferInfo(gl,data,p){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);return{buffer:b,vertexCount:data.length/6,stride:24,primitive:p||gl.TRIANGLES};}
+    const getFrustumBufferInfo = (gl, fovy, aspect, near, far) => createBufferInfo(gl, getFrustumVerts(fovy, aspect, near, far), gl.LINES);
+    function getFrustumVerts(fovy, aspect, near, far) {
+        const topN=near*Math.tan(fovy/2), rightN=topN*aspect;
+        const topF=far*Math.tan(fovy/2), rightF=topF*aspect;
+        const v=[[-rightN,topN,-near],[rightN,topN,-near],[rightN,-topN,-near],[-rightN,-topN,-near],[-rightF,topF,-far],[rightF,topF,-far],[rightF,-topF,-far],[-rightF,-topF,-far]];
+        const i=[0,1,1,2,2,3,3,0,4,5,5,6,6,7,7,4,0,4,1,5,2,6,3,7]; const c=[0.8,0.8,0.2];
+        return i.flatMap(idx => [...v[idx],...c]);
+    }
+    const getOrthoVerts = (frustumVerts, near) => {
+        const out = [];
+        for (let i = 0; i < frustumVerts.length; i += 6) {
+            const x = frustumVerts[i];
+            const y = frustumVerts[i + 1];
+            const z = frustumVerts[i + 2];
+            const color = [frustumVerts[i+3], frustumVerts[i+4], frustumVerts[i+5]];
+            out.push(x * near / -z, y * near / -z, z, ...color);
+        }
+        return out;
+    };
+    function getNdcVerts(){const s=1,v=[[-s,s,-s],[s,s,-s],[s,-s,-s],[-s,-s,-s],[-s,s,s],[s,s,s],[s,-s,s],[-s,-s,s]];const i=[0,1,1,2,2,3,3,0,4,5,5,6,6,7,7,4,0,4,1,5,2,6,3,7];const c=[0.2,0.8,0.8];return i.flatMap(idx=>[...v[idx],...c]);}
+    function lerpGeometry(vertsA, vertsB, t){ const out=[];for(let i=0;i<vertsA.length;i++){const isColor=i%6>=3;out.push(isColor?vertsA[i]:vertsA[i]*(1-t)+vertsB[i]*t);}return out;}
+    function transformVerts(verts, matrix){
+        const out=[];
+        for(let i=0;i<verts.length;i+=6){
+            const x=verts[i],y=verts[i+1],z=verts[i+2];
+            const color = [verts[i+3], verts[i+4], verts[i+5]];
+            const w = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
+            const invW = 1 / (w || 1);
+            out.push(
+                (matrix[0]*x+matrix[4]*y+matrix[8]*z+matrix[12])*invW,
+                (matrix[1]*x+matrix[5]*y+matrix[9]*z+matrix[13])*invW,
+                (matrix[2]*x+matrix[6]*y+matrix[10]*z+matrix[14])*invW,
+                ...color
+            );
+        }
+        return out;
+    }
+    function getAxesData(){return[0,0,0,1,0.5,0.5,5,0,0,1,0.5,0.5,0,0,0,0.5,1,0.5,0,5,0,0.5,1,0.5,0,0,0,0.5,0.5,1,0,0,5,0.5,0.5,1];}
+    function getTeapotData(){const s=1.5;const data=[-0.7,-0.8,0,0,1,0,0.7,-0.8,0,0,1,0,0,-0.8,0.7,0,1,0,-0.7,0,0,1,0,1,0.7,0,0,1,0,1,0,0.8,0.7,1,0,1,0.4,0,0,0.8,0.7,1,0.4,0.4,0,0,0.8,0.7,0.8,0.7,1,0,1,0,-0.6,0.6,1,0.7,0,0,-0.2,0.8,1,0.7,0,-0.2,0.4,0,1,0.7,0,0.4,0,0.8,1,0.7,0,-0.6,-0.6,0.7,1,0,0.7,-0.8,0,0.7,1,0,-0.7,-0.8,0,0.7,1,0];const coloredData=[];for(let i=0;i<data.length;i+=3){coloredData.push(data[i]*s, data[i+1]*s, data[i+2]*s, 0.8,0.8,0.9);} return coloredData;}
+
+    // --- Util ---
+    function createShader(gl, type, source) { const s=gl.createShader(type); gl.shaderSource(s,source); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error('Shader error',gl.getShaderInfoLog(s));gl.deleteShader(s);return null} return s; }
+    function createProgram(gl, vs, fs) { const p=gl.createProgram(); gl.attachShader(p,vs); gl.attachShader(p,fs); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)){console.error('Program error',gl.getProgramInfoLog(p));gl.deleteProgram(p);return null} return p; }
+    function resizeCanvas(canvas) {if(canvas.width!==canvas.clientWidth||canvas.height!==canvas.clientHeight){canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight;}}
+    
+    init();
+</script>
+</body>
+</html>
+

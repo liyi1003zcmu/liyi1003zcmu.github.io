@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三维变换探索应用</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        /* Styles for the interactive 3D application */
+        .app-container-3d {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            width: 100%;
+            max-width: 1200px;
+            height: 600px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .controls-panel-3d { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .canvas-panel-3d { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; position: relative; overflow: hidden; }
+        .control-group-3d { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group-3d h5 { margin: 0 0 10px 0; }
+        #transform-list-3d { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white; max-height: 250px; overflow-y: auto;}
+        #transform-list-3d li { padding: 5px; background-color: #fff; border: 1px solid #ddd; margin: 5px; border-radius: 4px; cursor: grab; display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
+        #transform-list-3d li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs-3d { display: grid; grid-template-columns: auto 1fr; gap: 2px 5px; align-items: center; }
+        .param-inputs-3d label { font-weight: bold; }
+        .param-inputs-3d input { width: 100%; box-sizing: border-box; }
+        .delete-btn-3d { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold; flex-shrink: 0;}
+        .matrix-display-4x4 { font-family: 'Courier New', monospace; background-color: #e9ecef; padding: 8px; border-radius: 4px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; text-align: right; }
+        .matrix-display-4x4 span { padding: 1px 4px; background: white; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <h1>三维变换交互式探索</h1>
+    <div class="app-container-3d" id="app-3d-container">
+        <div class="controls-panel-3d">
+            <div class="control-group-3d">
+                <h5>1. 添加新变换</h5>
+                <select id="transform-type-3d">
+                    <option value="translate">平移 (Translate)</option>
+                    <option value="rotateX">绕X轴旋转</option>
+                    <option value="rotateY">绕Y轴旋转</option>
+                    <option value="rotateZ">绕Z轴旋转</option>
+                    <option value="scale">缩放 (Scale)</option>
+                </select>
+                <button id="add-transform-btn-3d" style="margin-top: 5px;">添加</button>
+            </div>
+            <div class="control-group-3d">
+                <h5>2. 变换序列 (可拖拽)</h5>
+                <ul id="transform-list-3d"></ul>
+            </div>
+            <div class="control-group-3d">
+                <h5>3. 最终复合矩阵 M = M_n * ... * M_1</h5>
+                <div id="final-matrix-display-3d" class="matrix-display-4x4">
+                    <!-- Matrix will be populated by script -->
+                </div>
+            </div>
+        </div>
+        <div class="canvas-panel-3d" id="canvas-container-3d">
+            <!-- Three.js Canvas will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Load Three.js library globally from the same source (jsdelivr) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Self-executing function to encapsulate the app logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('app-3d-container');
+            if (!container) return;
+
+            let scene, camera, renderer, cube, controls;
+            let transformations = [];
+            
+            // DOM Elements
+            const typeSelector = document.getElementById('transform-type-3d');
+            const addBtn = document.getElementById('add-transform-btn-3d');
+            const transformList = document.getElementById('transform-list-3d');
+            const matrixDisplay = document.getElementById('final-matrix-display-3d');
+            const canvasContainer = document.getElementById('canvas-container-3d');
+
+            function initialize() {
+                // Scene setup
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xffffff);
+
+                // Camera
+                camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+                camera.position.set(1.5, 1.5, 2);
+
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+                canvasContainer.appendChild(renderer.domElement);
+                
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize, false);
+
+
+                // Controls
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 2);
+                scene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+
+                // Helpers
+                const axesHelper = new THREE.AxesHelper(1); // X-red, Y-green, Z-blue
+                scene.add(axesHelper);
+                const gridHelper = new THREE.GridHelper(4, 10);
+                scene.add(gridHelper);
+
+                // Object
+                const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+                const material = new THREE.MeshStandardMaterial({ color: 0x007bff, transparent: true, opacity: 0.9 });
+                cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                
+                // Event Listeners
+                addBtn.addEventListener('click', addTransform);
+                transformList.addEventListener('input', updateTransformParams);
+                transformList.addEventListener('click', handleListClick);
+                
+                let draggedItem = null;
+                transformList.addEventListener('dragstart', e => {
+                    draggedItem = e.target.closest('li');
+                    setTimeout(() => draggedItem.classList.add('dragging'), 0);
+                });
+                transformList.addEventListener('dragend', e => {
+                    if (draggedItem) draggedItem.classList.remove('dragging');
+                });
+                transformList.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(transformList, e.clientY);
+                    if (draggedItem) {
+                       if (afterElement == null) {
+                            transformList.appendChild(draggedItem);
+                        } else {
+                            transformList.insertBefore(draggedItem, afterElement);
+                        }
+                    }
+                });
+                 transformList.addEventListener('drop', e => {
+                    e.preventDefault();
+                    reorderTransformations();
+                    updateAndRender();
+                });
+
+                animate();
+                updateAndRender();
+            }
+
+            function onWindowResize() {
+                camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            }
+            
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            function addTransform() {
+                const type = typeSelector.value;
+                let newTransform = { id: Date.now(), type: type, params: {} };
+                switch (type) {
+                    case 'translate': newTransform.params = { x: 0.5, y: 0, z: 0 }; break;
+                    case 'rotateX': case 'rotateY': case 'rotateZ': newTransform.params = { angle: 30 }; break;
+                    case 'scale': newTransform.params = { x: 1.2, y: 1.2, z: 1.2 }; break;
+                }
+                transformations.push(newTransform);
+                renderList();
+                updateAndRender();
+            }
+            
+            function handleListClick(e) {
+                if (e.target.classList.contains('delete-btn-3d')) {
+                    const id = parseInt(e.target.closest('li').dataset.id);
+                    transformations = transformations.filter(t => t.id !== id);
+                    renderList();
+                    updateAndRender();
+                }
+            }
+            
+            function updateTransformParams(e) {
+                if (e.target.tagName !== 'INPUT') return;
+                const id = parseInt(e.target.closest('li').dataset.id);
+                const transform = transformations.find(t => t.id === id);
+                const paramName = e.target.dataset.param;
+                transform.params[paramName] = parseFloat(e.target.value) || 0;
+                updateAndRender();
+            }
+            
+            function reorderTransformations() {
+                const newOrderIds = [...transformList.querySelectorAll('li')].map(li => parseInt(li.dataset.id));
+                transformations.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+            }
+
+            function renderList() {
+                transformList.innerHTML = '';
+                transformations.forEach(t => {
+                    const li = document.createElement('li');
+                    li.dataset.id = t.id;
+                    li.draggable = true;
+                    let inputs = '', label = '';
+                    switch (t.type) {
+                        case 'translate':
+                            label = '平移';
+                            inputs = `<label>x:</label><input type="number" step="0.1" data-param="x" value="${t.params.x}">
+                                      <label>y:</label><input type="number" step="0.1" data-param="y" value="${t.params.y}">
+                                      <label>z:</label><input type="number" step="0.1" data-param="z" value="${t.params.z}">`;
+                            break;
+                        case 'rotateX': label = '绕X轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'rotateY': label = '绕Y轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'rotateZ': label = '绕Z轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'scale':
+                            label = '缩放';
+                            inputs = `<label>x:</label><input type="number" step="0.1" data-param="x" value="${t.params.x}">
+                                      <label>y:</label><input type="number" step="0.1" data-param="y" value="${t.params.y}">
+                                      <label>z:</label><input type="number" step="0.1" data-param="z" value="${t.params.z}">`;
+                            break;
+                    }
+                    li.innerHTML = `<span>${label}</span><div class="param-inputs-3d">${inputs}</div><button class="delete-btn-3d">&times;</button>`;
+                    transformList.appendChild(li);
+                });
+            }
+
+            function updateAndRender() {
+                const finalMatrix = new THREE.Matrix4(); // Starts as identity
+                transformations.forEach(t => {
+                    const m = new THREE.Matrix4();
+                    const p = t.params;
+                    switch (t.type) {
+                        case 'translate': m.makeTranslation(p.x, p.y, p.z); break;
+                        case 'rotateX': m.makeRotationX(THREE.MathUtils.degToRad(p.angle)); break;
+                        case 'rotateY': m.makeRotationY(THREE.MathUtils.degToRad(p.angle)); break;
+                        case 'rotateZ': m.makeRotationZ(THREE.MathUtils.degToRad(p.angle)); break;
+                        case 'scale': m.makeScale(p.x, p.y, p.z); break;
+                    }
+                    finalMatrix.premultiply(m);
+                });
+
+                cube.matrix.copy(finalMatrix);
+                cube.matrixAutoUpdate = false;
+
+                matrixDisplay.innerHTML = finalMatrix.elements.map(v => `<span>${v.toFixed(2)}</span>`).join('');
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

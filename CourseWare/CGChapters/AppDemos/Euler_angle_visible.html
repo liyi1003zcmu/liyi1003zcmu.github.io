@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>欧拉角可视化工具 (WebGL)</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+    }
+    .main-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+    .controls-panel {
+        width: 320px;
+        padding: 20px;
+        background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        border-right: 1px solid #e0e0e0;
+    }
+    .canvas-container {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    h1 {
+        font-size: 22px;
+        margin: 0 0 10px 0;
+        color: #1a1a1a;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    label {
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+    }
+    input[type="range"] {
+        width: 100%;
+        cursor: pointer;
+    }
+    select {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        background-color: #fff;
+    }
+    .info {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        font-size: 12px;
+        color: #555;
+    }
+    .info p {
+        margin: 5px 0;
+        line-height: 1.5;
+    }
+    .axis-legend {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .axis-legend li {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    .color-box {
+        width: 12px;
+        height: 12px;
+        margin-right: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="controls-panel">
+        <h1>欧拉角控制器</h1>
+        
+        <div class="control-group">
+            <label for="order">旋转顺序 (Rotation Order)</label>
+            <select id="order">
+                <option value="XYZ">XYZ</option>
+                <option value="XZY">XZY</option>
+                <option value="YXZ">YXZ</option>
+                <option value="YZX">YZX</option>
+                <option value="ZXY" selected>ZXY</option>
+                <option value="ZYX">ZYX</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="roll">X轴 (Roll): <span id="roll-value">0</span>°</label>
+            <input type="range" id="roll" min="-180" max="180" value="0">
+        </div>
+
+        <div class="control-group">
+            <label for="pitch">Y轴 (Pitch): <span id="pitch-value">0</span>°</label>
+            <input type="range" id="pitch" min="-180" max="180" value="0">
+        </div>
+
+        <div class="control-group">
+            <label for="yaw">Z轴 (Yaw): <span id="yaw-value">0</span>°</label>
+            <input type="range" id="yaw" min="-180" max="180" value="0">
+        </div>
+
+        <div class="control-group">
+            <label for="gimbal-lock-toggle" style="justify-content: flex-start; gap: 8px; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="gimbal-lock-toggle">
+                展示万向节死锁 (Gimbal Lock)
+            </label>
+        </div>
+        
+        <div class="info">
+            <p><strong>坐标轴图例:</strong></p>
+            <ul class="axis-legend">
+                <li><span class="color-box" style="background-color: red;"></span>X 轴 (红色)</li>
+                <li><span class="color-box" style="background-color: green;"></span>Y 轴 (绿色)</li>
+                <li><span class="color-box" style="background-color: blue;"></span>Z 轴 (蓝色)</li>
+            </ul>
+            <p id="info-text">使用左侧工具栏调整参数，右侧画布将实时显示基于原生WebGL的欧拉角旋转效果。</p>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="gl-canvas" width="800" height="600"></canvas>
+    </div>
+</div>
+
+<script>
+    // --- Shaders ---
+    const vertexShaderSource = `
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        
+        uniform mat4 u_matrix;
+        
+        varying vec4 v_color;
+        
+        void main() {
+            gl_Position = u_matrix * a_position;
+            v_color = a_color;
+        }
+    `;
+
+    const fragmentShaderSource = `
+        precision mediump float;
+        
+        varying vec4 v_color;
+        
+        void main() {
+            gl_FragColor = v_color;
+        }
+    `;
+
+    // --- Matrix Math Utilities ---
+    // Note: These functions are simplified for this specific demo.
+    const m4 = {
+        create: function() {
+            return new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ]);
+        },
+
+        multiply: function(a, b) {
+            const out = this.create();
+            const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+            const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+            const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+            const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+            let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+            out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+            out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+            out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+            out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+            b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+            out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+            out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+            out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+            out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+            b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+            out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+            out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+            out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+            out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+            
+            b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+            out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+            out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+            out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+            out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+            return out;
+        },
+
+        perspective: function(fieldOfViewInRadians, aspect, near, far) {
+            const f = 1.0 / Math.tan(fieldOfViewInRadians / 2);
+            const rangeInv = 1 / (near - far);
+            return new Float32Array([
+                f / aspect, 0, 0, 0,
+                0, f, 0, 0,
+                0, 0, (near + far) * rangeInv, -1,
+                0, 0, near * far * rangeInv * 2, 0
+            ]);
+        },
+
+        translation: function(tx, ty, tz) {
+            return new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                tx, ty, tz, 1,
+            ]);
+        },
+
+        xRotation: function(angleInRadians) {
+            const c = Math.cos(angleInRadians);
+            const s = Math.sin(angleInRadians);
+            return new Float32Array([
+                1, 0, 0, 0,
+                0, c, s, 0,
+                0, -s, c, 0,
+                0, 0, 0, 1,
+            ]);
+        },
+
+        yRotation: function(angleInRadians) {
+            const c = Math.cos(angleInRadians);
+            const s = Math.sin(angleInRadians);
+            return new Float32Array([
+                c, 0, -s, 0,
+                0, 1, 0, 0,
+                s, 0, c, 0,
+                0, 0, 0, 1,
+            ]);
+        },
+        
+        zRotation: function(angleInRadians) {
+            const c = Math.cos(angleInRadians);
+            const s = Math.sin(angleInRadians);
+            return new Float32Array([
+                c, s, 0, 0,
+                -s, c, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ]);
+        },
+
+        translate: function(m, tx, ty, tz) {
+            return this.multiply(m, this.translation(tx, ty, tz));
+        },
+        xRotate: function(m, angleInRadians) {
+            return this.multiply(m, this.xRotation(angleInRadians));
+        },
+        yRotate: function(m, angleInRadians) {
+            return this.multiply(m, this.yRotation(angleInRadians));
+        },
+        zRotate: function(m, angleInRadians) {
+            return this.multiply(m, this.zRotation(angleInRadians));
+        }
+    };
+
+    function createCircleVertices(segments, radius, plane) {
+        const vertices = [];
+        let r = 1, g = 1, b = 1;
+
+        // Assign a color related to the perpendicular axis
+        if (plane === 'XY') [r, g, b] = [0.5, 0.5, 1]; // Related to Z (Blue)
+        if (plane === 'YZ') [r, g, b] = [1, 0.5, 0.5]; // Related to X (Red)
+        if (plane === 'XZ') [r, g, b] = [0.5, 1, 0.5]; // Related to Y (Green)
+
+        for (let i = 0; i < segments; i++) {
+            const angle = (i / segments) * 2 * Math.PI;
+            const cos = Math.cos(angle) * radius;
+            const sin = Math.sin(angle) * radius;
+
+            if (plane === 'XY') {
+                // Circle on the XY plane (z=0)
+                vertices.push(cos, sin, 0, r, g, b);
+            } else if (plane === 'YZ') {
+                // Circle on the YZ plane (x=0)
+                vertices.push(0, cos, sin, r, g, b);
+            } else { // XZ
+                // Circle on the XZ plane (y=0)
+                vertices.push(cos, 0, sin, r, g, b);
+            }
+        }
+        return vertices;
+    }
+
+
+    // --- Main WebGL Logic ---
+    function main() {
+        // --- Setup ---
+        const canvas = document.getElementById('gl-canvas');
+        const gl = canvas.getContext('webgl');
+        if (!gl) {
+            alert('WebGL not supported!');
+            return;
+        }
+
+        // --- Shader Program ---
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            return program;
+        }
+        
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader);
+
+        // --- Attribute and Uniform Locations ---
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        const colorLocation = gl.getAttribLocation(program, 'a_color');
+        const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
+
+        // --- Data Buffer ---
+        const axisData = [
+             // X-axis (Red)
+             0, 0, 0,   1, 0, 0,
+             1.2, 0, 0, 1, 0, 0, // Increased length
+             // Y-axis (Green)
+             0, 0, 0,   0, 1, 0,
+             0, 1.2, 0, 0, 1, 0, // Increased length
+             // Z-axis (Blue)
+             0, 0, 0,   0, 0, 1,
+             0, 0, 1.2, 0, 0, 1  // Increased length
+        ];
+
+        const segments = 64;
+        const radius = 0.8;
+        const circleXYData = createCircleVertices(segments, radius, 'XY');
+        const circleYZData = createCircleVertices(segments, radius, 'YZ');
+        const circleXZData = createCircleVertices(segments, radius, 'XZ');
+
+        const combinedData = new Float32Array([
+            ...axisData,
+            ...circleXYData,
+            ...circleYZData,
+            ...circleXZData
+        ]);
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, combinedData, gl.STATIC_DRAW);
+
+
+        // --- UI Controls ---
+        const controls = {
+            roll: document.getElementById('roll'),
+            pitch: document.getElementById('pitch'),
+            yaw: document.getElementById('yaw'),
+            order: document.getElementById('order'),
+            gimbalLockToggle: document.getElementById('gimbal-lock-toggle'),
+        };
+
+        const values = {
+            rollValue: document.getElementById('roll-value'),
+            pitchValue: document.getElementById('pitch-value'),
+            yawValue: document.getElementById('yaw-value'),
+        };
+
+        const infoText = document.getElementById('info-text');
+        let preLockState = {};
+
+        function updateValues() {
+            values.rollValue.textContent = controls.roll.value;
+            values.pitchValue.textContent = controls.pitch.value;
+            values.yawValue.textContent = controls.yaw.value;
+            drawScene();
+        }
+        
+        Object.values(controls).forEach(control => {
+            if (control.id !== 'gimbal-lock-toggle') {
+                control.addEventListener('input', updateValues);
+            }
+        });
+
+        controls.gimbalLockToggle.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                // Store current state
+                preLockState = {
+                    roll: controls.roll.value,
+                    pitch: controls.pitch.value,
+                    yaw: controls.yaw.value,
+                    order: controls.order.value,
+                };
+
+                // Enter gimbal lock state
+                controls.order.value = 'ZYX';
+                controls.pitch.value = 90;
+
+                // Disable controls
+                controls.order.disabled = true;
+                controls.pitch.disabled = true;
+
+                infoText.innerHTML = '<b>万向节死锁已激活:</b> 旋转顺序为 ZYX, Y轴 (Pitch) 已锁定在90°。现在, X轴 (Roll) 和 Z轴 (Yaw) 的旋转将产生相同的效果，导致失去一个旋转自由度。请尝试分别拖动X轴和Z轴滑块观察效果。';
+
+            } else {
+                // Restore previous state
+                controls.order.value = preLockState.order;
+                controls.roll.value = preLockState.roll;
+                controls.pitch.value = preLockState.pitch;
+                controls.yaw.value = preLockState.yaw;
+
+                // Enable controls
+                controls.order.disabled = false;
+                controls.pitch.disabled = false;
+                
+                infoText.textContent = '使用左侧工具栏调整参数，右侧画布将实时显示基于原生WebGL的欧拉角旋转效果。';
+            }
+            // Update visuals
+            updateValues();
+        });
+        
+        // --- Drawing ---
+        function drawScene() {
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clearColor(0.95, 0.96, 0.98, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST);
+            gl.useProgram(program);
+
+            // Bind buffer and set attributes
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            
+            const stride = 6 * 4; // 6 floats per vertex, 4 bytes per float
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, stride, 0);
+
+            gl.enableVertexAttribArray(colorLocation);
+            gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, stride, 3 * 4);
+
+            // --- Matrix Calculations ---
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            const fov = Math.PI / 3;
+            const projectionMatrix = m4.perspective(fov, aspect, 1, 100);
+
+            let cameraMatrix = m4.translation(0, 0, -4);
+            const viewMatrix = m4.multiply(m4.create(), cameraMatrix);
+            
+            // --- Euler Angle Rotation ---
+            const roll = controls.roll.value * Math.PI / 180;
+            const pitch = controls.pitch.value * Math.PI / 180;
+            const yaw = controls.yaw.value * Math.PI / 180;
+            
+            const rotationMatrices = {
+                'X': m4.xRotation(roll),
+                'Y': m4.yRotation(pitch),
+                'Z': m4.zRotation(yaw)
+            };
+
+            let modelMatrix = m4.create();
+            const order = controls.order.value;
+
+            // Apply rotations based on the selected order
+            for (const axis of order) {
+                 modelMatrix = m4.multiply(modelMatrix, rotationMatrices[axis]);
+            }
+            
+            let viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+            let mvpMatrix = m4.multiply(viewProjectionMatrix, modelMatrix);
+
+            gl.uniformMatrix4fv(matrixLocation, false, mvpMatrix);
+
+            
+            // Draw axes
+            gl.lineWidth(3.0);
+            gl.drawArrays(gl.LINES, 0, 6);
+
+            // Draw circles
+            gl.lineWidth(1.5);
+            const axisVertices = 6;
+            const circleVertices = segments;
+            
+            gl.drawArrays(gl.LINE_LOOP, axisVertices, circleVertices);
+            gl.drawArrays(gl.LINE_LOOP, axisVertices + circleVertices, circleVertices);
+            gl.drawArrays(gl.LINE_LOOP, axisVertices + circleVertices * 2, circleVertices);
+        }
+
+        // Initial draw
+        updateValues();
+    }
+
+    main();
+</script>
+
+</body>
+</html>
+

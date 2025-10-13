@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投影对比演示 (正交 vs. 透视)</title>
+<style>
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5; color: #333;
+    }
+    .main-container {
+        display: flex; width: 100%; height: 100%;
+    }
+    .canvas-container {
+        flex-grow: 1; position: relative;
+    }
+    canvas {
+        display: block; width: 100%; height: 100%;
+    }
+    .controls-panel {
+        position: absolute; top: 15px; left: 15px;
+        background-color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        padding: 15px; border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    h2 { font-size: 16px; margin: 0 0 10px; }
+    #projection-toggle {
+        padding: 10px 15px; font-size: 14px; font-weight: bold; width: 100%;
+        border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s;
+    }
+    .perspective { background-color: #3498db; color: white; }
+    .orthographic { background-color: #2ecc71; color: white; }
+    #matrix-display {
+        margin-top: 15px; font-family: 'Courier New', monospace; font-size: 11px;
+        line-height: 1.4; background-color: #f4f4f5; padding: 8px; border-radius: 4px;
+    }
+    .instructions {
+        position: absolute; bottom: 15px; left: 15px;
+        background-color: rgba(0, 0, 0, 0.6); color: white;
+        padding: 8px 12px; border-radius: 5px; font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="canvas-container">
+        <canvas id="gl-canvas"></canvas>
+        <div class="controls-panel">
+            <h2>投影模式</h2>
+            <button id="projection-toggle"></button>
+            <div id="matrix-display"></div>
+        </div>
+        <div class="instructions">拖动鼠标以旋转相机</div>
+    </div>
+</div>
+
+<script>
+    // --- Shaders ---
+    const vsSource = `
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        uniform mat4 u_mvpMatrix;
+        varying vec4 v_color;
+        void main() { gl_Position = u_mvpMatrix * a_position; v_color = a_color; }`;
+    const fsSource = `
+        precision mediump float;
+        varying vec4 v_color;
+        void main() { gl_FragColor = v_color; }`;
+
+    // --- Matrix Lib ---
+    const m4 = {
+        create: function(){return new Float32Array(16)},
+        identity: function(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])},
+        multiply: function(a,b){const o=this.create(),a00=a[0],a01=a[1],a02=a[2],a03=a[3],a10=a[4],a11=a[5],a12=a[6],a13=a[7],a20=a[8],a21=a[9],a22=a[10],a23=a[11],a30=a[12],a31=a[13],a32=a[14],a33=a[15],b00=b[0],b01=b[1],b02=b[2],b03=b[3],b10=b[4],b11=b[5],b12=b[6],b13=b[7],b20=b[8],b21=b[9],b22=b[10],b23=b[11],b30=b[12],b31=b[13],b32=b[14],b33=b[15];o[0]=a00*b00+a10*b01+a20*b02+a30*b03;o[1]=a01*b00+a11*b01+a21*b02+a31*b03;o[2]=a02*b00+a12*b01+a22*b02+a32*b03;o[3]=a03*b00+a13*b01+a23*b02+a33*b03;o[4]=a00*b10+a10*b11+a20*b12+a30*b13;o[5]=a01*b10+a11*b11+a21*b12+a31*b13;o[6]=a02*b10+a12*b11+a22*b12+a32*b13;o[7]=a03*b10+a13*b11+a23*b12+a33*b13;o[8]=a00*b20+a10*b21+a20*b22+a30*b23;o[9]=a01*b20+a11*b21+a21*b22+a31*b23;o[10]=a02*b20+a12*b21+a22*b22+a32*b23;o[11]=a03*b20+a13*b21+a23*b22+a33*b23;o[12]=a00*b30+a10*b31+a20*b32+a30*b33;o[13]=a01*b30+a11*b31+a21*b32+a31*b33;o[14]=a02*b30+a12*b31+a22*b32+a32*b33;o[15]=a03*b30+a13*b31+a23*b32+a33*b33;return o},
+        translation: function(v){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,v[0],v[1],v[2],1])},
+        perspective: function(fov,a,n,f){const p=1/Math.tan(fov/2),nf=1/(n-f);return new Float32Array([p/a,0,0,0,0,p,0,0,0,0,(f+n)*nf,-1,0,0,2*f*n*nf,0])},
+        orthographic: function(l,r,b,t,n,f){const lr=1/(r-l),bt=1/(t-b),nf=1/(f-n);return new Float32Array([2*lr,0,0,0,0,2*bt,0,0,0,0,-2*nf,0,-(r+l)*lr,-(t+b)*bt,-(f+n)*nf,1])},
+        lookAt: function(eye,center,up){const z0=eye[0]-center[0],z1=eye[1]-center[1],z2=eye[2]-center[2];let l=1/Math.hypot(z0,z1,z2);const z=[z0*l,z1*l,z2*l];const x0=up[1]*z[2]-up[2]*z[1],x1=up[2]*z[0]-up[0]*z[2],x2=up[0]*z[1]-up[1]*z[0];l=1/Math.hypot(x0,x1,x2);const x=[x0*l,x1*l,x2*l];const y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-(x[0]*eye[0]+x[1]*eye[1]+x[2]*eye[2]),-(y[0]*eye[0]+y[1]*eye[1]+y[2]*eye[2]),-(z[0]*eye[0]+z[1]*eye[1]+z[2]*eye[2]),1])},
+    };
+
+    // --- Main ---
+    const canvas = document.getElementById('gl-canvas');
+    const gl = canvas.getContext('webgl', { antialias: true });
+    const program = createProgram(gl, createShader(gl, gl.VERTEX_SHADER, vsSource), createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    const locations = {
+        position: gl.getAttribLocation(program, 'a_position'),
+        color: gl.getAttribLocation(program, 'a_color'),
+        mvpMatrix: gl.getUniformLocation(program, 'u_mvpMatrix'),
+    };
+    const geometries = setupGeometries(gl);
+
+    const toggleButton = document.getElementById('projection-toggle');
+    const matrixDisplay = document.getElementById('matrix-display');
+    
+    let projectionMode = 'perspective';
+    let cameraAzimuth = -0.5;
+    let cameraElevation = 0.5;
+    let cameraDistance = 25;
+    
+    function updateButton() {
+        if (projectionMode === 'perspective') {
+            toggleButton.textContent = '切换至: 正交投影';
+            toggleButton.className = 'perspective';
+        } else {
+            toggleButton.textContent = '切换至: 透视投影';
+            toggleButton.className = 'orthographic';
+        }
+    }
+
+    function draw() {
+        // --- Resize and Clear ---
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clearColor(0.2, 0.22, 0.25, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+        gl.useProgram(program);
+
+        // --- Camera ---
+        const eye = [
+            cameraDistance * Math.sin(cameraAzimuth) * Math.cos(cameraElevation),
+            cameraDistance * Math.sin(cameraElevation),
+            cameraDistance * Math.cos(cameraAzimuth) * Math.cos(cameraElevation)
+        ];
+        const viewMatrix = m4.lookAt(eye, [0, 0, 0], [0, 1, 0]);
+
+        // --- Projection ---
+        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+        let projectionMatrix;
+        if (projectionMode === 'perspective') {
+            projectionMatrix = m4.perspective(45 * Math.PI / 180, aspect, 0.1, 100);
+        } else {
+            const h = 10;
+            projectionMatrix = m4.orthographic(-h * aspect, h * aspect, -h, h, 0.1, 100);
+        }
+        matrixDisplay.textContent = Array.from(projectionMatrix).map((n,i) => n.toFixed(2).padStart(6,' ')+((i+1)%4===0?'\n':'')).join('');
+
+        // --- Draw Geometries ---
+        const objects = [
+            { geom: geometries.grid, model: m4.identity() },
+            { geom: geometries.cube, model: m4.translation([-5, 1, 0]) },
+            { geom: geometries.sphere, model: m4.translation([0, 1, 0]) },
+            { geom: geometries.cylinder, model: m4.translation([5, 1, 0]) },
+        ];
+        
+        objects.forEach(obj => {
+            gl.bindBuffer(gl.ARRAY_BUFFER, obj.geom.buffer);
+            gl.enableVertexAttribArray(locations.position);
+            gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, obj.geom.stride, 0);
+            gl.enableVertexAttribArray(locations.color);
+            gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, obj.geom.stride, 3*4);
+            
+            const mvp = m4.multiply(projectionMatrix, m4.multiply(viewMatrix, obj.model));
+            gl.uniformMatrix4fv(locations.mvpMatrix, false, mvp);
+            gl.drawArrays(obj.geom.primitive, 0, obj.geom.vertexCount);
+        });
+    }
+
+    // --- Event Listeners ---
+    toggleButton.addEventListener('click', () => {
+        projectionMode = (projectionMode === 'perspective') ? 'orthographic' : 'perspective';
+        updateButton();
+        draw();
+    });
+
+    let isDragging = false;
+    let lastMouseX, lastMouseY;
+    canvas.addEventListener('mousedown', e => { isDragging = true; lastMouseX = e.clientX; lastMouseY = e.clientY; });
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+    canvas.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        cameraAzimuth += dx * 0.01;
+        cameraElevation += dy * 0.01;
+        cameraElevation = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, cameraElevation));
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        draw();
+    });
+    window.addEventListener('resize', draw);
+
+    // --- Geometry ---
+    function setupGeometries(gl) {
+        return {
+            cube: createBufferInfo(gl, getCubeData()),
+            sphere: createBufferInfo(gl, getSphereData()),
+            cylinder: createBufferInfo(gl, getCylinderData()),
+            grid: createBufferInfo(gl, getGridData(), gl.LINES),
+        };
+    }
+    function createBufferInfo(gl,data,p){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);return{buffer:b,vertexCount:data.length/6,stride:24,primitive:p||gl.TRIANGLES};}
+    function getCubeData(){const s=1,v=[[-s,-s,s],[s,-s,s],[s,s,s],[-s,s,s],[-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s]],C=[[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1]],f=(i,c)=>[...v[i[0]],...c,...v[i[1]],...c,...v[i[2]],...c,...v[i[0]],...c,...v[i[2]],...c,...v[i[3]],...c];return[...f([0,3,2,1],C[0]),...f([4,5,6,7],C[1]),...f([3,7,6,2],C[2]),...f([0,1,5,4],C[3]),...f([1,2,6,5],C[4]),...f([4,0,3,7],C[5])];}
+    function getGridData(){const l=[],s=20,d=20,t=s/d,h=s/2,c=[0.4,0.4,0.4];for(let i=0;i<=d;i++){const p=-h+i*t;l.push(-h,0,p,...c,h,0,p,...c,p,0,-h,...c,p,0,h,...c);}return l;}
+    function getSphereData(){const v=[],latB=30,longB=30,r=1.2,c=[0.8,0.3,0.8];for(let i=0;i<=latB;i++){const th=i*Math.PI/latB,sth=Math.sin(th),cth=Math.cos(th);for(let j=0;j<=longB;j++){const p=j*2*Math.PI/longB,sp=Math.sin(p),cp=Math.cos(p);v.push(r*cp*sth,r*cth,r*sp*sth,...c);}}const indices=[];for(let i=0;i<latB;i++){for(let j=0;j<longB;j++){const f=i*(longB+1)+j,s=(i+1)*(longB+1)+j;indices.push(f,s,f+1,s,s+1,f+1);}}const o=[];indices.forEach(idx=>o.push(...v.slice(idx*6,idx*6+6)));return o;}
+    function getCylinderData(){const v=[],s=32,r=1,h=2,c1=[0.3,0.8,0.8],c2=[0.2,0.6,0.6];for(let i=0;i<=s;i++){const a=i/s*2*Math.PI,x=r*Math.cos(a),z=r*Math.sin(a);v.push(x,h/2,z,...c1,x,-h/2,z,...c1);}const indices=[];for(let i=0;i<s;i++){const c=i*2,n=c+2;indices.push(c,n,c+1,n,n+1,c+1);}const o=[];indices.forEach(idx=>o.push(...v.slice(idx*6,idx*6+6)));return o;}
+    
+    // --- Util ---
+    function createShader(gl, type, source) { const s=gl.createShader(type); gl.shaderSource(s,source); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error('Shader error',gl.getShaderInfoLog(s));gl.deleteShader(s);return null} return s; }
+    function createProgram(gl, vs, fs) { const p=gl.createProgram(); gl.attachShader(p,vs); gl.attachShader(p,fs); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)){console.error('Program error',gl.getProgramInfoLog(p));gl.deleteProgram(p);return null} return p; }
+    
+    // --- Initial Run ---
+    updateButton();
+    draw();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>独立的三维变换探索应用 (WebGL版)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        /* Styles for the interactive 3D application */
+        .app-container-3d {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            width: 100%;
+            max-width: 1200px;
+            height: 600px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .controls-panel-3d { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .canvas-panel-3d { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; position: relative; overflow: hidden; cursor: move; }
+        .control-group-3d { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group-3d h5 { margin: 0 0 10px 0; }
+        #transform-list-3d { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white; max-height: 250px; overflow-y: auto;}
+        #transform-list-3d li { padding: 5px; background-color: #fff; border: 1px solid #ddd; margin: 5px; border-radius: 4px; cursor: grab; display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
+        #transform-list-3d li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs-3d { display: grid; grid-template-columns: auto 1fr; gap: 2px 5px; align-items: center; }
+        .param-inputs-3d label { font-weight: bold; }
+        .param-inputs-3d input { width: 100%; box-sizing: border-box; }
+        .delete-btn-3d { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold; flex-shrink: 0;}
+        .matrix-display-4x4 { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 8px; border-radius: 4px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; text-align: right; }
+        .matrix-display-4x4 span { padding: 1px 4px; background: white; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <h1>三维变换交互式探索 (原生 WebGL)</h1>
+    <div class="app-container-3d" id="app-3d-container">
+        <div class="controls-panel-3d">
+            <div class="control-group-3d">
+                <h5>1. 添加新变换</h5>
+                <select id="transform-type-3d">
+                    <option value="translate">平移 (Translate)</option>
+                    <option value="rotateX">绕X轴旋转</option>
+                    <option value="rotateY">绕Y轴旋转</option>
+                    <option value="rotateZ">绕Z轴旋转</option>
+                    <option value="scale">缩放 (Scale)</option>
+                </select>
+                <button id="add-transform-btn-3d" style="margin-top: 5px;">添加</button>
+            </div>
+            <div class="control-group-3d">
+                <h5>2. 变换序列 (可拖拽)</h5>
+                <ul id="transform-list-3d"></ul>
+            </div>
+            <div class="control-group-3d">
+                <h5>3. 最终复合矩阵 M = M_n * ... * M_1</h5>
+                <div id="final-matrix-display-3d" class="matrix-display-4x4">
+                    <!-- Matrix will be populated by script -->
+                </div>
+            </div>
+        </div>
+        <div class="canvas-panel-3d" id="canvas-container-3d">
+            <canvas id="webgl-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- WebGL & App Setup ---
+            const canvas = document.getElementById('webgl-canvas');
+            const gl = canvas.getContext('webgl');
+            if (!gl) {
+                alert('WebGL not supported!');
+                return;
+            }
+
+            const container = document.getElementById('app-3d-container');
+            if (!container) return;
+
+            // --- UI Elements ---
+            const typeSelector = document.getElementById('transform-type-3d');
+            const addBtn = document.getElementById('add-transform-btn-3d');
+            const transformList = document.getElementById('transform-list-3d');
+            const matrixDisplay = document.getElementById('final-matrix-display-3d');
+            
+            // --- App State ---
+            let transformations = [];
+            let shaderProgram;
+            let cubeBuffers;
+            let axisBuffers;
+            let camera = {
+                angleX: -0.5,
+                angleY: -0.5,
+                distance: 5
+            };
+            
+            // --- Simple Matrix Library (mat4) ---
+            const mat4 = {
+                create: () => new Float32Array(16),
+                identity: (out) => {
+                    out.fill(0);
+                    out[0] = out[5] = out[10] = out[15] = 1;
+                    return out;
+                },
+                multiply: (out, a, b) => { // out = a * b (Column-major)
+                    const a00 = a[0], a01 = a[4], a02 = a[8], a03 = a[12];
+                    const a10 = a[1], a11 = a[5], a12 = a[9], a13 = a[13];
+                    const a20 = a[2], a21 = a[6], a22 = a[10], a23 = a[14];
+                    const a30 = a[3], a31 = a[7], a32 = a[11], a33 = a[15];
+
+                    const b00 = b[0], b01 = b[4], b02 = b[8], b03 = b[12];
+                    const b10 = b[1], b11 = b[5], b12 = b[9], b13 = b[13];
+                    const b20 = b[2], b21 = b[6], b22 = b[10], b23 = b[14];
+                    const b30 = b[3], b31 = b[7], b32 = b[11], b33 = b[15];
+
+                    out[0] = a00 * b00 + a01 * b10 + a02 * b20 + a03 * b30;
+                    out[1] = a10 * b00 + a11 * b10 + a12 * b20 + a13 * b30;
+                    out[2] = a20 * b00 + a21 * b10 + a22 * b20 + a23 * b30;
+                    out[3] = a30 * b00 + a31 * b10 + a32 * b20 + a33 * b30;
+
+                    out[4] = a00 * b01 + a01 * b11 + a02 * b21 + a03 * b31;
+                    out[5] = a10 * b01 + a11 * b11 + a12 * b21 + a13 * b31;
+                    out[6] = a20 * b01 + a21 * b11 + a22 * b21 + a23 * b31;
+                    out[7] = a30 * b01 + a31 * b11 + a32 * b21 + a33 * b31;
+
+                    out[8] = a00 * b02 + a01 * b12 + a02 * b22 + a03 * b32;
+                    out[9] = a10 * b02 + a11 * b12 + a12 * b22 + a13 * b32;
+                    out[10] = a20 * b02 + a21 * b12 + a22 * b22 + a23 * b32;
+                    out[11] = a30 * b02 + a31 * b12 + a32 * b22 + a33 * b32;
+
+                    out[12] = a00 * b03 + a01 * b13 + a02 * b23 + a03 * b33;
+                    out[13] = a10 * b03 + a11 * b13 + a12 * b23 + a13 * b33;
+                    out[14] = a20 * b03 + a21 * b13 + a22 * b23 + a23 * b33;
+                    out[15] = a30 * b03 + a31 * b13 + a32 * b23 + a33 * b33;
+                    return out;
+                },
+                perspective: (out, fov, aspect, near, far) => {
+                    const f = 1.0 / Math.tan(fov / 2);
+                    out.fill(0);
+                    out[0] = f / aspect;
+                    out[5] = f;
+                    out[10] = (far + near) / (near - far);
+                    out[11] = -1;
+                    out[14] = (2 * far * near) / (near - far);
+                    return out;
+                },
+                fromTranslation: (out, v) => {
+                    mat4.identity(out);
+                    out[12] = v[0]; out[13] = v[1]; out[14] = v[2];
+                    return out;
+                },
+                fromScaling: (out, v) => {
+                    mat4.identity(out);
+                    out[0] = v[0]; out[5] = v[1]; out[10] = v[2];
+                    return out;
+                },
+                fromRotation: (out, rad, axis) => {
+                    let s = Math.sin(rad), c = Math.cos(rad);
+                    mat4.identity(out);
+                    if (axis[0] === 1) { // RotateX
+                        out[5] = c; out[6] = s; out[9] = -s; out[10] = c;
+                    } else if (axis[1] === 1) { // RotateY
+                        out[0] = c; out[2] = -s; out[8] = s; out[10] = c;
+                    } else if (axis[2] === 1) { // RotateZ
+                        out[0] = c; out[1] = s; out[4] = -s; out[5] = c;
+                    }
+                    return out;
+                }
+            };
+            
+            // --- GLSL Shaders ---
+            const vsSource = `
+                attribute vec4 aVertexPosition;
+                attribute vec4 aVertexColor;
+                uniform mat4 uModelViewMatrix;
+                uniform mat4 uProjectionMatrix;
+                varying lowp vec4 vColor;
+                void main(void) {
+                  gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+                  vColor = aVertexColor;
+                }
+            `;
+            const fsSource = `
+                varying lowp vec4 vColor;
+                void main(void) {
+                  gl_FragColor = vColor;
+                }
+            `;
+
+            function initShaderProgram(gl, vsSource, fsSource) {
+                const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+                const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+                const shaderProgram = gl.createProgram();
+                gl.attachShader(shaderProgram, vertexShader);
+                gl.attachShader(shaderProgram, fragmentShader);
+                gl.linkProgram(shaderProgram);
+                if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                    console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+                    return null;
+                }
+                return shaderProgram;
+            }
+
+            function loadShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            function initCubeBuffers(gl) {
+                const s = 0.4; // half-size
+                const positions = [ // vertices
+                    -s,-s,-s,  s,-s,-s,  s, s,-s, -s, s,-s, // front
+                    -s,-s, s,  s,-s, s,  s, s, s, -s, s, s, // back
+                    -s,-s,-s, -s, s,-s, -s, s, s, -s,-s, s, // left
+                     s,-s,-s,  s, s,-s,  s, s, s,  s,-s, s, // right
+                    -s, s,-s,  s, s,-s,  s, s, s, -s, s, s, // top
+                    -s,-s,-s,  s,-s,-s,  s,-s, s, -s,-s, s, // bottom
+                ];
+                 const colors = [ // one color per face
+                    [1.0, 0.0, 0.0, 1.0], // Front: Red
+                    [0.0, 1.0, 0.0, 1.0], // Back: Green
+                    [0.0, 0.0, 1.0, 1.0], // Left: Blue
+                    [1.0, 1.0, 0.0, 1.0], // Right: Yellow
+                    [1.0, 0.0, 1.0, 1.0], // Top: Magenta
+                    [0.0, 1.0, 1.0, 1.0], // Bottom: Cyan
+                ];
+                let unpackedColors = [];
+                for (let c of colors) { for (let i=0; i<4; i++) unpackedColors.push(...c); }
+
+                const indices = [
+                    0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11,
+                    12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23
+                ];
+
+                const posBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+                
+                const colorBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(unpackedColors), gl.STATIC_DRAW);
+
+                const indexBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+                return {
+                    position: posBuffer,
+                    color: colorBuffer,
+                    indices: indexBuffer,
+                    vertexCount: indices.length
+                };
+            }
+
+            function initAxisBuffers(gl) {
+                const L = 1.0; // Axis length
+                const positions = [ 0, 0, 0, L, 0, 0, 0, 0, 0, 0, L, 0, 0, 0, 0, 0, 0, L ];
+                const colors = [
+                    1, 0, 0, 1,   1, 0, 0, 1, // Red for X
+                    0, 1, 0, 1,   0, 1, 0, 1, // Green for Y
+                    0, 0, 1, 1,   0, 0, 1, 1, // Blue for Z
+                ];
+
+                const posBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+                
+                const colorBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+                return { position: posBuffer, color: colorBuffer, vertexCount: 6 };
+            }
+
+            function drawScene() {
+                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                gl.clearColor(1.0, 1.0, 1.0, 1.0);
+                gl.clearDepth(1.0);
+                gl.enable(gl.DEPTH_TEST);
+                gl.depthFunc(gl.LEQUAL);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+                const projectionMatrix = mat4.perspective(mat4.create(), 45 * Math.PI / 180, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100.0);
+
+                const viewMatrix = mat4.identity(mat4.create());
+                const rotationX = mat4.fromRotation(mat4.create(), camera.angleX, [1, 0, 0]);
+                const rotationY = mat4.fromRotation(mat4.create(), camera.angleY, [0, 1, 0]);
+                const translation = mat4.fromTranslation(mat4.create(), [0, 0, -camera.distance]);
+                
+                mat4.multiply(viewMatrix, viewMatrix, translation);
+                mat4.multiply(viewMatrix, viewMatrix, rotationX);
+                mat4.multiply(viewMatrix, viewMatrix, rotationY);
+                
+
+                gl.useProgram(shaderProgram);
+                gl.uniformMatrix4fv(shaderProgram.uniformLocations.projectionMatrix, false, projectionMatrix);
+                
+                // --- DRAW AXES ---
+                gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffers.position);
+                gl.vertexAttribPointer(shaderProgram.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(shaderProgram.attribLocations.vertexPosition);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, axisBuffers.color);
+                gl.vertexAttribPointer(shaderProgram.attribLocations.vertexColor, 4, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(shaderProgram.attribLocations.vertexColor);
+                
+                gl.uniformMatrix4fv(shaderProgram.uniformLocations.modelViewMatrix, false, viewMatrix); // Axes are at origin, so modelView is just view
+                gl.drawArrays(gl.LINES, 0, axisBuffers.vertexCount);
+
+
+                // --- DRAW CUBE ---
+                const modelMatrix = mat4.identity(mat4.create());
+                // M = M_n * ... * M_1 (pre-multiplication)
+                transformations.forEach(t => {
+                    const p = t.params;
+                    const m = mat4.create();
+                    switch (t.type) {
+                        case 'translate': mat4.fromTranslation(m, [p.x, p.y, p.z]); break;
+                        case 'rotateX': mat4.fromRotation(m, p.angle * Math.PI / 180, [1, 0, 0]); break;
+                        case 'rotateY': mat4.fromRotation(m, p.angle * Math.PI / 180, [0, 1, 0]); break;
+                        case 'rotateZ': mat4.fromRotation(m, p.angle * Math.PI / 180, [0, 0, 1]); break;
+                        case 'scale': mat4.fromScaling(m, [p.x, p.y, p.z]); break;
+                    }
+                    mat4.multiply(modelMatrix, m, modelMatrix);
+                });
+                
+                const modelViewMatrix = mat4.multiply(mat4.create(), viewMatrix, modelMatrix);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffers.position);
+                gl.vertexAttribPointer(shaderProgram.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(shaderProgram.attribLocations.vertexPosition);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffers.color);
+                gl.vertexAttribPointer(shaderProgram.attribLocations.vertexColor, 4, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(shaderProgram.attribLocations.vertexColor);
+                
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeBuffers.indices);
+                
+                gl.uniformMatrix4fv(shaderProgram.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+                gl.drawElements(gl.TRIANGLES, cubeBuffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+                
+                // Transpose for row-major display
+                const dm = modelMatrix;
+                const transposedForDisplay = [
+                    dm[0], dm[4], dm[8], dm[12],
+                    dm[1], dm[5], dm[9], dm[13],
+                    dm[2], dm[6], dm[10], dm[14],
+                    dm[3], dm[7], dm[11], dm[15]
+                ];
+                matrixDisplay.innerHTML = transposedForDisplay.map(v => `<span>${v.toFixed(2)}</span>`).join('');
+            }
+            
+            function initializeApp() {
+                const canvasContainer = document.getElementById('canvas-container-3d');
+                canvas.width = canvasContainer.clientWidth;
+                canvas.height = canvasContainer.clientHeight;
+                window.addEventListener('resize', () => {
+                    canvas.width = canvasContainer.clientWidth;
+                    canvas.height = canvasContainer.clientHeight;
+                });
+                
+                shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+                shaderProgram.attribLocations = {
+                    vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+                    vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+                };
+                shaderProgram.uniformLocations = {
+                    projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+                    modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+                };
+                cubeBuffers = initCubeBuffers(gl);
+                axisBuffers = initAxisBuffers(gl);
+                
+                let isDragging = false;
+                let lastMouseX, lastMouseY;
+                canvas.addEventListener('mousedown', e => { isDragging = true; lastMouseX = e.clientX; lastMouseY = e.clientY; });
+                canvas.addEventListener('mouseup', () => isDragging = false);
+                canvas.addEventListener('mouseout', () => isDragging = false);
+                canvas.addEventListener('mousemove', e => {
+                    if (isDragging) {
+                        const dx = e.clientX - lastMouseX;
+                        const dy = e.clientY - lastMouseY;
+                        camera.angleY += dx * 0.01;
+                        camera.angleX += dy * 0.01;
+                        lastMouseX = e.clientX;
+                        lastMouseY = e.clientY;
+                    }
+                });
+                canvas.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    camera.distance += e.deltaY * 0.01;
+                    camera.distance = Math.max(2, Math.min(20, camera.distance));
+                });
+                
+                addBtn.addEventListener('click', addTransform);
+                transformList.addEventListener('input', updateTransformParams);
+                transformList.addEventListener('click', handleListClick);
+                
+                 function renderLoop() {
+                    drawScene();
+                    requestAnimationFrame(renderLoop);
+                 }
+                 renderLoop();
+            }
+            
+            function reorderTransformations() {
+                const newOrderIds = [...transformList.querySelectorAll('li')].map(li => parseInt(li.dataset.id));
+                transformations.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+            }
+
+            function addTransform() {
+                const type = typeSelector.value;
+                let newTransform = { id: Date.now(), type: type, params: {} };
+                switch (type) {
+                    case 'translate': newTransform.params = { x: 0.5, y: 0, z: 0 }; break;
+                    case 'rotateX': case 'rotateY': case 'rotateZ': newTransform.params = { angle: 30 }; break;
+                    case 'scale': newTransform.params = { x: 1.2, y: 1.2, z: 1.2 }; break;
+                }
+                transformations.push(newTransform);
+                renderList();
+            }
+            
+            let renderList = function() {
+                transformList.innerHTML = '';
+                transformations.forEach(t => {
+                    const li = document.createElement('li');
+                    li.dataset.id = t.id;
+                    li.draggable = true;
+                    let inputs = '', label = '';
+                    switch (t.type) {
+                        case 'translate':
+                            label = '平移';
+                            inputs = `<label>x:</label><input type="number" step="0.1" data-param="x" value="${t.params.x}"> <label>y:</label><input type="number" step="0.1" data-param="y" value="${t.params.y}"> <label>z:</label><input type="number" step="0.1" data-param="z" value="${t.params.z}">`;
+                            break;
+                        case 'rotateX': label = '绕X轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'rotateY': label = '绕Y轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'rotateZ': label = '绕Z轴旋转'; inputs = `<label>°:</label><input type="number" data-param="angle" value="${t.params.angle}">`; break;
+                        case 'scale':
+                            label = '缩放';
+                            inputs = `<label>x:</label><input type="number" step="0.1" data-param="x" value="${t.params.x}"> <label>y:</label><input type="number" step="0.1" data-param="y" value="${t.params.y}"> <label>z:</label><input type="number" step="0.1" data-param="z" value="${t.params.z}">`;
+                            break;
+                    }
+                    li.innerHTML = `<span>${label}</span><div class="param-inputs-3d">${inputs}</div><button class="delete-btn-3d">&times;</button>`;
+                    transformList.appendChild(li);
+                });
+            };
+
+            const handleListClick = (e) => {
+                if (e.target.classList.contains('delete-btn-3d')) {
+                    const id = parseInt(e.target.closest('li').dataset.id);
+                    transformations = transformations.filter(t => t.id !== id);
+                    renderList();
+                }
+            };
+            
+            const updateTransformParams = (e) => {
+                if (e.target.tagName !== 'INPUT') return;
+                const id = parseInt(e.target.closest('li').dataset.id);
+                const transform = transformations.find(t => t.id === id);
+                const paramName = e.target.dataset.param;
+                transform.params[paramName] = parseFloat(e.target.value) || 0;
+            };
+
+            let draggedItem = null;
+            transformList.addEventListener('dragstart', e => {
+                draggedItem = e.target.closest('li');
+                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging')}, 0);
+            });
+            transformList.addEventListener('dragend', e => { if (draggedItem) draggedItem.classList.remove('dragging'); draggedItem = null; });
+            transformList.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = [...transformList.querySelectorAll('li:not(.dragging)')].reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = e.clientY - box.top - box.height / 2;
+                    return (offset < 0 && offset > closest.offset) ? { offset: offset, element: child } : closest;
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+                if (draggedItem) {
+                    if (afterElement == null) { transformList.appendChild(draggedItem); } 
+                    else { transformList.insertBefore(draggedItem, afterElement); }
+                }
+            });
+            transformList.addEventListener('drop', e => { e.preventDefault(); reorderTransformations(); });
+
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
+

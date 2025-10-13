@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-观察</title>
+
+    <meta name="description" content="复合变换">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第四章(1) 观察</h2>
+                <p style="font-family: courier;font-size:28pt;text-align:center">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>如何“画”出三维物体？</h3>
+                <div class="two-column">
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap04/ch04-The_Last_Supper.jpg" alt="The Last Supper" style="height:100%">
+                            <caption>达・芬奇 《最后的晚餐》</caption>
+                        </figure>
+                    </div>
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap04/ch04-Jagdschloss_Granitz.jpg" alt="Jagdschloss Granitz"style="height:100%">
+                            <caption>建筑蓝图</caption>
+                        </figure>
+                    </div>
+                </div>
+                <p class="fragment">不同的“画法”服务于不同的目的：<strong>艺术的真实感</strong> vs <strong>工程的精确性</strong></p>
+            </section>
+            <section>
+                <h3>学习目标 (Objective)</h3>
+                <ul>
+                    <li class="fragment"><strong>构成要素:</strong> 了解经典观察系统的三个基本组成部分</li>
+                    <li class="fragment"><strong>投影分类:</strong> 掌握投影的主要分类方式，并理解其划分依据</li>
+                    <li class="fragment"><strong>平行投影:</strong> 辨析正交投影、斜投影和轴测投影的概念与应用</li>
+                    <li class="fragment"><strong>透视投影:</strong> 理解透视投影的基本原理和视觉特点</li>
+                </ul>
+            </section>
+            <section>
+                <h3>两个游戏画面</h3>
+                <p class="fragment">这是两个游戏画面，请比较这两幅画面中的“立体感”有何不同？</p>
+                <div class="two-column">
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap04/ch04-Elden-Ring-Screenshot-018.jpg" style="height:100%">
+                            <caption>艾尔登法环截图</caption>
+                        </figure>
+                    </div>
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap04/ch04-Monument-Valley2-Screenshot.jpg" alt="Monument Valley" style="height:100%">
+                            <caption>纪念碑谷</caption>
+                        </figure>
+                    </div>
+                </div>
+                <p class="fragment">左图<strong>近大远小</strong>，符合视觉真实感；右图<strong>远近大小一样</strong>，具有设计感</p>
+                <p class="fragment">这背后是两种不同的投影成像方法</p>
+            </section>
+            <section>
+                <section>
+                    <h3>经典观察的构成要素</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-viewing.png" alt="经典观察的构成要素" style="height:100%">
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-parproj.png" alt="经典观察构成要素" style="height: 100%;">
+                        </div>
+                    </div>
+                    <ol>
+                        <li class="fragment"><strong>投影中心(Center of Projection, COP)</strong>：观察点或光源，即“眼睛”所在位置</li>
+                        <li class="fragment"><strong>投影线(Projector)</strong>：从物体射向投影中心的光线，将物体投射到投影平面上</li>
+                        <li class="fragment"><strong>投影平面(Projection Plane)</strong>成像平面，即“屏幕”或“画布”</li>
+                    </ol>
+                </section>
+                <section>
+                    <h3>平面几何投影</h3>
+                    <ul>
+                        <li class="fragment">标准投影将物体投射到<strong>成像平面</strong></li>
+                        <li class="fragment">所有的投影线均是直线，要么平行，要么会聚到投影中心</li>
+                        <li class="fragment">所有的投影线都是直线，能够保持线性关系，但不维持角度大小</li>
+                        <li class="fragment">非线性投影适用于特定的范围，比如地图</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>经典投影示例</h3>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap04/ch04-projs.png" style="height:100%">
+                    </div>
+                </section>
+                <section>
+                    <h3>平面几何投影分类</h3>
+                    <p class="fragment"><strong>投影中心</strong>与<strong>投影平面</strong>的相对关系</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-graphicalprojs.svg" style="width:100%">
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>平行投影(Parallel)</strong>，投影中心在无穷远处，投影线互相平行</li>
+                                <ul>
+                                    <li class="fragment"><strong>正交投影(Orthographic)</strong></li>
+                                    <ul>
+                                        <li class="fragment"><strong>多视图投影(Multiview)</strong></li>
+                                        <li class="fragment"><strong>轴测投影(Axonometric)</strong></li>
+                                    </ul>
+                                    <li class="fragment"><strong>斜投影(Oblique)</strong></li>
+                                </ul>
+                                <li class="fragment"><strong>透视投影</strong>，投影中心在有限距离处，投影线会聚于一点</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+					<h3>投影方式选择</h3>
+				    <ul>
+						<li>经典成像中，两种投影方式的实现是不同的</li>
+						<li>从数学上来看，平行投影是透视投影的极限情况，即投影线的会聚点位于无穷远处</li>
+                        <li>计算机图形学中，所有的成像计算采用同一套管线实现</li>
+					</ul>
+				</section>
+            </section>
+            <section>
+                                <section>
+                    <h3>平行投影(Parallel Projection)</h3>
+                    <p class="fragment">特点：保留物体的<strong>实际尺寸</strong>和<strong>平行关系</strong>，常用于工程和设计</p>
+                    <p class="fragment">二次分类的依据：<strong>投影线</strong>与<strong>投影平面</strong>的夹角</p>
+                    <div class="classification-tree" style="font-size: 0.8em;">
+                        <ul>
+                            <li class="fragment">
+                            <strong style="color:#17a2b8;">正交投影 (Orthographic)</strong>
+                            <br>投影线与投影平面<strong>垂直 (90°)</strong>
+                            </li>
+                            <li class="fragment">
+                            <strong style="color:#17a2b8;">斜投影 (Oblique)</strong>
+                            <br>投影线与投影平面<strong>不垂直</strong>，呈一定角度
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h3>正交投影(Orthographic Proj.)</h3>
+                    <p class="fragmeht" style="text-align:center;font-size:24pt">投影线与投影平面垂直</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-orthproj.png" alt="正交投影" style="height:100%">
+                    </div>
+                </section>
+                <section>
+                    <h3>正交投影(1)：多视图投影(Multiview)</h3>
+                    <p class="fragment">主要投影平面与物体面的坐标轴平行，一般采用第一人称视图，常用于展示物体的<strong>三视图</strong>，即<strong>正视图</strong>，<strong>左视图</strong>和<strong>顶视图</strong></p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-multiproj.png" alt="房屋三视图" style="height:100%">
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment">一般用于机械制图、建筑设计等，能够精确表达尺寸和形状。</li>
+                                <li class="fragment">用三个视图加上等轴测视图构成完整的视图</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>正交投影(1)：多视图投影(Multiview)</h3>
+                    <p class="fragment">多视图正投影优点和缺点：</p>
+                    <ul>
+                        <li class="fragment">优点：</li>
+						<ul>
+                            <li class="fragment">能够保持物体原有的距离和角度</li>
+							<li class="fragment">维持原有的形状</li>
+							<li class="fragment">可用于测量，如规划设计、制作手册等</li>
+						</ul>
+					    <li class="fragment">缺点：</li>
+						<ul>
+                            <li class="fragment">因为视角位置上存在遮挡，无法观察到物体的完整情况</li>
+						    <li class="fragment">通常需要加上轴测图</li>
+						</ul>
+                    </ul>
+                </section>
+                <section>
+                    <h3>正交投影(2)：轴测投影(Axonometric Proj.)</h3>
+                    <p class="fragment">投影平面相对物体发生运动，与物体的主要坐标轴<strong>不平行</strong>，呈一定角度，可用于在一张图上展示物体的三维形态</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-axnoproj.png" alt="轴测投影" style="width:70%">
+                        </div>
+                        <div>
+                           <img class="fragment" src="../../images/cg/chap04/ch04-axonmetheta.png" alt="轴测投影角度" style="width:40%">
+                           <br>
+                           <img class="fragment" src="../../images/cg/chap04/ch04-axonproj.jpg" alt="轴测投影示例" style="width:100%">
+                        </div>
+                    </div>
+                    <p class="fragment"><strong>应用</strong>：CAD、技术插图、UI设计、复古风格游戏。</p>
+                </section>
+                <section>
+                    <h3>正交投影(2)：轴测投影(Axonometric Proj.)</h3>
+                    <p class="fragment">轴测投影的类型：根据投影立方体一角的三个角度有几个相同，将轴测投影分为<strong>等轴测(isometric, 三个角相同)</strong>，<strong>二轴测(dimetric, 二个角相同)</strong>，<strong>三轴测(trimetric 三个角都不同)</strong>。其中，等轴测视图最为常用</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-axono-explained.png" alt="轴测投影" style="height:100%">
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-axoviews.png" alt="轴测投影分类" style="height:100%">
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="./AppDemos/axomometric_demo.html" target="_blank">轴测投影示例</a></p>
+                </section>
+                <section>
+                    <h3>正交投影(2)：轴测投影(Axonometric Proj.)</h3>
+                    <p class="fragment">轴测投影优点和缺点</p>
+                    <ul>
+                        <li class="fragment">线段会有缩放，可通过旋转角度找到缩放系数</li>
+                        <li class="fragment">能保持线性关系，但无法维持角度关系。如将一个圆投影到不平行的投影平面，形成的结果为椭圆</li>
+                        <li class="fragment">对一个类似盒子的三维物体，可同时看到三个主要表面</li>
+                        <li class="fragment">可能产生光学错觉，如平行线看起来像是发散的线</li>
+                        <li class="fragment">视觉上不具有真实感，远处的物体与近处的物体有同样的缩放系数</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>斜投影(Oblique Proj.)</h3>
+                    <p class="fragment">投影线与投影平面之间可以成任意角度，保持一个面与投影平面平行（用于保留真实形状），又能够表现出深度。</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="images/chap04/ch04-obliqproj.png" alt="斜投影特点" style="width:100%">
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-PGProjection-oblique.png" alt="斜投影" style="width:100%">
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="./AppDemos/oblique_demo.html" target="_blank">斜投影示例</a></p>
+                    <p class="fragment"><strong>应用：</strong>家具设计草图、快速表现物体形态、地图绘制。</p>
+                </section>
+                <section>
+                    <h3>斜投影(Oblique Proj.)</h3>
+                    <p class="fragment">斜投影的优缺点</p>
+                    <ul>
+						<li class="fragment">可选择任意角度，强调物体中某个特定的面，尤其用于建筑设计中</li>
+						<li class="fragment">与投影平面平行的平面中角度能够维持，同时在斜投影中可以看到周围的面</li>
+						<li class="fragment">在现实世界中，无法用简单的相机获得斜投影视图，一般需要借助特殊的镜头</li>
+					</ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>透视投影(Perspective Proj.)</h3>
+                    <p class="fragment">透视投影中，投影线会聚到投影中心，产生<strong>近大远小</strong>的视觉效果，符合人眼视觉的特征，能够产生真实感和深度感</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-classical-viewing.png" alt="透视投影" style="width:50%">
+                    </div>
+                    
+                    <p class="fragment"><strong>应用：</strong>绘画、摄影、3D游戏、电影、虚拟现实等一切追求真实感的领域。</p>
+                </section>
+                <section>
+                    <h3>透视投影(Perspective Proj.)</h3>
+                    <p class="fragment">透视投影中，物体上的平行线(与投影平面不平行的线)会聚到投影方向上的一点，该点称为<Strong>灭点(Vanishing Point)</Strong></p>
+                    <p class="fragment">利用灭点可以手绘简单的透视投影效果图</p>
+                    <div class="three-column">
+                        <div>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">三点透视中，没有一个主方向与投影面平行</li>
+                                <li class="fragment" style="font-size:20pt">立方体投影有三个灭点</li>
+                            </ul>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-tptpersp.png" alt="三灭点透视投影" style="width:100%">
+                        </div>
+                        <div>
+                           <ul>
+                            <li class="fragment" style="font-size:20pt">两点透视中，一个主方向与投影面平行</li>
+                            <li class="fragment" style="font-size:20pt">立方体投影有两个灭点</li>
+                           </ul>
+                           <img class="fragment" src="../../images/cg/chap04/ch04-dptpersp.png" alt="两灭点透视投影" style="width:100%">
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">一点透视中，两个主方向与投影面平行</li>
+                                <li class="fragment" style="font-size:20pt">立方体投影有一个灭点</li>
+                            </ul>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-optpersp.png" alt="一灭点透视投影" style="width:100%">
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="./AppDemos/perspective_demo.html" target="_blank">透视投影示例</a></p>
+                </section>
+                <section>
+                    <h3>透视投影的优缺点</h3>
+                    <ul>
+						<li class="fragment">距离观察者较远的物体会比距离较近的物体在投影平面上的成像更小，看起来会更真实</li>
+						<li class="fragment">沿着同一方向两段相同距离的线段在投影成像上距离不同</li>
+						<li class="fragment">只有与投影平面平行的面上的角度能够得到维持</li>
+						<li class="fragment">透视投影较难用手绘实现，但在计算机中可以</li>
+					</ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>课堂测试</h3>
+                    <ol>
+                        <li class="fragment">我们玩第一人称射击游戏时，屏幕上显示的画面是用了哪种投影方式？为什么？<br>
+                            <strong class="fragment" style="color: #2a5a8a;">答案：透视投影，为了营造真实的沉浸感和空间感，“近大远小”有助于判断距离。</strong>
+                        </li>
+                        <li class="fragment">请用一句话概括平行投影和透视投影最根本的区别。<br>
+                            <strong class="fragment" style="color: #2a5a8a;">答案：投影线是相互平行（平行投影）还是汇聚于一点（透视投影）。</strong>
+                        </li>
+                    </ol>
+                </section>
+                <section>
+                    <h4>后测 (Post-assessment)</h4>
+                    <p class="fragment" data-fragment-index="1">请识别以下图像分别使用了哪种主要的投影方式？</p>
+                    <div style="display: flex; justify-content: space-around; align-items: center; font-size: 0.8em;">
+                        <div style="flex: 1; margin: 5px; text-align: center;">
+                            <img class="fragment" data-fragment-index="2" src="../../images/cg/chap04/ch04-test-1.png" alt="[浴室的等轴测视图的图像]" style="height: 250px;">
+                            <p class="fragment" data-fragment-index="6" style="text-align: center;">等轴测投影</p>
+                        </div>
+                        <div style="flex: 1; margin: 5px; text-align: center;">
+                            <img class="fragment" data-fragment-index="3" src="../../images/cg/chap04/ch04-test-2.jpg" alt="[帕齐礼拜堂外部照片的图像]" style="height: 250px;">
+                            <p class="fragment" data-fragment-index="7" style="text-align: center;">透视投影</p>
+                        </div>
+                        <div style="flex: 1; margin: 5px; text-align: center;">
+                            <img class="fragment" data-fragment-index="4" src="../../images/cg/chap04/ch04-test-3.png" alt="[房屋平面图的图像]" style="height: 250px;">
+                            <p class="fragment" data-fragment-index="8" style="text-align: center;">正交投影 (多视图)</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <h3>总结</h3>
+                <ul>
+                    <li class="fragment">经典观察的<strong>三要素</strong>：投影中心、投影线、投影平面</li>
+                    <li class="fragment">投影的两大分类：<strong>平行投影</strong>和<strong>透视投影</strong>，其根本区别在于投影线是否平行</li>
+                    <li class="fragment">平行投影中，包括<strong>正交投影</strong>（三视图、等轴测）和<strong>斜投影</strong>，分别服务于精确测量和快速表现</li>
+                    <li class="fragment"><strong>透视投影</strong>是创造视觉真实感的关键</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+</script>
+</body>
+</html>

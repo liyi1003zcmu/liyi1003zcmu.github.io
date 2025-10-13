@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正视图到轴测投影变换</title>
+<style>
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5; color: #333;
+    }
+    .main-container {
+        display: flex; width: 100%; height: 100%;
+    }
+    .controls-panel {
+        width: 320px; padding: 20px; background-color: #ffffff;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; border-right: 1px solid #e0e0e0;
+    }
+    .canvas-container {
+        flex-grow: 1; display: flex; justify-content: center; align-items: center;
+        position: relative; /* Needed for overlay */
+    }
+    canvas {
+        display: block;
+        border-radius: 8px;
+    }
+    #gl-canvas {
+        background-color: #e9eef2;
+        position: relative; /* Set position to apply z-index */
+        z-index: 0; /* Base layer */
+    }
+    #overlay-canvas {
+        position: absolute;
+        pointer-events: none; /* Allows mouse events to pass through to the GL canvas */
+        background-color: transparent;
+        z-index: 1; /* Overlay layer on top */
+    }
+    h1 { font-size: 22px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .control-group { margin-bottom: 20px; }
+    label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 8px; }
+    input[type="range"] { width: 100%; cursor: pointer; }
+    select, button { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; background-color: #fff; }
+    button { background-color: #007bff; color: white; border-color: #007bff; cursor: pointer; margin-top: 10px; }
+    button:hover { background-color: #0056b3; }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="controls-panel">
+        <h1>投影变换控制器</h1>
+        
+        <div class="control-group">
+            <label for="object-select">选择物体</label>
+            <select id="object-select">
+                <option value="cube">立方体 (Cube)</option>
+                <option value="l-shape">L形体 (L-Shape)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="alpha-slider">绕 Y 轴旋转 (α): <span id="alpha-value">0</span>°</label>
+            <input type="range" id="alpha-slider" min="-180" max="180" value="0">
+        </div>
+
+        <div class="control-group">
+            <label for="beta-slider">绕 X 轴旋转 (β): <span id="beta-value">0</span>°</label>
+            <input type="range" id="beta-slider" min="-180" max="180" value="0">
+        </div>
+        
+        <div class="control-group">
+            <button id="isometric-btn">设置为标准等轴测视图</button>
+            <button id="dimetric-btn">设置为标准二轴测视图</button>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="gl-canvas" width="800" height="600"></canvas>
+        <canvas id="overlay-canvas" width="800" height="600"></canvas>
+    </div>
+</div>
+
+<script>
+    // --- Shaders ---
+    const vertexShaderSource = `
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        uniform mat4 u_matrix;
+        varying vec4 v_color;
+        void main() {
+            gl_Position = u_matrix * a_position;
+            v_color = a_color;
+        }`;
+
+    const fragmentShaderSource = `
+        precision mediump float;
+        varying vec4 v_color;
+        void main() {
+            gl_FragColor = v_color;
+        }`;
+
+    // --- Matrix Math Utilities ---
+    const m4 = {
+        create: function() { return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]); },
+        
+        // CORRECTED 4x4 matrix multiplication function
+        // Performs b * a, where a and b are column-major matrices
+        multiply: function(a, b) {
+            const out = this.create();
+            
+            const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+            const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+            const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+            const a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+            const b00 = b[0], b01 = b[1], b02 = b[2], b03 = b[3];
+            const b10 = b[4], b11 = b[5], b12 = b[6], b13 = b[7];
+            const b20 = b[8], b21 = b[9], b22 = b[10], b23 = b[11];
+            const b30 = b[12], b31 = b[13], b32 = b[14], b33 = b[15];
+
+            out[0] = b00 * a00 + b01 * a10 + b02 * a20 + b03 * a30;
+            out[1] = b00 * a01 + b01 * a11 + b02 * a21 + b03 * a31;
+            out[2] = b00 * a02 + b01 * a12 + b02 * a22 + b03 * a32;
+            out[3] = b00 * a03 + b01 * a13 + b02 * a23 + b03 * a33;
+
+            out[4] = b10 * a00 + b11 * a10 + b12 * a20 + b13 * a30;
+            out[5] = b10 * a01 + b11 * a11 + b12 * a21 + b13 * a31;
+            out[6] = b10 * a02 + b11 * a12 + b12 * a22 + b13 * a32;
+            out[7] = b10 * a03 + b11 * a13 + b12 * a23 + b13 * a33;
+
+            out[8] = b20 * a00 + b21 * a10 + b22 * a20 + b23 * a30;
+            out[9] = b20 * a01 + b21 * a11 + b22 * a21 + b23 * a31;
+            out[10] = b20 * a02 + b21 * a12 + b22 * a22 + b23 * a32;
+            out[11] = b20 * a03 + b21 * a13 + b22 * a23 + b23 * a33;
+
+            out[12] = b30 * a00 + b31 * a10 + b32 * a20 + b33 * a30;
+            out[13] = b30 * a01 + b31 * a11 + b32 * a21 + b33 * a31;
+            out[14] = b30 * a02 + b31 * a12 + b32 * a22 + b33 * a32;
+            out[15] = b30 * a03 + b31 * a13 + b32 * a23 + b33 * a33;
+            
+            return out;
+        },
+        orthographic: function(left, right, bottom, top, near, far) {
+            const lr=1/(left-right),bt=1/(bottom-top),nf=1/(near-far);
+            return new Float32Array([(2*lr),0,0,0, 0,(2*bt),0,0, 0,0,(2*nf),0, (left+right)*lr,(top+bottom)*bt,(far+near)*nf,1]);
+        },
+        // Returns a COLUMN-MAJOR rotation matrix
+        xRotation: function(rad) {
+            const c=Math.cos(rad),s=Math.sin(rad); 
+            return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
+        },
+        // Returns a COLUMN-MAJOR rotation matrix
+        yRotation: function(rad) {
+            const c=Math.cos(rad),s=Math.sin(rad); 
+            return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);
+        },
+    };
+
+    // --- Main WebGL Logic ---
+    function main() {
+        // --- Setup UI ---
+        const alphaSlider = document.getElementById('alpha-slider');
+        const betaSlider = document.getElementById('beta-slider');
+        const alphaValue = document.getElementById('alpha-value');
+        const betaValue = document.getElementById('beta-value');
+        const isometricBtn = document.getElementById('isometric-btn');
+        const dimetricBtn = document.getElementById('dimetric-btn');
+        const objectSelect = document.getElementById('object-select');
+
+        // --- Setup Canvases ---
+        const glCanvas = document.getElementById('gl-canvas');
+        const gl = glCanvas.getContext('webgl', { antialias: true });
+        if (!gl) { alert('WebGL not supported!'); return; }
+        
+        const overlayCanvas = document.getElementById('overlay-canvas');
+        const ctx2d = overlayCanvas.getContext('2d');
+        
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader);
+
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        const colorLocation = gl.getAttribLocation(program, 'a_color');
+        const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
+        const buffer = gl.createBuffer();
+        
+        let currentObject = 'cube';
+        let vertexCount = 0;
+
+        function setGeometry(objectType) {
+            currentObject = objectType;
+            let geometryData;
+            if (objectType === 'cube') {
+                geometryData = getCubeData();
+                vertexCount = 36;
+            } else {
+                geometryData = getLShapeData();
+                vertexCount = 60;
+            }
+
+            const combinedData = new Float32Array([...getAxesData(), ...geometryData]);
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, combinedData, gl.STATIC_DRAW);
+            drawScene();
+        }
+        
+        // --- Event Listeners ---
+        alphaSlider.addEventListener('input', () => drawScene());
+        betaSlider.addEventListener('input', () => drawScene());
+        objectSelect.addEventListener('change', (e) => setGeometry(e.target.value));
+        isometricBtn.addEventListener('click', () => {
+            alphaSlider.value = 45;
+            betaSlider.value = 35.264;
+            drawScene();
+        });
+        dimetricBtn.addEventListener('click', () => {
+            alphaSlider.value = 26.57;
+            betaSlider.value = 45;
+            drawScene();
+        });
+
+        // --- Drawing ---
+        function drawScene() {
+            const alpha = alphaSlider.value * Math.PI / 180;
+            const beta = betaSlider.value * Math.PI / 180;
+            alphaValue.textContent = parseFloat(alphaSlider.value).toFixed(2);
+            betaValue.textContent = parseFloat(betaSlider.value).toFixed(2);
+
+            // --- WebGL Drawing ---
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clearColor(0.9, 0.92, 0.95, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.enable(gl.DEPTH_TEST);
+            gl.useProgram(program);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            const stride = 6 * 4;
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, stride, 0);
+            gl.enableVertexAttribArray(colorLocation);
+            gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, stride, 3 * 4);
+
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            const projectionMatrix = m4.orthographic(-2 * aspect, 2 * aspect, -2, 2, -10, 10);
+            const yRotationMatrix = m4.yRotation(alpha);
+            const xRotationMatrix = m4.xRotation(beta);
+            // The order is RotX then RotY: viewMatrix = xRotationMatrix * yRotationMatrix
+            let viewMatrix = m4.multiply(xRotationMatrix, yRotationMatrix);
+            let mvpMatrix = m4.multiply(projectionMatrix, viewMatrix);
+
+            gl.uniformMatrix4fv(matrixLocation, false, mvpMatrix);
+            
+            gl.lineWidth(2.0);
+            gl.drawArrays(gl.LINES, 0, 6);
+            gl.drawArrays(gl.TRIANGLES, 6, vertexCount);
+
+            // --- 2D Overlay Drawing ---
+            drawAngleMarkers(ctx2d, viewMatrix);
+        }
+
+        function drawAngleMarkers(ctx, viewMat) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // The columns of the view matrix are the transformed axes
+            const vX = { x: viewMat[0], y: viewMat[1] };
+            const vY = { x: viewMat[4], y: viewMat[5] };
+            const vZ = { x: viewMat[8], y: viewMat[9] };
+            
+            ctx.save();
+            ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+
+            drawAngleArc(ctx, vX, vY, '#d63031'); // XY Angle
+            drawAngleArc(ctx, vY, vZ, '#0984e3'); // YZ Angle
+            drawAngleArc(ctx, vZ, vX, '#00b894'); // ZX Angle
+
+            ctx.restore();
+        }
+
+        function drawAngleArc(ctx, v1, v2, color) {
+            const dot = v1.x * v2.x + v1.y * v2.y;
+            const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            if(mag1 < 0.01 || mag2 < 0.01) return;
+
+            const angleRad = Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2))));
+            const angleDeg = angleRad * 180 / Math.PI;
+
+            // Canvas Y is inverted, so use -y for atan2
+            const startAngle = Math.atan2(-v1.y, v1.x);
+            const endAngle = Math.atan2(-v2.y, v2.x);
+            
+            const radius = 40;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+
+            const crossProduct = v1.x * v2.y - v1.y * v2.x;
+            const counterClockwise = crossProduct < 0;
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, startAngle, endAngle, counterClockwise);
+            ctx.stroke();
+            
+            let angleDiff = endAngle - startAngle;
+            if(counterClockwise && angleDiff < 0) angleDiff += 2 * Math.PI;
+            if(!counterClockwise && angleDiff > 0) angleDiff -= 2 * Math.PI;
+            
+            const bisector = startAngle + angleDiff / 2;
+
+            const textRadius = radius + 15;
+            const textX = Math.cos(bisector) * textRadius;
+            const textY = Math.sin(bisector) * textRadius;
+
+            ctx.fillStyle = 'black';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${angleDeg.toFixed(1)}°`, textX, textY);
+        }
+        
+        setGeometry('cube'); // Initial setup
+    }
+    
+    // --- Geometry Data Functions ---
+    function getAxesData() { return [0,0,0,1,0,0,1.5,0,0,1,0,0,0,0,0,0,1,0,0,1.5,0,0,1,0,0,0,0,0,0,1,0,0,1.5,0,0,1,]; }
+    function getCubeData() { const s=0.8,v=[[-s,-s,s],[s,-s,s],[s,s,s],[-s,s,s],[-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s]],C=[[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1]],f=(i,c)=>[...v[i[0]],...c,...v[i[1]],...c,...v[i[2]],...c,...v[i[0]],...c,...v[i[2]],...c,...v[i[3]],...c]; return [...f([0,3,2,1],C[0]),...f([4,5,6,7],C[1]),...f([3,7,6,2],C[2]),...f([0,1,5,4],C[3]),...f([1,2,6,5],C[4]),...f([4,0,3,7],C[5])]; }
+    function getLShapeData() { const v=[[-1,-1,0.5],[1,-1,0.5],[1,0,0.5],[-0.2,0,0.5],[-0.2,1,0.5],[-1,1,0.5],[-1,-1,-0.5],[1,-1,-0.5],[1,0,-0.5],[-0.2,0,-0.5],[-0.2,1,-0.5],[-1,1,-0.5]],C=[[1,0,0],[0,1,0],[0,0,1],[1,1,0],[1,0,1],[0,1,1],[0.5,0.5,1],[1,0.5,0.5]],f=(i,c)=>{const q=i.map(idx=>v[idx]);return [...q[0],...c,...q[1],...c,...q[2],...c,...q[0],...c,...q[2],...c,...q[3],...c];}; return [...f([0,1,2,3],C[0]),...f([0,3,4,5],C[0]),...f([6,9,8,7],C[1]),...f([6,11,10,9],C[1]),...f([1,7,8,2],C[2]),...f([2,8,9,3],C[2]),...f([3,9,10,4],C[3]),...f([4,10,11,5],C[4]),...f([5,11,6,0],C[5]),...f([0,6,7,1],C[6]),...f([5,4,10,11],C[7])]; }
+    
+    // --- Utility Functions ---
+    function createShader(gl, type, source) { const shader=gl.createShader(type); gl.shaderSource(shader,source); gl.compileShader(shader); if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)) {console.error('Shader error:',gl.getShaderInfoLog(shader));gl.deleteShader(shader);return null;} return shader; }
+    function createProgram(gl, vs, fs) { const prog=gl.createProgram(); gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog); if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) {console.error('Program error:',gl.getProgramInfoLog(prog));gl.deleteProgram(prog);return null;} return prog; }
+
+    main();
+</script>
+
+</body>
+</html>

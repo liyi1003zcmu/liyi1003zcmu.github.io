@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>太阳系动画 - 复合变换示例</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden; /* Prevent scrollbars */
+        background-color: #000010;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        color: #fff;
+    }
+    h1 {
+        margin-bottom: 20px;
+        font-weight: 300;
+        text-shadow: 0 0 5px #fff;
+    }
+    canvas {
+        background-color: transparent;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        display: block; /* Remove default inline spacing */
+    }
+</style>
+</head>
+<body>
+
+    <h1>太阳系动画 - 复合变换示例</h1>
+    <canvas id="solarSystemCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('solarSystemCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let centerX, centerY;
+    let scaleFactor;
+
+    // --- 星体定义 (速度单位: rad/s) ---
+    const sun = { radius: 60, color: 'gold' };
+    const earth = { radius: 24, color: '#2e86de', orbitRadius: 250, revolutionSpeed: 0.1, rotationSpeed: 2.5 };
+    const moon = { radius: 8, color: '#bdc3c7', orbitRadius: 40, revolutionSpeed: 0.5 };
+    const mars = { radius: 16, color: '#e74c3c', orbitRadius: 350, revolutionSpeed: 0.07, rotationSpeed: 2.0 };
+    
+    // 记录动画开始时间
+    const startTime = Date.now();
+
+    function resizeCanvas() {
+        const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.7);
+        canvas.width = size;
+        canvas.height = size;
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        // 使用基准宽度800px来计算缩放比例
+        scaleFactor = canvas.width / 800; 
+    }
+
+    function draw() {
+        // 计算从开始到现在经过的时间（秒）
+        const elapsedTime = (Date.now() - startTime) / 1000;
+
+        ctx.fillStyle = '#000010';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // --- 绘制轨道和星体，所有尺寸都乘以缩放因子 ---
+        drawOrbit(earth.orbitRadius * scaleFactor);
+        drawOrbit(mars.orbitRadius * scaleFactor);
+
+        const sunRotationAngle = elapsedTime * 0.01;
+        ctx.save();
+        ctx.rotate(sunRotationAngle);
+        drawCelestialBody(sun.radius * scaleFactor, sun.color);
+        ctx.restore();
+
+        // --- 地球系统 ---
+        ctx.save();
+        const earthRevolutionAngle = elapsedTime * earth.revolutionSpeed;
+        ctx.rotate(earthRevolutionAngle);
+        ctx.translate(earth.orbitRadius * scaleFactor, 0);
+        
+        const earthRotationAngle = elapsedTime * earth.rotationSpeed;
+        drawInfo('地球', earthRevolutionAngle, earth.revolutionSpeed, earthRotationAngle, earth.rotationSpeed);
+
+        ctx.save();
+        ctx.rotate(earthRotationAngle);
+        drawCelestialBody(earth.radius * scaleFactor, earth.color, true); 
+        ctx.restore();
+        
+        ctx.save();
+        const moonRevolutionAngle = elapsedTime * moon.revolutionSpeed;
+        ctx.rotate(moonRevolutionAngle);
+        ctx.translate(moon.orbitRadius * scaleFactor, 0);
+        drawCelestialBody(moon.radius * scaleFactor, moon.color);
+        ctx.restore(); 
+
+        ctx.restore();
+
+        // --- 火星 ---
+        ctx.save();
+        const marsRevolutionAngle = elapsedTime * mars.revolutionSpeed;
+        ctx.rotate(marsRevolutionAngle);
+        ctx.translate(mars.orbitRadius * scaleFactor, 0);
+        
+        const marsRotationAngle = elapsedTime * mars.rotationSpeed;
+        drawInfo('火星', marsRevolutionAngle, mars.revolutionSpeed, marsRotationAngle, mars.rotationSpeed);
+
+        ctx.rotate(marsRotationAngle);
+        drawCelestialBody(mars.radius * scaleFactor, mars.color, true);
+        ctx.restore(); 
+
+        ctx.restore();
+    }
+
+    function drawCelestialBody(radius, color, hasMarker = false) {
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        if (hasMarker) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 2 * scaleFactor;
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -radius);
+            ctx.stroke();
+        }
+    }
+
+    function drawInfo(name, revAngleRad, revSpeed, rotAngleRad, rotSpeed) {
+        const revAngleDeg = (revAngleRad * 180 / Math.PI) % 360;
+        const rotAngleDeg = (rotAngleRad * 180 / Math.PI) % 360;
+        
+        const fontSize = 12 * scaleFactor;
+        const smallFontSize = 10 * scaleFactor;
+
+        ctx.save();
+        ctx.rotate(-revAngleRad); 
+        ctx.fillStyle = 'white';
+        ctx.font = `${fontSize}px Arial`;
+        ctx.fillText(`${name}`, 20 * scaleFactor, -35 * scaleFactor);
+        ctx.fillText(`公转角: ${revAngleDeg.toFixed(0)}°`, 20 * scaleFactor, -20 * scaleFactor);
+        ctx.fillText(`自转角: ${rotAngleDeg.toFixed(0)}°`, 20 * scaleFactor, -5 * scaleFactor);
+        
+        ctx.font = `${smallFontSize}px Arial`;
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(`公转速: ${revSpeed.toFixed(2)} rad/s`, 20 * scaleFactor, 10 * scaleFactor);
+        ctx.fillText(`自转速: ${rotSpeed.toFixed(2)} rad/s`, 20 * scaleFactor, 22 * scaleFactor);
+        ctx.restore();
+    }
+
+    function drawOrbit(orbitRadius) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.arc(0, 0, orbitRadius, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    // --- 启动和窗口事件 ---
+    window.addEventListener('resize', resizeCanvas);
+    
+    // 初始设置画布大小
+    resizeCanvas();
+    // 启动动画，每秒更新10次 (100毫秒间隔)
+    setInterval(draw, 100);
+</script>
+
+</body>
+</html>
+

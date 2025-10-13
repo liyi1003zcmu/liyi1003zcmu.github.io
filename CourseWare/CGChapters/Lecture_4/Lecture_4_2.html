@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-观察</title>
+
+    <meta name="description" content="复合变换">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第四章(2) 观察</h2>
+                <p style="font-family: courier;font-size:28pt;text-align:center">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>如何”实现”投影</h3>
+                <p class="fragment">想象一下，在无限大的三维世界中，该如何告诉计算机，你想“看”哪里？</p>
+                <img class="fragment" src="../../images/cg/chap04/ch04-man-camera.jpg" atl="人和相机" style="width: 50%; height: 50%; margin: 0 auto;">
+                <p class="fragment">需要定义一个<strong>虚拟相机(Virtual Camera)</strong></p>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment"><strong>流水线中的位置：</strong>理解视图和投影变换在图形渲染流水线中的位置和作用</li>
+                    <li class="fragment"><strong>定义相机：</strong>掌握使用<strong>视点(Eye)</strong>、<strong>目标点(At)</strong>和<strong>上方向(Up)</strong>向量设置相机</li>
+                    <li class="fragment"><strong>视图变换：</strong>理解视图变换的目的，及其“变换世界，而非相机”的核心思想</li>
+                    <li class="fragment"><strong>视图矩阵：</strong>理解视图矩阵$M_{view}$的推导过程</li>
+                </ul>
+            </section>
+            <section>
+                <h3>如何简化计算</h3>
+                <p class="fragment">假设你要拍摄一座巨大的山脉</p>
+                <p class="fragment">从“数学”的角度，下面哪种方式的坐标系设置更“简单”？</p>
+                <div class="two-column fragment">
+                    <div>
+                        <p><strong>A. 山脉不动，相机动</strong></p>
+                        <p style="font-size:20pt">保持山脉不动，你带着相机到处移动，寻找最佳角度和位置</p>
+                        <p style="color:#4682b4;font-size:20pt;">为每个点计算相对于最佳位置相机的投影</p>
+                    </div>
+                    <div>
+                        <p><strong>B. 相机不动，山脉动</strong></p>
+                        <p style="font-size:20pt">将相机固定在某个位置，以这个位置为原点，你移动和旋转整个地球，通过山脉移动，让山脉对准相机镜头，找到最佳角度和位置</p>
+                        <p style="color:#4682b4;font-size:20pt">相机位置“始终”在原点，并且朝向$-Z$方向</p>
+                    </div>
+                </div>
+                <p class="fragment" style="color:red;margin-top:20px"><strong>答案：B</strong></p>
+                <p class="fragment">将相机标准化，能够用一个统一的、简单的投影公式处理所有的物体，简化投影计算，这就是<strong>视图变换</strong>的核心思想</p> 
+            </section>
+            <section>
+                <section>
+                    <h3>视图变换</h3>
+                    <p class="fragment">一个顶点从模型到最终显示在屏幕上，需要经历一系列坐标系的变换</p>
+                    <div class="fragment">
+                        <img src="../../images/cg/chap04/ch04-coordinate-system-view.png" alt="坐标系变换" style="width: 80%; margin: 0 auto;">
+                    </div>
+                    <div class="fragment">
+                        <ol>
+                            <li><strong>模型变换</strong> (Model Transformation)：将物体从局部坐标系变换到世界坐标系</li>
+                            <li><strong style="color:darkred;">视图变换</strong> (View Transformation)：将世界坐标系中的物体变换到相机坐标系</li>
+                            <li><strong style="color:darkred;">投影变换</strong> (Projection Transformation)：将三维场景投影到二维平面</li>
+                            <li><strong>裁剪</strong> (Clipping)：去除视野外的部分</li>
+                            <li><strong>屏幕映射</strong> (Screen Mapping)：将规范化设备坐标映射到屏幕坐标</li>
+                        </ol>
+                    </div>
+                </section>
+                <section>
+                    <h3>视图变换</h3>
+                    <p class="fragment"><strong>目标：</strong>将位于世界坐标系任意位置的相机，变换到<strong>相机坐标系(View Space)</strong>的原点，即<strong>标准观察位置</strong>，并使其看向$-Z$轴方向，并保持$+Y$向上</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-view-transformation.png" alt="视图变换" style="width: 80%; margin: 0 auto;">
+                    </div>
+                    <p class="fragment">对整个场景施加一个与相机变换<strong>相反</strong>的<strong>逆变换</strong>实现</p>
+                    <p class="fragment">这个逆变换矩阵就是<strong>视图矩阵(View Matrix)$M_{view}$</strong></p>
+                </section>
+                <section>
+                    <h3>定义相机</h3>
+                    <p class="fragment">关键是构建<strong>相机坐标系(View Space)</strong>，即要找到构建相机坐标系的<strong>三个正交基向量$(n, u, v)$</strong></p>
+                    <p class="fragment">相机设置的三要素：</p>
+                    <div class="two-column fragment">
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>$E$(eye position)：</strong>相机在世界坐标系中的位置</li>
+                                <li class="fragment"><strong>$A$(at)：</strong>相机<strong>看向</strong>的目标点</li>
+                                <li class="fragment"><strong>$\vec{u}$(up)：</strong>定义相机“头顶”朝向的<strong>上方向</strong>，用于确定相机的旋转，一般取$(0,1,0)$</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-camera-def.png" alt="相机定义" style="width: 80%; margin: 0 auto;">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>构建相机坐标系(View Space)</h3>
+                    <p class="fragment">从相机三要素计算相机坐标系的三个正交基向量</p>
+                    <img class="fragment" src="../../images/cg/chap04/ch04-view-space.png" alt="相机坐标系" style="width: 80%; margin: 0 auto;">
+                    <p class="fragment"><strong>$Z$轴（指向观察者）：$\vec{n}$，$X$轴（指向右方）：$\vec{u}$，$Y$轴（指向上方）：$\vec{v}$</strong></p>
+                </section>
+                <section>
+                    <h3>相机变换</h3>
+                    <p class="fragment">相机初始化时，位置位于原点，指向$Z$轴负方向</p>
+                    <p class="fragment">若要同时看到$Z$轴正方向和负方向的物体对象</p>
+                    <ul>
+                        <li class="fragment">沿$Z$轴正方向移动相机，即改变相机坐标</li>
+                        <li class="fragment">沿$Z$轴负方向移动物体，即改变物体坐标</li>
+                    </ul>
+                    <p class="fragment">这两者成像结果是等价的</p>
+                    <p class="fragment">移动相机与移动物体方法一样，可以采用任意旋转和平移序列将相机放置到适当位置</p>
+                </section>
+                <section>
+                    <h3>构建视图矩阵$M_{view}$</h3>
+                    <p class="fragment"><strong>视图矩阵$M_{view}$</strong>包含两部分：</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">1. <strong>平移($T$)</strong>：将相机位置$E$平移到原点</p>
+                            <p class="formula fragment">$T = \begin{bmatrix} 1 & 0 & 0 & -e_x \\ 0 & 1 & 0 & -e_y \\ 0 & 0 & 1 & -e_z \\ 0 & 0 & 0 & 1 \end{bmatrix}$ </p>
+                        </div>
+                        <div>
+                            <p class="fragment">2. <strong>旋转($R$)</strong>：将相机坐标系$(u,v,n)$旋转至与世界坐标系$(x,y,z)$重合</p>
+                            <p class="formula fragment"> $R = \begin{bmatrix} u_x & u_y & u_z & 0 \\ v_x & v_y & v_z & 0 \\ n_x & n_y & n_z & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}$ </p>
+                        </div>
+                    </div>
+                    <p class="fragment">视图矩阵$M_{view}=RT$，这个过程通常被封装在<strong>lookAt</strong>函数中</p>
+                </section>
+                <section>
+                    <h3>lookAt函数</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure class="fragment">
+                                <img src="../../images/cg/chap04/ch04-lookatfunc.png" alt="lookAt函数" style="width: 100%; margin: 0 auto;">
+                                <caption style="font-size:16pt">lookAt(eye, at, up)</caption>
+                            </figure>
+                        </div>
+                        <div>
+                            <pre class="fragment" style="font-size:12pt"><code class="JavaScript" data-trim>
+lookAt(eye, at, up) {
+    // 计算相机坐标系的三个基向量
+    let g = normalize(subtract(at, eye));
+    let t = normalize(cross(up, g));
+    let u_prime = normalize(cross(g, t));
+    
+    // 构建旋转矩阵
+    let R = mat4(
+        t[0], u_prime[0], -g[0], 0,
+        t[1], u_prime[1], -g[1], 0,
+        t[2], u_prime[2], -g[2], 0,
+        0, 0, 0, 1
+    );
+    
+    // 构建平移矩阵
+    let T = translate(-eye[0], -eye[1], -eye[2]);
+    
+    // 返回视图矩阵
+    return mult(R, T);
+}
+</code></pre>
+<pre class="fragment" style="font-size:12pt"><code class="JavaScript" data-trim></code>
+var eye=vec3(1.0, 1.0, 1.0);
+var at=vec3(0.0, 0.0, 0.0);
+var up=vec3(0.0, 1.0, 0.0);
+var mv=lookAt(eye, at, up);
+				</code></pre>
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="./AppDemos/lookat_demo.html" target="_blank">lookAt Demo</a></p>
+                </section>
+            </section>
+            <section>
+                <h3>课堂测试</h3>
+                <ol>
+                    <li class="fragment">定义一个虚拟相机需要哪三个核心向量？
+                        <p class="fragment" style="color: #17a2b8;">视点 (Eye), 目标点 (At), 上方向 (Up)。</p>
+                    </li>
+                    <li class="fragment">视图变换的最终目的是什么？
+                        <p class="fragment" style="color: #17a2b8;">将相机变换到标准位置（原点，看向-Z，+Y朝上），从而简化后续计算。</p>
+                    </li>
+                    <li class="fragment">视图矩阵 $`M_{view}`$ 是由哪两种基本变换组合而成的？
+                        <p class="fragment" style="color: #17a2b8;">旋转 (Rotation) 和平移 (Translation)。</p>
+                    </li>
+                </ol>
+            </section>
+            <section>
+                <h3>课堂总结</h3>
+                <ul>
+                    <li class="fragment">明确了视图变换在<strong>渲染流水线</strong>中的位置和作用</li>
+                    <li class="fragment">学会使用 <strong>lookAt</strong> 方法的三个向量来精确描述一个相机</li>
+                    <li class="fragment">深入理解视图变换的本质：<strong>变换世界，而非相机</strong>。</li>
+                    <li class="fragment">掌握了从相机三要素<strong>推导视图矩阵</strong>的完整过程。</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+</script>
+</body>
+</html>

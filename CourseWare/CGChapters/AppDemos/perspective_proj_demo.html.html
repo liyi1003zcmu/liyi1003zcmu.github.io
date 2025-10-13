@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>透视投影原理演示</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2a5a8a;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .demo-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .canvas-container {
+            flex: 2;
+            min-width: 600px;
+        }
+        .controls-container {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        canvas {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f0f8ff;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            color: #2a5a8a;
+        }
+        .slider-container {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        .checkbox-container {
+            margin-top: 15px;
+        }
+        button {
+            background-color: #2a76dd;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #1c5bb9;
+        }
+        .info-panel {
+            margin-top: 20px;
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #17a2b8;
+        }
+        .info-panel h3 {
+            margin-top: 0;
+            color: #17a2b8;
+        }
+        .coordinates-display {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>透视投影原理交互演示</h1>
+        
+        <div class="demo-area">
+            <div class="canvas-container">
+                <canvas id="perspectiveDemo"></canvas>
+            </div>
+            
+            <div class="controls-container">
+                <div class="control-group">
+                    <h3>视见体参数</h3>
+                    <div class="slider-container">
+                        <label for="fovSlider">视场角 (FOV): <span id="fovValue" class="value-display">60°</span></label>
+                        <input type="range" id="fovSlider" min="30" max="120" value="60">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label for="nearSlider">近平面距离: <span id="nearValue" class="value-display">1.0</span></label>
+                        <input type="range" id="nearSlider" min="0.1" max="5" step="0.1" value="1.0">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label for="farSlider">远平面距离: <span id="farValue" class="value-display">10.0</span></label>
+                        <input type="range" id="farSlider" min="5" max="20" step="0.5" value="10.0">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>可视化选项</h3>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="showRays" checked>
+                        <label for="showRays">显示投影射线</label>
+                    </div>
+                    
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="showOrthoTransform" checked>
+                        <label for="showOrthoTransform">显示正交变换</label>
+                    </div>
+                    
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="showCoordinates" checked>
+                        <label for="showCoordinates">显示坐标值</label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>演示对象</h3>
+                    <button id="addCube">添加立方体</button>
+                    <button id="addSphere">添加球体</button>
+                    <button id="resetObjects">重置对象</button>
+                </div>
+                
+                <div class="info-panel">
+                    <h3>坐标信息</h3>
+                    <div id="coordinatesDisplay" class="coordinates-display">
+                        选择一个对象以查看其坐标...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgba(255,0,0,0.5);"></div>
+                <span>透视视见体</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgba(0,0,255,0.3);"></div>
+                <span>正交视见体</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgba(255,255,0,0.5);"></div>
+                <span>投影射线</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: rgba(0,255,0,0.5);"></div>
+                <span>投影点</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 Three.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // 初始化场景、相机和渲染器
+        const canvas = document.getElementById('perspectiveDemo');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setClearColor(0xf0f8ff);
+
+        const scene = new THREE.Scene();
+        
+        // 创建侧视图相机（用于观察透视投影过程）
+        const camera = new THREE.PerspectiveCamera(
+            75, canvas.clientWidth / canvas.clientHeight, 0.1, 100
+        );
+        camera.position.set(15, 5, 15);
+        camera.lookAt(0, 0, -5);
+        
+        // 添加轨道控制
+        const controls = new THREE.OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.maxPolarAngle = Math.PI / 1.5;
+        controls.target.set(0, 0, -5);
+        
+        // 添加网格和坐标轴
+        const gridHelper = new THREE.GridHelper(20, 20);
+        gridHelper.rotation.x = Math.PI / 2;
+        scene.add(gridHelper);
+        
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+        
+        // 创建光源
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+        
+        // 创建视见体可视化
+        let frustumGroup = new THREE.Group();
+        scene.add(frustumGroup);
+        
+        // 创建投影射线可视化
+        let raysGroup = new THREE.Group();
+        scene.add(raysGroup);
+        
+        // 创建正交变换可视化
+        let orthoGroup = new THREE.Group();
+        scene.add(orthoGroup);
+        
+        // 创建对象组
+        let objectsGroup = new THREE.Group();
+        scene.add(objectsGroup);
+        
+        // 创建投影点可视化
+        let projectionPointsGroup = new THREE.Group();
+        scene.add(projectionPointsGroup);
+        
+        // 初始参数
+        let params = {
+            fov: 60,
+            near: 1.0,
+            far: 10.0,
+            showRays: true,
+            showOrthoTransform: true,
+            showCoordinates: true
+        };
+        
+        // 更新UI显示
+        function updateUIDisplay() {
+            document.getElementById('fovValue').textContent = params.fov + '°';
+            document.getElementById('nearValue').textContent = params.near.toFixed(1);
+            document.getElementById('farValue').textContent = params.far.toFixed(1);
+        }
+        
+        // 更新视见体可视化
+        function updateFrustumVisualization() {
+            // 清除旧的视见体
+            while(frustumGroup.children.length > 0) {
+                frustumGroup.remove(frustumGroup.children[0]);
+            }
+            
+            // 计算视见体尺寸
+            const fovRad = params.fov * Math.PI / 180;
+            const nearHeight = 2 * Math.tan(fovRad / 2) * params.near;
+            const nearWidth = nearHeight * camera.aspect;
+            const farHeight = 2 * Math.tan(fovRad / 2) * params.far;
+            const farWidth = farHeight * camera.aspect;
+            
+            // 创建视见体线框
+            const frustumGeometry = new THREE.BufferGeometry();
+            
+            // 近平面四个角的坐标
+            const nearTopLeft = new THREE.Vector3(-nearWidth/2, nearHeight/2, -params.near);
+            const nearTopRight = new THREE.Vector3(nearWidth/2, nearHeight/2, -params.near);
+            const nearBottomRight = new THREE.Vector3(nearWidth/2, -nearHeight/2, -params.near);
+            const nearBottomLeft = new THREE.Vector3(-nearWidth/2, -nearHeight/2, -params.near);
+            
+            // 远平面四个角的坐标
+            const farTopLeft = new THREE.Vector3(-farWidth/2, farHeight/2, -params.far);
+            const farTopRight = new THREE.Vector3(farWidth/2, farHeight/2, -params.far);
+            const farBottomRight = new THREE.Vector3(farWidth/2, -farHeight/2, -params.far);
+            const farBottomLeft = new THREE.Vector3(-farWidth/2, -farHeight/2, -params.far);
+            
+            // 视见体的顶点
+            const vertices = new Float32Array([
+                // 近平面
+                nearTopLeft.x, nearTopLeft.y, nearTopLeft.z,
+                nearTopRight.x, nearTopRight.y, nearTopRight.z,
+                
+                nearTopRight.x, nearTopRight.y, nearTopRight.z,
+                nearBottomRight.x, nearBottomRight.y, nearBottomRight.z,
+                
+                nearBottomRight.x, nearBottomRight.y, nearBottomRight.z,
+                nearBottomLeft.x, nearBottomLeft.y, nearBottomLeft.z,
+                
+                nearBottomLeft.x, nearBottomLeft.y, nearBottomLeft.z,
+                nearTopLeft.x, nearTopLeft.y, nearTopLeft.z,
+                
+                // 远平面
+                farTopLeft.x, farTopLeft.y, farTopLeft.z,
+                farTopRight.x, farTopRight.y, farTopRight.z,
+                
+                farTopRight.x, farTopRight.y, farTopRight.z,
+                farBottomRight.x, farBottomRight.y, farBottomRight.z,
+                
+                farBottomRight.x, farBottomRight.y, farBottomRight.z,
+                farBottomLeft.x, farBottomLeft.y, farBottomLeft.z,
+                
+                farBottomLeft.x, farBottomLeft.y, farBottomLeft.z,
+                farTopLeft.x, farTopLeft.y, farTopLeft.z,
+                
+                // 连接线
+                nearTopLeft.x, nearTopLeft.y, nearTopLeft.z,
+                farTopLeft.x, farTopLeft.y, farTopLeft.z,
+                
+                nearTopRight.x, nearTopRight.y, nearTopRight.z,
+                farTopRight.x, farTopRight.y, farTopRight.z,
+                
+                nearBottomRight.x, nearBottomRight.y, nearBottomRight.z,
+                farBottomRight.x, farBottomRight.y, farBottomRight.z,
+                
+                nearBottomLeft.x, nearBottomLeft.y, nearBottomLeft.z,
+                farBottomLeft.x, farBottomLeft.y, farBottomLeft.z,
+            ]);
+            
+            frustumGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            
+            // 创建视见体线框材质和网格
+            const frustumMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const frustumLines = new THREE.LineSegments(frustumGeometry, frustumMaterial);
+            frustumGroup.add(frustumLines);
+            
+            // 创建视见体面
+            const frustumFacesMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.DoubleSide
+            });
+            
+            // 近平面
+            const nearPlaneGeometry = new THREE.PlaneGeometry(nearWidth, nearHeight);
+            const nearPlane = new THREE.Mesh(nearPlaneGeometry, frustumFacesMaterial);
+            nearPlane.position.set(0, 0, -params.near);
+            frustumGroup.add(nearPlane);
+            
+            // 远平面
+            const farPlaneGeometry = new THREE.PlaneGeometry(farWidth, farHeight);
+            const farPlane = new THREE.Mesh(farPlaneGeometry, frustumFacesMaterial);
+            farPlane.position.set(0, 0, -params.far);
+            frustumGroup.add(farPlane);
+            
+            // 更新正交变换可视化
+            if (params.showOrthoTransform) {
+                updateOrthoTransformVisualization(
+                    nearTopLeft, nearTopRight, nearBottomRight, nearBottomLeft,
+                    farTopLeft, farTopRight, farBottomRight, farBottomLeft
+                );
+            }
+            
+            // 更新投影射线
+            if (params.showRays) {
+                updateProjectionRays();
+            }
+            
+            // 更新投影点
+            updateProjectionPoints();
+        }
+        
+        // 更新正交变换可视化
+        function updateOrthoTransformVisualization(
+            nearTopLeft, nearTopRight, nearBottomRight, nearBottomLeft,
+            farTopLeft, farTopRight, farBottomRight, farBottomLeft
+        ) {
+            // 清除旧的正交变换可视化
+            while(orthoGroup.children.length > 0) {
+                orthoGroup.remove(orthoGroup.children[0]);
+            }
+            
+            // 创建正交视见体（长方体）
+            const orthoWidth = Math.max(
+                nearTopRight.x - nearTopLeft.x,
+                farTopRight.x - farTopLeft.x
+            );
+            const orthoHeight = Math.max(
+                nearTopLeft.y - nearBottomLeft.y,
+                farTopLeft.y - farBottomLeft.y
+            );
+            const orthoDepth = params.far - params.near;
+            
+            // 创建正交视见体线框
+            const orthoBoxGeometry = new THREE.BoxGeometry(orthoWidth, orthoHeight, orthoDepth);
+            const orthoBoxMaterial = new THREE.MeshBasicMaterial({
+                color: 0x0000ff,
+                transparent: true,
+                opacity: 0.2,
+                wireframe: false
+            });
+            const orthoBox = new THREE.Mesh(orthoBoxGeometry, orthoBoxMaterial);
+            orthoBox.position.set(0, 0, -(params.near + params.far) / 2);
+            
+            // 添加正交视见体线框
+            const orthoEdges = new THREE.EdgesGeometry(orthoBoxGeometry);
+            const orthoLinesMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const orthoLines = new THREE.LineSegments(orthoEdges, orthoLinesMaterial);
+            orthoLines.position.copy(orthoBox.position);
+            
+            orthoGroup.add(orthoBox);
+            orthoGroup.add(orthoLines);
+            
+            // 添加连接线，显示透视到正交的变换
+            const lineMaterial = new THREE.LineDashedMaterial({
+                color: 0x00ff00,
+                dashSize: 0.1,
+                gapSize: 0.1
+            });
+            
+            // 连接近平面的四个角
+            addDashedLine(nearTopLeft, new THREE.Vector3(-orthoWidth/2, orthoHeight/2, -params.near), lineMaterial);
+            addDashedLine(nearTopRight, new THREE.Vector3(orthoWidth/2, orthoHeight/2, -params.near), lineMaterial);
+            addDashedLine(nearBottomRight, new THREE.Vector3(orthoWidth/2, -orthoHeight/2, -params.near), lineMaterial);
+            addDashedLine(nearBottomLeft, new THREE.Vector3(-orthoWidth/2, -orthoHeight/2, -params.near), lineMaterial);
+            
+            // 连接远平面的四个角
+            addDashedLine(farTopLeft, new THREE.Vector3(-orthoWidth/2, orthoHeight/2, -params.far), lineMaterial);
+            addDashedLine(farTopRight, new THREE.Vector3(orthoWidth/2, orthoHeight/2, -params.far), lineMaterial);
+            addDashedLine(farBottomRight, new THREE.Vector3(orthoWidth/2, -orthoHeight/2, -params.far), lineMaterial);
+            addDashedLine(farBottomLeft, new THREE.Vector3(-orthoWidth/2, -orthoHeight/2, -params.far), lineMaterial);
+        }
+        
+        // 添加虚线
+        function addDashedLine(start, end, material) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+            const line = new THREE.Line(geometry, material);
+            line.computeLineDistances(); // 必须调用此方法使虚线生效
+            orthoGroup.add(line);
+        }
+        
+        // 更新投影射线
+        function updateProjectionRays() {
+            // 清除旧的射线
+            while(raysGroup.children.length > 0) {
+                raysGroup.remove(raysGroup.children[0]);
+            }
+            
+            // 如果不显示射线，则返回
+            if (!params.showRays) return;
+            
+            // 创建从原点（眼睛位置）到每个对象的射线
+            const rayMaterial = new THREE.LineBasicMaterial({ color: 0xffff00 });
+            
+            objectsGroup.children.forEach(obj => {
+                // 获取对象的世界坐标
+                const objPosition = new THREE.Vector3();
+                obj.getWorldPosition(objPosition);
+                
+                // 创建从原点到对象的射线
+                const rayGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    objPosition
+                ]);
+                const ray = new THREE.Line(rayGeometry, rayMaterial);
+                raysGroup.add(ray);
+                
+                // 创建从对象到近平面的射线
+                const t = params.near / Math.abs(objPosition.z);
+                const projectionPoint = new THREE.Vector3(
+                    objPosition.x * t,
+                    objPosition.y * t,
+                    -params.near
+                );
+                
+                const projectionRayGeometry = new THREE.BufferGeometry().setFromPoints([
+                    objPosition,
+                    projectionPoint
+                ]);
+                const projectionRay = new THREE.Line(projectionRayGeometry, new THREE.LineBasicMaterial({ 
+                    color: 0x00ff00,
+                    dashSize: 0.1,
+                    gapSize: 0.1
+                }));
+                raysGroup.add(projectionRay);
+            });
+        }
+        
+        // 更新投影点
+        function updateProjectionPoints() {
+            // 清除旧的投影点
+            while(projectionPointsGroup.children.length > 0) {
+                projectionPointsGroup.remove(projectionPointsGroup.children[0]);
+            }
+            
+            // 为每个对象创建投影点
+            objectsGroup.children.forEach(obj => {
+                // 获取对象的世界坐标
+                const objPosition = new THREE.Vector3();
+                obj.getWorldPosition(objPosition);
+                
+                // 计算投影点坐标
+                const t = params.near / Math.abs(objPosition.z);
+                const projectionPoint = new THREE.Vector3(
+                    objPosition.x * t,
+                    objPosition.y * t,
+                    -params.near
+                );
+                
+                // 创建投影点可视化
+                const pointGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+                const pointMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const point = new THREE.Mesh(pointGeometry, pointMaterial);
+                point.position.copy(projectionPoint);
+                projectionPointsGroup.add(point);
+                
+                // 如果显示坐标，添加坐标标签
+                if (params.showCoordinates) {
+                    // 在实际应用中，这里可以添加文本标签显示坐标
+                    // 由于Three.js中添加文本需要额外的库或复杂处理，这里简化处理
+                }
+            });
+            
+            // 更新坐标显示面板
+            updateCoordinatesDisplay();
+        }
+        
+        // 更新坐标显示面板
+        function updateCoordinatesDisplay() {
+            if (!params.showCoordinates || objectsGroup.children.length === 0) {
+                document.getElementById('coordinatesDisplay').textContent = '选择一个对象以查看其坐标...';
+                return;
+            }
+            
+            let coordsText = '';
+            
+            objectsGroup.children.forEach((obj, index) => {
+                // 获取对象的世界坐标
+                const objPosition = new THREE.Vector3();
+                obj.getWorldPosition(objPosition);
+                
+                // 计算投影点坐标
+                const t = params.near / Math.abs(objPosition.z);
+                const projectionPoint = new THREE.Vector3(
+                    objPosition.x * t,
+                    objPosition.y * t,
+                    -params.near
+                );
+                
+                coordsText += `对象 ${index + 1}:\n`;
+                coordsText += `  原始坐标: (${objPosition.x.toFixed(2)}, ${objPosition.y.toFixed(2)}, ${objPosition.z.toFixed(2)})\n`;
+                coordsText += `  投影坐标: (${projectionPoint.x.toFixed(2)}, ${projectionPoint.y.toFixed(2)}, ${projectionPoint.z.toFixed(2)})\n`;
+                coordsText += `  缩放比例: ${t.toFixed(2)}\n\n`;
+            });
+            
+            document.getElementById('coordinatesDisplay').textContent = coordsText;
+        }
+        
+        // 添加示例对象
+        function addCube() {
+            const size = 0.5 + Math.random() * 0.5;
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const material = new THREE.MeshPhongMaterial({
+                color: Math.random() * 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            const cube = new THREE.Mesh(geometry, material);
+            
+            // 随机位置，但确保在视见体内
+            const x = (Math.random() - 0.5) * 4;
+            const y = (Math.random() - 0.5) * 4;
+            const z = -params.near - Math.random() * (params.far - params.near);
+            
+            cube.position.set(x, y, z);
+            objectsGroup.add(cube);
+            
+            // 更新投影射线和投影点
+            if (params.showRays) {
+                updateProjectionRays();
+            }
+            updateProjectionPoints();
+        }
+        
+        function addSphere() {
+            const radius = 0.3 + Math.random() * 0.3;
+            const geometry = new THREE.SphereGeometry(radius, 32, 32);
+            const material = new THREE.MeshPhongMaterial({
+                color: Math.random() * 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            const sphere = new THREE.Mesh(geometry, material);
+            
+            // 随机位置，但确保在视见体内
+            const x = (Math.random() - 0.5) * 4;
+            const y = (Math.random() - 0.5) * 4;
+            const z = -params.near - Math.random() * (params.far - params.near);
+            
+            sphere.position.set(x, y, z);
+            objectsGroup.add(sphere);
+            
+            // 更新投影射线和投影点
+            if (params.showRays) {
+                updateProjectionRays();
+            }
+            updateProjectionPoints();
+        }
+        
+        function resetObjects() {
+            // 清除所有对象
+            while(objectsGroup.children.length > 0) {
+                objectsGroup.remove(objectsGroup.children[0]);
+            }
+            
+            // 清除投影射线和投影点
+            while(raysGroup.children.length > 0) {
+                raysGroup.remove(raysGroup.children[0]);
+            }
+            
+            while(projectionPointsGroup.children.length > 0) {
+                projectionPointsGroup.remove(projectionPointsGroup.children[0]);
+            }
+            
+            // 重置坐标显示
+            document.getElementById('coordinatesDisplay').textContent = '选择一个对象以查看其坐标...';
+        }
+        
+        // 初始化场景
+        function init() {
+            // 添加事件监听器
+            document.getElementById('fovSlider').addEventListener('input', function(e) {
+                params.fov = parseFloat(e.target.value);
+                updateUIDisplay();
+                updateFrustumVisualization();
+            });
+            
+            document.getElementById('nearSlider').addEventListener('input', function(e) {
+                params.near = parseFloat(e.target.value);
+                // 确保近平面小于远平面
+                if (params.near >= params.far) {
+                    params.near = params.far - 0.1;
+                    this.value = params.near;
+                }
+                updateUIDisplay();
+                updateFrustumVisualization();
+            });
+            
+            document.getElementById('farSlider').addEventListener('input', function(e) {
+                params.far = parseFloat(e.target.value);
+                // 确保远平面大于近平面
+                if (params.far <= params.near) {
+                    params.far = params.near + 0.1;
+                    this.value = params.far;
+                }
+                updateUIDisplay();
+                updateFrustumVisualization();
+            });
+            
+            document.getElementById('showRays').addEventListener('change', function(e) {
+                params.showRays = e.target.checked;
+                if (params.showRays) {
+                    updateProjectionRays();
+                } else {
+                    while(raysGroup.children.length > 0) {
+                        raysGroup.remove(raysGroup.children[0]);
+                    }
+                }
+            });
+            
+            document.getElementById('showOrthoTransform').addEventListener('change', function(e) {
+                params.showOrthoTransform = e.target.checked;
+                if (params.showOrthoTransform) {
+                    updateFrustumVisualization();
+                } else {
+                    while(orthoGroup.children.length > 0) {
+                        orthoGroup.remove(orthoGroup.children[0]);
+                    }
+                }
+            });
+            
+            document.getElementById('showCoordinates').addEventListener('change', function(e) {
+                params.showCoordinates = e.target.checked;
+                updateProjectionPoints();
+            });
+            
+            document.getElementById('addCube').addEventListener('click', addCube);
+            document.getElementById('addSphere').addEventListener('click', addSphere);
+            document.getElementById('resetObjects').addEventListener('click', resetObjects);
+            
+            // 初始化视见体可视化
+            updateFrustumVisualization();
+            
+            // 添加一些初始对象
+            addCube();
+            addSphere();
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 处理窗口大小变化
+        function onWindowResize() {
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(width, height);
+            updateFrustumVisualization();
+        }
+        
+        window.addEventListener('resize', onWindowResize);
+        
+        // 启动应用
+        init();
+        animate();
+    </script>
+</body>
+</html>

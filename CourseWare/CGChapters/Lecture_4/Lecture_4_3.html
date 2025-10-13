@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-投影</title>
+
+    <meta name="description" content="投影变换">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第四章(3) 投影</h2>
+                <p style="font-family: courier;font-size:28pt;text-align:center">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            
+            <!-- Bridge-in -->
+            <section>
+                <h3>回顾：视图变换</h3>
+                <div class="two-column">
+                    <div>
+                        <p class="fragment">上节课，完成了<strong>视图变换</strong>，将场景转换到了相机坐标系空间</p>
+                        <p class="fragment">视图变换的目的是<strong>简化后续的投影计算</strong></p>
+                    </div>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-camera-len.jpg" alt="相机空间" style="width: 100%; margin: 0 auto;">
+                    </div>
+                </div>
+                <p class="fragment">但问题是：<strong>如何将三维场景投影到二维平面上？</strong></p>
+            </section>
+            
+            <!-- Objectives -->
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment"><strong>理解投影的基本概念：</strong>掌握投影的定义和分类</li>
+                    <li class="fragment"><strong>正交投影：</strong>理解正交投影的特性和推导正交投影矩阵</li>
+                    <li class="fragment"><strong>透视投影：</strong>理解透视投影的特性和推导透视投影矩阵</li>
+                    <li class="fragment"><strong>视见体和裁剪：</strong>理解视见体的概念及其在投影中的作用</li>
+                    <li class="fragment"><strong>WebGL实现：</strong>学习如何在WebGL中应用投影矩阵</li>
+                </ul>
+            </section>
+            
+            <!-- Pre-assessment -->
+            <section>
+                <h3>两种投影成像实现的区别？</h3>
+                <p class="fragment">观察下面两幅图像，它们的投影实现有什么区别？</p>
+                <div class="two-column">
+                    <div>
+                        <figure  class="fragment">
+                            <img src="../../images/cg/chap04/ch04-cube-ortho.png" alt="正交投影" style="width: 100%; margin: 0 auto;">
+                            <caption>正交投影</caption>
+                        </figure>
+                    </div>
+                    <div>
+                        <figure  class="fragment">    
+                            <img src="../../images/cg/chap04/ch04-cube-persp.png" alt="透视投影" style="width: 100%; margin: 0 auto;">
+                            <caption>透视投影</caption>
+                        </figure>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Participatory Learning -->
+            <section>
+                <section>
+                    <h3>投影的基本概念</h3>
+                    <p class="fragment"><strong>投影(Projection)</strong>：将三维物体映射到二维平面的过程</p>
+                    <p class="fragment">完成视图变换后，所有的物体都已位于相机坐标系中，需要定义一个视见体(View Volume)，将可视空间内的物体映射到二维平面</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-ortho-pers-to-cvv.png" alt="规范化可视空间" style="width:40%">
+                    </div>
+                    <p class="fragment">投影变换的目的：将<strong>视见体(View Volume)</strong>内的所有顶点，映射到<strong>规范化视见体(Canonical View Volume)</strong>(一个$[-1,1]$的立方体)</p>
+                </section>
+                <section>
+                    <h3>正交投影</h3>
+                    <p class="fragment">假设投影成像平面为$z=0$, 将点$P(x,y,z)$通过正交投影到$z=0$平面，其投影矩阵为</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-sportproj.png" alt="正交投影" style="width: 100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:16pt">
+                                \[
+                                P'=MP\\
+                                M=\begin{bmatrix}
+                                1&0&0&0\\
+                                0&1&0&0\\
+                                0&0&0&0\\
+                                0&0&0&1
+                                \end{bmatrix}
+                                P=\begin{bmatrix}
+                                x\\
+                                y\\
+                                z\\
+                                1
+                                \end{bmatrix}
+                                P'=\begin{bmatrix}
+                                x\\
+                                y\\
+                                0\\
+                                1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                            <p class="fragment">一般实现时，可令$M=I$，再将对应的$z$分量设置为$0$</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>正交投影</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment"><strong>特点：</strong></p>
+                            <ul>
+                                <li class="fragment">投影线相互平行</li>
+                                <li class="fragment">物体大小不随距离变化</li>
+                                <li class="fragment">平行线在投影后仍然平行</li>
+                                <li class="fragment">适用于工程制图、建筑设计等</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap04/ch04-orthographic_frustum.png" alt="正交投影视见体" style="width: 100%; margin: 0 auto;">
+                                <figurecaption class="fragment" style="font-size:20pt; line-height: 0.8;">正交投影视见体，通常是一个长方体，由六个平面定义：left, right, bottom, top, near, far，这六个平面定义了一个轴对齐的长方体</caption>
+                            </figure>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>正交投影矩阵推导</h3>
+                    <p class="fragment" data-fragment-index="1"><strong>目标：</strong>将一个$[left, right]\times [bottom, top] \times [near, far]$定义的长方体视见体映射到规范化视见体(立方体) $[-1,1]^3$ 中</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">视见体的六个参数定义：</p>
+                            <ul>
+                                <li class="fragment">左右边界：$left$, $right$</li>
+                                <li class="fragment">上下边界：$top$, $bottom$</li>
+                                <li class="fragment">近远平面：$near$, $far$</li>
+                            </ul>
+                            <p class="fragment">变换分两步：</p>
+                            <ol>
+                                <li class="fragment"><strong>平移</strong>视见体中心到原点</li>
+                                <li class="fragment"><strong>缩放</strong>视见体到 $[-1,1]^3$ 立方体，即尺寸为$2\times 2\times 2$</li>
+                            </ol>
+                        </div>
+                        <div>
+                            <img class="fragment" data-fragment-index="2" src="../../images/cg/chap04/ch04-orthoview.png" alt="正交投影变换" style="width: 100%; margin: 0 auto;">
+                        </div>
+                    </div>
+                </section>
+                
+                <section>
+                    <h3>正交投影矩阵</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">步骤1：将视见体中心平移到原点</p>
+                            <p class="formula fragment"  style="font-size:16pt">$T = \begin{bmatrix} 1 & 0 & 0 & -\frac{right+left}{2} \\ 0 & 1 & 0 & -\frac{top+bottom}{2} \\ 0 & 0 & 1 & -\frac{far+near}{2} \\ 0 & 0 & 0 & 1 \end{bmatrix}$</p>
+                        </div>
+                        <div>
+                            <p class="fragment">步骤2：缩放视见体到 $[-1,1]^3$ 立方体即规范视见体</p>
+                            <p class="formula fragment"  style="font-size:16pt">$S = \begin{bmatrix} \frac{2}{right-left} & 0 & 0 & 0 \\ 0 & \frac{2}{top-bottom} & 0 & 0 \\ 0 & 0 & \frac{2}{far-near} & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}$</p>
+                        </div>
+                    </div>
+                    <p class="fragment">正交投影矩阵 $M_{ortho} = ST$</p>
+                    <p class="formula fragment"  style="font-size:16pt">$M_{ortho} = \begin{bmatrix} \frac{2}{right-left} & 0 & 0 & -\frac{right+left}{right-left} \\ 0 & \frac{2}{top-bottom} & 0 & -\frac{top+bottom}{top-bottom} \\ 0 & 0 & -\frac{2}{far-near} & -\frac{far+near}{far-near} \\ 0 & 0 & 0 & 1 \end{bmatrix}$</p>
+                    
+                    <p class="note-box fragment">注意：在WebGL/OpenGL中，因为相机看向$-Z$方向，视见体的$Z$轴范围通常是 $[-near, -far]$，近平面$near>far$，因此$near-far$为正</p>
+                </section>
+                <section>
+                    <h3>正交投影矩阵</h3>
+                    <p class="fragment">将规范视见体投影到$z=0$平面，其投影矩阵为</p>
+                        <p class="fragment" style="font-size:16pt">
+                            \[
+                            M = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}
+                            \]</p>
+                        <p class="fragment">因此，将齐次坐标表示的点$P(x,y,z,1)$以正投影方式投影到$z=0$平面，最终的投影矩阵为
+                            \[
+                            P'=MSTP
+                            \]
+                        </p>
+                </section>
+                <section>
+                    <h3>webGL正投影成像函数</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-orthoview.png" alt="正交投影变换" style="width: 100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <p class="fragment">ortho(left, right, bottom, top, near, far)</p>
+                            <p class="fragment">其中，near和far是指的相对相机的距离</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>练习</h3>
+                    <p>假设我们有一个正交投影，其视见体参数为：</p>
+                    <p>left=-1, right=1, bottom=-1, top=1, near=1, far=-1</p>
+                    <p class="fragment">请问点 P=(0.5, 0.5, 0) 经过该正交投影矩阵变换后，新的坐标是什么？</p>
+                    <div class="fragment note-box">
+                        <p  style="font-size:16pt"><strong>推导:</strong></p>
+                        <p  style="font-size:16pt">$r-l=2, t-b=2, n-f=2$</p>
+                        <p  style="font-size:16pt">$r+l=0, t+b=0, n+f=0$</p>
+                        <p class="formula" style="font-size:16pt"> $M_{ortho} = \begin{bmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}$ (单位矩阵)</p>
+                        <p  style="font-size:16pt">所以 $P' = I \cdot P = P = (0.5, 0.5, 0)$</p>
+                        <p class="fragment" style="color:red; font-size:16pt"><strong>等一下！</strong> Z坐标的映射是 $z' = \frac{2}{n-f}z - \frac{n+f}{n-f} = \frac{2}{2}z - 0 = z$。所以 $P'=(0.5, 0.5, 0)$。</p>
+                        <p class="fragment" style="font-size:16pt">但通常OpenGL的约定是 $z' = \frac{2}{f-n}z - \frac{f+n}{f-n}$，这样近处z值小，远处z值大。按此约定，结果是 $(0.5, 0.5, -0)$。</p>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>透视投影</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">假设投影中心为原点，投影平面位于$z=d, d<0$ 处</p>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-spperproj.png" alt="透视投影" style="width: 100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-perpdia-1.png" alt="透视投影" style="width: 75%; margin: 0 auto;">
+                            <p class="fragment">从顶视图计算$x_p$的值有$x_p=\frac{x}{z/d}$</p>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-perpdia-2.png" alt="透视投影" style="width: 75%; margin: 0 auto;">
+                            <p class="fragment">从侧视图计算$y_p$的值有$y_p=\frac{y}{z/d}$</p>
+                            <p class="fragment">同时有，$z=d$</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>透视投影</h3>
+                    <p class="fragment">需要构建投影矩阵有$P'=MP$，其中，$P=(x,y,z)$，$P'=(x_p, y_p, z_p)$，其中$x_p=\frac{x}{z/d}, y_p=\frac{y}{z/d}, z_p=d$</p>
+                    <p class="fragment">将$P'$写成齐次坐标的形式有
+                        \[
+                        P'=\begin{bmatrix}
+                        x_p\\
+                        y_p\\
+                        z_p\\
+                        1
+                        \end{bmatrix}
+                        =\begin{bmatrix}
+                        \frac{x}{z/d}\\
+                        \frac{y}{z/d}\\
+                        d\\
+                        1\\
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">对于任意一个点的齐次坐标形式有
+                        \[
+                        T=\begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        1
+                        \end{bmatrix}, 
+                        wT=\begin{bmatrix}
+                        wx\\
+                        wy\\
+                        wz\\
+                        w
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>透视投影</h3>
+                    <p class="fragment">令$w=z/d$，则有
+                        \[
+                        wP'=\begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        z/d
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">找到一个矩阵$M$，令$wP'=MP$，则有
+                        \[
+                        \begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        z/d
+                        \end{bmatrix}
+                        =M\begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        1
+                        \end{bmatrix},
+                        M=\begin{bmatrix}
+                        1&0&0&0\\
+                        0&1&0&0\\
+                        0&0&1&0\\
+                        0&0&1/d&0
+                        \end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">这里，反过来，当利用$M$计算得到对应的透视变换结果后，因为齐次坐标中$w=z/d\neq 1$, 因此需要将齐次向量除以$w$，以得到正确结果，这里就是
+                        \[
+                        x_p=\frac{x}{z/d}, y_p={y}{z/d}, z_p=d
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>透视投影</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment"><strong>特点：</strong></p>
+                            <ul>
+                                <li class="fragment">投影线汇聚于一点(眼睛/相机位置)</li>
+                                <li class="fragment">远处物体看起来更小</li>
+                                <li class="fragment">平行线可能会在投影后相交</li>
+                                <li class="fragment">更符合人眼视觉感知</li>
+                                <li class="fragment">适用于游戏、虚拟现实等</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-frustum-def.png" alt="透视投影视见体" style="width: 100%; margin: 0 auto;">
+                            <p class="fragment" style="font-size: 16pt; text-align: center;">透视投影视见体，是一个被近平面(near)和远平面(far)截断的金字塔结构，称为<strong>截头锥体(Frustum)</strong>，定义参数包括垂直视场角(fvoy)，宽高比(aspect)，近裁剪面(near)和远裁剪面(far)</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">透视投影的核心思想是：<strong>"近大远小"</strong></p>
+                    <p class="fragment"><strong>目标</strong>：将一个截头锥体视见体映射到规范化视见体 $[-1,1]^3$ 中</p>
+                    <div class="two-column">
+                        <div>
+                            <ol>
+                                <li class="fragment"><strong>步骤一，挤压/扭曲</strong>：将这个截头锥体“挤压”成一个长方体</li>
+                                <li class="fragment"><strong>步骤二，正交投影</strong>：利用正交投影矩阵，将长方体映射到规范化视见体</li>
+                            </ol>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-frustum-to-cubic.png" alt="透视投影视见体规范化" style="width: 100%; margin: 0 auto;">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">考虑视见体中的一点$P(x,y,z)$，将其投影到成像平面$z=d$上的点$P'(x_p,y_p,z_p)$</p>
+                    <p class="fragment">先看简化情况，考虑透视成像中心位于<strong>原点</strong>，成像平面即近裁剪面位于$z=-1$处，成像空间视场角为$90\degree$，则有</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-simppers.png" alt="简单透视" style="width:100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <p class="fragment">该视见体为一个由左右$x=\pm z, y=\pm z$构成的一个无限金字塔，为能够在投影平面成像，需定义前后剪裁面，近剪裁面和远剪裁面分别为$z=-near, z=-far$，并有$far>near>0$</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">当投影到$z=-1$平面时，根据前面透视投影矩阵的计算有$d=-1$，因此对应的透视矩阵为
+                        \[
+                        M=\begin{bmatrix}
+                        1&0&0&0\\
+                        0&1&0&0\\
+                        0&0&1&0\\
+                        0&0&-1&0
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">考虑一般情况，视见体中点$(x,y,z)$，投影到近平面$z=-near$上的点$(x',y',z')$（这里用$n$替代near，用$f$替代far)</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-persp-comp.png" alt="透视投影计算" style="width: 100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <p class="fragment">根据相似三角形原理，有
+                                \[
+                                \begin{cases}
+                                x'=\frac{x}{z/n}\\
+                                y'=\frac{y}{z/n}\\
+                                z'=Z
+                                \end{cases}
+                                \Rightarrow
+                                M\begin{bmatrix}
+                                x\\
+                                y\\
+                                z\\
+                                1
+                                \end{bmatrix}
+                                =\begin{bmatrix}
+                                \frac{x}{z/n}\\
+                                \frac{y}{z/n}\\
+                                z\\
+                                1                                
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">采用与之前一样的思路，将齐次坐标点改写为
+                        \[
+                        M\begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        1
+                        \end{bmatrix}
+                        =\begin{bmatrix}
+                        wx\\
+                        wy\\
+                        wz\\
+                        w\end{bmatrix}
+                        \]
+                    </p>
+                    <p class="fragment">当$w=z$时，有
+                        \[
+                        M\begin{bmatrix}
+                        x\\
+                        y\\
+                        z\\
+                        1\end{bmatrix}
+                        =\begin{bmatrix}
+                        nx\\
+                        ny\\
+                        z^2\\
+                        z\end{bmatrix}                        
+                        \]
+                    </p>
+                    <p class="fragment">所以关键是找到<strong>$M$</strong></p>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                        <p class="fragment">$M$的形式为
+                            \[
+                            M=\begin{bmatrix}
+                            n&0&0&0\\
+                            0&n&0&0\\
+                            0&0&\alpha &\beta \\
+                            0&0&-1&0
+                            \end{bmatrix}
+                            \Rightarrow
+                            \alpha z+\beta =z^2 \\
+                            \Rightarrow
+                            \begin{cases}
+                            \alpha n + \beta = n^2\\
+                            \alpha f + \beta = f^2
+                            \end{cases}
+                            \Rightarrow
+                            \begin{cases}
+                            \alpha =f+n\\
+                            \beta =-fn
+                            \end{cases}
+                            \]
+                        </p>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <p class="fragment">因此，透视投影矩阵第一步变换为长方体视见体的结果为</p>
+                    <p class="fragment" style="font-size:16pt">
+                        \[
+                        M_{persp1}=\begin{bmatrix}
+                        near & 0 & 0 & 0\\
+                        0 & near & 0 & 0\\
+                        0 & 0 & (near+far) & -near\cdot far\\
+                        0 & 0 & -1 & 0
+                        \end{bmatrix}
+                        \]</p>
+
+                    <p class="fragment">将该长方体变换为规范视见体，可得到透视投影变换矩阵，有</p>
+                    <p class="fragment" style="font-size:16pt">
+                        \[
+                        M_{persp}=M_{ortho}M_{persp1}\\
+                        =
+                        \begin{bmatrix} \frac{2}{right-left} & 0 & 0 & -\frac{right+left}{right-left} \\ 0 & \frac{2}{top-bottom} & 0 & -\frac{top+bottom}{top-bottom} \\ 0 & 0 & -\frac{2}{far-near} & -\frac{far+near}{far-near} \\ 0 & 0 & 0 & 1 \end{bmatrix}
+                        \begin{bmatrix}
+                        near & 0 & 0 & 0\\
+                        0 & near & 0 & 0\\
+                        0 & 0 & (near+far) & -near*far\\
+                        0 & 0 & -1 & 0
+                        \end{bmatrix}\\
+
+                        =\begin{bmatrix}
+                        \frac{2*near}{right-left}&0&\frac{right+left}{right-left}&0\\
+                        0&\frac{2*near}{top-bottom}&\frac{top+bottom}{top+bottom}&0\\
+                        0&0&-\frac{far+near}{far-near}&\frac{-2*far*near}{far-near}\\
+                        0&0&-1&0
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>透视投影矩阵推导</h3>
+                    <div class="two-column">
+                        <div>
+                        <p class="fragment" style="font-size:16pt">因此，最终的透视投影矩阵为</p>
+                        <p class="fragment" style="font-size:16pt">
+                        \[
+                        \begin{bmatrix}
+                        \frac{2*near}{right-left}&0&\frac{right+left}{right-left}&0\\
+                        0&\frac{2*near}{top-bottom}&\frac{top+bottom}{top+bottom}&0\\
+                        0&0&-\frac{far+near}{far-near}&\frac{-2*far*near}{far-near}\\
+                        0&0&-1&0
+                        \end{bmatrix}
+                        \]
+                        </p>
+                        </div>
+                        <div>
+                            <p class="fragment">如果截头锥体是左右对称，有$left=-right, bottom=-top$，则有</p>
+                            <p class="fragment" style="font-size:16pt">
+                                \[
+                                \begin{bmatrix}
+                                \frac{near}{right}&0&0&0\\
+                                0&\frac{near}{top}&0&0\\
+                                0&0&-\frac{far+near}{far-near}&\frac{-2*far*near}{far-near}\\
+                                0&0&-1&0
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                    </div>
+                    <p class="fragment">即将一个截头锥体空间映射到规范化视见体空间中</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap04/ch04-persnorm.png" alt="规范化透视投影" style="width: 100%; margin: 0 auto;">
+                    </div>
+                </section>
+                <section>
+                    <h3>WebGL透视投影成像函数</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-persview.png" alt="透视投影" style="width:100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                        <p class="fragment">frustum(left, right, bottom, top, near, far)，可用于非对称的空间</p>    
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>WebGL透视投影成像函数</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap04/ch04-fov.png" alt="透视投影fov" style="width: 100%; margin: 0 auto;">
+                        </div>
+                        <div>
+                            <p class="fragment">perspective(fovy, aspect, near, far)，适用对称的视见体，能够提供更好的视图构建形式，其中fovy为垂直方向的视角大小，aspect为宽高比，即$aspect=w/h$</p>
+                            <p class="fragment">利用fovy, aspect, near, far四个参数也可将前面对称的截头锥体透视投影矩阵写成</p>
+                            <p class="fragment" style="font-size:20pt">
+                                \[
+                                   \begin{bmatrix} 
+                                    \frac{cf}{aspect} & 0 & 0 & 0 \\
+                                    0 & cf & 0 & 0 \\
+                                    0 & 0 & -\frac{far+near}{far-near} & -\frac{2near*far}{far-near} \\
+                                    0 & 0 & -1 & 0
+                                    \end{bmatrix}\\
+                                    cf=\cot(\frac{fvoy}{2})
+                                \]
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>WebGL代码</h3>
+                    <p class="fragment">正交投影</p>
+                    <pre class="fragment"><code class="JavaScript" data-trim>
+// 创建正交投影矩阵
+function ortho(left, right, bottom, top, near, far) {
+    var w = right - left;
+    var h = top - bottom;
+    var d = far - near;
+
+    var result = mat4();
+    result[0][0] = 2.0 / w;
+    result[1][1] = 2.0 / h;
+    result[2][2] = -2.0 / d;
+    result[0][3] = -(left + right) / w;
+    result[1][3] = -(top + bottom) / h;
+    result[2][3] = -(near + far) / d;
+
+    return result;
+}
+                </code></pre>
+                </section>
+                <section>
+                    <h3>WebGL代码</h3>
+                    <p class="fragment">透视投影</p>
+                    <pre class="fragment"><code class="JavaScript" data-trim>
+// 创建透视投影矩阵
+function perspective(fovy, aspect, near, far) {
+    var f = 1.0 / Math.tan(fovy / 2);
+    var d = far - near;
+
+    var result = mat4();
+    result[0][0] = f / aspect;
+    result[1][1] = f;
+    result[2][2] = -(near + far) / d;
+    result[2][3] = -2 * near * far / d;
+    result[3][2] = -1;
+    result[3][3] = 0.0;
+
+    return result;
+}
+                </code></pre>
+                </section>
+                <section>
+                    <h3>WebGL代码</h3>
+                    <p class="fragment">视图矩阵</p>
+                    <pre class="fragment"><code class="JavaScript" data-trim>
+function lookAt(eye, center, up) {
+    const f = normalize(sub(center, eye));
+    const s = normalize(cross(f, up));
+    const u = cross(s, f);
+
+    return [
+        s[0], u[0], -f[0], 0,
+        s[1], u[1], -f[1], 0,
+        s[2], u[2], -f[2], 0,
+        -dot(s, eye), -dot(u, eye), dot(f, eye), 1
+    ];
+}                       
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>WebGL代码</h2>
+                    <div class="two-column">
+                        <div>
+                            <h4>顶点着色器</h4>
+                            <pre><code class="glsl">
+#version 300 es
+in vec3 aPosition;
+in vec3 aColor;
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProj;
+out vec3 vColor;
+
+void main() {
+    gl_Position = uProj * uView * uModel * vec4(aPosition, 1.0);
+    vColor = aColor;
+}</code></pre>
+                        </div>
+                        <div>
+                            <h3>片元着色器</h3>
+                            <pre><code class="glsl">
+#version 300 es
+precision mediump float;
+in vec3 vColor;
+out vec4 fragColor;
+
+void main() {
+    fragColor = vec4(vColor, 1.0);
+}</code></pre>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <p><strong>注意：</strong></p>
+                        <ul>
+                            <li>矩阵乘法顺序：投影 * 视图 * 模型 * 顶点</li>
+                            <li>矩阵在JavaScript中按列存储</li>
+                            <li>需要启用深度测试以正确处理遮挡</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h3>完整渲染循环</h3>
+                    <div class="col">
+                        <h3>渲染循环</h3>
+                        <pre><code class="javascript">
+// 在渲染循环中切换投影
+const view = lookAt([0, 0, 5], [0, 0, 0], [0, 1, 0]);
+let usePerspective = true;
+
+function render() {
+    const model = rotationY(time * 0.001);
+    const proj = usePerspective ? 
+        perspective(Math.PI / 3, canvas.width / canvas.height, 0.1, 100.0) : 
+        orthographic(-2, 2, -2, 2, 0.1, 100.0);
+    
+    gl.uniformMatrix4fv(uModelLoc, false, new Float32Array(uModel));
+    gl.uniformMatrix4fv(uViewLoc, false, new Float32Array(uView));
+    gl.uniformMatrix4fv(uProjLoc, false, new Float32Array(uProj));
+    
+    gl.enable(gl.DEPTH_TEST);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    
+    drawCube();
+    requestAnimationFrame(render);
+}
+</code></pre>
+                    </div>
+                </section>
+                <section>
+                    <h3>完整渲染流水线中的投影</h3>
+                    <p class="fragment">在完整的渲染流水线中，投影是将3D场景转换为2D图像的关键步骤：</p>
+                    <ol>
+                        <li class="fragment">模型变换：局部坐标 → 世界坐标</li>
+                        <li class="fragment">视图变换：世界坐标 → 相机坐标</li>
+                        <li class="fragment">投影变换：相机坐标 → 裁剪坐标</li>
+                        <li class="fragment">透视除法：裁剪坐标 → 规范化设备坐标(NDC)</li>
+                        <li class="fragment">视口变换：NDC → 屏幕坐标</li>
+                    </ol>
+                    <p class="fragment"><a href="./AppDemos/projec_demo.html" target="_blank">立方体绘制Demo</a></p>
+                </section>
+            </section>
+            
+            <!-- Post-assessment -->
+            <section>
+                <h3>课堂测试</h3>
+                <ol>
+                    <li class="fragment">正交投影和透视投影的主要区别是什么？
+                        <p class="fragment" style="color: #17a2b8;">正交投影中平行线保持平行，物体大小不随距离变化；透视投影中平行线可能相交，远处物体看起来更小（近大远小）。</p>
+                    </li>
+                    <li class="fragment">透视投影矩阵推导的关键思想是什么？
+                        <p class="fragment" style="color: #17a2b8;">将透视视见体（截锥体）转换为正交视见体（长方体），然后应用正交投影。核心是利用齐次坐标实现非线性的"近大远小"效果。</p>
+                    </li>
+                    <li class="fragment">在WebGL中创建透视投影矩阵时，fovy、aspect、near和far这四个参数各自代表什么？
+                        <p class="fragment" style="color: #17a2b8;">fovy是垂直视场角，aspect是宽高比（宽度/高度），near是近平面距离，far是远平面距离。</p>
+                    </li>
+                    <li class="fragment">在着色器中，模型视图矩阵和投影矩阵正确的相乘顺序是什么？
+                        <p class="fragment" style="color: #17a2b8;">投影矩阵 * 视图矩阵 * 模型矩阵，矩阵右乘，顺序从右往左。</p>
+                    </li>
+                    <li class="fragment">如果我们想让立方体看起来更大，在不改变模型本身的情况下，可以通过调整透视投影的哪个参数来实现？
+                        <p class="fragment" style="color: #17a2b8;">减小fovy，或者让相机靠近模型。</p>
+                    </li>
+                </ol>
+            </section>
+            
+            <!-- Summary -->
+            <section>
+                <h3>课堂总结</h3>
+                <ul>
+                    <li class="fragment">了解了投影的基本概念和分类（正交投影和透视投影）</li>
+                    <li class="fragment">掌握了正交投影矩阵的推导过程和特性</li>
+                    <li class="fragment">理解了透视投影的"近大远小"原理和矩阵推导</li>
+                    <li class="fragment">学习了视见体的概念及其在投影中的作用</li>
+                    <li class="fragment">掌握了在WebGL中实现投影矩阵的方法</li>
+                </ul>
+                <p class="fragment">投影变换是计算机图形学中将3D场景转换为2D图像的关键步骤，它与模型变换和视图变换一起构成了3D图形渲染的基础。</p>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+</script>
+</body>
+</html>

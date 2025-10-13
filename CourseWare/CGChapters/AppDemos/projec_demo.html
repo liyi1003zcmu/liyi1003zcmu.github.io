@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive WebGL Rendering Pipeline</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-wrap: wrap; }
+        #controls { padding: 10px; border: 1px solid #ccc; margin: 10px; }
+        #pipeline { padding: 10px; border: 1px solid #ccc; margin: 10px; }
+        canvas { border: 1px solid black; }
+        .stage { margin-bottom: 10px; }
+        .stage-title { font-weight: bold; }
+        .coords { font-family: monospace; }
+        .color-model { color: #ff0000; }
+        .color-world { color: #00ff00; }
+        .color-view { color: #0000ff; }
+        .color-clip { color: #ff00ff; }
+        .color-ndc { color: #00ffff; }
+        .color-screen { color: #ffff00; }
+    </style>
+</head>
+<body>
+
+    <div id="webgl-container">
+        <canvas id="gl-canvas" width="640" height="480"></canvas>
+    </div>
+
+    <div id="controls">
+        <h3>Controls</h3>
+        <div id="model-controls">
+            <h4>Model Matrix</h4>
+            Translate X: <input type="range" id="model-tx" min="-2" max="2" value="0" step="0.1"><br>
+            Translate Y: <input type="range" id="model-ty" min="-2" max="2" value="0" step="0.1"><br>
+            Translate Z: <input type="range" id="model-tz" min="-2" max="2" value="0" step="0.1"><br>
+            Rotate Y: <input type="range" id="model-ry" min="-180" max="180" value="0" step="1"><br>
+        </div>
+        <div id="view-controls">
+            <h4>View Matrix</h4>
+            Camera Z: <input type="range" id="view-z" min="1" max="10" value="5" step="0.1"><br>
+        </div>
+        <div id="projection-controls">
+            <h4>Projection Matrix</h4>
+            <button id="proj-ortho">Orthographic</button>
+            <button id="proj-persp">Perspective</button><br>
+            FOV: <input type="range" id="proj-fov" min="15" max="120" value="45" step="1"><br>
+        </div>
+    </div>
+
+    <div id="pipeline">
+        <h3>Rendering Pipeline Visualization</h3>
+        <div id="stage-model" class="stage">
+            <div class="stage-title color-model">1. Model Coordinates</div>
+            <div class="coords" id="coords-model"></div>
+        </div>
+        <div id="stage-world" class="stage">
+            <div class="stage-title color-world">2. World Coordinates</div>
+            <div class="coords" id="coords-world"></div>
+        </div>
+        <div id="stage-view" class="stage">
+            <div class="stage-title color-view">3. View Coordinates</div>
+            <div class="coords" id="coords-view"></div>
+        </div>
+        <div id="stage-clip" class="stage">
+            <div class="stage-title color-clip">4. Clip Coordinates</div>
+            <div class="coords" id="coords-clip"></div>
+        </div>
+        <div id="stage-ndc" class="stage">
+            <div class="stage-title color-ndc">5. NDC (Perspective Division)</div>
+            <div class="coords" id="coords-ndc"></div>
+        </div>
+        <div id="stage-screen" class="stage">
+            <div class="stage-title color-screen">6. Screen Coordinates</div>
+            <div class="coords" id="coords-screen"></div>
+        </div>
+    </div>
+
+    <script src="../js/common/webgl-utils.js"></script>
+    <script src="../js/common/initShaders.js"></script>
+    <script src="../js/common/gl-matrix.js"></script>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        attribute vec4 a_color;
+        uniform mat4 u_mvpMatrix;
+        varying vec4 v_color;
+        void main() {
+            gl_Position = u_mvpMatrix * a_position;
+            v_color = a_color;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 v_color;
+        void main() {
+            gl_FragColor = v_color;
+        }
+    </script>
+
+    <script>
+		const { vec3, vec4, mat4 } = glMatrix;
+        function main() {
+            const canvas = document.getElementById('gl-canvas');
+            const gl = WebGLUtils.setupWebGL(canvas);
+            if (!gl) {
+                console.log('Failed to get the rendering context for WebGL');
+                return;
+            }
+
+            const program = initShaders(gl, "vertex-shader", "fragment-shader");
+            gl.useProgram(program);
+
+            const n = initVertexBuffers(gl, program);
+
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+
+            const u_mvpMatrix = gl.getUniformLocation(program, 'u_mvpMatrix');
+
+            const modelMatrix = mat4.create();
+            const viewMatrix = mat4.create();
+            const projMatrix = mat4.create();
+            const mvpMatrix = mat4.create();
+
+            let projectionType = 'perspective';
+
+            function render() {
+                // Update matrices from controls
+                const model_tx = document.getElementById('model-tx').value;
+                const model_ty = document.getElementById('model-ty').value;
+                const model_tz = document.getElementById('model-tz').value;
+                const model_ry = document.getElementById('model-ry').value;
+                mat4.fromYRotation(modelMatrix, model_ry * Math.PI / 180);
+                mat4.translate(modelMatrix, modelMatrix, [model_tx, model_ty, model_tz]);
+
+                const view_z = document.getElementById('view-z').value;
+                mat4.lookAt(viewMatrix, [0, 0, view_z], [0, 0, 0], [0, 1, 0]);
+
+                const fov = document.getElementById('proj-fov').value;
+                const aspect = canvas.width / canvas.height;
+                if (projectionType === 'perspective') {
+                    mat4.perspective(projMatrix, fov * Math.PI / 180, aspect, 1, 100);
+                } else {
+                    const orthoHeight = 5;
+                    mat4.ortho(projMatrix, -orthoHeight * aspect, orthoHeight * aspect, -orthoHeight, orthoHeight, 1, 100);
+                }
+
+                mat4.multiply(mvpMatrix, projMatrix, viewMatrix);
+                mat4.multiply(mvpMatrix, mvpMatrix, modelMatrix);
+
+                gl.uniformMatrix4fv(u_mvpMatrix, false, mvpMatrix);
+
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+
+                visualizePipeline();
+
+                requestAnimationFrame(render);
+            }
+
+            document.getElementById('proj-ortho').onclick = () => projectionType = 'orthographic';
+            document.getElementById('proj-persp').onclick = () => projectionType = 'perspective';
+
+            function visualizePipeline() {
+                const vertex = vec4.fromValues(0.5, 0.5, 0.5, 1.0); // Pick one vertex of the cube
+                
+                // 1. Model Coords
+                const modelCoords = vec4.clone(vertex);
+                document.getElementById('coords-model').innerText = formatVec4(modelCoords);
+
+                // 2. World Coords
+                const worldCoords = vec4.create();
+                vec4.transformMat4(worldCoords, modelCoords, modelMatrix);
+                document.getElementById('coords-world').innerText = formatVec4(worldCoords);
+
+                // 3. View Coords
+                const viewCoords = vec4.create();
+                vec4.transformMat4(viewCoords, worldCoords, viewMatrix);
+                document.getElementById('coords-view').innerText = formatVec4(viewCoords);
+
+                // 4. Clip Coords
+                const clipCoords = vec4.create();
+                vec4.transformMat4(clipCoords, viewCoords, projMatrix);
+                document.getElementById('coords-clip').innerText = formatVec4(clipCoords);
+
+                // 5. NDC
+                const ndcCoords = vec4.create();
+                if (clipCoords[3] !== 0) {
+                    vec4.scale(ndcCoords, clipCoords, 1 / clipCoords[3]);
+                }
+                document.getElementById('coords-ndc').innerText = formatVec4(ndcCoords) + ` (w=${clipCoords[3].toFixed(2)})`;
+
+                // 6. Screen Coords
+                const screenX = (ndcCoords[0] + 1) * canvas.width / 2;
+                const screenY = (1 - ndcCoords[1]) * canvas.height / 2;
+                const screenZ = (ndcCoords[2] + 1) / 2;
+                document.getElementById('coords-screen').innerText = `x: ${screenX.toFixed(2)}, y: ${screenY.toFixed(2)}, z: ${screenZ.toFixed(2)}`;
+            }
+
+            function formatVec4(v) {
+                return `x: ${v[0].toFixed(2)}, y: ${v[1].toFixed(2)}, z: ${v[2].toFixed(2)}, w: ${v[3].toFixed(2)}`;
+            }
+
+            render();
+        }
+
+        function initVertexBuffers(gl, program) {
+            // Create a cube
+            //    v6----- v5
+            //   /|      /|
+            //  v1------v0|
+            //  | |     | |
+            //  | |v7---|-v4
+            //  |/      |/
+            //  v2------v3
+            const vertices = new Float32Array([   // Vertex coordinates
+                 0.5, 0.5, 0.5,  -0.5, 0.5, 0.5,  -0.5,-0.5, 0.5,   0.5,-0.5, 0.5, // v0-v1-v2-v3 front
+                 0.5, 0.5, 0.5,   0.5,-0.5, 0.5,   0.5,-0.5,-0.5,   0.5, 0.5,-0.5, // v0-v3-v4-v5 right
+                 0.5, 0.5, 0.5,   0.5, 0.5,-0.5,  -0.5, 0.5,-0.5,  -0.5, 0.5, 0.5, // v0-v5-v6-v1 up
+                -0.5, 0.5, 0.5,  -0.5, 0.5,-0.5,  -0.5,-0.5,-0.5,  -0.5,-0.5, 0.5, // v1-v6-v7-v2 left
+                -0.5,-0.5,-0.5,   0.5,-0.5,-0.5,   0.5,-0.5, 0.5,  -0.5,-0.5, 0.5, // v7-v4-v3-v2 down
+                 0.5,-0.5,-0.5,  -0.5,-0.5,-0.5,  -0.5, 0.5,-0.5,   0.5, 0.5,-0.5  // v4-v7-v6-v5 back
+            ]);
+
+            const colors = new Float32Array([     // Colors
+                1, 0, 0,   1, 0, 0,   1, 0, 0,  1, 0, 0,     // v0-v1-v2-v3 front
+                0, 1, 0,   0, 1, 0,   0, 1, 0,  0, 1, 0,     // v0-v3-v4-v5 right
+                0, 0, 1,   0, 0, 1,   0, 0, 1,  0, 0, 1,     // v0-v5-v6-v1 up
+                1, 1, 0,   1, 1, 0,   1, 1, 0,  1, 1, 0,     // v1-v6-v7-v2 left
+                1, 0, 1,   1, 0, 1,   1, 0, 1,  1, 0, 1,     // v7-v4-v3-v2 down
+                0, 1, 1,   0, 1, 1,   0, 1, 1,  0, 1, 1,     // v4-v7-v6-v5 back
+            ]);
+
+            const indices = new Uint8Array([       // Indices of the vertices
+                 0, 1, 2,   0, 2, 3,    // front
+                 4, 5, 6,   4, 6, 7,    // right
+                 8, 9,10,   8,10,11,    // up
+                12,13,14,  12,14,15,    // left
+                16,17,18,  16,18,19,    // down
+                20,21,22,  20,22,23     // back
+            ]);
+
+            initArrayBuffer(gl, program, vertices, 3, gl.FLOAT, 'a_position');
+            initArrayBuffer(gl, program, colors, 3, gl.FLOAT, 'a_color');
+
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+            return indices.length;
+        }
+
+        function initArrayBuffer(gl, program, data, num, type, attribute) {
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+            const a_attribute = gl.getAttribLocation(program, attribute);
+            gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
+            gl.enableVertexAttribArray(a_attribute);
+            return true;
+        }
+
+        main();
+    </script>
+</body>
+</html>

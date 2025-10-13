@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Chap3 Demo-Rotating Square</title>
+    <script id="rot-v-shader" type="x-shader/x-vertex">
+	#version 300 es
+	in vec4 vPosition;
+	uniform float theta;
+	uniform float xpos;
+
+	void main()
+	{
+		float dt = theta;
+		float cost = cos(dt);
+		float sint = sin(dt);
+		
+		mat4 rz = mat4( cost, sint, 0.0, 0.0,
+		-sint, cost, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0);
+		
+		mat4 mv = mat4( 1.0, 0.0, 0.0, 0.0, 
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		xpos,0.0, 0.0, 1.0);
+		
+		gl_Position = rz * mv * vPosition;
+		gl_Position.z = -gl_Position.z;
+	}
+	</script>
+
+    <script id="rot-f-shader" type="x-shader/x-fragment">
+	#version 300 es
+	precision mediump float;
+	out vec4 fColor;
+	void main()
+	{
+		fColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+	}
+	</script>
+
+    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../js/common/initShaders.js"></script>
+    <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
+
+    <script type="text/javascript" src="../js/ch03/rotsquare2.js"></script>
+</head>
+
+<body onload="initRotSquare()">
+    <h2>Rotating Square</h2>
+    <canvas id="rot-canvas" width="512" height="512">你的浏览器不支持HTML5 canvas元素</canvas>
+</body>
+
+</html>

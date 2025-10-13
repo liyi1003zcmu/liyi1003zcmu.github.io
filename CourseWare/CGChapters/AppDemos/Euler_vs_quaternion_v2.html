@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旋转插值对比：欧拉 vs. 四元数SLERP</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 1em;
+            color: #333;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1em;
+        }
+        h1 {
+            color: #1a1a1a;
+            font-weight: 600;
+            margin: 0.5em 0;
+        }
+        .demo-container {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+            padding: 1em;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            background-color: #e9ecef;
+        }
+        h2 {
+            margin: 0.5em 0;
+            font-size: 1.2em;
+            color: #444;
+        }
+        .controls-container {
+            background: #fff;
+            padding: 1em;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 1168px;
+            box-sizing: border-box;
+        }
+        .rotation-controls {
+            display: flex;
+            justify-content: space-around;
+            gap: 2em;
+            margin-bottom: 1em;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8em;
+        }
+        .control-group h3 {
+            margin: 0 0 0.5em 0;
+            text-align: center;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 20px 1fr 50px;
+            gap: 0.8em;
+            align-items: center;
+        }
+        .slider-control input[type="range"] {
+            width: 100%;
+        }
+        .slider-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .slider-control label {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .slider-control span {
+            font-family: 'Courier New', Courier, monospace;
+            background: #e9ecef;
+            padding: 0.2em 0.5em;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>旋转插值对比：欧拉 vs. 四元数SLERP</h1>
+
+        <div class="demo-container">
+            <div class="canvas-wrapper">
+                <h2>欧拉角线性插值</h2>
+                <canvas id="canvas-euler"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <h2>四元数球面线性插值 (SLERP)</h2>
+                <canvas id="canvas-slerp"></canvas>
+            </div>
+        </div>
+
+        <div class="controls-container">
+            <div class="rotation-controls">
+                <div class="control-group" id="start-rot-controls">
+                    <h3>起始旋转 (度)</h3>
+                    <!-- Start rotation inputs will be generated here -->
+                </div>
+                <div class="control-group" id="end-rot-controls">
+                    <h3>结束旋转 (度)</h3>
+                    <!-- End rotation inputs will be generated here -->
+                </div>
+            </div>
+            <div class="slider-control">
+                <label for="t-slider">插值进度 (t)</label>
+                <input type="range" id="t-slider" min="0" max="1" step="0.01" value="0" style="width: 50%;">
+                <span id="t-value">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- UTILITY AND MATH LIBRARIES ---
+
+    // Simple Vector/Matrix/Quaternion Math Library
+    const glMath = {
+        vec3: {
+            normalize: (v) => {
+                let len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+                if (len > 0.00001) {
+                    return [v[0] / len, v[1] / len, v[2] / len];
+                } else {
+                    return [0, 0, 0];
+                }
+            },
+            cross: (a, b) => {
+                return [
+                    a[1] * b[2] - a[2] * b[1],
+                    a[2] * b[0] - a[0] * b[2],
+                    a[0] * b[1] - a[1] * b[0],
+                ];
+            }
+        },
+        mat4: {
+            create: () => new Float32Array(16),
+            identity: (out) => { out.fill(0); out[0] = out[5] = out[10] = out[15] = 1; return out; },
+            multiply: (out, a, b) => {
+                let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+                let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+                let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+                let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+                let b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+                out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+                out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+                out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+                out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+                b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+                out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+                out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+                out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+                out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+                b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+                out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+                out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+                out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+                out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+                b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+                out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+                out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+                out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+                out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+                return out;
+            },
+            perspective: (out, fov, aspect, near, far) => {
+                const f = 1.0 / Math.tan(fov / 2);
+                out.fill(0);
+                out[0] = f / aspect;
+                out[5] = f;
+                out[10] = (far + near) / (near - far);
+                out[11] = -1;
+                out[14] = (2 * far * near) / (near - far);
+                return out;
+            },
+            lookAt: (out, eye, center, up) => {
+                let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+                z0 = eye[0] - center[0]; z1 = eye[1] - center[1]; z2 = eye[2] - center[2];
+                len = 1 / Math.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
+                z0 *= len; z1 *= len; z2 *= len;
+                x0 = up[1] * z2 - up[2] * z1;
+                x1 = up[2] * z0 - up[0] * z2;
+                x2 = up[0] * z1 - up[1] * z0;
+                len = Math.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
+                if (!len) { x0 = 0; x1 = 0; x2 = 0; } else { len = 1 / len; x0 *= len; x1 *= len; x2 *= len; }
+                y0 = z1 * x2 - z2 * x1; y1 = z2 * x0 - z0 * x2; y2 = z0 * x1 - z1 * x0;
+                len = Math.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
+                if (!len) { y0 = 0; y1 = 0; y2 = 0; } else { len = 1 / len; y0 *= len; y1 *= len; y2 *= len; }
+                out[0] = x0; out[1] = y0; out[2] = z0; out[3] = 0;
+                out[4] = x1; out[5] = y1; out[6] = z1; out[7] = 0;
+                out[8] = x2; out[9] = y2; out[10] = z2; out[11] = 0;
+                out[12] = -(x0 * eye[0] + x1 * eye[1] + x2 * eye[2]);
+                out[13] = -(y0 * eye[0] + y1 * eye[1] + y2 * eye[2]);
+                out[14] = -(z0 * eye[0] + z1 * eye[1] + z2 * eye[2]);
+                out[15] = 1;
+                return out;
+            },
+            fromQuat: (out, q) => {
+                let x = q[0], y = q[1], z = q[2], w = q[3];
+                let x2 = x + x, y2 = y + y, z2 = z + z;
+                let xx = x * x2, xy = x * y2, xz = x * z2;
+                let yy = y * y2, yz = y * z2, zz = z * z2;
+                let wx = w * x2, wy = w * y2, wz = w * z2;
+                out[0] = 1 - (yy + zz); out[1] = xy + wz; out[2] = xz - wy; out[3] = 0;
+                out[4] = xy - wz; out[5] = 1 - (xx + zz); out[6] = yz + wx; out[7] = 0;
+                out[8] = xz + wy; out[9] = yz - wx; out[10] = 1 - (xx + yy); out[11] = 0;
+                out[12] = 0; out[13] = 0; out[14] = 0; out[15] = 1;
+                return out;
+            }
+        },
+        quat: {
+            create: () => new Float32Array(4),
+            identity: (out) => { out[0] = 0; out[1] = 0; out[2] = 0; out[3] = 1; return out; },
+            fromEuler: (out, x, y, z) => { // assumes order ZYX
+                let c1 = Math.cos(x / 2), c2 = Math.cos(y / 2), c3 = Math.cos(z / 2);
+                let s1 = Math.sin(x / 2), s2 = Math.sin(y / 2), s3 = Math.sin(z / 2);
+                out[0] = s1 * c2 * c3 + c1 * s2 * s3; // x
+                out[1] = c1 * s2 * c3 - s1 * c2 * s3; // y
+                out[2] = c1 * c2 * s3 + s1 * s2 * c3; // z
+                out[3] = c1 * c2 * c3 - s1 * s2 * s3; // w
+                return out;
+            },
+            slerp: (out, a, b, t) => {
+                let ax = a[0], ay = a[1], az = a[2], aw = a[3];
+                let bx = b[0], by = b[1], bz = b[2], bw = b[3];
+                let omega, cosom, sinom, scale0, scale1;
+                cosom = ax * bx + ay * by + az * bz + aw * bw;
+                if (cosom < 0.0) {
+                    cosom = -cosom;
+                    bx = -bx; by = -by; bz = -bz; bw = -bw;
+                }
+                if ((1.0 - cosom) > 0.000001) {
+                    omega = Math.acos(cosom);
+                    sinom = Math.sin(omega);
+                    scale0 = Math.sin((1.0 - t) * omega) / sinom;
+                    scale1 = Math.sin(t * omega) / sinom;
+                } else {
+                    scale0 = 1.0 - t;
+                    scale1 = t;
+                }
+                out[0] = scale0 * ax + scale1 * bx;
+                out[1] = scale0 * ay + scale1 * by;
+                out[2] = scale0 * az + scale1 * bz;
+                out[3] = scale0 * aw + scale1 * bw;
+                return out;
+            }
+        },
+        lerp: (a, b, t) => a + t * (b - a),
+        degToRad: (d) => d * Math.PI / 180,
+    };
+
+    // --- RENDERER CLASS ---
+    class Renderer {
+        constructor(canvasId) {
+            this.canvas = document.getElementById(canvasId);
+            this.gl = this.canvas.getContext('webgl');
+            if (!this.gl) throw new Error('WebGL not supported');
+            
+            this.shaderProgram = this.initShaderProgram();
+            this.programInfo = {
+                program: this.shaderProgram,
+                attribLocations: {
+                    vertexPosition: this.gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+                    vertexColor: this.gl.getAttribLocation(this.shaderProgram, 'aVertexColor'),
+                },
+                uniformLocations: {
+                    projectionMatrix: this.gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix'),
+                    modelViewMatrix: this.gl.getUniformLocation(this.shaderProgram, 'uModelViewMatrix'),
+                },
+            };
+
+            this.buffers = this.initArrowBuffers();
+        }
+
+        initShaderProgram() {
+            const vsSource = `
+                attribute vec3 aVertexPosition;
+                attribute vec4 aVertexColor;
+                uniform mat4 uModelViewMatrix;
+                uniform mat4 uProjectionMatrix;
+                varying lowp vec4 vColor;
+                void main() {
+                    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
+                    vColor = aVertexColor;
+                }
+            `;
+            const fsSource = `
+                varying lowp vec4 vColor;
+                void main() {
+                    gl_FragColor = vColor;
+                }
+            `;
+            const vertexShader = this.loadShader(this.gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = this.loadShader(this.gl.FRAGMENT_SHADER, fsSource);
+            const shaderProgram = this.gl.createProgram();
+            this.gl.attachShader(shaderProgram, vertexShader);
+            this.gl.attachShader(shaderProgram, fragmentShader);
+            this.gl.linkProgram(shaderProgram);
+            if (!this.gl.getProgramParameter(shaderProgram, this.gl.LINK_STATUS)) {
+                throw new Error('Unable to initialize the shader program: ' + this.gl.getProgramInfoLog(shaderProgram));
+            }
+            return shaderProgram;
+        }
+
+        loadShader(type, source) {
+            const shader = this.gl.createShader(type);
+            this.gl.shaderSource(shader, source);
+            this.gl.compileShader(shader);
+            if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+                const error = 'An error occurred compiling the shaders: ' + this.gl.getShaderInfoLog(shader);
+                this.gl.deleteShader(shader);
+                throw new Error(error);
+            }
+            return shader;
+        }
+        
+        initArrowBuffers() {
+            const shaftWidth = 0.05, shaftLength = 0.8;
+            const headWidth = 0.2, headLength = 0.3;
+            const sW = shaftWidth, sL = shaftLength;
+            const hW = headWidth, hL = headLength;
+            const shaftEnd = sL / 2, shaftStart = -sL/2;
+            const headBase = shaftEnd, headTip = shaftEnd + hL;
+
+            const positions = [
+                // Shaft (box)
+                -sW, shaftStart, -sW,  sW, shaftStart, -sW,  sW, headBase, -sW, -sW, headBase, -sW, // Front
+                -sW, shaftStart,  sW,  sW, shaftStart,  sW,  sW, headBase,  sW, -sW, headBase,  sW, // Back
+                -sW, shaftStart, -sW, -sW, headBase, -sW, -sW, headBase,  sW, -sW, shaftStart,  sW, // Left
+                 sW, shaftStart, -sW,  sW, headBase, -sW,  sW, headBase,  sW,  sW, shaftStart,  sW, // Right
+                // Head (pyramid)
+                0.0, headTip, 0.0,  -hW, headBase, -hW,  hW, headBase, -hW, // Front tri
+                0.0, headTip, 0.0,   hW, headBase, -hW,  hW, headBase,  hW, // Right tri
+                0.0, headTip, 0.0,   hW, headBase,  hW, -hW, headBase,  hW, // Back tri
+                0.0, headTip, 0.0,  -hW, headBase,  hW, -hW, headBase, -hW, // Left tri
+                // Head base
+                -hW, headBase, -hW,  hW, headBase, -hW,  hW, headBase,  hW, -hW, headBase,  hW,
+            ];
+            
+            const colors = [
+                ...Array(16).fill([0.8, 0.2, 0.2, 1.0]).flat(), // Shaft - Red-ish
+                ...Array(16).fill([0.9, 0.9, 0.2, 1.0]).flat(), // Head - Yellow
+            ];
+
+            const indices = [
+                0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15,
+                0,1,5, 0,5,4, 2,3,7, 2,7,6, // shaft caps
+                16,17,18, 19,20,21, 22,23,24, 25,26,27,
+                28,29,30, 28,30,31
+            ];
+            
+            const positionBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, positionBuffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(positions), this.gl.STATIC_DRAW);
+            
+            const colorBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, colorBuffer);
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colors), this.gl.STATIC_DRAW);
+            
+            const indexBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), this.gl.STATIC_DRAW);
+            
+            return { position: positionBuffer, color: colorBuffer, indices: indexBuffer, vertexCount: indices.length };
+        }
+
+
+        draw(rotationMatrix) {
+            const gl = this.gl;
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clearColor(0.95, 0.96, 0.97, 1.0);
+            gl.clearDepth(1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthFunc(gl.LEQUAL);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            const fieldOfView = 45 * Math.PI / 180;
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            const projectionMatrix = glMath.mat4.perspective(glMath.mat4.create(), fieldOfView, aspect, 0.1, 100.0);
+
+            const viewMatrix = glMath.mat4.lookAt(glMath.mat4.create(), [0, 1.5, 3], [0, 0, 0], [0, 1, 0]);
+            
+            const modelViewMatrix = glMath.mat4.identity(glMath.mat4.create());
+            // WebGL matrices are column-major, so V * M order is correct.
+            glMath.mat4.multiply(modelViewMatrix, viewMatrix, rotationMatrix);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.position);
+            gl.vertexAttribPointer(this.programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexPosition);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.color);
+            gl.vertexAttribPointer(this.programInfo.attribLocations.vertexColor, 4, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexColor);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
+            
+            gl.useProgram(this.programInfo.program);
+            gl.uniformMatrix4fv(this.programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+            gl.uniformMatrix4fv(this.programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+            
+            gl.drawElements(gl.TRIANGLES, this.buffers.vertexCount, gl.UNSIGNED_SHORT, 0);
+        }
+    }
+
+
+    // --- MAIN APPLICATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const rendererEuler = new Renderer('canvas-euler');
+        const rendererSlerp = new Renderer('canvas-slerp');
+
+        const state = {
+            startRot: { x: 0, y: 0, z: 0 },
+            endRot:   { x: 0, y: 350, z: 0 },
+            t: 0
+        };
+
+        const tSlider = document.getElementById('t-slider');
+        const tValue = document.getElementById('t-value');
+        
+        // --- UI Generation ---
+        function createRotationInputs(parentId, stateKey) {
+            const parent = document.getElementById(parentId);
+            ['x', 'y', 'z'].forEach(axis => {
+                const row = document.createElement('div');
+                row.className = 'input-row';
+                
+                const label = document.createElement('label');
+                label.textContent = axis.toUpperCase() + ':';
+                
+                const slider = document.createElement('input');
+                slider.type = 'range';
+                slider.min = -360;
+                slider.max = 360;
+                slider.value = state[stateKey][axis];
+                slider.dataset.axis = axis;
+                slider.dataset.stateKey = stateKey;
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.textContent = state[stateKey][axis];
+
+                row.appendChild(label);
+                row.appendChild(slider);
+                row.appendChild(valueSpan);
+                parent.appendChild(row);
+
+                slider.addEventListener('input', (e) => {
+                    const { axis, stateKey } = e.target.dataset;
+                    const value = parseInt(e.target.value);
+                    state[stateKey][axis] = value;
+                    valueSpan.textContent = value;
+                    render();
+                });
+            });
+        }
+        createRotationInputs('start-rot-controls', 'startRot');
+        createRotationInputs('end-rot-controls', 'endRot');
+
+
+        // --- Render Loop ---
+        function render() {
+            // 1. Euler Interpolation
+            const eulerRot = glMath.mat4.identity(glMath.mat4.create());
+            const ix = glMath.lerp(state.startRot.x, state.endRot.x, state.t);
+            const iy = glMath.lerp(state.startRot.y, state.endRot.y, state.t);
+            const iz = glMath.lerp(state.startRot.z, state.endRot.z, state.t);
+
+            const qEuler = glMath.quat.fromEuler(glMath.quat.create(), glMath.degToRad(ix), glMath.degToRad(iy), glMath.degToRad(iz));
+            glMath.mat4.fromQuat(eulerRot, qEuler);
+            rendererEuler.draw(eulerRot);
+
+            // 2. Quaternion SLERP
+            const slerpRot = glMath.mat4.identity(glMath.mat4.create());
+            const qStart = glMath.quat.fromEuler(glMath.quat.create(), glMath.degToRad(state.startRot.x), glMath.degToRad(state.startRot.y), glMath.degToRad(state.startRot.z));
+            const qEnd = glMath.quat.fromEuler(glMath.quat.create(), glMath.degToRad(state.endRot.x), glMath.degToRad(state.endRot.y), glMath.degToRad(state.endRot.z));
+            
+            const qInterp = glMath.quat.slerp(glMath.quat.create(), qStart, qEnd, state.t);
+            glMath.mat4.fromQuat(slerpRot, qInterp);
+            rendererSlerp.draw(slerpRot);
+        }
+
+        tSlider.addEventListener('input', (e) => {
+            state.t = parseFloat(e.target.value);
+            tValue.textContent = state.t.toFixed(2);
+            render();
+        });
+
+        // Initial render
+        render();
+    });
+
+    </script>
+</body>
+</html>
+
+

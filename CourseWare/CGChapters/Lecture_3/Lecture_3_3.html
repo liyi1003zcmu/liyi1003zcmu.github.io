@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学--复合变换</title>
+
+    <meta name="description" content="复合变换">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第三章(3) 变换</h2>
+                <p style="font-family: courier;font-size:28pt;text-align:center">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+
+            <!-- 第一课时 -->
+            <!--从绕平面任意点的旋转问题开始-->
+            <section>
+                <h3>绕任意点的旋转</h3>
+                <img class="fragment" src="../../images/cg/chap03/ch03-anyrot.png" style="width:100%">
+                <p class="fragment" style="text-align:center">思考，如何实现绕任意点的旋转？</p>
+                <p class="fragment" style="text-align:center">用单一的变换能否实现？如果不行，该如何实现？</p>
+            </section>
+            <section>
+                <h3>课程目标</h3>
+                <ul>
+                    <li class="fragment"><strong>推导</strong> 绕任意点旋转的变换矩阵</li>
+                    <li class="fragment"><strong>理解</strong> 复合变换中顺序的重要性</li>
+                    <li class="fragment"><strong>掌握</strong> 不同变换组合的效果差异</li>
+                    <li class="fragment"><strong>应用</strong> 复合变换解决实际图形变换问题</li>
+                </ul>
+            </section>
+            <section>
+                <h3>回顾，绕原点的旋转</h3>
+                <div class="placeholder">
+                    <!-- Placeholder for the image -->
+                    <img src="../../images/cg/chap03/ch03-rot-desc.png" alt="Rotation about Origin" style="max-width:100%; max-height:100%;">
+                </div>
+                <p class="fragment" style="text-align:center">绕原点旋转，关键要素有几点？</p>
+                <ul>
+                    <li class="fragment">旋转中心是原点</li>
+                    <li class="fragment">旋转方向(逆时针)</li>
+                    <li class="fragment">旋转角度($\theta$)</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>逆变换</h3>
+                    <p class="fragment">对三种基本变换，平移、旋转和缩放，都有对应的逆变换：</p>
+                    <ul>
+                        <li class="fragment"><strong>平移</strong>：$$T^{-1}(d_x,d_y,d_z)=T(-d_x,-d_y,-d_z)$$</li>
+                        <li class="fragment"><strong>旋转</strong>：$$R^{-1}(\theta)=R(-\theta)=R^{T}(\theta)$$</li>
+                        <li class="fragment"><strong>缩放</strong>：$$S^{-1}(s_x,s_y,s_z)=S(1/s_x,1/s_y,1/s_z)$$</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>变换的连接</h3>
+                    <ul>
+                        <li class="fragment">任意仿射变换都可以表示为基本变换的连接(复合)形式，可通过连接平移、旋转、缩放操作完成，结果对应于这些变换矩阵相乘的结果</li>
+                        <li class="fragment">复合变换矩阵$M=ABCD$，再将矩阵$M$应用于所有的顶点，有$P'=MP$。此处，$P$为<strong>顶点列向量</strong></li>
+                        <li class="fragment">难点在于<strong>如何通过正确的变换组合实现预期的变换结果</strong></li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>变换的顺序</h3>
+                    <ul>
+                        <li class="fragment">变换的顺序非常重要，矩阵乘法不满足交换律，即$AB\neq BA$</li>
+                        <li class="fragment">复合变换矩阵$M=ABCD$，应用于点时，有$$p'=MP=ABCDP=(A(B(C(DP))))$$
+                        变换顺序为<strong>右结合</strong></li>
+                        <li class="fragment">由于点采用齐次坐标列向量表示，有$$P'^{T}=P^TD^TC^TB^TA^T$$</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>变换实例化</h3>
+                    <p class="fragment">物体建模时，自身坐标系原点一般设置为物体中心点，方向与坐标轴方向保持一致，大小为单位大小</p>
+                    <p class="fragment">如果需要将物体放置到场景中，即世界坐标系中，一般需经过缩放、旋转、平移等操作，对应于各种基本变换的组合</p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>绕物体对象中心点的旋转</h3>
+                    <img class="fragment" src="../../images/cg/chap03/ch03-anyrot.png" style="width:100%">
+                    <ul>
+                        <li class="fragment">将旋转中心平移到原点</li>
+                        <li class="fragment">绕原点旋转</li>
+                        <li class="fragment">将旋转中心平移回原位置</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>绕物体对象中心点的旋转</h3>
+                    <div class="columnleft" style="width:25%">
+                        <figure>
+                            <img class="fragment" src="../../images/cg/chap03/ch03-mrotstart.png" style="width:100%">
+                            <figcaption class="fragment" style="text-align:center;font-size:16pt">起始状态：$M_0=I$</figcaption>
+                        </figure>
+                    </div>
+                    <div class="columnleft" style="width:25%">
+                        <figure>
+                            <img class="fragment" src="../../images/cg/chap03/ch03-mrot1.png" style="width:100%">
+                            <figcaption class="fragment" style="text-align:center;font-size:16pt">将旋转中心平移到原点：$M_1=T(-P_C)$</figcaption>
+                        </figure>
+                    </div>
+                    <div class="columnleft" style="width:25%">
+                        <figure>
+                            <img class="fragment" src="../../images/cg/chap03/ch03-mrot2.png" style="width:100%">
+                            <figcaption class="fragment" style="text-align:center;font-size:16pt">绕原点旋转：$M_2=R(\theta)$</figcaption>
+                        </figure>
+                    </div>
+                    <div class="columnright" style="width:25%">
+                        <figure>
+                            <img class="fragment" src="../../images/cg/chap03/ch03-mrot3.png" style="width:100%">
+                            <figcaption class="fragment" style="text-align:center;font-size:16pt">将旋转中心平移回原位置：$M_3=T(P_C)$</figcaption>
+                        </figure>
+                    </div>
+                    <br />
+                    <p class="fragment" style="clear:both;text-align:center;font-size:20pt">将全部变换连接起来，有
+                        \[
+                        M = M_3M_2M_1M_0 = T(P_C)R(\theta)T(-P_C)
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>绕对象中心点旋转后的新坐标</h3>
+                    <p class="fragment" style="text-align:center;font-size:20pt">
+                        将点$P(x,y)$绕点$P_C(c_x,c_y)$逆时针旋转$\theta$度后，计算对应点$P'(x',y')$的坐标</p>
+                    <div class="three-column">
+                        <div>
+                            <p class="fragment" style="text-align:center;font-size:16pt">1. 将旋转中心平移到原点</p>
+                            <p class="fragment" style="text-align:center;font-size:16pt">
+                                \[
+                                M_1=\begin{bmatrix}
+                                1&0&-c_x\\
+                                0&1&-c_y\\
+                                0&0&1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="text-align:center;font-size:16pt">2. 绕原点逆时针旋转$\theta$角度</p>
+                            <p class="fragment" style="text-align:center;font-size:16pt">
+                                \[
+                                M_2=\begin{bmatrix}
+                                \cos\theta&-\sin\theta&0\\
+                                \sin\theta&\cos\theta&0\\
+                                0&0&1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="text-align:center;font-size:16pt">3. 将旋转中心平移回原位置</p>
+                            <p class="fragment" style="text-align:center;font-size:16pt">
+                                \[
+                                M_3=\begin{bmatrix}
+                                1&0&c_x\\
+                                0&1&c_y\\
+                                0&0&1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                    </div>
+                    <p class="fragment" style="text-align:center;font-size:16pt">将全部变换连接起来，有
+                        \[
+                        M = M_3M_2M_1 =
+                        =\begin{bmatrix}
+                            1&0&c_x\\
+                            0&1&c_y\\
+                            0&0&1
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                            \cos\theta&-\sin\theta&0\\
+                            \sin\theta&\cos\theta&0\\
+                            0&0&1
+                        \end{bmatrix}
+                        \begin{bmatrix}
+                            1&0&-c_x\\
+                            0&1&-c_y\\
+                            0&0&1
+                        \end{bmatrix}
+                        =\begin{bmatrix} 
+                        \cos\theta & -\sin\theta & c_x(1-\cos\theta)+c_y\sin\theta \\ 
+                        \sin\theta & \cos\theta & c_y(1-\cos\theta)-c_x\sin\theta \\ 
+                        0 & 0 & 1 
+                        \end{bmatrix}
+                        \]</p>
+                    <p class="fragment" style="text-align:center;font-size:20pt">
+                        \[P'=MP\]
+                    </p>
+                    <p class="fragment" style="text-align:center;font-size:20pt">
+                        <a href="./AppDemos/rot_any_point.html" target="_blank">二维平面绕任意点旋转示例</a>
+                    </p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>复合变换的顺序</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="font-size:20pt">复合变换中，变换顺序非常重要，考虑两个操作:</p>
+                            <ul>
+                                <li class="fragment" style="font-size: 20pt;">沿X轴正向平移200个单位</li>
+                                <li class="fragment" style="font-size:20pt">绕原点逆时针旋转60度</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <canvas class="fragment" id="dispcanvas" style="border:none;" width="500" height="500"></canvas>
+                            <script>
+                                var canvasd = document.getElementById("dispcanvas");
+                                var ctxd = canvasd.getContext("2d");
+                                
+                                var phase_1 = 1;
+                                var phase_2 = 1;
+                                var p1_cnt_1 = 0;//rt
+                                var p2_cnt_1 = 0;//ta
+                                var p1_cnt_2 = 0;//rt
+                                var p2_cnt_2 = 0;//ta
+                                var p1 = 60;
+                                var animationCompleted_1 = false;
+                                var animationCompleted_2 = false;
+                                var p2 = 200;
+
+                                window.requestAnimFrame = (function (callback) {
+                                    return window.requestAnimationFrame ||
+                                        window.webketRequestAnimationFrame ||
+                                        window.mozRequestAnimationFrame ||
+                                        window.oRequestAnimationFrame ||
+                                        window.msRequestAnimationFrame ||
+                                        function (callback) {
+                                            window.setTimeout(callback, 1000 / 60);
+                                        };
+                                })();
+
+                                function drawSquare(myRectangle, context) {
+                                    context.beginPath();
+                                    context.rect(myRectangle.x, myRectangle.y, myRectangle.width, myRectangle.height);
+                                    context.fillStyle = "#CD83C0";
+                                    context.fill();
+                                    context.lineWidth = myRectangle.borderWidth;
+                                    context.strokeStyle = 'black';
+                                    context.stroke();
+                                }
+
+                                function drawAxis(canvas, context) {
+                                    context.setTransform();
+                                    context.beginPath();
+                                    context.lineWidth = 3;
+                                    context.strokeStyle = 'black';
+                                    context.moveTo(0, canvas.height / 2);
+                                    context.lineTo(canvas.width, canvas.height / 2);
+                                    context.stroke();
+                                    context.moveTo(canvas.width, canvas.height / 2);
+                                    context.lineTo(canvas.width - 20, canvas.height / 2 - 10);
+                                    context.stroke();
+                                    context.moveTo(canvas.width, canvas.height / 2);
+                                    context.lineTo(canvas.width - 20, canvas.height / 2 + 10);
+                                    context.stroke();
+                                    context.moveTo(canvas.width / 2, canvas.height);
+                                    context.lineTo(canvas.width / 2, 0);
+                                    context.stroke();
+                                    context.moveTo(canvas.width / 2, 0);
+                                    context.lineTo(canvas.width / 2 - 10, 20);
+                                    context.stroke();
+                                    context.moveTo(canvas.width / 2, 0);
+                                    context.lineTo(canvas.width / 2 + 10, 20);
+                                    context.stroke();
+                                }
+                                function animate(lastTime, myRectangle, runAnimation, canvas, context) {
+                                    // 先转后移
+                                    if (runAnimation.value) {
+
+                                        context.setTransform();
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+
+                                        var time = (new Date()).getTime();
+                                        var timeDiff = time - lastTime;
+
+                                        context.translate(canvas.width / 2, canvas.height / 2);
+
+                                        context.translate(p2_cnt_1, 0);
+                                        context.rotate(-p1_cnt_1 * Math.PI / 180.0);
+
+                                        //context.translate( p2_cnt, 0  );
+
+
+                                        if (phase_1 == 1 && p1_cnt_1 <= p1) {
+                                            p1_cnt_1 = p1_cnt_1 + 1;
+                                            if (p1_cnt_1 > p1)
+                                                phase_1 = 2;
+                                        }
+
+                                        if (phase_1 == 2 && p2_cnt_1 <= p2) {
+                                            p2_cnt_1 = p2_cnt_1 + 1;
+                                            if (p2_cnt_1 > p2)
+                                                animationCompleted_1 = true; // 动画完成
+                                        }
+
+                                        drawSquare(myRectangle, context);
+                                        drawAxis(canvas, context);
+
+                                        requestAnimFrame(function () {
+                                            animate(time, myRectangle, runAnimation, canvas, context);
+                                        });
+                                    }
+                                }
+
+                                function animate2(lastTime, myRectangle, runAnimation, canvas, context) {
+                                    // 先移后转
+                                    if (runAnimation.value) {
+
+                                        context.setTransform();
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+
+                                        var time = (new Date()).getTime();
+                                        var timeDiff = time - lastTime;
+
+                                        context.translate(canvas.width / 2, canvas.height / 2);
+
+                                        context.rotate(-p1_cnt_2 * Math.PI / 180.0);
+                                        context.translate(p2_cnt_2, 0);
+
+                                        //context.translate( p2_cnt, 0  );
+
+                                        if (phase_2 == 2 && p1_cnt_2 <= p1) {
+                                            p1_cnt_2 = p1_cnt_2 + 1;
+                                            if (p1_cnt_2 > p1)
+                                                phase_2 = 1;
+                                                animationCompleted_2 = true; // 动画完成
+                                        }
+
+                                        if (phase_2 == 1 && p2_cnt_2 <= p2) {
+                                            p2_cnt_2 = p2_cnt_2 + 1;
+                                            if (p2_cnt_2 > p2)
+                                                phase_2 = 2;
+                                               
+                                        }
+
+                                        drawSquare(myRectangle, context);
+                                        drawAxis(canvas, context);
+
+                                        requestAnimFrame(function () {
+                                            animate2(time, myRectangle, runAnimation, canvas, context);
+                                        });
+                                    }
+                                }
+
+                                var myRectangle = {
+                                    x: -50,
+                                    y: -25,
+                                    width: 100,
+                                    height: 50,
+                                    borderWidth: 5
+                                };
+
+                                var runAnimation = {
+                                    value: false
+                                }
+
+                                ctxd.translate(canvasd.width / 2, canvasd.height / 2);
+                                drawSquare(myRectangle, ctxd);
+                                drawAxis(canvasd, ctxd);
+                            </script>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>复合变换的顺序</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment" style="font-size: 20pt;">先绕原点旋转逆时针旋转60度</li>
+                                <li class="fragment" style="font-size:20pt;">再沿X轴正向平移200个单位</li>
+                            </ul>
+                            
+                        </div>
+                        <div>
+                            <canvas class="fragment" id="rtcanvas" style="border:none;" width="500" height="500"></canvas>
+                            <script>
+                                var canvas1 = document.getElementById("rtcanvas");
+                                var ctx1 = canvas1.getContext("2d");
+                                document.getElementById('rtcanvas').addEventListener('click', function () {
+                                    if (animationCompleted_1) { // 如果动画已完成，则重置
+                                        runAnimation.value = false;
+                                        animationCompleted_1 = false;
+                                        phase_2 = 1;
+                                        p1_cnt_1 = 0;
+                                        p2_cnt_1 = 0;
+                                        ctx1.setTransform();
+                                        ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+                                        ctx1.translate(canvas1.width / 2, canvas1.height / 2);
+                                        drawSquare(myRectangle, ctx1);
+                                        drawAxis(canvas1, ctx1);
+                                        return;
+                                    }
+
+                                    if (!runAnimation.value) {
+                                        runAnimation.value = true;
+                                        animationCompleted_1 = false;
+                                        phase_1 = 1;
+                                        p1_cnt_1 = 0;
+                                        p2_cnt_1 = 0;
+                                            var date = new Date();
+                                            var time = date.getTime();
+                                            animate(time, myRectangle, runAnimation, canvas1, ctx1);
+                                        }
+                                    });
+                                ctx1.translate(canvas1.width / 2, canvas1.height / 2);
+                                drawSquare(myRectangle, ctx1);
+                                drawAxis(canvas1, ctx1);
+                            </script>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>复合变换的顺序</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment" style="font-size: 20pt;">先沿X轴正向平移200个单位</li>
+                                <li class="fragment" style="font-size:20pt;">再绕原点逆时针旋转60度</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <canvas class="fragment" id="tacanvas" style="border:none;" width="500" height="500"></canvas>
+                            <script>
+                                var canvas2 = document.getElementById("tacanvas");
+                                var ctx2 = canvas2.getContext("2d");
+                                document.getElementById('tacanvas').addEventListener('click', function () {
+                                    if (animationCompleted_2) { // 如果动画已完成，则重置
+                                        runAnimation.value = false;
+                                        animationCompleted_2 = false;
+                                        phase_2 = 1;
+                                        p1_cnt_2 = 0;
+                                        p2_cnt_2 = 0;
+                                        ctx2.setTransform();
+                                        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+                                        ctx2.translate(canvas2.width / 2, canvas2.height / 2);
+                                        drawSquare(myRectangle, ctx2);
+                                        drawAxis(canvas2, ctx2);
+                                        return;
+                                    }
+
+                                    if (!runAnimation.value) {
+                                        runAnimation.value = true;
+                                        animationCompleted_2 = false;
+                                        phase_2 = 1;
+                                        p1_cnt_2 = 0;
+                                        p2_cnt_2 = 0;
+                                            var date = new Date();
+                                            var time = date.getTime();
+                                            animate2(time, myRectangle, runAnimation, canvas2, ctx2);
+                                        }
+                                    });
+                                ctx2.translate(canvas2.width / 2, canvas2.height / 2);
+                                drawSquare(myRectangle, ctx2);
+                                drawAxis(canvas2, ctx2);
+                            </script>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>复合变换的顺序</h3>
+                    <p class="fragment">两种变换顺序的结果完全不同！</p>
+                    <p class="fragment">矩阵乘法<strong>不满足</strong>交换律，即$AB\neq BA$</p>
+                    <p class="fragment">变换顺序会影响最终的结果</p>
+                    <div class="warning-box fragment">
+                        <p><strong>重要提示：</strong>变换的顺序至关重要！不同的变换顺序会产生完全不同的结果</p>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>复合变换应用--时钟</h3>
+                    <iframe class="fragment" src="./AppDemos/clock_demo.html" style="width:100%; height:600px; border:none;"></iframe>
+                </section>
+                <section>
+                    <h3>复合变换应用--行星系统</h3>
+                    <iframe class="fragment" src="./AppDemos/solar_system_demo.html" style="width:100%; height:600px; border:none;"></iframe>
+                </section>
+            </section>
+            <section>
+                <h3>思考</h3>
+                <p class="fragment">请写出将一个二维图形先以<strong>其中心点$(c_x, c_y)$</strong>为中心<strong>放大2倍</strong>，再绕其<strong>中心点逆时针旋转$45\degree$</strong>，再<strong>沿$Y$轴向上平移10个单位</strong>的复合变换矩阵表达式</p>
+                <p class="fragment"><strong>答案：</strong>
+                    \[
+                    M = T(0,10)T(c_x, c_y)R(45\degree)S(2,2)T(-c_x,-c_y)
+                    \]
+                </p>
+            </section>
+            <section>
+                <h3>小结</h3>
+                <ul>
+                    <li class="fragment">复合变换是基本变换的连接(组合)，可通过连接平移、旋转、缩放操作完成</li>
+                    <li class="fragment">复合变换矩阵$M=ABCD$，应用于点时，有$$p'=MP=ABCDP=(A(B(C(DP))))$$ 变换顺序为<strong>右结合</strong></li>
+                    <li class="fragment">变换的顺序非常重要，矩阵乘法不满足交换律，即$AB\neq BA$</li>
+                    <li class="fragment">绕任意点$C(c_x, c_y)$旋转$\theta$角度，需将旋转中心先平移到原点后再执行旋转操作，最后将旋转中心平移回原位置</li>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX],
+    })
+</script>
+</body>
+</html>

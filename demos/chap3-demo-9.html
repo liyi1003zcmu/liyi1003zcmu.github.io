@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-    <title>Chap3 Demo -- Continue Dot Square using Mouse Down</title>
-    <script id="vertex-shader" type="x-shader/x-vertex">
+	<meta http-equiv="Content-type" content="text/html;charset=utf-8">
+	<title>Chap4 Demo</title>
+	<script id="vertex-shader" type="x-shader/x-vertex">
 	#version 300 es
-	
 	in vec4 vPosition;
 	in vec4 vColor;
-
 	out vec4 aColor;
+
+	uniform vec4 r;
+	vec4 multq(vec4 a, vec4 b)
+	{
+		return(vec4(a.x*b.x-dot(a.yzw,b.yzw), a.x*b.yzw+b.x*a.yzw+cross(b.yzw,a.yzw)));
+	}
+
+	vec4 invq(vec4 a)
+	{
+		return (vec4(a.x, -a.yzw)/dot(a,a));
+	}
 
 	void main()
 	{
-		gl_Position = vPosition;
+		vec4 p;
+		p=vec4(0.0, vPosition.xyz);
+		p=multq(r, multq(p,invq(r)));
+		gl_Position = vec4(p.yzw, 1.0);
 		aColor = vColor;
 	}
 	</script>
 
-    <script id="fragment-shader" type="x-shader/x-fragment">
+	<script id="fragment-shader" type="x-shader/x-fragment">
 	#version 300 es
-	
 	precision mediump float;
-
 	in vec4 aColor;
 	out vec4 fColor;
 
@@ -32,31 +41,17 @@
 		fColor = aColor;
 	}
 	</script>
-
-    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
-    <script type="text/javascript" src="../js/common/initShaders.js"></script>
-    <script type="text/javascript" src="../js/common/gl-matrix-min.js"></script>
-
-    <script type="text/javascript" src="../js/ch03/drawpolygonclicks.js"></script>
+	<script type="text/javascript" src="../js/common/webgl-utils.js"></script>
+	<script type="text/javascript" src="../js/common/initShaders.js"></script>
+	<script type="text/javascript" src="../js/common/gl-Matrix.js"></script>
+	
+	<script type="text/javascript" src="../js/ch03/rotcubetrackq.js"></script>
 </head>
+<body onload="initCube()">
+<h1>旋转的立方体-跟踪球控制-四元数</h1>
+<canvas id="gl-canvas" width="512" height="512">
+你的浏览器不支持HTML5 canvas元素
+</canvas>
 
-<body onload="initPolygonCanvas()">
-    <h1>Draw a polygon with continue clicks</h1>
-    <canvas id="ply-canvas" width="512" height="512">你的浏览器不支持HTML5 canvas元素
-    </canvas>
-    <fieldset>
-        <legend>控制选项</legend>
-        <button id="closepoly">闭合多边形</button>
-        <select id="cmenu" size="7">
-            <option value="0">Black</option>
-            <option value="1">Red</option>
-            <option value="2">Yellow</option>
-            <option value="3">Green</option>
-            <option value="4">Blue</option>
-            <option value="5">Magenta</option>
-            <option value="6">Cyan</option>
-        </select>
-    </fieldset>
 </body>
-
 </html>

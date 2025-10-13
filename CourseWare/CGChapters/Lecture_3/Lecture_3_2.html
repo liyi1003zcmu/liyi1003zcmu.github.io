@@ -209,7 +209,11 @@
             <section id="titlepage">
                 <h1>计算机图形学</h1>
                 <h2>第三章(2) 变换</h2>
-                
+                <p style="font-family: courier;font-size:28pt;text-align:center">
+                    李懿<br>
+                    医学技术与信息工程学院<br>
+                    浙江中医药大学<br>
+                </p>
                 <p id="date" style="font-size:28pt;text-align:center"></p>
                 <script>
                     var now = new Date();
@@ -1308,6 +1312,167 @@
                     </div>
                 </section>
             </section>
+            <section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">三维空间中的变换与二维空间类似，只是多了z轴的变换。</p>
+                    <p class="fragment" style="font-weight:bold">平移</p>
+                    <p class="fragment">空间中，将一个点$P(x,y,z)$移动到新的点位置$P'(x',y',z')$，位移向量为$(t_x, t_y, t_z)$，即有</p>
+                    <p class="fragment">
+                        \[
+                            \begin{cases}
+                                x' = x + t_x \\
+                                y' = y + t_y \\
+                                z' = z + t_z
+                            \end{cases}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">平移对应的变换矩阵记为$T$，有$P'=TP$， 其中，$T$为</p>
+                    <p class="fragment">
+                        \[
+                            T(t_x, t_y, t_z) = \begin{bmatrix}
+                                1 & 0 & 0 & t_x \\
+                                0 & 1 & 0 & t_y \\
+                                0 & 0 & 1 & t_z \\
+                                0 & 0 & 0 & 1
+                            \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment" style="font-weight: bold">缩放</p>
+                    <p class="fragment">三维空间中，沿着三条轴的方向改变对象的大小，假设在三条轴方向上缩放系数分别为$s_x, s_y, s_z$，其表达式可写成</p>
+                    <p class="fragment">
+                        \[
+                            \begin{cases}
+                                x' = s_x \cdot x \\
+                                y' = s_y \cdot y \\
+                                z' = s_z \cdot z
+                            \end{cases}
+                        \]
+                    </p>
+                    <p class="fragment">缩放对应的变换矩阵记为$S$，有$P'=SP$， 其中，$S$为</p>
+                    <p class="fragment">
+                        \[
+                        S(s_x, s_y, s_z) = \begin{bmatrix}
+                            s_x & 0 & 0 & 0 \\
+                            0 & s_y & 0 & 0 \\
+                            0 & 0 & s_z & 0 \\
+                            0 & 0 & 0 & 1
+                        \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">反射可视作是特殊的缩放</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">
+                                \[
+                                \begin{cases}
+                                s_x=1, s_y=1\\
+                                s_x=-1, s_y=1\\
+                                s_x=-1, s_y=-1\\
+                                s_x=1, s_y=-1
+                                \end{cases}
+                                \]
+                            </p>
+                        </div>
+                        <div>
+                            <img class="fragment" src="./../../images/cg/chap03/ch03-reflection.png" alt="反射" width="100%">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment" style="font-weight: bold">旋转</p>
+                    <p class="fragment">三维空间中，旋转定义为绕特定坐标轴的转动</p>
+                    <p class="fragment">绕$Z$轴旋转$\theta$角，保持点坐标的$Z$分量不变</p>
+                    <img src="./../../images/cg/chap03/ch03-rotzview.png" alt="绕Z轴旋转" width="50%">
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">点$(x,y,z)$绕$Z$轴逆时针(正向)旋转$\theta$角度，相当于是点在$XOY$平面绕原点旋转在三维空间的扩展，有</p>
+                    <p class="fragment">
+                        \[
+                            \begin{cases}
+                                x' = x \cdot \cos \theta - y \cdot \sin \theta \\
+                                y' = x \cdot \sin \theta + y \cdot \cos \theta \\
+                                z' = z
+                            \end{cases}
+                        \]
+                    </p>
+                    <p class="fragment">对应的齐次旋转变换矩阵记为$R_{Z}(\theta)$，有$P'=R_{Z}(\theta)P$， 其中，$R_{Z}(\theta)$为</p>
+                    <p class="fragment">
+                        \[
+                            R_{Z}(\theta) = \begin{bmatrix}
+                                \cos \theta & -\sin \theta & 0 & 0 \\
+                                \sin \theta & \cos \theta & 0 & 0 \\
+                                0 & 0 & 1 & 0 \\
+                                0 & 0 & 0 & 1
+                            \end{bmatrix}
+                        \]
+                    </p>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">相应的，绕$X$轴和$Y$轴正向分别旋转$\theta$角度，保持相应的分量值不变</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="./../../images/cg/chap03/ch03-rotxview.png" alt="绕X轴旋转" width="100%">
+                        </div>
+                        <div>
+                            <img class="fragment" src="./../../images/cg/chap03/ch03-rotyview.png" alt="绕Y轴旋转" width="100%">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>三维空间的变换</h3>
+                    <p class="fragment">利用与$Z$轴相同的方式，可推导得到绕$X$轴和$Y$轴旋转的齐次坐标矩阵表示分别为：</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="text-align:center;font-size:18pt">
+                                \[
+                                R_X(\theta)=\begin{bmatrix}
+                                1&0&0&0\\
+                                0&\cos{\theta}&-\sin{\theta}&0\\
+                                0&\sin{\theta}&\cos{\theta}&0\\
+                                0&0&0&1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="text-align:center;font-size:18pt">
+                                \[
+                                R_Y(\theta)=\begin{bmatrix}
+                                \cos{\theta}&0&\sin{\theta}&0\\
+                                0&1&0&0\\
+                                -\sin{\theta}&0&\cos{\theta}&0\\
+                                0&0&0&1
+                                \end{bmatrix}
+                                \]
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>绕任意点的旋转</h3>
+                    <img class="fragment" src="../../images/cg/chap03/ch03-anyrot.png" style="width:100%">
+                    <p class="fragment" style="text-align:center">思考，如何实现绕任意点的旋转？</p>
+                </section>
+            </section>
+            <section>
+                <h3>课程总结</h3>
+                <li class="fragment">二维平面上三种基本变换的几何意义</strong></li>
+                <li class="fragment">使用齐次坐标和齐次矩阵统一表示变换的方法</li>
+                <li class="fragment">三维空间中三种基本变换的齐次矩阵表示 </li>
+            </section>
         </div>
     </div>
 
@@ -1408,7 +1573,6 @@
                     reorderTransformations();
                     updateAndRender();
                 });
-
                 updateAndRender();
             }
 

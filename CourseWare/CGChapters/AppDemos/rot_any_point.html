@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绕任意中心的2D旋转</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .main-container {
+        display: flex;
+        flex-direction: column; /* Changed to column layout */
+        width: 98%;
+        max-width: 1000px;
+        height: 95vh;
+        max-height: 850px;
+        background-color: #fff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .content-area {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    .canvas-container {
+        flex: 1.5;
+        min-width: 400px;
+        min-height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+    #canvas {
+        cursor: grab;
+        border-right: 1px solid #e0e0e0;
+    }
+    .controls-panel {
+        flex: 1;
+        min-width: 350px;
+        padding: 15px 20px;
+        background-color: #fafafa;
+        overflow-y: auto;
+    }
+    h1, h2 {
+        margin: 0 0 10px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #ddd;
+    }
+    h1 { font-size: 20px; text-align: center; }
+    h2 { font-size: 16px; color: #444; margin-top: 15px;}
+
+    .control-group { margin-bottom: 12px; }
+    label { font-weight: 600; font-size: 14px; }
+    input[type="range"] { width: 100%; cursor: pointer; }
+    .value-display { font-size: 14px; color: #555; margin: 5px 0; }
+    .matrix-display {
+        font-family: 'Courier New', Courier, monospace;
+        background-color: #e9eef2;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 13px; /* Reduced font size */
+        white-space: pre;
+        line-height: 1.4; /* Reduced line height */
+    }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>绕任意中心的2D旋转可视化</h1>
+    <div class="content-area">
+        <div class="canvas-container">
+            <canvas id="canvas" width="500" height="500"></canvas>
+        </div>
+        <div class="controls-panel">
+            
+
+            <div class="control-group">
+                <label for="angle-slider">旋转角度 (θ): <span id="angle-value">0</span>°</label>
+                <input type="range" id="angle-slider" min="0" max="360" value="0">
+            </div>
+
+            <div class="control-group">
+                <label>坐标 (拖动点进行修改)</label>
+                <p class="value-display">点 P (初始): <span id="p-coords"></span></p>
+                <p class="value-display">中心 C: <span id="c-coords"></span></p>
+                <p class="value-display">点 P' (旋转后): <span id="p-prime-coords"></span></p>
+            </div>
+
+            <h2>变换矩阵</h2>
+            
+            <div class="control-group">
+                <label>1. 平移至原点 (T)</label>
+                <div class="matrix-display" id="matrix-t"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>2. 绕原点旋转 (R)</label>
+                <div class="matrix-display" id="matrix-r"></div>
+            </div>
+
+            <div class="control-group">
+                <label>3. 平移回原位 (T⁻¹)</label>
+                <div class="matrix-display" id="matrix-t-inv"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>最终变换矩阵 (M = T⁻¹ * R * T)</label>
+                <div class="matrix-display" id="matrix-final"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- UI Elements ---
+    const angleSlider = document.getElementById('angle-slider');
+    const angleValue = document.getElementById('angle-value');
+    const pCoords = document.getElementById('p-coords');
+    const cCoords = document.getElementById('c-coords');
+    const pPrimeCoords = document.getElementById('p-prime-coords');
+    const matrixT = document.getElementById('matrix-t');
+    const matrixR = document.getElementById('matrix-r');
+    const matrixTInv = document.getElementById('matrix-t-inv');
+    const matrixFinal = document.getElementById('matrix-final');
+
+    // --- State ---
+    let origin = { x: canvas.width / 2, y: canvas.height / 2 };
+    let pointP = { x: 150, y: 100 };
+    let centerC = { x: 50, y: 50 };
+    let angle = 0; // in degrees
+
+    let dragging = null;
+    const pointRadius = 8;
+    const hitThreshold = 12;
+
+    // --- Coordinate Transformation ---
+    const toCanvasCoords = (p) => ({ x: p.x + origin.x, y: -p.y + origin.y });
+    const fromCanvasCoords = (p) => ({ x: p.x - origin.x, y: -(p.y - origin.y) });
+    
+    // --- Matrix Math ---
+    function multiplyMatrices(m1, m2) {
+        const result = [[0,0,0], [0,0,0], [0,0,0]];
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                for (let k = 0; k < 3; k++) {
+                    result[i][j] += m1[i][k] * m2[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    function formatNumber(num) {
+        return num.toFixed(2).padStart(7, ' ');
+    }
+    
+    function formatMatrix(m) {
+        return m.map(row => `| ${row.map(formatNumber).join(' ')} |`).join('\n');
+    }
+
+    // --- Drawing Functions ---
+    function drawAxes() {
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // X Axis
+        ctx.moveTo(0, origin.y);
+        ctx.lineTo(canvas.width, origin.y);
+        // Y Axis
+        ctx.moveTo(origin.x, 0);
+        ctx.lineTo(origin.x, canvas.height);
+        ctx.stroke();
+        ctx.fillStyle = '#999';
+        ctx.fillText('X', canvas.width - 15, origin.y - 5);
+        ctx.fillText('Y', origin.x + 5, 15);
+    }
+    
+    function drawPoint(p, color, label) {
+        const canvasP = toCanvasCoords(p);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(canvasP.x, canvasP.y, pointRadius, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.font = '14px Arial';
+        ctx.fillText(`${label}(${p.x.toFixed(0)}, ${p.y.toFixed(0)})`, canvasP.x + 10, canvasP.y - 10);
+    }
+
+    function drawScene() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawAxes();
+
+        // --- Calculations ---
+        const angleRad = angle * Math.PI / 180;
+        const cos = Math.cos(angleRad);
+        const sin = Math.sin(angleRad);
+
+        // 1. Translate pointP so centerC is at the origin
+        const pointTranslated = { x: pointP.x - centerC.x, y: pointP.y - centerC.y };
+
+        // 2. Rotate pointTranslated around the origin
+        const pointRotated = {
+            x: pointTranslated.x * cos - pointTranslated.y * sin,
+            y: pointTranslated.x * sin + pointTranslated.y * cos
+        };
+
+        // 3. Translate back
+        const pointFinal = {
+            x: pointRotated.x + centerC.x,
+            y: pointRotated.y + centerC.y
+        };
+
+        // --- Drawing Visuals ---
+        const canvasC = toCanvasCoords(centerC);
+        const canvasP = toCanvasCoords(pointP);
+        const canvasPPrime = toCanvasCoords(pointFinal);
+
+        // Line C to P
+        ctx.strokeStyle = 'rgba(0, 0, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(canvasC.x, canvasC.y);
+        ctx.lineTo(canvasP.x, canvasP.y);
+        ctx.stroke();
+
+        // Line C to P'
+        ctx.strokeStyle = 'rgba(0, 128, 0, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(canvasC.x, canvasC.y);
+        ctx.lineTo(canvasPPrime.x, canvasPPrime.y);
+        ctx.stroke();
+
+        // Rotation Arc
+        const radius = Math.hypot(pointP.x - centerC.x, pointP.y - centerC.y);
+        const startAngle = Math.atan2(-(pointP.y - centerC.y), pointP.x - centerC.x);
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.beginPath();
+        ctx.arc(canvasC.x, canvasC.y, radius, startAngle, startAngle - angleRad, true);
+        ctx.stroke();
+
+        // Draw points on top of lines
+        drawPoint(centerC, 'red', 'C');
+        drawPoint(pointP, 'blue', 'P');
+        drawPoint(pointFinal, 'green', "P'");
+        
+        // --- Update UI Text ---
+        angleValue.textContent = angle;
+        pCoords.textContent = `(${pointP.x.toFixed(0)}, ${pointP.y.toFixed(0)})`;
+        cCoords.textContent = `(${centerC.x.toFixed(0)}, ${centerC.y.toFixed(0)})`;
+        pPrimeCoords.textContent = `(${pointFinal.x.toFixed(0)}, ${pointFinal.y.toFixed(0)})`;
+
+        // Update matrices
+        const m_t = [[1, 0, -centerC.x], [0, 1, -centerC.y], [0, 0, 1]];
+        const m_r = [[cos, -sin, 0], [sin, cos, 0], [0, 0, 1]];
+        const m_t_inv = [[1, 0, centerC.x], [0, 1, centerC.y], [0, 0, 1]];
+        
+        const m_final = multiplyMatrices(m_t_inv, multiplyMatrices(m_r, m_t));
+
+        matrixT.textContent = formatMatrix(m_t);
+        matrixR.textContent = formatMatrix(m_r);
+        matrixTInv.textContent = formatMatrix(m_t_inv);
+        matrixFinal.textContent = formatMatrix(m_final);
+    }
+
+    // --- Event Listeners ---
+    angleSlider.addEventListener('input', (e) => {
+        angle = parseInt(e.target.value);
+        drawScene();
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        const mousePos = fromCanvasCoords({ x: e.offsetX, y: e.offsetY });
+        const distToP = Math.hypot(mousePos.x - pointP.x, mousePos.y - pointP.y);
+        const distToC = Math.hypot(mousePos.x - centerC.x, mousePos.y - centerC.y);
+
+        if (distToP < hitThreshold) {
+            dragging = pointP;
+            canvas.style.cursor = 'grabbing';
+        } else if (distToC < hitThreshold) {
+            dragging = centerC;
+            canvas.style.cursor = 'grabbing';
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (dragging) {
+            const mousePos = fromCanvasCoords({ x: e.offsetX, y: e.offsetY });
+            dragging.x = mousePos.x;
+            dragging.y = mousePos.y;
+            drawScene();
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        dragging = null;
+        canvas.style.cursor = 'grab';
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+        dragging = null;
+        canvas.style.cursor = 'grab';
+    });
+
+    // Initial draw
+    drawScene();
+</script>
+
+</body>
+</html>
+

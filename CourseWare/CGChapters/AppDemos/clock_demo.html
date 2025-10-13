@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时钟动画 - 复合变换示例</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f2f5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    h1 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    canvas {
+        background-color: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+</style>
+</head>
+<body>
+
+    <h1>时钟动画 - 复合变换示例 (UTC+8)</h1>
+    <canvas id="clockCanvas" width="500" height="500"></canvas>
+
+<script>
+    const canvas = document.getElementById('clockCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 将时钟半径设置为画布尺寸的90%，以留出边距
+    const radius = canvas.height / 2 * 0.9;
+    // 获取画布中心点坐标
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // 创建一个格式化工具，专门用于获取UTC+8时间
+    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Shanghai', // UTC+8
+        hour12: false,
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+    });
+
+
+    function drawClock() {
+        // 在绘制每一帧之前，清除整个画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 绘制时钟的表盘
+        drawFace(ctx, radius);
+
+        // 使用更可靠的 Intl API 获取当前UTC+8时间
+        const now = new Date();
+        const parts = timeFormatter.formatToParts(now);
+        const getValue = (type) => parseInt(parts.find(p => p.type === type).value);
+        
+        let hours = getValue('hour');
+        // Intl API 对于午夜24点会返回24，我们手动校正为0
+        if (hours === 24) hours = 0;
+        
+        const minutes = getValue('minute');
+        const seconds = getValue('second');
+        const milliseconds = now.getMilliseconds();
+
+
+        // --- 计算每根指针的角度 ---
+        // 秒针的角度：包含毫秒，实现平滑移动
+        const secAngle = (seconds / 60 + milliseconds / 60000) * 2 * Math.PI;
+        // 分针的角度：包含秒，实现平滑移动
+        const minAngle = ((minutes + seconds / 60) / 60) * 2 * Math.PI;
+        // 时针的角度：包含分钟，实现平滑移动 (小时数取模12以处理24小时制)
+        const hourAngle = (((hours % 12) + minutes / 60) / 12) * 2 * Math.PI;
+
+        // --- 绘制指针 ---
+        // 每一根指针的绘制都是一个独立的复合变换过程
+        drawHand(ctx, hourAngle, radius * 0.5, radius * 0.07, '#333');
+        drawHand(ctx, minAngle, radius * 0.75, radius * 0.05, '#333');
+        drawHand(ctx, secAngle, radius * 0.9, radius * 0.02, '#e74c3c');
+        
+        // 绘制中心的圆点
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.05, 0, 2 * Math.PI);
+        ctx.fillStyle = '#333';
+        ctx.fill();
+
+        // 请求浏览器在下一次重绘之前调用drawClock函数，形成动画循环
+        requestAnimationFrame(drawClock);
+    }
+
+    function drawFace(ctx, radius) {
+        // 绘制时钟外圆
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = radius * 0.05;
+        ctx.stroke();
+
+        // 绘制小时数字
+        ctx.font = radius * 0.15 + "px Arial";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.fillStyle = '#333';
+        for (let num = 1; num <= 12; num++) {
+            // 计算每个数字的位置角度 (需将3点钟方向的0度角调整为12点钟方向)
+            const angle = num * Math.PI / 6 - Math.PI / 2;
+            const x = centerX + Math.cos(angle) * (radius * 0.82);
+            const y = centerY + Math.sin(angle) * (radius * 0.82);
+            ctx.fillText(num.toString(), x, y);
+        }
+
+        // 绘制分钟刻度
+        for (let i = 0; i < 60; i++) {
+            const angle = i * Math.PI / 30;
+            const isHourMark = i % 5 === 0;
+            const markLength = isHourMark ? radius * 0.08 : radius * 0.04;
+            const markWidth = isHourMark ? 3 : 1;
+
+            ctx.beginPath();
+            ctx.lineWidth = markWidth;
+            ctx.strokeStyle = '#555';
+            // 从外圈向内画刻度线
+            ctx.moveTo(
+                centerX + Math.cos(angle) * radius,
+                centerY + Math.sin(angle) * radius
+            );
+            ctx.lineTo(
+                centerX + Math.cos(angle) * (radius - markLength),
+                centerY + Math.sin(angle) * (radius - markLength)
+            );
+            ctx.stroke();
+        }
+    }
+
+    // 绘制单根指针的函数
+    function drawHand(ctx, angle, length, width, color) {
+        // 1. 保存当前画布状态 (坐标系，样式等)
+        ctx.save();
+        
+        // 2.【变换一：平移】将坐标系原点移动到时钟中心
+        ctx.translate(centerX, centerY);
+        
+        // 3.【变换二：旋转】根据时间旋转坐标系
+        ctx.rotate(angle);
+        
+        // 4.【绘制】在变换后的坐标系中进行绘制
+        //    我们总是从新的原点(0,0)向上(Y轴负方向)画线
+        ctx.beginPath();
+        ctx.lineWidth = width;
+        ctx.strokeStyle = color;
+        ctx.lineCap = 'round';
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -length);
+        ctx.stroke();
+        
+        // 5. 恢复到上一次保存的画布状态
+        //    这样下一次绘制就不会受到本次变换的影响
+        ctx.restore();
+    }
+
+    // 启动动画
+    drawClock();
+</script>
+
+</body>
+</html>
+
