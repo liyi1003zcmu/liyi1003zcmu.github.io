@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 材质编辑器 (Phong 模型)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #eee;
+            display: flex;
+            flex-direction: row-reverse; /* 将控制面板放右边 */
+            height: 100vh;
+        }
+        #canvas-container {
+            flex: 3;
+            height: 100%;
+            overflow: hidden;
+            background-color: #111;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            flex: 1;
+            min-width: 320px;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #2a2a2a;
+            overflow-y: auto;
+            border-left: 2px solid #444;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+        h2 {
+            margin-top: 0;
+            color: #42a5f5;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 50px;
+            height: 30px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: transparent;
+        }
+        /* 兼容 WebKit 浏览器 */
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
+        /* 兼容 Firefox 浏览器 */
+        input[type="color"]::-moz-color-swatch {
+            border: none;
+            border-radius: 4px;
+        }
+        .hex-value {
+            font-family: 'Courier New', Courier, monospace;
+            background: #333;
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+        .slider-value {
+            text-align: right;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        #presets {
+            border-top: 1px solid #444;
+            padding-top: 15px;
+        }
+        #presets h3 {
+            margin: 0 0 10px 0;
+        }
+        #presets button {
+            background-color: #42a5f5;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        #presets button:hover {
+            background-color: #1e88e5;
+        }
+        #presets button.preset-clay { background-color: #a1887f; }
+        #presets button.preset-clay:hover { background-color: #8d6e63; }
+        #presets button.preset-metal { background-color: #9e9e9e; }
+        #presets button.preset-metal:hover { background-color: #757575; }
+
+        /* 新增：用于光源控制的样式 */
+        .light-control-grid {
+            display: grid;
+            grid-template-columns: 20px 1fr 50px;
+            align-items: center;
+            gap: 10px;
+        }
+        .light-control-grid label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        .light-control-grid .slider-value {
+            text-align: right;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 控制面板 -->
+    <div id="controls">
+        <h2>材质编辑器</h2>
+        
+        <div class="control-group">
+            <label for="ambientColor">环境光 (Ambient)</label>
+            <div class="color-picker">
+                <input type="color" id="ambientColor" value="#111111">
+                <span id="ambientHex" class="hex-value">#111111</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">物体在“黑暗”中反射的环境光颜色。通常设置得很暗。</p>
+        </div>
+
+        <div class="control-group">
+            <label for="diffuseColor">漫反射 (Diffuse)</label>
+            <div class="color-picker">
+                <input type="color" id="diffuseColor" value="#888888">
+                <span id="diffuseHex" class="hex-value">#888888</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">物体在光照下的“固有”颜色，表现了粗糙表面的散射。</p>
+        </div>
+
+        <div class="control-group">
+            <label for="specularColor">高光 (Specular)</label>
+            <div class="color-picker">
+                <input type="color" id="specularColor" value="#FFFFFF">
+                <span id="specularHex" class="hex-value">#FFFFFF</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">物体“镜面”反射的颜色。非金属通常为白色，金属为其固有色。</p>
+        </div>
+
+        <div class="control-group">
+            <label for="shininessSlider">高光强度 (Shininess)</label>
+            <input type="range" id="shininessSlider" min="1.0" max="256.0" value="32.0" step="1.0">
+            <div id="shininessValue" class="slider-value">32.0</div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">值越高，高光点越小越锐利（更光滑）；值越低，越分散（更粗糙）。</p>
+        </div>
+
+        <!-- 新增：光源颜色控制 -->
+        <div class="control-group">
+            <label for="lightColorPicker">光源颜色 (Light Color)</label>
+            <div class="color-picker">
+                <input type="color" id="lightColorPicker" value="#FFFFFF">
+                <span id="lightColorHex" class="hex-value">#FFFFFF</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">点光源发出的光的颜色。</p>
+        </div>
+
+        <!-- 新增：场景环境光控制 -->
+        <div class="control-group">
+            <label for="ambientLightPicker">场景环境光 (Ambient Light)</label>
+            <div class="color-picker">
+                <input type="color" id="ambientLightPicker" value="#1a1a1a">
+                <span id="ambientLightHex" class="hex-value">#1a1a1a</span>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">整个场景的基础光照颜色（对应 `u_ambientLight`）。</p>
+        </div>
+
+        <!-- 新增的光源控制 -->
+        <div class="control-group">
+            <label>光源位置 (Light Position)</label>
+            <div class="light-control-grid">
+                <label for="lightXSlider">X:</label>
+                <input type="range" id="lightXSlider" min="-10" max="10" value="5" step="0.1">
+                <div id="lightXValue" class="slider-value">5.0</div>
+                
+                <label for="lightYSlider">Y:</label>
+                <input type="range" id="lightYSlider" min="-10" max="10" value="5" step="0.1">
+                <div id="lightYValue" class="slider-value">5.0</div>
+
+                <label for="lightZSlider">Z:</label>
+                <input type="range" id="lightZSlider" min="-20" max="-2" value="-7" step="0.1">
+                <div id="lightZValue" class="slider-value">-7.0</div>
+            </div>
+            <p style="font-size: 0.8em; color: #aaa; margin: 5px 0;">拖动滑块来移动光源，观察高光的变化。</p>
+        </div>
+        <!-- 光源控制结束 -->
+
+
+        <div id="presets">
+            <h3>预设材质</h3>
+            <button id="presetPlastic">塑料 (Plastic)</button>
+            <button id="presetMetal" class="preset-metal">闪亮金属 (Metal)</button>
+            <button id="presetClay" class="preset-clay">黏土 (Clay)</button>
+        </div>
+    </div>
+
+    <!-- WebGL 画布 -->
+    <div id="canvas-container">
+        <canvas id="webgl-canvas"></canvas>
+    </div>
+
+    <!-- 顶点着色器 (Vertex Shader) -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 a_position;
+        attribute vec3 a_normal;
+
+        uniform mat4 u_worldViewProjection;
+        uniform mat4 u_world;
+        uniform mat4 u_worldInverseTranspose;
+
+        varying vec3 v_worldPos;
+        varying vec3 v_normal;
+
+        void main() {
+            // 最终的裁剪空间坐标
+            gl_Position = u_worldViewProjection * a_position;
+            
+            // 传递给片元着色器的世界坐标和法线
+            v_worldPos = (u_world * a_position).xyz;
+            v_normal = mat3(u_worldInverseTranspose) * a_normal;
+        }
+    </script>
+
+    <!-- 片元着色器 (Fragment Shader) - 实现 Phong 光照模型 -->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        // 从VS传入
+        varying vec3 v_worldPos;
+        varying vec3 v_normal;
+
+        // 全局 Uniforms
+        uniform vec3 u_cameraPos;
+        uniform vec3 u_lightPos;
+        uniform vec3 u_lightColor;
+        uniform vec3 u_ambientLight; // 场景中的环境光基色
+
+        // 材质 Uniforms
+        struct Material {
+            vec3 ambient;
+            vec3 diffuse;
+            vec3 specular;
+            float shininess;
+        };
+        uniform Material u_material;
+
+        void main() {
+            // 1. 归一化向量
+            vec3 normal = normalize(v_normal);
+            vec3 viewDir = normalize(u_cameraPos - v_worldPos);
+            vec3 lightDir = normalize(u_lightPos - v_worldPos);
+            
+            // 2. 环境光 (Ambient)
+            // 场景环境光 * 材质环境色
+            vec3 ambient = u_ambientLight * u_material.ambient;
+
+            // 3. 漫反射 (Diffuse)
+            // max(dot(N, L), 0.0)
+            float diff = max(dot(normal, lightDir), 0.0);
+            vec3 diffuse = diff * u_lightColor * u_material.diffuse;
+
+            // 4. 高光 (Specular) - 使用 Blinn-Phong
+            // Blinn-Phong 更高效，效果也很好
+            vec3 halfwayDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(normal, halfwayDir), 0.0), u_material.shininess);
+            vec3 specular = spec * u_lightColor * u_material.specular;
+
+            // 5. 最终颜色
+            gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+        }
+    </script>
+
+    <!-- 
+      JavaScript 部分:
+      1. 嵌入 webgl-utils.js 和 m4.js (用于矩阵数学)
+      2. 嵌入 createSphere (用于生成球体)
+      3. 主 WebGL 应用逻辑
+    -->
+    
+    <script>
+        // --- 最小化的 webgl-utils.js ---
+        // (仅包含创建着色器和程序的部分)
+        const webglUtils = {
+            createShader: function(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    return shader;
+                }
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+            },
+            createProgram: function(gl, vertexShader, fragmentShader) {
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    return program;
+                }
+                console.error(gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+            }
+        };
+
+        // --- 最小化的 m4.js (矩阵数学库) ---
+        const m4 = {
+            perspective: function(fieldOfViewYInRadians, aspect, zNear, zFar) {
+                var f = 1.0 / Math.tan(fieldOfViewYInRadians / 2);
+                var rangeInv = 1 / (zNear - zFar);
+                return [
+                    f / aspect, 0, 0, 0,
+                    0, f, 0, 0,
+                    0, 0, (zNear + zFar) * rangeInv, -1,
+                    0, 0, zNear * zFar * rangeInv * 2, 0
+                ];
+            },
+            multiply: function(a, b) {
+                var a00 = a[0 * 4 + 0]; var a01 = a[0 * 4 + 1]; var a02 = a[0 * 4 + 2]; var a03 = a[0 * 4 + 3];
+                var a10 = a[1 * 4 + 0]; var a11 = a[1 * 4 + 1]; var a12 = a[1 * 4 + 2]; var a13 = a[1 * 4 + 3];
+                var a20 = a[2 * 4 + 0]; var a21 = a[2 * 4 + 1]; var a22 = a[2 * 4 + 2]; var a23 = a[2 * 4 + 3];
+                var a30 = a[3 * 4 + 0]; var a31 = a[3 * 4 + 1]; var a32 = a[3 * 4 + 2]; var a33 = a[3 * 4 + 3];
+                var b00 = b[0 * 4 + 0]; var b01 = b[0 * 4 + 1]; var b02 = b[0 * 4 + 2]; var b03 = b[0 * 4 + 3];
+                var b10 = b[1 * 4 + 0]; var b11 = b[1 * 4 + 1]; var b12 = b[1 * 4 + 2]; var b13 = b[1 * 4 + 3];
+                var b20 = b[2 * 4 + 0]; var b21 = b[2 * 4 + 1]; var b22 = b[2 * 4 + 2]; var b23 = b[2 * 4 + 3];
+                var b30 = b[3 * 4 + 0]; var b31 = b[3 * 4 + 1]; var b32 = b[3 * 4 + 2]; var b33 = b[3 * 4 + 3];
+                return [
+                    b00 * a00 + b01 * a10 + b02 * a20 + b03 * a30,
+                    b00 * a01 + b01 * a11 + b02 * a21 + b03 * a31,
+                    b00 * a02 + b01 * a12 + b02 * a22 + b03 * a32,
+                    b00 * a03 + b01 * a13 + b02 * a23 + b03 * a33,
+                    b10 * a00 + b11 * a10 + b12 * a20 + b13 * a30,
+                    b10 * a01 + b11 * a11 + b12 * a21 + b13 * a31,
+                    b10 * a02 + b11 * a12 + b12 * a22 + b13 * a32,
+                    b10 * a03 + b11 * a13 + b12 * a23 + b13 * a33,
+                    b20 * a00 + b21 * a10 + b22 * a20 + b23 * a30,
+                    b20 * a01 + b21 * a11 + b22 * a21 + b23 * a31,
+                    b20 * a02 + b21 * a12 + b22 * a22 + b23 * a32,
+                    b20 * a03 + b21 * a13 + b22 * a23 + b23 * a33,
+                    b30 * a00 + b31 * a10 + b32 * a20 + b33 * a30,
+                    b30 * a01 + b31 * a11 + b32 * a21 + b33 * a31,
+                    b30 * a02 + b31 * a12 + b32 * a22 + b33 * a32,
+                    b30 * a03 + b31 * a13 + b32 * a23 + b33 * a33,
+                ];
+            },
+            translation: function(tx, ty, tz) {
+                return [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, ty, tz, 1 ];
+            },
+            xRotation: function(angleInRadians) {
+                var c = Math.cos(angleInRadians); var s = Math.sin(angleInRadians);
+                return [ 1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1 ];
+            },
+            yRotation: function(angleInRadians) {
+                var c = Math.cos(angleInRadians); var s = Math.sin(angleInRadians);
+                return [ c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1 ];
+            },
+            translate: function(m, tx, ty, tz) { return m4.multiply(m, m4.translation(tx, ty, tz)); },
+            xRotate: function(m, angleInRadians) { return m4.multiply(m, m4.xRotation(angleInRadians)); },
+            yRotate: function(m, angleInRadians) { return m4.multiply(m, m4.yRotation(angleInRadians)); },
+            identity: function() { return [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]; },
+            lookAt: function(cameraPosition, target, up) {
+                var zAxis = m4.normalize(m4.subtractVectors(cameraPosition, target));
+                var xAxis = m4.normalize(m4.cross(up, zAxis));
+                var yAxis = m4.normalize(m4.cross(zAxis, xAxis));
+                return [
+                    xAxis[0], xAxis[1], xAxis[2], 0,
+                    yAxis[0], yAxis[1], yAxis[2], 0,
+                    zAxis[0], zAxis[1], zAxis[2], 0,
+                    cameraPosition[0], cameraPosition[1], cameraPosition[2], 1,
+                ];
+            },
+            inverse: function(m) {
+                var m00 = m[0 * 4 + 0]; var m01 = m[0 * 4 + 1]; var m02 = m[0 * 4 + 2]; var m03 = m[0 * 4 + 3];
+                var m10 = m[1 * 4 + 0]; var m11 = m[1 * 4 + 1]; var m12 = m[1 * 4 + 2]; var m13 = m[1 * 4 + 3];
+                var m20 = m[2 * 4 + 0]; var m21 = m[2 * 4 + 1]; var m22 = m[2 * 4 + 2]; var m23 = m[2 * 4 + 3];
+                var m30 = m[3 * 4 + 0]; var m31 = m[3 * 4 + 1]; var m32 = m[3 * 4 + 2]; var m33 = m[3 * 4 + 3];
+                var tmp_0  = m22 * m33; var tmp_1  = m32 * m23; var tmp_2  = m12 * m33; var tmp_3  = m32 * m13;
+                var tmp_4  = m12 * m23; var tmp_5  = m22 * m13; var tmp_6  = m02 * m33; var tmp_7  = m32 * m03;
+                var tmp_8  = m02 * m23; var tmp_9  = m22 * m03; var tmp_10 = m02 * m13; var tmp_11 = m12 * m03;
+                var tmp_12 = m20 * m31; var tmp_13 = m30 * m21; var tmp_14 = m10 * m31; var tmp_15 = m30 * m11;
+                var tmp_16 = m10 * m21; var tmp_17 = m20 * m11; var tmp_18 = m00 * m31; var tmp_19 = m30 * m01;
+                var tmp_20 = m00 * m21; var tmp_21 = m20 * m01; var tmp_22 = m00 * m11; var tmp_23 = m10 * m01;
+                var t0 = (tmp_0 * m11 + tmp_3 * m21 + tmp_4 * m31) - (tmp_1 * m11 + tmp_2 * m21 + tmp_5 * m31);
+                var t1 = (tmp_1 * m01 + tmp_6 * m21 + tmp_9 * m31) - (tmp_0 * m01 + tmp_7 * m21 + tmp_8 * m31);
+                var t2 = (tmp_2 * m01 + tmp_7 * m11 + tmp_10 * m31) - (tmp_3 * m01 + tmp_6 * m11 + tmp_11 * m31);
+                var t3 = (tmp_5 * m01 + tmp_8 * m11 + tmp_11 * m21) - (tmp_4 * m01 + tmp_9 * m11 + tmp_10 * m21);
+                var d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
+                return [
+                    d * t0, d * t1, d * t2, d * t3,
+                    d * ((tmp_1 * m10 + tmp_2 * m20 + tmp_5 * m30) - (tmp_0 * m10 + tmp_3 * m20 + tmp_4 * m30)),
+                    d * ((tmp_0 * m00 + tmp_7 * m20 + tmp_8 * m30) - (tmp_1 * m00 + tmp_6 * m20 + tmp_9 * m30)),
+                    d * ((tmp_3 * m00 + tmp_6 * m10 + tmp_11 * m30) - (tmp_2 * m00 + tmp_7 * m10 + tmp_10 * m30)),
+                    d * ((tmp_4 * m00 + tmp_9 * m10 + tmp_10 * m20) - (tmp_5 * m00 + tmp_8 * m10 + tmp_11 * m20)),
+                    d * ((tmp_12 * m13 + tmp_15 * m23 + tmp_16 * m33) - (tmp_13 * m13 + tmp_14 * m23 + tmp_17 * m33)),
+                    d * ((tmp_13 * m03 + tmp_18 * m23 + tmp_21 * m33) - (tmp_12 * m03 + tmp_19 * m23 + tmp_20 * m33)),
+                    d * ((tmp_14 * m03 + tmp_19 * m13 + tmp_22 * m33) - (tmp_15 * m03 + tmp_18 * m13 + tmp_23 * m33)),
+                    d * ((tmp_17 * m03 + tmp_20 * m13 + tmp_23 * m23) - (tmp_16 * m03 + tmp_21 * m13 + tmp_22 * m23)),
+                    d * ((tmp_14 * m22 + tmp_17 * m32 + tmp_13 * m12) - (tmp_16 * m32 + tmp_12 * m12 + tmp_15 * m22)),
+                    d * ((tmp_20 * m32 + tmp_12 * m02 + tmp_19 * m22) - (tmp_18 * m22 + tmp_21 * m32 + tmp_13 * m02)),
+                    d * ((tmp_18 * m12 + tmp_23 * m32 + tmp_15 * m02) - (tmp_22 * m32 + tmp_14 * m02 + tmp_19 * m12)),
+                    d * ((tmp_22 * m22 + tmp_16 * m02 + tmp_21 * m12) - (tmp_20 * m12 + tmp_23 * m22 + tmp_17 * m02)),
+                ];
+            },
+            transpose: function(m) {
+                return [
+                    m[0], m[4], m[8], m[12],
+                    m[1], m[5], m[9], m[13],
+                    m[2], m[6], m[10], m[14],
+                    m[3], m[7], m[11], m[15],
+                ];
+            },
+            subtractVectors: function(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; },
+            normalize: function(v) {
+                var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+                if (length > 0.00001) {
+                    return [v[0] / length, v[1] / length, v[2] / length];
+                } else {
+                    return [0, 0, 0];
+                }
+            },
+            cross: function(a, b) {
+                return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+            },
+        };
+
+        // --- 球体生成函数 ---
+        function createSphere(radius, subdivisions) {
+            const positions = [];
+            const normals = [];
+            const indices = [];
+            const pi = Math.PI;
+            const pi2 = pi * 2;
+
+            for (let j = 0; j <= subdivisions; ++j) {
+                const aj = j * pi / subdivisions;
+                const sinAj = Math.sin(aj);
+                const cosAj = Math.cos(aj);
+                for (let i = 0; i <= subdivisions; ++i) {
+                    const ai = i * pi2 / subdivisions;
+                    const sinAi = Math.sin(ai);
+                    const cosAi = Math.cos(ai);
+
+                    const x = sinAj * cosAi;
+                    const y = cosAj;
+                    const z = sinAj * sinAi;
+
+                    positions.push(x * radius, y * radius, z * radius);
+                    normals.push(x, y, z);
+                }
+            }
+
+            for (let j = 0; j < subdivisions; ++j) {
+                for (let i = 0; i < subdivisions; ++i) {
+                    const p1 = j * (subdivisions + 1) + i;
+                    const p2 = p1 + (subdivisions + 1);
+
+                    indices.push(p1, p2, p1 + 1);
+                    indices.push(p1 + 1, p2, p2 + 1);
+                }
+            }
+            return { positions, normals, indices };
+        }
+
+        // --- 主应用逻辑 ---
+        function main() {
+            const canvas = document.getElementById("webgl-canvas");
+            const gl = canvas.getContext("webgl");
+            if (!gl) {
+                alert("WebGL 不可用");
+                return;
+            }
+
+            // 1. 创建着色器程序
+            const vsSource = document.getElementById("vertex-shader").text;
+            const fsSource = document.getElementById("fragment-shader").text;
+            const vs = webglUtils.createShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fs = webglUtils.createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const program = webglUtils.createProgram(gl, vs, fs);
+
+            // 2. 查找属性和 Uniforms 的位置
+            const programInfo = {
+                program: program,
+                attribLocations: {
+                    position: gl.getAttribLocation(program, "a_position"),
+                    normal: gl.getAttribLocation(program, "a_normal"),
+                },
+                uniformLocations: {
+                    worldViewProjection: gl.getUniformLocation(program, "u_worldViewProjection"),
+                    world: gl.getUniformLocation(program, "u_world"),
+                    worldInverseTranspose: gl.getUniformLocation(program, "u_worldInverseTranspose"),
+                    cameraPos: gl.getUniformLocation(program, "u_cameraPos"),
+                    lightPos: gl.getUniformLocation(program, "u_lightPos"),
+                    lightColor: gl.getUniformLocation(program, "u_lightColor"),
+                    ambientLight: gl.getUniformLocation(program, "u_ambientLight"),
+                    material: {
+                        ambient: gl.getUniformLocation(program, "u_material.ambient"),
+                        diffuse: gl.getUniformLocation(program, "u_material.diffuse"),
+                        specular: gl.getUniformLocation(program, "u_material.specular"),
+                        shininess: gl.getUniformLocation(program, "u_material.shininess"),
+                    },
+                },
+            };
+
+            // 3. 创建球体几何数据和缓冲区
+            const sphere = createSphere(2.0, 32);
+            
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.positions), gl.STATIC_DRAW);
+
+            const normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.normals), gl.STATIC_DRAW);
+
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sphere.indices), gl.STATIC_DRAW);
+            
+            const numElements = sphere.indices.length;
+
+            // 4. 定义场景和材质状态
+            const sceneState = {
+                cameraPos: [0, 0, 7],
+                lightPos: [5, 5, -7], // 将 Z 设为 -7，与滑块初始值匹配
+                lightColor: [1.0, 1.0, 1.0], // 将由 UI 控制
+                ambientLight: [0.1, 0.1, 0.1] // 将由 UI 控制
+            };
+
+            const materialState = {
+                ambient: [0.0, 0.0, 0.0],
+                diffuse: [0.5, 0.5, 0.5],
+                specular: [1.0, 1.0, 1.0],
+                shininess: 32.0
+            };
+
+            // 5. UI 事件监听
+            const ui = {
+                ambientColor: document.getElementById("ambientColor"),
+                ambientHex: document.getElementById("ambientHex"),
+                diffuseColor: document.getElementById("diffuseColor"),
+                diffuseHex: document.getElementById("diffuseHex"),
+                specularColor: document.getElementById("specularColor"),
+                specularHex: document.getElementById("specularHex"),
+                shininessSlider: document.getElementById("shininessSlider"),
+                shininessValue: document.getElementById("shininessValue"),
+                // 新增 UI 元素 (光源)
+                lightColorPicker: document.getElementById("lightColorPicker"),
+                lightColorHex: document.getElementById("lightColorHex"),
+                ambientLightPicker: document.getElementById("ambientLightPicker"),
+                ambientLightHex: document.getElementById("ambientLightHex"),
+                // 光源位置
+                lightXSlider: document.getElementById("lightXSlider"),
+                lightXValue: document.getElementById("lightXValue"),
+                lightYSlider: document.getElementById("lightYSlider"),
+                lightYValue: document.getElementById("lightYValue"),
+                lightZSlider: document.getElementById("lightZSlider"),
+                lightZValue: document.getElementById("lightZValue"),
+                // 预设按钮
+                presetPlastic: document.getElementById("presetPlastic"),
+                presetMetal: document.getElementById("presetMetal"),
+                presetClay: document.getElementById("presetClay"),
+            };
+
+            // 帮助函数：Hex 转 RGB (0-1)
+            function hexToRgb(hex) {
+                let r = 0, g = 0, b = 0;
+                if (hex.length == 4) { // #RGB
+                    r = parseInt(hex[1] + hex[1], 16);
+                    g = parseInt(hex[2] + hex[2], 16);
+                    b = parseInt(hex[3] + hex[3], 16);
+                } else if (hex.length == 7) { // #RRGGBB
+                    r = parseInt(hex.substring(1, 3), 16);
+                    g = parseInt(hex.substring(3, 5), 16);
+                    b = parseInt(hex.substring(5, 7), 16);
+                }
+                return [r / 255, g / 255, b / 255];
+            }
+
+            // 更新材质状态的函数
+            function updateMaterialFromUI() {
+                materialState.ambient = hexToRgb(ui.ambientColor.value);
+                materialState.diffuse = hexToRgb(ui.diffuseColor.value);
+                materialState.specular = hexToRgb(ui.specularColor.value);
+                materialState.shininess = parseFloat(ui.shininessSlider.value);
+                
+                // 更新 UI 文本
+                ui.ambientHex.textContent = ui.ambientColor.value;
+                ui.diffuseHex.textContent = ui.diffuseColor.value;
+                ui.specularHex.textContent = ui.specularColor.value;
+                ui.shininessValue.textContent = materialState.shininess.toFixed(1);
+            }
+            
+            // 新增：更新场景状态的函数 (用于光源)
+            function updateSceneFromUI() {
+                // 更新光源位置
+                sceneState.lightPos[0] = parseFloat(ui.lightXSlider.value);
+                sceneState.lightPos[1] = parseFloat(ui.lightYSlider.value);
+                sceneState.lightPos[2] = parseFloat(ui.lightZSlider.value);
+
+                // 更新光源颜色
+                sceneState.lightColor = hexToRgb(ui.lightColorPicker.value);
+                
+                // 更新场景环境光
+                sceneState.ambientLight = hexToRgb(ui.ambientLightPicker.value);
+
+                // 更新 UI 文本
+                ui.lightXValue.textContent = sceneState.lightPos[0].toFixed(1);
+                ui.lightYValue.textContent = sceneState.lightPos[1].toFixed(1);
+                ui.lightZValue.textContent = sceneState.lightPos[2].toFixed(1);
+                ui.lightColorHex.textContent = ui.lightColorPicker.value;
+                ui.ambientLightHex.textContent = ui.ambientLightPicker.value;
+            }
+
+            // 更新 UI 控件的函数 (用于预设)
+            function updateUIFromMaterial() {
+                // 这个函数有点麻烦，因为 RGB (0-1) 转 Hex
+                function rgbToHex(rgb) {
+                    const r = Math.floor(rgb[0] * 255).toString(16).padStart(2, '0');
+                    const g = Math.floor(rgb[1] * 255).toString(16).padStart(2, '0');
+                    const b = Math.floor(rgb[2] * 255).toString(16).padStart(2, '0');
+                    return `#${r}${g}${b}`;
+                }
+                ui.ambientColor.value = rgbToHex(materialState.ambient);
+                ui.diffuseColor.value = rgbToHex(materialState.diffuse);
+                ui.specularColor.value = rgbToHex(materialState.specular);
+                ui.shininessSlider.value = materialState.shininess;
+                
+                // 再次调用 updateMaterialFromUI 来同步文本标签
+                updateMaterialFromUI();
+            }
+
+            // 绑定事件
+            ui.ambientColor.addEventListener("input", updateMaterialFromUI);
+            ui.diffuseColor.addEventListener("input", updateMaterialFromUI);
+            ui.specularColor.addEventListener("input", updateMaterialFromUI);
+            ui.shininessSlider.addEventListener("input", updateMaterialFromUI);
+            
+            // 绑定光源滑块事件
+            ui.lightXSlider.addEventListener("input", updateSceneFromUI);
+            ui.lightYSlider.addEventListener("input", updateSceneFromUI);
+            ui.lightZSlider.addEventListener("input", updateSceneFromUI);
+
+            // 绑定新增的光源颜色选择器事件
+            ui.lightColorPicker.addEventListener("input", updateSceneFromUI);
+            ui.ambientLightPicker.addEventListener("input", updateSceneFromUI);
+
+            // 预设按钮事件
+            ui.presetPlastic.addEventListener("click", () => {
+                materialState.ambient = [0.01, 0.01, 0.01];
+                materialState.diffuse = [0.1, 0.1, 0.8]; // 蓝色塑料
+                materialState.specular = [0.5, 0.5, 0.5]; // 塑料高光是白色的
+                materialState.shininess = 64.0;
+                updateUIFromMaterial();
+            });
+
+            ui.presetMetal.addEventListener("click", () => {
+                materialState.ambient = [0.2, 0.2, 0.2];
+                materialState.diffuse = [0.7, 0.7, 0.7]; // 金属的漫反射色
+                materialState.specular = [0.9, 0.9, 0.9]; // 金属高光是其固有色
+                materialState.shininess = 128.0;
+                updateUIFromMaterial();
+            });
+            
+            ui.presetClay.addEventListener("click", () => {
+                materialState.ambient = [0.1, 0.05, 0.05];
+                materialState.diffuse = [0.6, 0.3, 0.2]; // 陶土色
+                materialState.specular = [0.1, 0.1, 0.1]; // 黏土几乎没有高光
+                materialState.shininess = 8.0; // 非常粗糙
+                updateUIFromMaterial();
+            });
+            
+            // 初始化 UI
+            updateUIFromMaterial(); // 使用默认值初始化材质
+            updateSceneFromUI(); // 使用默认值初始化场景 (光源滑块)
+
+            // 6. 渲染循环
+            let then = 0;
+            function render(now) {
+                now *= 0.001; // 转换为秒
+                const deltaTime = now - then;
+                then = now;
+
+                // 调整画布大小
+                if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                    canvas.width = canvas.clientWidth;
+                    canvas.height = canvas.clientHeight;
+                    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                }
+
+                // 清空画布
+                gl.clearColor(0.1, 0.1, 0.1, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.enable(gl.DEPTH_TEST);
+                gl.enable(gl.CULL_FACE);
+
+                // 计算矩阵
+                const fov = 45 * Math.PI / 180;
+                const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+                const zNear = 0.1;
+                const zFar = 100.0;
+                const projectionMatrix = m4.perspective(fov, aspect, zNear, zFar);
+
+                const cameraMatrix = m4.lookAt(sceneState.cameraPos, [0, 0, 0], [0, 1, 0]);
+                const viewMatrix = m4.inverse(cameraMatrix);
+                
+                const worldMatrix = m4.yRotation(now * 0.3); // 让球体缓慢旋转
+                
+                const viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+                const worldViewProjectionMatrix = m4.multiply(viewProjectionMatrix, worldMatrix);
+                const worldInverseMatrix = m4.inverse(worldMatrix);
+                const worldInverseTransposeMatrix = m4.transpose(worldInverseMatrix);
+
+                // --- 绑定程序和缓冲区 ---
+                gl.useProgram(programInfo.program);
+
+                // 绑定位置
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.position, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.position);
+
+                // 绑定法线
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.normal, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.normal);
+
+                // 绑定索引
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+                // --- 设置 Uniforms ---
+                // 矩阵
+                gl.uniformMatrix4fv(programInfo.uniformLocations.worldViewProjection, false, worldViewProjectionMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.world, false, worldMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.worldInverseTranspose, false, worldInverseTransposeMatrix);
+
+                // 场景
+                gl.uniform3fv(programInfo.uniformLocations.cameraPos, sceneState.cameraPos);
+                gl.uniform3fv(programInfo.uniformLocations.lightPos, sceneState.lightPos);
+                gl.uniform3fv(programInfo.uniformLocations.lightColor, sceneState.lightColor);
+                gl.uniform3fv(programInfo.uniformLocations.ambientLight, sceneState.ambientLight);
+
+                // 材质 (来自 UI)
+                gl.uniform3fv(programInfo.uniformLocations.material.ambient, materialState.ambient);
+                gl.uniform3fv(programInfo.uniformLocations.material.diffuse, materialState.diffuse);
+                gl.uniform3fv(programInfo.uniformLocations.material.specular, materialState.specular);
+                gl.uniform1f(programInfo.uniformLocations.material.shininess, materialState.shininess);
+
+                // 绘制
+                gl.drawElements(gl.TRIANGLES, numElements, gl.UNSIGNED_SHORT, 0);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        main();
+    </script>
+</body>
+</html>

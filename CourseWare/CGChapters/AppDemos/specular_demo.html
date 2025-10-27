@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高光(Specular)反射模型演示</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #212121; /* 深色背景以突出高光 */
+            color: #f5f5f5;
+        }
+
+        .app-container {
+            width: 90%;
+            max-width: 650px;
+            background: #333333;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #4fc3f7;
+        }
+
+        canvas {
+            background-color: #000000;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin: 10px auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .controls div {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .controls label {
+            font-size: 1em;
+            font-weight: bold;
+            color: #b0bec5;
+            width: 180px; /* 标签对齐 */
+            text-align: right;
+            margin-right: 15px;
+        }
+        
+        input[type="range"] {
+            flex-grow: 1;
+        }
+
+        .readout {
+            margin-top: 20px;
+            font-size: 1.1em;
+            background-color: #212121;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            line-height: 1.6;
+        }
+
+        .readout strong {
+            color: #ffee58; /* 突出高光强度 */
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>高光(Specular)反射模型 (Phong)</h1>
+        <p>高光强度取决于观察角 ($\vec{V}$)和全反射角 ($\vec{R}$)的接近程度</p>
+        
+        <canvas id="demoCanvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <div>
+                <label for="lightAngleSlider">入射光角度 ($\theta_l$):</label>
+                <input type="range" id="lightAngleSlider" min="0" max="90" value="45">
+            </div>
+            <div>
+                <label for="viewAngleSlider">观察者角度 ($\theta_v$):</label>
+                <input type="range" id="viewAngleSlider" min="0" max="90" value="30">
+            </div>
+            <div>
+                <label for="shininessSlider">光泽度 (Shininess):</label>
+                <input type="range" id="shininessSlider" min="1" max="128" value="32">
+            </div>
+        </div>
+
+        <div class="readout">
+            夹角 (α = |θ<sub>l</sub> - θ<sub>v</sub>|): <span id="alphaDisplay">15.0°</span><br>
+            光泽度 (Shininess): <span id="shineDisplay">32</span><br>
+            高光强度 (I = (cos(α))<sup>shininess</sup>): <strong id="intensityDisplay">0.12</strong>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('demoCanvas');
+        const ctx = canvas.getContext('2d');
+        const lightSlider = document.getElementById('lightAngleSlider');
+        const viewSlider = document.getElementById('viewAngleSlider');
+        const shineSlider = document.getElementById('shininessSlider');
+
+        const alphaDisplay = document.getElementById('alphaDisplay');
+        const shineDisplay = document.getElementById('shineDisplay');
+        const intensityDisplay = document.getElementById('intensityDisplay');
+
+        // 定义绘图原点和向量长度
+        const origin = { x: canvas.width / 2, y: 350 };
+        const vecLength = 180; // 向量的长度
+
+        function draw() {
+            // 1. 获取输入值
+            const angleLDeg = parseFloat(lightSlider.value);
+            const angleVDeg = parseFloat(viewSlider.value);
+            const shine = parseFloat(shineSlider.value);
+
+            const angleLRad = angleLDeg * Math.PI / 180;
+            const angleVRad = angleVDeg * Math.PI / 180;
+
+            // 2. 核心计算
+            // 夹角 α = |angleL - angleV| (因为全反射角 = 入射角)
+            const angleAlphaRad = Math.abs(angleLRad - angleVRad);
+            const cosAlpha = Math.cos(angleAlphaRad);
+            
+            // 强度 = (cos(α)) ^ shininess
+            const intensity = Math.pow(Math.max(0, cosAlpha), shine);
+
+            // 3. 更新文本显示
+            alphaDisplay.textContent = `${(angleAlphaRad * 180 / Math.PI).toFixed(1)}°`;
+            shineDisplay.textContent = `${shine}`;
+            intensityDisplay.textContent = `${intensity.toFixed(3)}`;
+
+            // 4. 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 5. 绘制表面
+            ctx.fillStyle = '#9e9e9e';
+            ctx.fillRect(0, origin.y, canvas.width, 5);
+
+            // 6. 绘制法线 (N)
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x, origin.y - vecLength - 30);
+            ctx.strokeStyle = '#f5f5f5';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#f5f5f5';
+            ctx.font = 'bold 16px Inter';
+            ctx.fillText('N (法线)', origin.x + 8, origin.y - vecLength - 15);
+
+            // 7. 绘制入射光 (L)
+            const lightEndX = origin.x - vecLength * Math.sin(angleLRad);
+            const lightEndY = origin.y - vecLength * Math.cos(angleLRad);
+            drawArrow(ctx, lightEndX, lightEndY, origin.x, origin.y, '#f57f17', 4); // 黄色
+            ctx.fillText('L (入射光)', lightEndX - 100, lightEndY);
+            ctx.fillText(`θl=${angleLDeg}°`, origin.x - 40, origin.y - 50);
+
+            // 8. 绘制全反射角 (R)
+            const reflectEndX = origin.x + vecLength * Math.sin(angleLRad);
+            const reflectEndY = origin.y - vecLength * Math.cos(angleLRad);
+            ctx.beginPath();
+            ctx.setLineDash([2, 3]);
+            drawArrow(ctx, origin.x, origin.y, reflectEndX, reflectEndY, '#9e9e9e', 2); // 灰色虚线
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#9e9e9e';
+            ctx.fillText('R (全反射)', reflectEndX + 10, reflectEndY);
+
+            // 9. 绘制观察者 (V)
+            const viewEndX = origin.x + vecLength * Math.sin(angleVRad);
+            const viewEndY = origin.y - vecLength * Math.cos(angleVRad);
+            drawArrow(ctx, origin.x, origin.y, viewEndX, viewEndY, '#4fc3f7', 4); // 蓝色
+            ctx.fillStyle = '#4fc3f7';
+            ctx.fillText('V (观察者)', viewEndX + 10, viewEndY - 10);
+            ctx.fillText(`θv=${angleVDeg}°`, origin.x + 40, origin.y - 50);
+
+            // 10. 绘制高光强度 (核心)
+            // 在V方向上绘制一个高亮度的、宽度渐变的“光束”来模拟高光
+            if (intensity > 0.001) {
+                ctx.beginPath();
+                ctx.moveTo(origin.x, origin.y);
+                ctx.lineTo(viewEndX, viewEndY);
+                // 关键：高光强度体现在亮度和透明度上
+                ctx.strokeStyle = `rgba(255, 255, 255, ${intensity * 0.9})`; // 越强越不透明
+                ctx.lineWidth = 15 * intensity; // 越强越粗
+                ctx.stroke();
+                
+                // 再加一个更亮的中心线
+                ctx.beginPath();
+                ctx.moveTo(origin.x, origin.y);
+                ctx.lineTo(viewEndX, viewEndY);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${intensity})`;
+                ctx.lineWidth = 4 * intensity;
+                ctx.stroke();
+            }
+        }
+
+        // 绘制带箭头的线段
+        function drawArrow(ctx, fromx, fromy, tox, toy, color, width) {
+            const headlen = 10; // 箭头长度
+            const dx = tox - fromx;
+            const dy = toy - fromy;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+            
+            // 绘制箭头
+            ctx.beginPath();
+            ctx.moveTo(tox, toy);
+            ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(tox, toy);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        // 事件监听
+        lightSlider.addEventListener('input', draw);
+        viewSlider.addEventListener('input', draw);
+        shineSlider.addEventListener('input', draw);
+
+        // 初始绘制
+        draw();
+    </script>
+
+</body>
+</html>

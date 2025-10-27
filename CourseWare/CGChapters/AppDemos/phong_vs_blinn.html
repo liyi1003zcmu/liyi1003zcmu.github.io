@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phong vs Blinn-Phong 对比演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: #fff;
+            overflow: hidden; /* 避免滑块导致滚动条 */
+        }
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+            width: 300px;
+        }
+        .controls div {
+            margin-bottom: 12px;
+        }
+        .controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glCanvas"></canvas>
+
+    <div class="controls">
+        <h3>光照模型对比</h3>
+        <div>
+            <input type="checkbox" id="useBlinnPhong" checked>
+            <label for="useBlinnPhong" style="display: inline;">使用 Blinn-Phong</label>
+            (<span id="modelName">Blinn-Phong</span>)
+        </div>
+        <div>
+            <label for="lightAngle">光源高度 (角度): <span id="lightAngleValue">45</span>°</label>
+            <input type="range" id="lightAngle" min="0" max="90" value="45" step="0.1">
+        </div>
+        <div>
+            <label for="viewAngle">相机高度 (角度): <span id="viewAngleValue">30</span>°</label>
+            <input type="range" id="viewAngle" min="0" max="90" value="30" step="0.1">
+        </div>
+        <div>
+            <label for="shininess">光泽度: <span id="shininessValue">32</span></label>
+            <input type="range" id="shininess" min="1" max="128" value="32">
+        </div>
+        <p style="font-size: 0.9em; opacity: 0.8;">
+            提示: 尝试将光源和相机高度都调到很低 (如 10°)，然后切换模型对比高光。
+        </p>
+        <div class="debug-values" style="margin-top: 15px; border-top: 1px solid #555; padding-top: 10px;">
+            <p style="font-size: 0.8em; margin-bottom: 5px; opacity: 0.7;">(在球体顶点 (0,1,0) 处的计算值)</p>
+            <label style="font-size: 0.9em;">Phong (V·R): <span id="v_dot_r_value" style="font-weight: bold; color: #ffc;">0.0</span></label><br>
+            <label style="font-size: 0.9em;">Blinn (N·H): <span id="n_dot_h_value" style="font-weight: bold; color: #cff;">0.0</span></label>
+        </div>
+    </div>
+
+    <div class="info">
+        当前模型: <strong id="currentModelInfo">Blinn-Phong</strong>
+    </div>
+
+    <!-- 顶点着色器 -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 a_position;
+        attribute vec3 a_normal;
+        
+        uniform mat4 u_modelMatrix;
+        uniform mat4 u_viewMatrix;
+        uniform mat4 u_projectionMatrix;
+        
+        varying vec3 v_worldPosition;
+        varying vec3 v_worldNormal;
+        
+        void main() {
+            vec4 worldPos = u_modelMatrix * vec4(a_position, 1.0);
+            v_worldPosition = worldPos.xyz;
+            
+            // 法线矩阵（模型矩阵的逆转置）
+            // 修复: WebGL 1.0 (GLSL 1.0) 不支持 'inverse()'。
+            // 由于此演示中的 modelMatrix 始终是单位矩阵，
+            // 我们可以安全地简化为 mat3(u_modelMatrix)。
+            mat3 normalMatrix = mat3(u_modelMatrix);
+            v_worldNormal = normalize(normalMatrix * a_normal);
+            
+            gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
+        }
+    </script>
+    
+    <!-- 
+      片元着色器 (Phong)
+      注意: 我们将在这个着色器中实现两个模型，通过 uniform 变量切换
+    -->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        
+        uniform vec3 u_lightPosition;
+        uniform vec3 u_viewPosition;
+        uniform float u_shininess;
+        uniform bool u_useBlinnPhong;
+        
+        varying vec3 v_worldPosition;
+        varying vec3 v_worldNormal;
+        
+        void main() {
+            vec3 objectColor = vec3(0.6, 0.6, 0.8); // 物体颜色
+            vec3 lightColor = vec3(1.0, 1.0, 1.0);  // 光源颜色
+            
+            // 环境光
+            vec3 ambient = 0.1 * objectColor;
+            
+            // 向量计算
+            vec3 N = normalize(v_worldNormal);
+            vec3 L = normalize(u_lightPosition - v_worldPosition);
+            vec3 V = normalize(u_viewPosition - v_worldPosition);
+            
+            // 漫反射 (Lambert)
+            float diff = max(dot(N, L), 0.0);
+            vec3 diffuse = diff * lightColor * objectColor;
+            
+            // 高光 (Specular)
+            vec3 specular = vec3(0.0, 0.0, 0.0);
+            float specStrength = 1.0; // 高光强度
+            
+            if (diff > 0.0) { // 只有在光照亮的地方才计算高光
+                if (u_useBlinnPhong) {
+                    // --- Blinn-Phong 模型 ---
+                    vec3 H = normalize(L + V); // 半程向量
+                    float spec = pow(max(dot(N, H), 0.0), u_shininess);
+                    specular = specStrength * spec * lightColor;
+                } else {
+                    // --- 经典 Phong 模型 ---
+                    vec3 R = reflect(-L, N); // 反射向量
+                    float spec = pow(max(dot(R, V), 0.0), u_shininess);
+                    specular = specStrength * spec * lightColor;
+                }
+            }
+            
+            // 最终颜色
+            gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+        }
+    </script>
+
+    <script type="module">
+        // --- WebGL 辅助函数 ---
+        
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader 编译失败:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vsSource, fsSource) {
+            const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program 链接失败:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            return program;
+        }
+
+        // --- 矩阵库 (gl-matrix 简化版) ---
+        const mat4 = {
+            create: () => new Float32Array(16),
+            identity: (out) => {
+                out.fill(0);
+                out[0] = out[5] = out[10] = out[15] = 1;
+                return out;
+            },
+            perspective: (out, fovy, aspect, near, far) => {
+                const f = 1.0 / Math.tan(fovy / 2);
+                out[0] = f / aspect;
+                out[1] = 0;
+                out[2] = 0;
+                out[3] = 0;
+                out[4] = 0;
+                out[5] = f;
+                out[6] = 0;
+                out[7] = 0;
+                out[8] = 0;
+                out[9] = 0;
+                out[11] = -1;
+                out[15] = 0;
+                if (far != null && far !== Infinity) {
+                    const nf = 1 / (near - far);
+                    out[10] = (far + near) * nf;
+                    out[14] = 2 * far * near * nf;
+                } else {
+                    out[10] = -1;
+                    out[14] = -2 * near;
+                }
+                return out;
+            },
+            lookAt: (out, eye, center, up) => {
+                let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+                let eyex = eye[0], eyey = eye[1], eyez = eye[2];
+                let upx = up[0], upy = up[1], upz = up[2];
+                let centerx = center[0], centery = center[1], centerz = center[2];
+                z0 = eyex - centerx;
+                z1 = eyey - centery;
+                z2 = eyez - centerz;
+                len = 1 / Math.hypot(z0, z1, z2);
+                z0 *= len;
+                z1 *= len;
+                z2 *= len;
+                x0 = upy * z2 - upz * z1;
+                x1 = upz * z0 - upx * z2;
+                x2 = upx * z1 - upy * z0;
+                len = 1 / Math.hypot(x0, x1, x2);
+                x0 *= len;
+                x1 *= len;
+                x2 *= len;
+                y0 = z1 * x2 - z2 * x1;
+                y1 = z2 * x0 - z0 * x2;
+                y2 = z0 * x1 - z1 * x0;
+                out[0] = x0;
+                out[1] = y0;
+                out[2] = z0;
+                out[3] = 0;
+                out[4] = x1;
+                out[5] = y1;
+                out[6] = z1;
+                out[7] = 0;
+                out[8] = x2;
+                out[9] = y2;
+                out[10] = z2;
+                out[11] = 0;
+                out[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+                out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+                out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+                out[15] = 1;
+                return out;
+            },
+            rotateX: (out, a, rad) => {
+                mat4.identity(out);
+                const s = Math.sin(rad), c = Math.cos(rad);
+                out[5] = c; out[6] = s; out[7] = 0;
+                out[9] = -s; out[10] = c; out[11] = 0;
+                return out;
+            }
+        };
+
+        // --- 新增: vec3 迷你向量库 ---
+        const vec3 = {
+            create: () => new Float32Array(3),
+            normalize: (out, a) => {
+                let x = a[0], y = a[1], z = a[2];
+                let len = x * x + y * y + z * z;
+                if (len > 0) {
+                    len = 1 / Math.sqrt(len);
+                    out[0] = a[0] * len;
+                    out[1] = a[1] * len;
+                    out[2] = a[2] * len;
+                }
+                return out;
+            },
+            dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+            subtract: (out, a, b) => {
+                out[0] = a[0] - b[0];
+                out[1] = a[1] - b[1];
+                out[2] = a[2] - b[2];
+                return out;
+            },
+            add: (out, a, b) => {
+                out[0] = a[0] + b[0];
+                out[1] = a[1] + b[1];
+                out[2] = a[2] + b[2];
+                return out;
+            },
+            reflect: (out, inc, norm) => {
+                // out = inc - 2.0 * dot(norm, inc) * norm
+                const dotVal = 2.0 * vec3.dot(norm, inc);
+                out[0] = inc[0] - dotVal * norm[0];
+                out[1] = inc[1] - dotVal * norm[1];
+                out[2] = inc[2] - dotVal * norm[2];
+                return out;
+            }
+        };
+
+        // --- 球体几何体 ---
+        function createSphereGeometry(radius, latitudeBands, longitudeBands) {
+            const positions = [];
+            const normals = [];
+            const indices = [];
+
+            for (let lat = 0; lat <= latitudeBands; lat++) {
+                const theta = lat * Math.PI / latitudeBands;
+                const sinTheta = Math.sin(theta);
+                const cosTheta = Math.cos(theta);
+
+                for (let long = 0; long <= longitudeBands; long++) {
+                    const phi = long * 2 * Math.PI / longitudeBands;
+                    const sinPhi = Math.sin(phi);
+                    const cosPhi = Math.cos(phi);
+
+                    const x = cosPhi * sinTheta;
+                    const y = cosTheta;
+                    const z = sinPhi * sinTheta;
+
+                    positions.push(radius * x, radius * y, radius * z);
+                    normals.push(x, y, z);
+                }
+            }
+
+            for (let lat = 0; lat < latitudeBands; lat++) {
+                for (let long = 0; long < longitudeBands; long++) {
+                    const first = (lat * (longitudeBands + 1)) + long;
+                    const second = first + longitudeBands + 1;
+                    indices.push(first, second, first + 1);
+                    indices.push(second, second + 1, first + 1);
+                }
+            }
+            return { positions, normals, indices };
+        }
+
+        // --- 主程序 ---
+        function main() {
+            const canvas = document.getElementById('glCanvas');
+            const gl = canvas.getContext('webgl');
+            if (!gl) {
+                alert('WebGL 不可用');
+                return;
+            }
+
+            const vsSource = document.getElementById('vertex-shader').text;
+            const fsSource = document.getElementById('fragment-shader').text;
+            const shaderProgram = createProgram(gl, vsSource, fsSource);
+
+            const programInfo = {
+                program: shaderProgram,
+                attribLocations: {
+                    position: gl.getAttribLocation(shaderProgram, 'a_position'),
+                    normal: gl.getAttribLocation(shaderProgram, 'a_normal'),
+                },
+                uniformLocations: {
+                    projectionMatrix: gl.getUniformLocation(shaderProgram, 'u_projectionMatrix'),
+                    viewMatrix: gl.getUniformLocation(shaderProgram, 'u_viewMatrix'),
+                    modelMatrix: gl.getUniformLocation(shaderProgram, 'u_modelMatrix'),
+                    lightPosition: gl.getUniformLocation(shaderProgram, 'u_lightPosition'),
+                    viewPosition: gl.getUniformLocation(shaderProgram, 'u_viewPosition'),
+                    shininess: gl.getUniformLocation(shaderProgram, 'u_shininess'),
+                    useBlinnPhong: gl.getUniformLocation(shaderProgram, 'u_useBlinnPhong'),
+                },
+            };
+
+            // 创建球体
+            const sphere = createSphereGeometry(1.0, 32, 32);
+
+            // --- VAO 和 VBOs ---
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.positions), gl.STATIC_DRAW);
+            
+            const normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.normals), gl.STATIC_DRAW);
+
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sphere.indices), gl.STATIC_DRAW);
+
+            // --- UI 控制 ---
+            const lightAngleSlider = document.getElementById('lightAngle');
+            const viewAngleSlider = document.getElementById('viewAngle');
+            const shininessSlider = document.getElementById('shininess');
+            const useBlinnPhongCheckbox = document.getElementById('useBlinnPhong');
+
+            const lightAngleValue = document.getElementById('lightAngleValue');
+            const viewAngleValue = document.getElementById('viewAngleValue');
+            const shininessValue = document.getElementById('shininessValue');
+            const modelName = document.getElementById('modelName');
+            const currentModelInfo = document.getElementById('currentModelInfo');
+            
+            function updateUI() {
+                lightAngleValue.textContent = parseFloat(lightAngleSlider.value).toFixed(1);
+                viewAngleValue.textContent = parseFloat(viewAngleSlider.value).toFixed(1);
+                shininessValue.textContent = shininessSlider.value;
+                const modelStr = useBlinnPhongCheckbox.checked ? 'Blinn-Phong' : 'Phong';
+                modelName.textContent = modelStr;
+                currentModelInfo.textContent = modelStr;
+            }
+            [lightAngleSlider, viewAngleSlider, shininessSlider, useBlinnPhongCheckbox].forEach(el => el.addEventListener('input', updateUI));
+            updateUI();
+
+            // --- 渲染循环 ---
+            function render() {
+                // 调整画布大小
+                gl.canvas.width = gl.canvas.clientWidth;
+                gl.canvas.height = gl.canvas.clientHeight;
+                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+                // 清空
+                gl.clearColor(0.1, 0.1, 0.1, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                gl.enable(gl.DEPTH_TEST);
+
+                // --- 从UI获取值 ---
+                const lightAngle = parseFloat(lightAngleSlider.value) * Math.PI / 180;
+                const viewAngle = parseFloat(viewAngleSlider.value) * Math.PI / 180;
+                const shininess = parseFloat(shininessSlider.value);
+                const useBlinnPhong = useBlinnPhongCheckbox.checked;
+
+                // --- 设置相机 (View) ---
+                const viewRadius = 5.0;
+                // 修复: 更改 viewPosition 计算，使其与光线在同一个 YZ 平面内运动
+                const viewPosition = [
+                    0, // X 坐标为 0
+                    Math.sin(viewAngle) * viewRadius,
+                    Math.cos(viewAngle) * viewRadius
+                ];
+                const viewMatrix = mat4.create();
+                // 修复: 更改 up 向量为 [1, 0, 0]，以避免在 viewAngle=90度 时与视线[0,1,0]重合
+                mat4.lookAt(viewMatrix, viewPosition, [0, 0, 0], [1, 0, 0]);
+
+                // --- 设置投影 (Projection) ---
+                const projectionMatrix = mat4.create();
+                mat4.perspective(projectionMatrix, 45 * Math.PI / 180, gl.canvas.width / gl.canvas.height, 0.1, 100.0);
+
+                // --- 设置光源 ---
+                const lightRadius = 4.0;
+                const lightPosition = [
+                    0,
+                    Math.sin(lightAngle) * lightRadius,
+                    Math.cos(lightAngle) * lightRadius
+                ];
+
+                // --- 新增: JS端调试值计算 ---
+                {
+                    const P = [0, 1, 0]; // 代表点 (球顶)
+                    const N = [0, 1, 0]; // 该点法线
+                    
+                    const L_vec = vec3.create();
+                    vec3.subtract(L_vec, lightPosition, P);
+                    vec3.normalize(L_vec, L_vec);
+                    
+                    const V_vec = vec3.create();
+                    vec3.subtract(V_vec, viewPosition, P);
+                    vec3.normalize(V_vec, V_vec);
+                    
+                    const R_vec = vec3.create();
+                    const neg_L_vec = [-L_vec[0], -L_vec[1], -L_vec[2]];
+                    vec3.reflect(R_vec, neg_L_vec, N);
+                    
+                    const H_vec = vec3.create();
+                    vec3.add(H_vec, L_vec, V_vec);
+                    vec3.normalize(H_vec, H_vec);
+                    
+                    const v_dot_r = Math.max(0, vec3.dot(V_vec, R_vec));
+                    const n_dot_h = Math.max(0, vec3.dot(N, H_vec));
+                    
+                    // 更新 UI
+                    document.getElementById('v_dot_r_value').textContent = v_dot_r.toFixed(4);
+                    document.getElementById('n_dot_h_value').textContent = n_dot_h.toFixed(4);
+                }
+
+                // --- 绘制物体 ---
+                gl.useProgram(programInfo.program);
+
+                // 绑定顶点属性
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.position, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.position);
+                
+                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+                gl.vertexAttribPointer(programInfo.attribLocations.normal, 3, gl.FLOAT, false, 0, 0);
+                gl.enableVertexAttribArray(programInfo.attribLocations.normal);
+                
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+                // 设置 Uniforms
+                const modelMatrix = mat4.identity(mat4.create()); // 单位矩阵
+                gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
+                gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrix, false, modelMatrix);
+                
+                gl.uniform3fv(programInfo.uniformLocations.lightPosition, lightPosition);
+                gl.uniform3fv(programInfo.uniformLocations.viewPosition, viewPosition);
+                gl.uniform1f(programInfo.uniformLocations.shininess, shininess);
+                gl.uniform1i(programInfo.uniformLocations.useBlinnPhong, useBlinnPhong);
+
+                // 绘制
+                gl.drawElements(gl.TRIANGLES, sphere.indices.length, gl.UNSIGNED_SHORT, 0);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        main();
+    </script>
+</body>
+</html>
+
+
+
+

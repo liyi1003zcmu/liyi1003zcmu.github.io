@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-Phong光照模型</title>
+
+    <meta name="description" content="Phong光照模型">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+    <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第五章(2) 光照与着色</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>绘制的“真实感”</h3>
+                <p>从线框到逼真的渲染，赋予物体“真实感”，关键因素是什么？</p>
+                <div class="two-column" style="margin-top: 30px;">
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap05/ch05-utah-teapot-wf.jpg" alt="Utah茶壶-线框模型" style="width: 100%;">
+                            <figcaption style="font-size:24pt">只有几何形状</figcaption>
+                        </figure>
+                    </div>
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap05/ch05-utah-teapot-sm.jpg" alt="Utah茶壶-渲染模型" style="width: 100%;">
+                            <figcaption style="font-size:24pt">如何计算出每个点的颜色？</figcaption>
+                        </figure>
+                    </div>
+                </div>
+                <p class="fragment" style="text-align:center; margin-top:20px;">需要：<strong>光</strong>、<strong>材质</strong>、<strong>观察点</strong>、<strong>表面朝向(法向量)</strong></p>
+            </section>
+            <section>
+                <h3>局部光照模型</h3>
+                <p class="fragment">将光、材质、观察点、表面朝向结合在一起，模拟真实世界的光照，需要建立一个<strong>光照模型</strong></p>
+                <p class="fragment" style="margin-top: 40px;">最经典、应用最广泛的局部光照模型：<text style="color:#2a76dd;">Phong光照模型</text></p>
+                <p class="fragment">其主要思想是，利用几个简单的部分模拟复杂的光照现象，在计算效率和真实感之间取得了平衡</p>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment">阐述Phong光照模型的基本原理</li>
+                    <li class="fragment">比较Phong光照模型的三个分量的异同：环境光、漫反射光和镜面反射光</li>
+                    <li class="fragment">推导Phong光照模型的数学表达式及计算方法</li>
+                    <li class="fragment">解释Blinn-Phong模型与比较其与普通Phong模型的优势</li>
+                </ul>
+            </section>
+            <section>
+                <section>
+                    <h3>Phong光照模型简介</h3>
+                        <div>
+                            <p class="fragment">Phong光照模型是由越南裔计算机图形学家<strong>裴祥风(Bùi Tường Phong)</strong>在1975年提出的</p>
+                            <p class="fragment">是一种<strong>局部光照模型</strong>，广泛应用于实时渲染</p>
+                            <p class="fragment">通过模拟光与物体表面的相互作用，产生真实感的视觉效果</p>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phong-shading.jpg" alt="Phong光照模型" style="width: 100%; margin: 0 auto;">
+                                <figcaption class="fragment">Phong模型渲染</figcaption>
+                            </figure>
+                        </div>
+                </section>
+                <section>
+                    <h3>Phong光照模型的组成</h3>
+                    <p class="fragment">Phong光照模型将光照效果分解为三个独立的分量：</p>
+                    <div>
+                        <figure>
+                            <img class="fragment" src="../../images/cg/chap05/ch05-Phong-components.png" alt="Phong模型分量" style="width:100%; margin: 0 auto;">
+                            <figcaption class="fragment">Phong模型分量</figcaption>
+                        </figure>
+                    </div>
+                    <p class="fragment">最终的光照效果是这三种光照分量的<strong>叠加</strong></p>
+                </section>
+                <section>
+                    <h3>Phong模型的数学表达式</h3>
+                    <p class="fragment">Phong模型的计算公式：</p>
+                    <p class="fragment" style="text-align:center; font-size:28pt;">$I = I_{ambient}+I_{diffuse}+I_{specular}$</sub></p>
+                    <p class="fragment">其中：</p>
+                    <ul>
+                        <li class="fragment">$I_{ambient}$：环境光分量</li>
+                        <li class="fragment">$I_{diffuse}$：漫反射光分量</li>
+                        <li class="fragment">$I_{specular}$：镜面反射光分量</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>向量表示</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phongmd.png" alt="Phong模型向量" style="width:100%; margin: 0 auto;">
+                            </figure>
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>$\vec{n}$</strong>：表面法向量(Normal vector)</li>
+                                <li class="fragment"><strong>$\vec{l}$</strong>：指向光源的单位向量(Light vector)</li>
+                                <li class="fragment"><strong>$\vec{v}$</strong>：指向观察者的单位向量(View vector)</li>
+                                <li class="fragment"><strong>$\vec{r}$</strong>：全反射向量(Reflection vector)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="fragment" style="text-align:center">可通过这四个向量计算得到三种分量</p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>环境光分量 (Ambient Light)</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-ambient.png" alt="环境光示例" style="width:100%; margin: 0 auto;">
+                            </figure>
+                        </div>
+                        <div>
+                            <p class="fragment">环境光是光源和环境中物体进行多次交互后的结果，是对间接光照的简化模拟</p>
+                            <p class="fragment">假设来自所有方向的光照强度相等</p>
+                            <p class="fragment">不考虑光源位置和物体表面朝向</p>
+                            <p class="fragment">环境光强度和颜色取决于光源的颜色和物体的材质属性</p>
+                            <p class="fragment">计算公式：</p>
+                            <p class="fragment" style="text-align:center; font-size:28pt;">$I_{ambient}=k_{a}I_{a}$</p>
+                            <ul>
+                                <li class="fragment">$k_a$：环境光反射系数（材质属性）</li>
+                                <li class="fragment">$I_a$：环境光强度</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>环境光的意义</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-ambient-none.png" alt="无环境光" style="width:100%; margin: 0 auto;">
+                                <figcaption class="fragment">无环境光</figcaption>
+                            </figure>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-ambient.png" alt="有环境光" style="width:100%; margin: 0 auto;">
+                                <figcaption class="fragment">有环境光</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <p class="fragment">环境光确保了场景中没有完全黑暗的区域，模拟了现实世界中光线的多次散射</p>
+                    <p class="fragment">虽然不真实，但是能实现简单有效的近似模拟</p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>朗伯面</h3>
+                    <p class="fragment"><strong><a href="./AppDemos/lambertian_surface.html" target="_blank">朗伯面(Lambertian Surface)</a></strong>，一种理想的漫反射表面，光线均匀地向各个方向散射</p>
+                    <p class="fragment">反射光强度与入射光在垂直方向上的强度呈线性关系，即</p>
+                    <ul>
+                        <li class="fragment">反射光强度与$\cos{\theta}$呈线性关系</li>
+                        <li class="fragment">若向量已正则化，有$\cos(\theta)=\vec{l}\cdot\vec{n}$</li>
+                        <li class="fragment">可对三个颜色分量分别计算反射量，反射系数分别为$k_r, k_g, k_b$</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>漫反射光分量 (Diffuse Light)</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-diffuse.png" alt="漫反射光示例" style="width:100%; margin: 0 auto;">
+                            </figure>
+                        </div>
+                        <div>
+                            <p class="fragment">漫反射模拟光线在<strong>粗糙表面</strong>上的反射</p>
+                            <p class="fragment">基于<strong>朗伯定律(Lambert's Law)</strong>：反射光强度与入射光和表面法线夹角的余弦成正比</p>
+                            <p class="fragment">计算公式：</p>
+                            <p class="fragment" style="text-align:center; font-size:28pt;">$I_{diffuse}=k_{d}I_{d}(\vec{n}\cdot\vec{l})$</p>
+                            <ul>
+                                <li class="fragment">$k_d$：漫反射系数（材质属性）</li>
+                                <li class="fragment">$I_d$：光源强度</li>
+                                <li class="fragment">$\vec{n}·\vec{l}$：法向量与光源方向的点积（余弦值）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>漫反射的特点</h3>
+                        <ul>
+                            <li class="fragment">当$\vec{n}\cdot\vec{l}>0$时，表面接收光照</li>
+                            <li class="fragment">当$\vec{n}\cdot\vec{l}\leq 0$时，表面背向光源，不接收光照</li>
+                            <li class="fragment">漫反射光与观察者位置无关</li>
+                            <li class="fragment">漫反射决定了物体的基本明暗变化，提供了物体的形状感</li>
+                        </ul>
+                        <p class="fragment">漫反射适合表现如纸张、布料、墙壁等不光滑表面的光照效果</p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>理想反射面</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment">法向量由局部方向决定</li>
+                                <li class="fragment">光线入射角等于反射角</li>
+                                <li class="fragment">三个向量共面，包括入射光向量、法线向量和全反射向量</li>
+                            </ul>
+                            <p class="fragment">$$
+						\vec{r}=2(\vec{l}\cdot\vec{n})\vec{n}-\vec{l}
+						$$</p>
+                        </div>
+                        <div>
+                            <img class="fragment" src="images/chap05/ch05-idealrlt.png">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>高光表面</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment">大多数平面既非理想的漫反射表面，也非理想的镜面(即理想全反射面)</li>
+                                <li class="fragment">平滑表面会在接近于镜面反射方向反射入射光，形成高光</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img class="fragment" src="images/chap05/ch05-spusuf.png" style="width:60%">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>高光反射建模</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment">Phong模型以一个变量$I_{specular}$表示反射光强度</li>
+                                <li class="fragment">当观察者与全反射角之间的角度增大时，反射光强度会减小,即有$I_{specular}\sim k_sI_s\cos^{\alpha}({\phi})$</li>
+                                <ul>
+                                    <li class="fragment">$I_{specular}$表示反射强度</li>
+                                    <li class="fragment">$k_s$为光反射系数，其值介于0和1之间，表明有多少光被反射</li>
+                                    <li class="fragment">$I_s$为入射光强度</li>
+                                    <li class="fragment">$\cos^{\alpha}({\phi})$为Phong模型中定义的闪光系数</li>
+                                    <li class="fragment">$\phi$为观察者与全反射方向之间的夹角</li>
+                                </ul>
+                            </ul> 
+                        </div>
+                        <div>
+                            <img src="images/chap05/ch05-phongtheta.png" style="width:100%">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>镜面反射光分量 (Specular Light)</h3>
+                    <div class="two-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-specular.png" alt="镜面反射光示例" style="width:100%; margin: 0 auto;">
+                            </figure>
+                        </div>
+                        <div>
+                            <p class="fragment">镜面反射模拟光线在<strong>光滑表面</strong>上的反射</p>
+                            <p class="fragment">产生高光效果，与观察者位置相关</p>
+                            <p class="fragment">计算公式：</p>
+                            <p class="fragment" style="text-align:center; font-size:28pt;">$I_{specular}=k_{s}I_{s}(\vec{r}\cdot\vec{v})^{\alpha}$</p>
+                            <ul>
+                                <li class="fragment">$k_s$：镜面反射系数（材质属性）</li>
+                                <li class="fragment">$I_s$：光源强度</li>
+                                <li class="fragment">$\vec{r}\cdot\vec{v}$：反射向量与视线向量的点积</li>
+                                <li class="fragment">$\alpha$：光泽度(shininess)，控制高光大小</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>光泽度(Shininess)</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment">当$\alpha$无限趋近于正无穷时，对应于镜面材质</li>
+                                <li class="fragment">当$\alpha$值界于100到200之间时，对应于较为金属材质</li>
+                                <li class="fragment">当$\alpha$值界于10到50之间时，对应于塑料材质</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img src="images/chap05/ch05-shinecoeff.png">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>光泽度(Shininess)的影响</h3>
+                    <div class="three-column">
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phong-shiness-1.png" alt="低光泽度" style="width:100%; margin: 0 auto;">
+                                <figcaption class="fragment">α = 1<br>低光泽度</figcaption>
+                            </figure>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phong-shiness-32.png" alt="中光泽度" style="width:100%; margin: 0 auto;">
+                                <figcaption class="fragment">α = 32<br>中光泽度</figcaption>
+                            </figure>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phong-shiness-128.png" alt="高光泽度" style="width:100%; margin: 0 auto;">
+                                <figcaption class="fragment">α = 128<br>高光泽度</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <ul>
+                        <li class="fragment">光泽度α越大，高光区域越小越集中，表面越光滑</li>
+                        <li class="fragment">光泽度α越小，高光区域越大越分散，表面越粗糙</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>距离因子</h3>
+                    <p class="fragment">在现实世界中，光照强度会随着距离增加而衰减</p>
+                    <p class="fragment">其强度衰减与距离平方的倒数相关，因此，衰减因子为</p>
+                    <p class="fragment">
+                        $$att = \frac{1}{k_1+k_2 d+k_3 d^2}$$
+                    </p>
+                    <p class="fragment">其中$d$为光源到表面点的距离，$k_1$、$k_2$、$k_3$分别为常数项、线性项和二次项的衰减系数</p>
+                    <p class="fragment">将衰减因子应用到漫反射和镜面反射分量中</p>
+                </section>
+                <section>
+                    <h3>Phong模型计算式</h3>
+                    <ul>
+                        <li class="fragment">将前述各分量相加，得到Phong模型的计算式，对于每一个光源，有
+                            $$
+I = k_a I_a +\frac{1}{k_1+k_2 d+k_3 d^2}\cdot\left( k_d I_d (\vec{n}\cdot\vec{l}) + k_s I_s (\vec{r}\cdot\vec{v})^{\alpha}\right)
+                            $$
+                        </li>
+                        <li class="fragment">如果场景中有多个光源，将所有光源的漫反射和镜面反射分量相加，即可得到完整的光照计算式，有
+                            $$
+I = k_a I_a +\sum_{i=1}^n\left(\frac{1}{k_1+k_2 d+k_3 d^2}\cdot\left( k_d I_d (\vec{n}\cdot\vec{l}) + k_s I_s (\vec{r}\cdot\vec{v})^{\alpha}\right)\right)
+                            $$
+                        </li>
+                    </ul>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-phongmd.png" alt="Phong模型计算式" style="width:50%; margin: 0 auto;">
+                    </div>
+                </section>
+                <section>
+                    <h3>光源和材质</h3>
+                    <ul>
+                        <li class="fragment">Phong模型中，可对每个光源单独计算各分量</li>
+					<li class="fragment">每个光源都有独立的漫反射、高光反射和环境光分量，可灵活计算调整，但这种模型并不符合物理实际</li>
+					<li class="fragment">每种分量又可进一步分解成红、绿、蓝三种颜色分量，因此每个光源都有$I_{dr}, I_{dg}, I_{db}, I_{sr}, I_{sg}, I_{sb}, I_{ar}, I_{ag}, l_{ab}$九个分量</li>
+					<li class="fragment">对于物体的材质，也与光源性质相类似，分别对应于三种光源三种颜色分量的吸收性质，有$k_{dr}, k_{dg}, k_{db}, k_{sr}, k_{sg}, k_{sb}, k_{ar}, k_{ag}, k_{ab}$</li>
+					<li class="fragment">除外，不同的材质的光泽度系统$\alpha$也不同</li>
+                    <li class="fragment">因此，可对每个光源每种材质独立进行计算后再相加</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>改进Phong模型</h3>
+                    <p class="fragment">在Phong模型计算中，对于镜面反射分量的计算，需要计算每个顶点的观察者向量，以及全反射向量，计算量大</p>
+                    <p class="fragment">Jim Blinn于1977年提出了一种对Phong模型的优化改进，称为<strong>Blinn-Phong模型</strong></p>
+                    <p class="fragment">Blinn-Phong模型引入<strong>半路向量(Half Vector)</strong>替代全反射向量，提高计算效率</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">
+                            $$
+    					        \vec{h}=\frac{(\vec{l}+\vec{v})}{|\vec{l}+\vec{v}|}
+					        $$
+                            </p>
+                        </div>
+                        <div>
+                            <img class="fragment" src="images/chap05/ch05-halfvec.png" style="width:80%">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>改进Phong模型的计算</h3>
+                    <p class="fragment">将Phong模型中$(\vec{v}\cdot\vec{r})^{\alpha}$替代为$(\vec{n}\cdot\vec{h})^\beta$，其中$\beta$的值根据光泽度$\alpha$的值设定，一般$\beta\approx 4\alpha$
+                    </p>
+                    <p class="fragment">如果所有向量均共面，则半路角为$\vec{r}$和$\vec{v}$夹角的一半，即$\psi=\phi/2$</p>
+                    <p class="fragment"><a href="./AppDemos/phong_vs_blinn.html" target="_blank">Blinn-Phong模型对比</a></p>
+                </section>
+                <section>
+                    <h3>Phong vs Blinn-Phong</h3>
+                    <p class="fragment">Blinn-Phong模型的优势：</p>
+                    <ul>
+                        <li class="fragment">计算效率更高（避免了反射向量的计算）</li>
+                        <li class="fragment">在掠射角度（视线几乎平行于表面）时表现更好</li>
+                        <li class="fragment">在现代图形API和着色器中广泛使用</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Phong模型的局限性</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment">简化了真实世界的光照交互</li>
+                                <li class="fragment">不能模拟复杂的光照效果：
+                                    <ul>
+                                        <li class="fragment">次表面散射</li>
+                                        <li class="fragment">光的色散</li>
+                                        <li class="fragment">光的衍射</li>
+                                    </ul>
+                                </li>
+                                <li class="fragment">不考虑物体间的光线传递</li>
+                                <li class="fragment">不支持真实的阴影生成</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <figure>
+                                <img class="fragment" src="../../images/cg/chap05/ch05-phong-vs-pbr.png" alt="PBR vs Phong" style="width:80%; margin: 0 auto;">
+                                <figcaption class="fragment" style="font-size:24pt">物理基础渲染(PBR)与Phong模型对比</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <p class="fragment">尽管有局限性，Phong模型因其简单高效的特点，仍然在实时渲染中广泛应用</p>
+                </section>
+            </section>
+            <section>
+                <h3>Phong模型示例</h3>
+                <img class="fragment" src="../../images/cg/chap05/ch05-teapotarray.png" alt="Phong模型示例" style="width:80%; margin: 0 auto;">
+                <p class="fragment"><a href="https://people.eecs.ku.edu/~jrmiller/Courses/672/InClass/3DLighting/MaterialProperties.html" target="_blank">不同材质参数表</a></p>
+            </section>
+
+            <!-- Post-assessment -->
+            <section>
+                <section>
+                    <h3>题目一 (选择题)</h3>
+                    <div class="quiz-container">
+                        <p>在Phong光照模型中，以下哪个分量与观察者的位置无关？</p>
+                        <ul class="quiz-options" id="q1-options">
+                            <li data-answer="correct">A. 环境光分量</li>
+                            <li data-answer="correct">B. 漫反射分量</li>
+                            <li data-answer="incorrect">C. 镜面反射分量</li>
+                        </ul>
+                        <div class="fragment answer-explanation">
+                            <p><strong>答案: A. B</strong></p>
+                            <p><strong>解析:</strong> 在Phong光照模型中，漫反射分量仅依赖于光线方向与表面法线的夹角，与观察者位置无关。漫反射计算公式为 I<sub>diffuse</sub> = k<sub>d</sub> × I<sub>d</sub> × (N·L)，其中不包含视线向量V。环境光分量也与观察者位置无关。镜面反射分量与观察者位置密切相关，因为它依赖于反射向量和视线向量的夹角。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>题目二 (单选题)</h3>
+                    <div class="quiz-container">
+                        <p>Blinn-Phong模型相比原始Phong模型的主要优化是什么？</p>
+                        <ul class="quiz-options" id="q2-options">
+                            <li data-answer="incorrect">A. 增加了环境光计算的准确性</li>
+                            <li data-answer="incorrect">B. 改进了漫反射计算方法</li>
+                            <li data-answer="correct">C. 使用半路向量(Half Vector)替代反射向量，提高计算效率</li>
+                            <li data-answer="incorrect">D. 添加了光照衰减因子</li>
+                        </ul>
+                        <div class="fragment answer-explanation">
+                            <p><strong>答案: C</strong></p>
+                            <p style="font-size:16pt"><strong>解析:</strong> Blinn-Phong模型的主要优化是使用半路向量(Half Vector)H替代反射向量R来计算镜面反射。半路向量是光源方向L和视线方向V的归一化平均值：H = (L + V) / |L + V|。这种方法避免了计算反射向量的开销，提高了计算效率，并在某些情况下（如掠射角）产生更好的视觉效果。Blinn-Phong模型的镜面反射计算使用(N·H)<sup>α'</sup>替代了Phong模型中的(R·V)<sup>α</sup>。</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>题目三 (问答题)</h3>
+                    <div class="quiz-container">
+                        <p>一个3D场景中有一个红色的塑料球和一个银色的金属球，它们在相同的光照条件下呈现出不同的视觉效果。请结合Phong光照模型的三个分量，解释如何通过调整材质参数来区分这两种不同材质的球体。具体说明哪些参数应该如何设置，以及为什么这些设置能够产生塑料和金属的视觉差异。</p>
+                        <div class="fragment answer-explanation">
+                            <p><strong>答案解析:</strong></p>
+                            <ul>
+                                <li class="fragment" style="font-size:12pt"><strong>材质参数差异:</strong><br>
+                                要区分红色塑料球和银色金属球，需要调整以下Phong模型参数：</li>
+                                
+                                <li class="fragment"style="font-size:12pt"><strong>漫反射系数(k<sub>d</sub>):</strong><br>
+                                    <ul>
+                                        <li style="font-size:12pt"><strong>红色塑料球:</strong> 设置较高的红色通道漫反射系数(k<sub>d,r</sub>)，较低的绿色和蓝色通道系数。塑料材质主要通过漫反射呈现颜色，因此k<sub>d</sub>应该占主导。</li>
+                                        <li style="font-size:12pt"><strong>银色金属球:</strong> 设置较低的漫反射系数，且RGB三个通道值接近（灰色调）。金属材质的漫反射较弱，颜色主要通过镜面反射呈现。</li>
+                                    </ul>
+                                </li>
+                                
+                                <li class="fragment" style="font-size:12pt"><strong>镜面反射系数(k<sub>s</sub>):</strong><br>
+                                    <ul>
+                                        <li style="font-size:12pt"><strong>红色塑料球:</strong> 设置较低的镜面反射系数，且通常为白色(RGB值相等)。塑料的高光通常是白色的，与物体本身颜色无关。</li>
+                                        <li style="font-size:12pt"><strong>银色金属球:</strong> 设置较高的镜面反射系数，且RGB值接近（银色调）。金属的高光通常继承了金属本身的颜色。</li>
+                                    </ul>
+                                </li>
+                                
+                                <li class="fragment" style="font-size:12pt"><strong>光泽度(α):</strong><br>
+                                    <ul>
+                                        <li style="font-size:12pt"><strong>红色塑料球:</strong> 设置中等的光泽度值(如α=16~32)。塑料表面虽然有光泽，但不如金属那么锐利集中。</li>
+                                        <li style="font-size:12pt"><strong>银色金属球:</strong> 设置较高的光泽度值(如α=64~128或更高)。金属表面通常非常光滑，产生锐利集中的高光。</li>
+                                    </ul>
+                                </li>
+                                
+                                <li class="fragment" style="font-size:12pt"><strong>环境光反射系数(k<sub>a</sub>):</strong><br>
+                                两者的环境光系数可以设置相似，但应与各自的漫反射系数保持一致的颜色比例。</li>
+                                
+                                <li class="fragment" style="font-size:12pt"><strong>视觉效果解释:</strong><br>
+                                这些参数设置的结果是：红色塑料球会呈现出均匀的红色表面，带有较为柔和的白色高光；而银色金属球则会显示出强烈的镜面反射效果，高光区域锐利且带有金属本身的色调，整体看起来更加"闪亮"和"反光"。这符合我们在现实世界中对这两种材质的视觉感知。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <!-- Summary -->
+            <section>
+                <h3>课堂总结</h3>
+                <ul>
+                    <li class="fragment">Phong光照模型是一种经典的局部光照模型，由环境光、漫反射光和镜面反射光三个分量组成</li>
+                    <li class="fragment">环境光分量模拟间接光照，与表面朝向和观察位置无关</li>
+                    <li class="fragment">漫反射分量基于朗伯定律，与表面朝向相关但与观察位置无关</li>
+                    <li class="fragment">镜面反射分量产生高光效果，与表面朝向和观察位置都相关</li>
+                    <li class="fragment">Blinn-Phong模型通过使用半路向量优化了计算效率，在现代图形应用中广泛使用</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    })
+
+    function handleQuizClick(optionsId) {
+            const options = document.getElementById(optionsId);
+            if (!options) return;
+
+            options.addEventListener('click', function(event) {
+                const clickedLi = event.target.closest('li');
+                if (!clickedLi) return;
+
+                // 移除所有选项的 selected 状态
+                options.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // 为被点击的选项添加 selected 状态
+                clickedLi.classList.add('selected');
+
+                // 判断答案并添加相应样式
+                if (clickedLi.dataset.answer === 'correct') {
+                    clickedLi.classList.add('correct');
+                } else {
+                    clickedLi.classList.add('incorrect');
+                }
+            });
+        }
+
+        handleQuizClick('q1-options');
+        handleQuizClick('q2-options');
+</script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phong Lighting Model Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: rgb(126, 90, 90);
+        }
+        .controls {
+            width: 300px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .range-value {
+            font-size: 0.8em;
+            color: #666;
+            text-align: right;
+        }
+        .toggle-group {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .toggle {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .toggle input {
+            margin-right: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Phong Lighting Model Demonstration</h1>
+
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="gl-canvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="controls">
+            <h2>Lighting Controls</h2>
+
+            <div class="control-group toggle-group">
+                <div class="toggle">
+                    <input type="checkbox" id="ambient-toggle" checked>
+                    <label for="ambient-toggle">Ambient</label>
+                </div>
+                <div class="toggle">
+                    <input type="checkbox" id="diffuse-toggle" checked>
+                    <label for="diffuse-toggle">Diffuse</label>
+                </div>
+                <div class="toggle">
+                    <input type="checkbox" id="specular-toggle" checked>
+                    <label for="specular-toggle">Specular</label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="light-x">Light Position X</label>
+                <input type="range" id="light-x" min="-5" max="5" step="0.1" value="2">
+                <div class="range-value" id="light-x-value">2.0</div>
+            </div>
+
+            <div class="control-group">
+                <label for="light-y">Light Position Y</label>
+                <input type="range" id="light-y" min="-5" max="5" step="0.1" value="2">
+                <div class="range-value" id="light-y-value">2.0</div>
+            </div>
+
+            <div class="control-group">
+                <label for="light-z">Light Position Z</label>
+                <input type="range" id="light-z" min="-5" max="5" step="0.1" value="2">
+                <div class="range-value" id="light-z-value">2.0</div>
+            </div>
+
+            <div class="control-group">
+                <label for="shininess">Material Shininess</label>
+                <input type="range" id="shininess" min="1" max="128" step="1" value="32">
+                <div class="range-value" id="shininess-value">32</div>
+            </div>
+
+            <div class="control-group">
+                <label for="ambient-color">Ambient Light Color</label>
+                <input type="color" id="ambient-color" value="#ffffff">
+            </div>
+
+            <div class="control-group">
+                <label for="diffuse-color">Diffuse Light Color</label>
+                <input type="color" id="diffuse-color" value="#ffffff">
+            </div>
+
+            <div class="control-group">
+                <label for="specular-color">Specular Light Color</label>
+                <input type="color" id="specular-color" value="#ffffff">
+            </div>
+
+            <button id="reset-button">Reset Light Position</button>
+        </div>
+    </div>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        // Vertex shader for Phong lighting model
+        // Computes position and normal in world space for the fragment shader
+
+        attribute vec3 aPosition;
+        attribute vec3 aNormal;
+
+        uniform mat4 uProjectionMatrix;
+        uniform mat4 uModelViewMatrix;
+        uniform mat3 uNormalMatrix;
+
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+
+        void main() {
+            // Transform position to view space
+            vec4 positionView = uModelViewMatrix * vec4(aPosition, 1.0);
+            vPosition = positionView.xyz;
+
+            // Transform normal to view space
+            vNormal = normalize(uNormalMatrix * aNormal);
+
+            // Final position in clip space
+            gl_Position = uProjectionMatrix * positionView;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        // Fragment shader implementing Phong lighting model
+        // Computes ambient, diffuse, and specular components
+
+        precision mediump float;
+
+        // Material properties
+        uniform vec3 uMaterialAmbient;
+        uniform vec3 uMaterialDiffuse;
+        uniform vec3 uMaterialSpecular;
+        uniform float uMaterialShininess;
+
+        // Light properties
+        uniform vec3 uLightPosition;
+        uniform vec3 uLightAmbient;
+        uniform vec3 uLightDiffuse;
+        uniform vec3 uLightSpecular;
+
+        // Lighting toggles
+        uniform bool uUseAmbient;
+        uniform bool uUseDiffuse;
+        uniform bool uUseSpecular;
+
+        // Interpolated values from vertex shader
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+
+        void main() {
+            // Normalize the normal vector
+            vec3 N = normalize(vNormal);
+
+            // Calculate light direction (L) - from surface to light
+            vec3 L = normalize(uLightPosition - vPosition);
+
+            // Calculate view direction (V) - from surface to camera
+            vec3 V = normalize(-vPosition);
+
+            // Calculate reflection vector (R)
+            vec3 R = reflect(-L, N);
+
+            // Initialize final color
+            vec3 finalColor = vec3(0.0);
+
+            // AMBIENT COMPONENT: ka * Ia
+            // Ambient light provides constant illumination regardless of light direction
+            if (uUseAmbient) {
+                vec3 ambient = uMaterialAmbient * uLightAmbient;
+                finalColor += ambient;
+            }
+
+            // DIFFUSE COMPONENT: kd * max(dot(N, L), 0) * Id
+            // Diffuse light depends on the angle between surface normal and light direction
+            if (uUseDiffuse) {
+                float NdotL = max(dot(N, L), 0.0);
+                vec3 diffuse = uMaterialDiffuse * NdotL * uLightDiffuse;
+                finalColor += diffuse;
+            }
+
+            // SPECULAR COMPONENT: ks * pow(max(dot(R, V), 0), shininess) * Is
+            // Specular highlights depend on the reflection vector and view direction
+            if (uUseSpecular) {
+                float RdotV = max(dot(R, V), 0.0);
+                vec3 specular = uMaterialSpecular * pow(RdotV, uMaterialShininess) * uLightSpecular;
+                finalColor += specular;
+            }
+
+            // Output the final color
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    </script>
+
+    <script>
+        // WebGL context and resources
+        let gl;
+        let shaderProgram;
+        let sphereVertexBuffer;
+        let sphereNormalBuffer;
+        let sphereIndexBuffer;
+        let indexCount;
+
+        // Uniform locations
+        let uProjectionMatrix;
+        let uModelViewMatrix;
+        let uNormalMatrix;
+        let uMaterialAmbient;
+        let uMaterialDiffuse;
+        let uMaterialSpecular;
+        let uMaterialShininess;
+        let uLightPosition;
+        let uLightAmbient;
+        let uLightDiffuse;
+        let uLightSpecular;
+        let uUseAmbient;
+        let uUseDiffuse;
+        let uUseSpecular;
+
+        // Light position
+        let lightPosition = [2.0, 2.0, 2.0];
+
+        // Material properties
+        const materialAmbient = [0.2, 0.2, 0.2];  // ka = 0.2
+        const materialDiffuse = [1.0, 1.0, 1.0];  // kd = 1.0
+        const materialSpecular = [0.5, 0.5, 0.5]; // ks = 0.5
+        let materialShininess = 32.0; // Made variable to allow updates
+
+        // Light properties
+        let lightAmbient = [1.0, 1.0, 1.0];
+        let lightDiffuse = [1.0, 1.0, 1.0];
+        let lightSpecular = [1.0, 1.0, 1.0];
+
+        // Camera parameters
+        let cameraDistance = 5.0;
+        let cameraAngleX = 0.0;
+        let cameraAngleY = 0.0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+
+        // Initialize WebGL
+        function initWebGL() {
+            const canvas = document.getElementById('gl-canvas');
+            gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+            if (!gl) {
+                alert('WebGL not supported!');
+                return;
+            }
+
+            gl.clearColor(0.53, 0.81, 0.92, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        // Create and compile shader
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Error compiling shader:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+
+            return shader;
+        }
+
+        // Initialize shaders
+        function initShaders() {
+            const vertexShaderSource = document.getElementById('vertex-shader').text;
+            const fragmentShaderSource = document.getElementById('fragment-shader').text;
+
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+            shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                console.error('Unable to initialize shader program:', gl.getProgramInfoLog(shaderProgram));
+                return;
+            }
+
+            gl.useProgram(shaderProgram);
+
+            // Get attribute locations
+            shaderProgram.aPosition = gl.getAttribLocation(shaderProgram, 'aPosition');
+            gl.enableVertexAttribArray(shaderProgram.aPosition);
+
+            shaderProgram.aNormal = gl.getAttribLocation(shaderProgram, 'aNormal');
+            gl.enableVertexAttribArray(shaderProgram.aNormal);
+
+            // Get uniform locations
+            uProjectionMatrix = gl.getUniformLocation(shaderProgram, 'uProjectionMatrix');
+            uModelViewMatrix = gl.getUniformLocation(shaderProgram, 'uModelViewMatrix');
+            uNormalMatrix = gl.getUniformLocation(shaderProgram, 'uNormalMatrix');
+            uMaterialAmbient = gl.getUniformLocation(shaderProgram, 'uMaterialAmbient');
+            uMaterialDiffuse = gl.getUniformLocation(shaderProgram, 'uMaterialDiffuse');
+            uMaterialSpecular = gl.getUniformLocation(shaderProgram, 'uMaterialSpecular');
+            uMaterialShininess = gl.getUniformLocation(shaderProgram, 'uMaterialShininess');
+            uLightPosition = gl.getUniformLocation(shaderProgram, 'uLightPosition');
+            uLightAmbient = gl.getUniformLocation(shaderProgram, 'uLightAmbient');
+            uLightDiffuse = gl.getUniformLocation(shaderProgram, 'uLightDiffuse');
+            uLightSpecular = gl.getUniformLocation(shaderProgram, 'uLightSpecular');
+            uUseAmbient = gl.getUniformLocation(shaderProgram, 'uUseAmbient');
+            uUseDiffuse = gl.getUniformLocation(shaderProgram, 'uUseDiffuse');
+            uUseSpecular = gl.getUniformLocation(shaderProgram, 'uUseSpecular');
+        }
+
+        // Create sphere geometry
+        function createSphere(radius, latitudeBands, longitudeBands) {
+            const vertices = [];
+            const normals = [];
+            const indices = [];
+
+            // Generate vertices and normals
+            for (let lat = 0; lat <= latitudeBands; lat++) {
+                const theta = lat * Math.PI / latitudeBands;
+                const sinTheta = Math.sin(theta);
+                const cosTheta = Math.cos(theta);
+
+                for (let lon = 0; lon <= longitudeBands; lon++) {
+                    const phi = lon * 2 * Math.PI / longitudeBands;
+                    const sinPhi = Math.sin(phi);
+                    const cosPhi = Math.cos(phi);
+
+                    const x = cosPhi * sinTheta;
+                    const y = cosTheta;
+                    const z = sinPhi * sinTheta;
+
+                    // Normal vector is the same as position for a unit sphere
+                    normals.push(x, y, z);
+
+                    // Scale by radius to get actual position
+                    vertices.push(radius * x, radius * y, radius * z);
+                }
+            }
+
+            // Generate indices
+            for (let lat = 0; lat < latitudeBands; lat++) {
+                for (let lon = 0; lon < longitudeBands; lon++) {
+                    const first = (lat * (longitudeBands + 1)) + lon;
+                    const second = first + longitudeBands + 1;
+
+                    indices.push(first, second, first + 1);
+                    indices.push(second, second + 1, first + 1);
+                }
+            }
+
+            return { vertices, normals, indices };
+        }
+
+        // Initialize sphere buffers
+        function initSphereBuffers() {
+            const sphere = createSphere(1.0, 30, 30);
+
+            // Vertex buffer
+            sphereVertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.vertices), gl.STATIC_DRAW);
+
+            // Normal buffer
+            sphereNormalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, sphereNormalBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.normals), gl.STATIC_DRAW);
+
+            // Index buffer
+            sphereIndexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sphere.indices), gl.STATIC_DRAW);
+
+            indexCount = sphere.indices.length;
+        }
+
+        // Matrix multiplication helper
+        function multiplyMatrices(a, b) {
+            const result = [];
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < 4; k++) {
+                        sum += a[i * 4 + k] * b[k * 4 + j];
+                    }
+                    result[i * 4 + j] = sum;
+                }
+            }
+            return result;
+        }
+
+        // Create perspective projection matrix
+        function createPerspectiveMatrix(fov, aspect, near, far) {
+            const f = 1.0 / Math.tan(fov / 2);
+            const rangeInv = 1 / (near - far);
+
+            return [
+                f / aspect, 0, 0, 0,
+                0, f, 0, 0,
+                0, 0, (near + far) * rangeInv, -1,
+                0, 0, near * far * rangeInv * 2, 0
+            ];
+        }
+
+        // Create translation matrix
+        function createTranslationMatrix(x, y, z) {
+            return [
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                x, y, z, 1
+            ];
+        }
+
+        // Create rotation matrix around X axis
+        function createRotationXMatrix(angle) {
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+
+            return [
+                1, 0, 0, 0,
+                0, c, s, 0,
+                0, -s, c, 0,
+                0, 0, 0, 1
+            ];
+        }
+
+        // Create rotation matrix around Y axis
+        function createRotationYMatrix(angle) {
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+
+            return [
+                c, 0, -s, 0,
+                0, 1, 0, 0,
+                s, 0, c, 0,
+                0, 0, 0, 1
+            ];
+        }
+
+        // Extract 3x3 normal matrix from 4x4 model-view matrix
+        function getNormalMatrix(modelViewMatrix) {
+            return [
+                modelViewMatrix[0], modelViewMatrix[1], modelViewMatrix[2],
+                modelViewMatrix[4], modelViewMatrix[5], modelViewMatrix[6],
+                modelViewMatrix[8], modelViewMatrix[9], modelViewMatrix[10]
+            ];
+        }
+
+        // Draw scene
+        function draw() {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            // Set up projection matrix
+            const canvas = document.getElementById('gl-canvas');
+            const projectionMatrix = createPerspectiveMatrix(
+                45 * Math.PI / 180,
+                canvas.width / canvas.height,
+                0.1,
+                100.0
+            );
+
+            // Set up model-view matrix
+            let modelViewMatrix = createTranslationMatrix(0, 0, -cameraDistance);
+            modelViewMatrix = multiplyMatrices(modelViewMatrix, createRotationYMatrix(cameraAngleY));
+            modelViewMatrix = multiplyMatrices(modelViewMatrix, createRotationXMatrix(cameraAngleX));
+
+            // Calculate normal matrix
+            const normalMatrix = getNormalMatrix(modelViewMatrix);
+
+            // Set uniforms
+            gl.uniformMatrix4fv(uProjectionMatrix, false, projectionMatrix);
+            gl.uniformMatrix4fv(uModelViewMatrix, false, modelViewMatrix);
+            gl.uniformMatrix3fv(uNormalMatrix, false, normalMatrix);
+
+            // Material properties
+            gl.uniform3fv(uMaterialAmbient, materialAmbient);
+            gl.uniform3fv(uMaterialDiffuse, materialDiffuse);
+            gl.uniform3fv(uMaterialSpecular, materialSpecular);
+            gl.uniform1f(uMaterialShininess, materialShininess);
+
+            // Light properties
+            gl.uniform3fv(uLightPosition, lightPosition);
+            gl.uniform3fv(uLightAmbient, lightAmbient);
+            gl.uniform3fv(uLightDiffuse, lightDiffuse);
+            gl.uniform3fv(uLightSpecular, lightSpecular);
+
+            // Lighting toggles
+            gl.uniform1i(uUseAmbient, document.getElementById('ambient-toggle').checked);
+            gl.uniform1i(uUseDiffuse, document.getElementById('diffuse-toggle').checked);
+            gl.uniform1i(uUseSpecular, document.getElementById('specular-toggle').checked);
+
+            // Bind vertex buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexBuffer);
+            gl.vertexAttribPointer(shaderProgram.aPosition, 3, gl.FLOAT, false, 0, 0);
+
+            // Bind normal buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, sphereNormalBuffer);
+            gl.vertexAttribPointer(shaderProgram.aNormal, 3, gl.FLOAT, false, 0, 0);
+
+            // Bind index buffer
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereIndexBuffer);
+
+            // Draw sphere
+            gl.drawElements(gl.TRIANGLES, indexCount, gl.UNSIGNED_SHORT, 0);
+        }
+
+        // Mouse event handlers for camera control
+        function handleMouseDown(event) {
+            isDragging = true;
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+        }
+
+        function handleMouseUp(event) {
+            isDragging = false;
+        }
+
+        function handleMouseMove(event) {
+            if (!isDragging) return;
+
+            const deltaX = event.clientX - lastMouseX;
+            const deltaY = event.clientY - lastMouseY;
+
+            cameraAngleY += deltaX * 0.01;
+            cameraAngleX += deltaY * 0.01;
+
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+
+            draw();
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16) / 255.0,
+                parseInt(result[2], 16) / 255.0,
+                parseInt(result[3], 16) / 255.0
+            ] : null;
+        }
+
+        // Initialize application
+        function init() {
+            initWebGL();
+            initShaders();
+            initSphereBuffers();
+
+            // Set up mouse event listeners
+            const canvas = document.getElementById('gl-canvas');
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseleave', handleMouseUp);
+
+            // Set up light position slider listeners
+            document.getElementById('light-x').addEventListener('input', function() {
+                lightPosition[0] = parseFloat(this.value);
+                document.getElementById('light-x-value').textContent = this.value;
+                draw();
+            });
+
+            document.getElementById('light-y').addEventListener('input', function() {
+                lightPosition[1] = parseFloat(this.value);
+                document.getElementById('light-y-value').textContent = this.value;
+                draw();
+            });
+
+            document.getElementById('light-z').addEventListener('input', function() {
+                lightPosition[2] = parseFloat(this.value);
+                document.getElementById('light-z-value').textContent = this.value;
+                draw();
+            });
+
+            // Shininess slider event listener
+            document.getElementById('shininess').addEventListener('input', function() {
+                materialShininess = parseFloat(this.value);
+                document.getElementById('shininess-value').textContent = this.value;
+                draw();
+            });
+
+            // Color picker listeners
+            document.getElementById('ambient-color').addEventListener('input', function() {
+                lightAmbient = hexToRgb(this.value);
+                draw();
+            });
+
+            document.getElementById('diffuse-color').addEventListener('input', function() {
+                lightDiffuse = hexToRgb(this.value);
+                draw();
+            });
+
+            document.getElementById('specular-color').addEventListener('input', function() {
+                lightSpecular = hexToRgb(this.value);
+                draw();
+            });
+
+            // Set up lighting toggle listeners
+            document.getElementById('ambient-toggle').addEventListener('change', draw);
+            document.getElementById('diffuse-toggle').addEventListener('change', draw);
+            document.getElementById('specular-toggle').addEventListener('change', draw);
+
+            // Set up reset button listener
+            document.getElementById('reset-button').addEventListener('click', function() {
+                lightPosition = [2.0, 2.0, 2.0];
+                document.getElementById('light-x').value = 2.0;
+                document.getElementById('light-y').value = 2.0;
+                document.getElementById('light-z').value = 2.0;
+                document.getElementById('light-x-value').textContent = '2.0';
+                document.getElementById('light-y-value').textContent = '2.0';
+                document.getElementById('light-z-value').textContent = '2.0';
+                draw();
+            });
+
+            // Initial draw
+            draw();
+        }
+
+        // Start the application when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-光源与材质</title>
+
+    <meta name="description" content="Phong光照模型">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+    <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第五章(3) 光源与材质</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>回顾Phong模型</h3>
+                <p class="fragment">完整的Phong模型式</p>
+                <p class="fragment">$$
+I = k_a I_a +\frac{1}{k_1+k_2 d+k_3 d^2}\cdot\left( k_d I_d (\vec{n}\cdot\vec{l}) + k_s I_s (\vec{r}\cdot\vec{v})^{\alpha}\right)
+$$</p>
+                <p class="fragment">修正一下，有</p>
+                <p class="fragment">
+                    $$
+I = k_a I_a +\frac{1}{k_1+k_2 d+k_3 d^2}\cdot\left( k_d I_d \max(0, (\vec{n}\cdot\vec{l}))+ k_s I_s \max(0, (\vec{r}\cdot\vec{v})^{\alpha})\right)
+$$
+                </p>
+                <p class="fragment">但还有未定义的内容</p>
+                <ul>
+                    <li class="fragment">$\vec{l}$(光照向量)如何确定</li>
+                    <li class="fragment">现实中的<strong>太阳</strong>和<strong>台灯</strong>与$\vec{l}$一样吗</li>
+                    <li class="fragment">与材质相关的属性$k_s, k_d, k_s$以及光泽度$\alpha$如何确定</li>
+                </ul>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment fade-in">认识三种基本的光源类型：
+                        <strong>方向光</strong>, 
+                        <strong>点光源</strong>, 
+                        <strong>聚光灯</strong>
+                    </li>
+                    <li class="fragment fade-in">了解如何为每种光源计算光照向量 $\vec{l}$</li>
+                    <li class="fragment fade-in">理解如何在程序中定义一个物体的 <strong>材质 (Material)</strong></li>
+                </ul>
+            </section>
+            <section>
+                <h3>思考，三者光照有何不同</h3>
+                <div class="three-column">
+                    <div>
+                        <p style="text-align:center;font-size:150px;">☀️</p>
+                        <p style="text-align:center; font-weight:bold; font-size:24pt">太阳</p>
+                    </div>
+                    <div>
+                        <p style="text-align:center;font-size:150px;">💡</p>
+                        <p style="text-align:center; font-weight:bold; font-size:24pt">灯泡</p>
+                    </div>
+                    <div>
+                        <p style="text-align:center;font-size:150px;">🔦</p>
+                        <p style="text-align:center; font-weight:bold; font-size:24pt">手电筒</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="fragment" style="text-align:center"><strong>太阳</strong>，光线是平行的，来自无限远处</p>
+                    <p class="fragment" style="text-align:center"><strong>灯泡</strong>，从一个点向所有方向发光</p>
+                    <p class="fragment" style="text-align:center"><strong>手电筒</strong>，从一个点向特定的锥形区域发光</p>
+                </div>
+            </section>
+            <section>
+                <section>
+                    <h3>平行光(Directional Light)</h3>
+                    <ul>
+                        <li class="fragment">以<strong>太阳光</strong>为代表</li>
+                        <li class="fragment">光源距离无限远，所有光线都是<strong>平行</strong>的</li>
+                        <li class="fragment">没有光源“位置”，只有一个<strong>方向</strong></li>
+                        <li class="fragment">计算光照向量 $\vec{l}$，对于场景中任意一个点，$\vec{l}$都是<strong>恒定不变</strong>的，都指向光源，有$\vec{l}=\text{normalize}(-\overrightarrow{lightDirection})$</li>
+                    </ul>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-directional-light.png" alt="Directional Light" style="width: 50%; height: auto;">
+                    </div>
+                </section>
+                <section>
+                    <h3>点光源(Point Light)</h3>
+                    <ul>
+                        <li class="fragment">以<strong>灯泡</strong>为代表</li>
+                        <li class="fragment">光源有一个确定的<strong>位置</strong>，从该点向<strong>所有方向</strong>发光</li>
+                        <li class="fragment">计算光照向量$\vec{l}$，对场景中的每一个点$P$，$\vec{l}$都指向光源位置，因此都不相同，有$\vec{l}=\text{normalize}(\overrightarrow{lightPosition} - \overrightarrow{pointPosition})$</li>
+                    </ul>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-point-light.png" alt="Directional Light" style="width: 50%; height: auto;">
+                    </div>
+                </section>
+                <section>
+                    <h3>点光源的衰减</h3>
+                    <p class="fragment">现实世界中，光会随着距离增加而变暗，即能量会衰减</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap05/ch05-light-falloff.png" alt="Directional Light" style="width: 100%; height: auto;">
+                        </div>
+                        <div>
+                            <p class="fragment">
+                                $$ I_{final}=I_{light}\times f_{att}$$
+                            </p>
+                            <p class="fragment">
+                                $$ f_{att}=\frac{1}{k_1+k_2 d+k_3 d^2}$$
+                            </p>
+                            <p class="fragment">其中，$k_1, k_2, k_3$分别为衰减系数的常数项、一次项和二次项，$d$为光源到点的距离</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>光源类型演示(1)</h3>
+                    <p class="fragment"><a href="./AppDemos/light_source.html" target="_blank">光源类型Demo</a></p>
+                </section>
+                <section>
+                    <h3>聚光灯(Spotlights)</h3>
+                    <p class="fragment">以<strong>手电筒、舞台灯</strong>为代表</p>
+                    <p class="fragment">可视作是“点光源”的升级版，光源有一个确定的<strong>位置</strong>，从该点向<strong>特定方向</strong>发光，光线被限制在一个<strong>圆锥体</strong>内</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-spotlight.png" alt="Directional Light" style="width: 50%; height: auto;">
+                    </div>
+                </section>
+                <section>
+                    <h3>聚光灯的计算</h3>
+                    <ul>
+                        <li class="fragment"  style="font-size:20pt">计算光照向量$\vec{l}$，与点光源相同，有$\vec{l}=\text{normalize}(\overrightarrow{lightPosition} - \overrightarrow{pointPosition})$</li>
+                        <li class="fragment"  style="font-size:20pt">计算光线与聚光灯方向的夹角$\theta$，有$\theta=\arccos(\vec{l}\cdot(-\overrightarrow{lightDirection}))$</li>
+                        <li class="fragment"  style="font-size:20pt">如果$\theta$小于聚光灯的<strong>内锥角</strong>，则点$P$被光照亮，否则不被照亮</li>
+                        <li class="fragment"  style="font-size:20pt">如果$\theta$在<strong>内锥角(定义为100%亮度的区域)</strong>和<strong>外锥角(光线完全衰减为0的区域)</strong>之间，则光照强度按比例衰减</li>
+                        <li class="fragment"  style="font-size:20pt">最终光强度计算公式为：
+                            $$ I_{final}=I_{light}\times f_{att}\times f_{spot} $$
+                        </li>
+                        <li class="fragment"  style="font-size:20pt">其中，$f_{att}$为距离衰减因子，$f_{spot}$为聚光灯衰减因子，计算公式为：
+                            $$ f_{spot}=\begin{cases}
+1 & \theta \leq \theta_{inner} \\
+\frac{\cos(\theta)-\cos(\theta_{outer})}{\cos(\theta_{inner})-\cos(\theta_{outer})} & \theta_{inner} < \theta < \theta_{outer} \\
+0 & \theta \geq \theta_{outer}
+\end{cases} $$
+                        </li>
+                    </ul>
+                    <p class="fragment"><a href="./AppDemos/spotlight_demo.html" target="_blank">聚光灯Demo演示</a></p>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>材质</h3>
+                    <p class="fragment">材质(Material)定义了物体表面对光的反应特性的参数</p>
+                    <p class="fragment">在Phong光照模型中，材质通常包含以下参数：   </p>
+                    <ul>
+                        <li class="fragment">环境光反射系数 $k_a$：定义物体对环境光的反射能力</li>
+                        <li class="fragment">漫反射反射系数 $k_d$：定义物体对漫反射光的反射能力</li>
+                        <li class="fragment">镜面反射系数 $k_s$：定义物体对镜面反射光的反射能力</li>
+                        <li class="fragment">光泽度 $\alpha$：控制镜面高光的大小和锐利程度</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>光线与材质的交互</h3>
+                    <p class="fragment">物体最终呈现的颜色是由<strong>光线颜色</strong>与<strong>材质颜色</strong>逐分量<strong>相乘</strong>得到的结果</p>
+                    <div class="fragment fade-in" style="margin-top: 20px;">
+                    <h4>白光  + 红色材质 <span class="color-box" style="background: #f00;"></span></h4>
+                    <pre><code data-trim data-noescape>
+Light.diffuse  = vec3(1.0, 1.0, 1.0); // (R,G,B)
+Material.diffuse = vec3(1.0, 0.0, 0.0);
+FinalColor = Light.diffuse * Material.diffuse;
+// FinalColor = vec3(1.0, 0.0, 0.0)  (结果: 红色)
+                    </code></pre>
+                </div>
+                
+                <div class="fragment fade-in" style="margin-top: 20px;">
+                    <h4>绿光  + 红色材质 <span class="color-box" style="background: #f00;"></span></h4>
+                    <pre><code data-trim data-noescape>
+Light.diffuse  = vec3(0.0, 1.0, 0.0);
+Material.diffuse = vec3(1.0, 0.0, 0.0);
+FinalColor = Light.diffuse * Material.diffuse;
+// FinalColor = vec3(0.0, 0.0, 0.0)  (结果: 黑色)
+                    </code></pre>
+                </div>
+                <p class="fragment fade-in" style="margin-top: 15px">
+                    这符合物理现象：红色材质只能反射红色光，无法反射绿色光，因此在绿光照射下看起来是黑色的
+                </p>
+                </section>
+            </section>
+            <!-- Post-assessment -->
+            <section>
+                <h3>测试</h3>
+                <p class="fragment">要在我的3D场景里模拟一个夜晚的 <strong>篝火</strong>，我应该选择哪种光源？为了让它看起来更真实，我还应该为这个光源添加什么效果？</p>
+                <div style="margin-top: 50px;">
+                    <p class="fragment fade-in">
+                        1. <span class="key-term">光源类型:</span> <strong>点光源 (Point Light)</strong>，因为它从一个中心点向外发光。
+                    </p>
+                    <p class="fragment fade-in">
+                        2. <span class="key-term">关键效果:</span> <strong>衰减 (Attenuation)</strong>，这样离篝火越远，光线越暗。
+                    </p>
+                    <p class="fragment fade-in note">
+                        (还可以让光源的强度和位置有轻微的随机“抖动”，模拟火焰的跳动。)
+                    </p>
+                </div>
+            </section>
+            <!-- Summary -->
+            <section>
+                <h3>课堂总结</h3>
+                <div class="fragment fade-in">
+                    <h4>光源 (Lights) - 3种基本类型</h4>
+                    <ul style="font-size: 0.9em;">
+                        <li><strong>方向光 (Directional):</strong> 平行光, $\vec{l}$ 恒定 (如: 太阳)。</li>
+                        <li><strong>点光源 (Point):</strong> 有位置, $\vec{l}$ 需计算, 有衰减 (如: 灯泡)。</li>
+                        <li><strong>聚光灯 (Spotlight):</strong> 点光源 + 锥形限制 (如: 手电筒)。</li>
+                    </ul>
+                </div>
+                
+                <div class="fragment fade-in" style="margin-top: 30px;">
+                    <h4>材质 (Material) - 物体的光学属性</h4>
+                    <ul style="font-size: 0.9em;">
+                        <li>包含了 <span class="key-term">$k_a, k_d, k_s, \text{shininess}$</span></li>
+                        <li>最终颜色 = <span class="key-term">光线颜色 * 材质颜色</span> (逐分量相乘)</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: 1024,
+    height: 768,
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    })
+
+    function handleQuizClick(optionsId) {
+            const options = document.getElementById(optionsId);
+            if (!options) return;
+
+            options.addEventListener('click', function(event) {
+                const clickedLi = event.target.closest('li');
+                if (!clickedLi) return;
+
+                // 移除所有选项的 selected 状态
+                options.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // 为被点击的选项添加 selected 状态
+                clickedLi.classList.add('selected');
+
+                // 判断答案并添加相应样式
+                if (clickedLi.dataset.answer === 'correct') {
+                    clickedLi.classList.add('correct');
+                } else {
+                    clickedLi.classList.add('incorrect');
+                }
+            });
+        }
+
+        handleQuizClick('q1-options');
+        handleQuizClick('q2-options');
+</script>
+</body>
+</html>
