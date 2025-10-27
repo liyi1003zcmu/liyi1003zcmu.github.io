@@ -31,7 +31,13 @@
 
 |    |    |    |
 | ---- | ---- | ---- |
-|[第4章-1](./CourseWare/CGChapters/Lecture_4/Lecture_4_1.html)|[第4章-2](./CourseWare/CGChapters/Lecture_4/Lecture_43_2.html)|[第4章-3](./CourseWare/CGChapters/Lecture_4_3.html)|
+|[第4章-1](./CourseWare/CGChapters/Lecture_4/Lecture_4_1.html)|[第4章-2](./CourseWare/CGChapters/Lecture_4/Lecture_4_2.html)|[第4章-3](./CourseWare/CGChapters/Lecture_4_3.html)|
+
+### 第5章
+
+|    |    |    |
+| ---- | ---- | ---- |
+|[第5章-1](./CourseWare/CGChapters/Lecture_5/Lecture_5_1.html)|[第5章-2](./CourseWare/CGChapters/Lecture_5/Lecture_5_2.html)|[第5章-3](./CourseWare/CGChapters/Lecture_5_3.html)|
 
 
 ## Demo
