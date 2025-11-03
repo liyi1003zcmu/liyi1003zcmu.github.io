@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-光源与材质</title>
+
+    <meta name="description" content="Phong光照模型">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .reveal td{
+            font-size:24pt;
+            text-align:center;
+        }
+        
+        .reveal tr{
+            font-size:24pt;
+            text-align:center;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+    <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第五章(4) 多边形着色</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>从点着色到面着色</h3>
+                <p class="fragment">Phong模型可用于计算<strong>一个点</strong>的颜色</p>
+                <p class="fragment">但，模型一般是由上百乃至成千上万个<strong>三角形</strong>组成</p>
+                <p class="fragment">如何计算一个<strong>面</strong>的颜色？</p>
+                <div class="three-column">
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-shanding-flat.png" alt="flat Shading" style="width:100%;"/>
+                        <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">对每个面着同一个颜色？</p>
+                    </div>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-shading-gouraud.png" alt="flat Shading" style="width:100%;"/>
+                        <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">对顶点颜色进行插值？</p>
+                    </div>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-shading-phong.png" alt="flat Shading" style="width:100%;"/>
+                        <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">对每个像素计算颜色？</p>
+                    </div>
+                </div>
+                <p class="fragment">不同的多边形着色方法</p>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment fade-in">比较三种经典的多边形着色技术：
+                        <ul>
+                            <li class="fragment"><strong>平面着色 (Flat Shading)</strong></li>
+                            <li class="fragment"><strong>Gouraud着色 (Gouraud Shading)</strong></li>
+                            <li class="fragment"><strong>Phong着色 (Phong Shading)</strong></li>
+                        </ul>
+                    </li>
+                    <li class="fragment fade-in">理解这三种着色技术在<span style="color:red">计算量</span>和<span style="color:blue">视觉效果</span>的差异</li>
+                </ul>
+            </section>
+            <section>
+                <h3>思考，如何着色</h3>
+                <p class="fragment">有一个光滑曲面模型，如茶壶</p>
+                <div>
+                    <img class="fragment" src="../../images/cg/chap05/ch05-teapot-wireframe.png" alt="teapot" style="width:50%; display:block; margin:auto;"/>
+                </div>
+                <div class="two-column">
+                    <div>
+                        <p class="fragment"><strong>要求：</strong>最省资源，效率最高</p>
+                        <p class="fragment">该怎么做？</p>
+                    </div>
+                    <div>
+                        <p class="fragment"><strong>要求：</strong>视觉效果最好</p>
+                        <p class="fragment">该怎么做？</p>
+                    </div>
+                </div>
+                <p class="fragment">“效果”与“效率”之间的权衡</p>
+            </section>
+            <section>
+                <section>
+                    <h3>平面着色和平滑着色</h3>
+                    <ul>
+                        <li class="fragment">在已有流水线实现中，对多边形着色，先<strong>计算每个顶点的颜色</strong></li>
+                        <ul>
+                            <li class="fragment">可直接将顶点颜色作为属性传递给顶点着色器</li>
+                            <li class="fragment">可将参数传递给顶点着色器，由顶点着色器分别计算各顶点颜色</li>
+                        </ul>
+                        <li class="fragment">在面片着色器中，将顶点颜色作为变量传递进来后，<strong>默认通过插值计算</strong>得到物体表面上各点的颜色，将此作为面片颜色，这种方法称为<strong>平滑着色(Smooth shading)</strong></li>
+                        <li class="fragment">在面片着色器中，用<strong>常量</strong>对面片进行着色，即假设$\vec{l}$, $\vec{n}$和$\vec{v}$均为常量，这种方法称为<strong>平面着色(Flat shading)</strong></li>
+                    </ul>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-shading-method.png" alt="flat vs smooth shading" style="width:70%; display:block; margin:auto;"/>
+                    </div>
+                </section>
+                <section>
+                    <h3>着色的关键问题</h3>
+                    <p class="fragment">用什么“法线”？</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-face-vs-vertex-normal.jpg" alt="face vs vertex normals" style="width:50%; display:block; margin:auto;"/>
+                    </div>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment"><strong>顶点法线 (Vertex Normal)</strong>，代表光滑曲面在该顶点处的方向，每个顶点一个法线方向</p>
+                        </div>
+                        <div>
+                            <p class="fragment"><strong>面法线 (Face Normal)</strong>，代表平面的方向，垂直于平面，每个面只有一个法线方向</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>平面着色(Flat Shading)</h3>
+                    <p class="fragment"><strong>原理：</strong></p>
+                    <p class="fragment">对每个三角形，只进行<span style="color:red">一次</span>光照计算</p>
+                    <p class="fragment"><strong>过程：</strong></p>
+                    <ul>
+                        <li class="fragment">计算三角形的<span style="color:red">面法线</span></li>
+                        <li class="fragment">使用面法线和三角形中心点，利用<strong>Phong模型</strong>计算颜色</li>
+                        <li class="fragment">将该颜色填充整个三角形的所有像素，作为三角形的颜色</li>
+                    </ul>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap05/ch05-shanding-flat.png" alt="flat shading diagram" style="width:60%;"/>
+                            <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">棱角分明</p>
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>优点：</strong>速度极快</li>
+                                <li class="fragment"><strong>缺点：</strong>视觉效果差，棱角分明，不真实，无法表现光滑曲面</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>平滑着色(Smooth Shading)</h3>
+                    <p class="fragment">需为三角形的每个顶点、每个面计算法线</p>
+                    <p class="fragment">根据法线计算顶点颜色及面片颜色</p>
+                    <p class="fragment">常用的平滑着色方法有两种：</p>
+                    <ul>
+                        <li class="fragment"><strong>Gouraud着色 (Gouraud Shading)</strong></li>
+                        <li class="fragment"><strong>Phong着色 (Phong Shading)</strong></li>
+                    </ul>
+                    <p class="fragment">注意Silhouette边，用于区分<strong>前面</strong>与<strong>背面</strong></p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-gouraud-shade-sphere.png" alt="silhouette edges" style="width:30%; display:block; margin:auto;"/>
+                    </div>
+                </section>
+                <section>
+                    <h3>Gouraud着色(Gouraud Shading)</h3>
+                    <p class="fragment"><strong>原理：</strong></p>
+                    <p class="fragment">对每个三角形的<span style="color:red">每个顶点</span>进行光照计算，然后在三角形内部对<span style="color:red">颜色</span>进行线性插值</p>
+                    <p class="fragment"><strong>过程：</strong></p>
+                    <ul>
+                        <li class="fragment">分别计算每个顶点的<span style="color:red">顶点法线</span></li>
+                        <li class="fragment">使用顶点法线和顶点位置，利用<strong>Phong模型</strong>计算每个顶点的颜色(C1, C2, C3)</li>
+                        <li class="fragment">硬件进行光栅化时，在三角形内部，对顶点颜色进行线性插值，得到每个像素的颜色</li>
+                    </ul>
+                     <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap05/ch05-shading-gouraud.png" alt="gouruad shading diagram" style="width:60%;"/>
+                            <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">表面光滑</p>
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>优点：</strong>效果好于平面着色，计算量适中</li>
+                                <li class="fragment"><strong>缺点：</strong>针错过三角形内部的高光，高光形状不正确</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>面片着色</h3>
+                    <p class="fragment">对于由多边形构成的模型，Gouraud提出，可利用顶点周围面片法线的平均值作为顶点法线的值，有</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">
+                            $$
+						\mathbf{n}=\frac{\mathbf{n}_1+\mathbf{n}_2+\mathbf{n}_3+\mathbf{n}_4}{|\mathbf{n}_1+\mathbf{n}_2+\mathbf{n}_3+\mathbf{n}_4|}
+						$$ 
+                            </p>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap05/ch05-normal-interp.png" alt="vertex normal average" style="width:80%;"/>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>Phong着色(Phong Shading)</h3>
+                    <p class="fragment" style="text-align:center;color:gray;">不要和<strong>Phong光照模型</strong>混淆！</p>
+                    <p class="fragment"><strong>原理：</strong></p>
+                    <p class="fragment">对每个<span style="color:red">像素</span>(片元)计算光照。它不对颜色进行插值，而是对<span style="color:red">法向量</span>进行线性插值</p>
+                    <p class="fragment"><strong>过程：</strong></p>
+                    <ul>
+                        <li class="fragment">分别计算每个顶点的<span style="color:red">顶点法线</span></li>
+                        <li class="fragment">硬件进行光栅化时，在三角形内部，对三个顶点法线进行线性插值，得到每个像素的“插值法线”</li>
+                        <li class="fragment">使用插值后的法线和像素位置，利用<strong>Phong模型</strong>计算每个像素的颜色</li>
+                    </ul>
+                     <div class="two-column">
+                        <div>   
+                            <img class="fragment" src="../../images/cg/chap05/ch05-shading-phong.png" alt="phong shading diagram" style="width:60%;"/>
+                            <p class="fragment" style="text-align:center; font-weight:bold; font-size:24pt">非常平滑，高光逼真</p>
+                        </div>
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>优点：</strong>效果最好，是目前的主流方法</li>
+                                <li class="fragment"><strong>缺点：</strong>计算量大，速度最慢</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>Gouraud着色和Phong着色</h3>
+                    <p class="fragment"><a href="./AppDemos/shading_demo_three.html" target="_blank">多边形着色Demo</a></p>
+                    <div class="three-column">
+                        <div>
+                            <p class="fragment"><strong>平面着色</strong></p>
+                            <p class="fragment">每个面算1次</p>
+                        </div>
+                        <div>
+                            <p class="fragment"><strong>Gouraud着色</strong></p>
+                            <p class="fragment">每个顶点算1次(对颜色插值)</p>
+                        </div>
+                        <div>
+                            <p class="fragment"><strong>Phong着色</strong></p>
+                            <p class="fragment">每个像素算1次(对法线插值)</p>    
+                    </div>
+                </section>
+                <section>
+                    <h3>Gouraud着色和Phong着色</h3>
+                    <div class="two-column">
+                        <div>
+                            <ul>
+                                <li class="fragment"><strong>Gouraud着色</strong></li>
+                                <ul>
+                                    <li class="fragment">对每个顶点计算法线，取周围各平面法线的几何平均值</li>
+                                    <li class="fragment">在每个顶点上应用Phong模型计算颜色</li>
+                                    <li class="fragment">在三角形内部对顶点颜色进行插值计算</li>
+                                </ul>
+                            </ul>
+                        </div>
+                        <div>
+                            <li class="fragment"><strong>Phong着色</strong></li>
+                            <ul>
+                                <li class="fragment">对每个顶点计算法线，对边上每点法线方向进行插值计算</li>
+                                <li class="fragment">在三角形内部的每个点根据边上各点线进行插值计算</li>
+                                <li class="fragment">在每个像素上应用Phong模型计算颜色</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>Gouraud着色和Phong着色</h3>
+                    <ul>
+                        <li class="fragment">如果物体表面<strong>曲率较高</strong>，使用Phong着色模型看起来会更平滑，采用Gouraud着色会有明显的<strong>Silhouette边</strong></li>
+                        <li class="fragment">从计算量来看，Phong着色计算量要<strong>大于</strong>Gouraud着色，Phong着色主要在面片着色器中进行，可进行实时计算</li>
+                        <li class="fragment">两种着色方法都需要对面片建立数据结构，以计算各顶点的法线值</li>
+                    </ul>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap05/ch05-vvsflighting.png" alt="gouraud vs phong" style="width:60%;" />
+                    </div>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>着色代码示例</h3>
+                    <p class="fragment">平面着色</p>
+                    <div class="two-column">
+                        <div>
+                            <pre class="fragment"><code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Flat Shading - 顶点着色器 (Vertex Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// Uniforms (全局变量)
+uniform mat4 u_projectionMatrix;
+uniform mat4 u_viewMatrix;
+uniform mat4 u_modelMatrix;
+uniform mat4 u_normalMatrix; // 用来变换法线
+
+uniform vec3 u_lightWorldPosition;
+uniform vec3 u_lightColor;
+uniform vec3 u_materialColor;
+uniform vec3 u_ambientColor;
+
+// Attributes (顶点数据)
+in vec3 a_position;
+in vec3 a_normal;
+
+// 'flat' 关键字是关键
+// 它告诉GPU不要插值这个变量
+flat out vec3 v_color;
+
+void main() {
+    // 变换法线和位置到世界空间
+    vec3 worldNormal = normalize(mat3(u_normalMatrix) * a_normal);
+    vec4 worldPosition = u_modelMatrix * vec4(a_position, 1.0);
+
+    // 计算光照
+    vec3 lightDir = normalize(u_lightWorldPosition - worldPosition.xyz);
+    float diff = max(dot(worldNormal, lightDir), 0.0);
+    vec3 diffuse = diff * u_lightColor * u_materialColor;
+    
+    // 环境光 + 漫反射光
+    v_color = u_ambientColor + diffuse;
+
+    // 计算最终裁剪空间位置
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
+}
+                            </code></pre>
+                        </div>
+                        <div>
+<pre class="fragment"><code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Flat Shading - 面片着色器 (Fragment Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// 接收来自顶点着色器的、未被插值的颜色
+flat in vec3 v_color;
+
+out vec4 outColor;
+
+void main() {
+    // 直接输出颜色
+    outColor = vec4(v_color, 1.0);
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>着色代码示例(2)</h3>
+                    <p class="fragment">Gouraud着色</p>
+                    <div class="two-column">
+                        <div>
+                            <pre class="fragment"><code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Gouraud Shading - 顶点着色器 (Vertex Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// Uniforms
+uniform mat4 u_projectionMatrix;
+uniform mat4 u_viewMatrix;
+uniform mat4 u_modelMatrix;
+uniform mat4 u_normalMatrix;
+
+uniform vec3 u_lightWorldPosition;
+uniform vec3 u_lightColor;
+uniform vec3 u_materialColor;
+uniform vec3 u_ambientColor;
+
+// Attributes
+in vec3 a_position;
+in vec3 a_normal;
+
+// 'out' 会在顶点之间平滑插值 (替代 'varying')
+out vec3 v_color;
+
+void main() {
+    // 变换法线和位置
+    vec3 worldNormal = normalize(mat3(u_normalMatrix) * a_normal);
+    vec4 worldPosition = u_modelMatrix * vec4(a_position, 1.0);
+
+    // --- 光照计算在顶点着色器中 ---
+    vec3 lightDir = normalize(u_lightWorldPosition - worldPosition.xyz);
+    float diff = max(dot(worldNormal, lightDir), 0.0);
+    vec3 diffuse = diff * u_lightColor * u_materialColor;
+    
+    // (Gouraud 也可以包含镜面反射，但通常只用于漫反射)
+    
+    v_color = u_ambientColor + diffuse;
+    // ---------------------------------
+
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
+}
+                            </code></pre>
+                        </div>
+                        <div>
+                        <pre class="fragment">
+                            <code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Gouraud Shading - 面片着色器 (Fragment Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// 接收插值后的颜色 (替代 'varying')
+in vec3 v_color;
+
+// 自定义输出变量
+out vec4 outColor;
+
+void main() {
+    // 面片着色器只负责输出插值后的结果
+    outColor = vec4(v_color, 1.0);
+}
+
+                            </code>
+                        </pre>
+                        </div>
+                    </div>                   
+                </section>
+                <section>
+                    <h3>着色代码示例(3)</h3>
+                    <p class="fragment">Phong着色</p>
+                    <div class="two-column">
+                        <div>
+                            <pre class="fragment">
+                                <code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Phong Shading - 顶点着色器 (Vertex Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// Uniforms
+uniform mat4 u_projectionMatrix;
+uniform mat4 u_viewMatrix;
+uniform mat4 u_modelMatrix;
+uniform mat4 u_normalMatrix;
+
+// Attributes
+in vec3 a_position;
+in vec3 a_normal;
+
+// 传递插值后的法线和世界位置
+out vec3 v_worldNormal;
+out vec3 v_worldPosition;
+
+void main() {
+    // 变换法线和位置
+    v_worldNormal = normalize(mat3(u_normalMatrix) * a_normal);
+    vec4 worldPosVec4 = u_modelMatrix * vec4(a_position, 1.0);
+    v_worldPosition = worldPosVec4.xyz;
+
+    // 顶点着色器只负责传递数据和计算位置
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPosVec4;
+}
+                                </code>
+                            </pre>
+                        </div>
+                        <div>
+                            <pre class="fragment">
+                                <code class="OpenGL Shading Language" data-trim data-line-numbers>
+/* * Phong Shading - 面片着色器 (Fragment Shader)
+ * (GLSL 3.0 / WebGL 2.0)
+ */
+#version 300 es
+precision mediump float;
+
+// Uniforms (面片着色器也需要光照信息)
+uniform vec3 u_lightWorldPosition;
+uniform vec3 u_lightColor;
+uniform vec3 u_materialColor;
+uniform vec3 u_ambientColor;
+
+uniform vec3 u_cameraPosition; // 镜面反射需要
+uniform float u_shininess;     // 高光强度
+
+// 接收插值后的数据
+in vec3 v_worldNormal;
+in vec3 v_worldPosition;
+
+// 自定义输出变量
+out vec4 outColor;
+
+void main() {
+    // --- 光照计算在面片着色器中 ---
+    
+    // 法线需要被重新归一化 (因为插值会改变长度)
+    vec3 normal = normalize(v_worldNormal);
+    
+    // 1. 环境光 (Ambient)
+    vec3 ambient = u_ambientColor;
+
+    // 2. 漫反射 (Diffuse)
+    vec3 lightDir = normalize(u_lightWorldPosition - v_worldPosition);
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * u_lightColor * u_materialColor;
+
+    // 3. 镜面反射 (Specular)
+    vec3 viewDir = normalize(u_cameraPosition - v_worldPosition);
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), u_shininess);
+    vec3 specular = spec * u_lightColor; // 镜面高光通常是光源颜色
+
+    // 最终颜色 = 环境光 + 漫反射 + 镜面反射
+    vec3 finalColor = ambient + diffuse + specular;
+
+    outColor = vec4(finalColor, 1.0);
+}
+                                </code>
+                            </pre>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <!-- Post-assessment -->
+            <section>
+                <section>
+                    <h3>随堂练习</h3>
+                        <h4>练习 1 (选择题)</h4>
+                        <p>Gouraud着色和Phong着色都能产生视觉上平滑的物体表面。它们在实现平滑效果时，最核心的计算区别是什么？</p>
+                        <ol type="A" style="font-size: 22pt; list-style-position: inside; text-align: left;">
+                        <li class="fragment">Gouraud在<strong>顶点着色器(VS)</strong>中计算光照并插值颜色；Phong在<strong>面片着色器(FS)</strong>中计算光照，但它插值的是<strong>法线</strong></li>
+                        <li class="fragment">Gouraud使用面法线 (Face Normal)；Phong使用顶点法线 (Vertex Normal)</li>
+                        <li class="fragment">Gouraud 在<strong>面片着色器(FS)</strong>中计算光照；Phong在<strong>顶点着色器(VS)</strong>中计算光照</li>
+                        <li class="fragment">Gouraud只能用于漫反射光照；Phong可以同时处理漫反射和高光</li>
+                        </ol>
+                        <div class="fragment" style="background-color: #f0fff0; border-left: 5px solid #4CAF50; padding: 15px; margin-top: 20px; border-radius: 5px;">
+                        <p style="font-size:22pt"><strong>答案与解析：A</strong></p>
+                        <p><strong>解析：</strong>这是两种平滑着色技术最本质的区别</p>
+                        <ul>
+                        <li><strong>Gouraud着色：</strong>在每个<strong>顶点</strong>上执行一次完整的光照模型计算，得到顶点的颜色。然后，硬件在光栅化三角形时，对这三个顶点的颜色值进行线性插值，得到内部每个像素的颜色。计算开销小，但效果有缺陷（如高光错误）</li>
+                        <li><strong>Phong着色：</strong>在顶点上传递法向量。硬件在光栅化时，对这三个顶点的法向量进行线性插值，得到内部每个像素的“插值法线”。然后，在每个面片（像素）上执行一次完整的光照模型计算。计算开销大，但效果精确</li>
+                        <li>B 选项错误，Gouraud和Phong 都使用顶点法线来实现平滑效果。C 选项的计算位置说反了。D 选项错误，Gouraud 也可以计算高光，只是效果不精确</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h3>随堂练习</h3>
+                        <h4>练习 2 (选择题)</h4>
+                        <p>在一个低多边形（Low-poly）球体上，一个很小的高光（Specular Highlight）恰好完全位于某个三角形的<strong>内部</strong>，没有落在任何一个顶点上。如果使用 Gouraud着色，最可能出现什么视觉效果？</p>
+                        <ol type="A" style="font-size: 22pt; list-style-position: inside; text-align: left;">
+                        <li class="fragment">高光会被完美地渲染出来，和Phong着色效果一样</li>
+                        <li class="fragment">高光会完全消失**或变得极不明显，因为 Gouraud 只在顶点计算光照，会“错过”这个在多边形内部的高光</li>
+                        <li class="fragment">整个三角形都会变成高亮的颜色，因为高光被插值到了整个平面</li>
+                        <li class="fragment">只有平面着色能准确渲染出这个高光</li>
+                        </ol>
+                        <div class="fragment" style="background-color: #f0fff0; border-left: 5px solid #4CAF50; padding: 15px; margin-top: 20px; border-radius: 5px;">
+                        <p style="font-size:22pt"><strong>答案与解析：B</strong></p>
+                        <p><strong>解析：</strong>这是 Gouraud 着色法最著名的缺陷之一</p>
+                        <ul>
+                        <li>Gouraud着色法只在三个顶点处计算光照。如果高光很小，并且恰好出现在三角形中间，那么三个顶点处的光照计算可能都没有捕捉到这个高光（即三个顶点的镜面反射分量都接近于0）</li>
+                        <li>当Gouraud着色对三个顶点的颜色（例如，都是暗色）进行插值时，插值的结果自然也都是暗色，因此这个高光就丢失了。只有 Phong着色（逐像素计算）才能准确捕捉到这个高光</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h4>练习 3 (问答题)</h4>
+                    <p>同样是一个茶壶模型，为什么平面着色看起来棱角分明，而Gouraud和Phong着色看起来是平滑的？这两种效果在着色计算时，最关键的输入数据差异是什么</p>
+                    <div class="fragment" style="background-color: #f0f8ff; border-left: 5px solid #4682b4; padding: 15px; margin-top: 20px; border-radius: 5px;">
+                        <p style="font-size:22pt"><strong>参考答案：</strong></p>
+                        <p style="font-size:20pt">关键的输入数据差异在于**法向量（Normal Vector）**的使用方式：</p>
+                        <ul style="font-size:20pt; list-style-position: inside; text-align: left;">
+                            <li><strong>平面着色：</strong>使用面法线 (Face Normal)。一个三角形的所有像素共享同一个法向量（垂直于该平面的向量）。因此，这个三角形上的所有像素计算出的光照颜色都是完全一样的，导致不同朝向的三角形之间出现明显的明暗边界，看起来棱角分明</li>
+                            <li><strong>Gouraud/Phong着色(平滑着色)：</strong>使用顶点法线 (Vertex Normal)。每个顶点都有一个法线（通常是共享该顶点的所有面的法线的平均值，代表了光滑曲面在该点的朝向）。着色器通过在三角形的三个顶点法线之间进行插值，来模拟一个平滑变化的曲面，从而隐藏了多边形的边界</li>
+                        </ul>
+                    </div>
+                </section>
+            </section>
+            <!-- Summary -->
+            <section>
+                <h3>课堂总结</h3>
+                <div class="fragment fade-in">
+                    <h4>多边形着色三种方法</h4>
+                    <table style="margin: auto;">
+                    <thead>
+                        <tr><th>技术</th><th>计算位置</th><th>插值对象</th><th>效果</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="fragment"><td><strong>平面着色(Flat Shading)</strong></td><td>多边形中心</td><td>无</td><td>粗糙，棱角分明</td></tr>
+                        <tr class="fragment"><td><strong>Gouraud Shading(Gouraud面着色)</strong></td><td>顶点</td><td>颜色</td><td>平滑，但有瑕疵</td></tr>
+                        <tr class="fragment"><td><strong>Phong Shading(Phong着色)</strong></td><td>像素/片元</td><td>法向量</td><td>平滑，效果好</td></tr>
+                        <tr></tr>
+                    </tbody>
+                </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: "100%",
+    height: "100%",
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    })
+
+    function handleQuizClick(optionsId) {
+            const options = document.getElementById(optionsId);
+            if (!options) return;
+
+            options.addEventListener('click', function(event) {
+                const clickedLi = event.target.closest('li');
+                if (!clickedLi) return;
+
+                // 移除所有选项的 selected 状态
+                options.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // 为被点击的选项添加 selected 状态
+                clickedLi.classList.add('selected');
+
+                // 判断答案并添加相应样式
+                if (clickedLi.dataset.answer === 'correct') {
+                    clickedLi.classList.add('correct');
+                } else {
+                    clickedLi.classList.add('incorrect');
+                }
+            });
+        }
+
+        handleQuizClick('q1-options');
+        handleQuizClick('q2-options');
+</script>
+</body>
+</html>
