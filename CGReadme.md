@@ -41,6 +41,14 @@
 |[第5章-4](./Courseware/CGChapters/Lecture_5/Lecture_5_4.html)|  |  |
 
 
+### 第6章
+
+|    |    |    |
+| ---- | ---- | ---- |
+|[第6章-1](./CourseWare/CGChapters/Lecture_6/Lecture_6_1.html)|[第6章-2](./CourseWare/CGChapters/Lecture_6/Lecture_6_2.html)|[第6章-3](./CourseWare/CGChapters/Lecture_6_3.html)|
+|[第6章-4](./Courseware/CGChapters/Lecture_6/Lecture_6_4.html)|  |  |
+
+
 ## Demo
 
 ### 第1章
