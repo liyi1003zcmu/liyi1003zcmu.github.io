@@ -38,6 +38,7 @@
 |    |    |    |
 | ---- | ---- | ---- |
 |[第5章-1](./CourseWare/CGChapters/Lecture_5/Lecture_5_1.html)|[第5章-2](./CourseWare/CGChapters/Lecture_5/Lecture_5_2.html)|[第5章-3](./CourseWare/CGChapters/Lecture_5_3.html)|
+|[第5章-4](./Courseware/CGChapters/Lecture_5/Lecture_5_4.html)|  |  |
 
 
 ## Demo
