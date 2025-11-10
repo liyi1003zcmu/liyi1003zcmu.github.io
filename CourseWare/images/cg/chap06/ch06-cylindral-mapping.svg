@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1040 640">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,3 L0,6 z" fill="#333"/>
+    </marker>
+    <linearGradient id="texgrad" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#6baed6"/>
+      <stop offset="100%" stop-color="#2171b5"/>
+    </linearGradient>
+    <radialGradient id="objgrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ddd"/>
+      <stop offset="100%" stop-color="#aaa"/>
+    </radialGradient>
+    <style>
+      .title{font: 700 16px sans-serif; fill:#111}
+      .label{font: 12px sans-serif; fill:#222}
+      .small{font: 11px sans-serif; fill:#333}
+      .mono{font: 12px ui-monospace, Menlo, Consolas, monospace; fill:#222}
+      .eq{font: 12px sans-serif; fill:#111}
+      .box{fill:#f8fbff; stroke:#bcd; stroke-width:1.2}
+      .ghost{fill:#f5f5f5; stroke:#ccc}
+      .arrow{stroke:#333; stroke-width:1.6; fill:none; marker-end:url(#arrow)}
+      .aux{stroke:#999; stroke-dasharray:4 4; fill:none}
+      .pt{fill:#d62728; stroke:#942d2d}
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="24" y="30" class="title">两步映射法（以圆柱体为中间形体）</text>
+
+  <!-- Left: Texture Image (u,v), fully inside canvas -->
+  <g transform="translate(36,76)">
+    <rect x="0" y="0" width="260" height="260" fill="url(#texgrad)" stroke="#1f4e79"/>
+    <line x1="0" y1="260" x2="260" y2="260" stroke="#111"/>
+    <line x1="0" y1="260" x2="0" y2="0" stroke="#111"/>
+    <text x="130" y="280" class="label">u →</text>
+    <text x="-12" y="130" class="label" transform="rotate(-90, -12,130)">v →</text>
+    <!-- Sample point in texture -->
+    <circle cx="184" cy="92" r="4.5" class="pt"/>
+    <text x="192" y="86" class="label">(u,v)</text>
+    <!-- Grid -->
+    <g opacity="0.25">
+      <g>
+        <line x1="52" y1="0" x2="52" y2="260" stroke="#fff"/>
+        <line x1="104" y1="0" x2="104" y2="260" stroke="#fff"/>
+        <line x1="156" y1="0" x2="156" y2="260" stroke="#fff"/>
+        <line x1="208" y1="0" x2="208" y2="260" stroke="#fff"/>
+      </g>
+      <g>
+        <line x1="0" y1="52" x2="260" y2="52" stroke="#fff"/>
+        <line x1="0" y1="104" x2="260" y2="104" stroke="#fff"/>
+        <line x1="0" y1="156" x2="260" y2="156" stroke="#fff"/>
+        <line x1="0" y1="208" x2="260" y2="208" stroke="#fff"/>
+      </g>
+    </g>
+    <text x="0" y="-10" class="label">图像空间 I(u,v)</text>
+  </g>
+
+  <!-- Arrow 1: (u,v) -> Cylinder params -->
+  <path d="M320,210 C380,188 430,188 490,210" class="arrow"/>
+  <text x="360" y="178" class="small">步骤 A: (u,v) → (θ,h) → C</text>
+
+  <!-- Middle: Cylinder (scaled and centered) -->
+  <g transform="translate(490,76)">
+    <!-- Cylinder body -->
+    <ellipse cx="140" cy="18" rx="76" ry="20" class="ghost"/>
+    <rect x="64" y="18" width="152" height="220" class="ghost"/>
+    <ellipse cx="140" cy="238" rx="76" ry="20" fill="#eee" stroke="#ccc"/>
+
+    <!-- Axis z -->
+    <line x1="140" y1="-6" x2="140" y2="262" class="aux"/>
+    <text x="146" y="-2" class="small">z</text>
+
+    <!-- Angle reference line -->
+    <line x1="140" y1="128" x2="216" y2="128" class="aux"/>
+    <text x="220" y="132" class="small">θ</text>
+
+    <!-- Sample point on cylinder -->
+    <circle cx="208" cy="128" r="4.5" class="pt"/>
+    <text x="214" y="120" class="label">C(x_c,y_c,z_c)</text>
+
+    <!-- Normal direction (radial) -->
+    <line x1="208" y1="128" x2="252" y2="128" class="arrow"/>
+    <text x="256" y="124" class="small">d = (cosθ, sinθ, 0)</text>
+
+    <text x="64" y="-10" class="label">中间形体：圆柱体</text>
+  </g>
+
+  <!-- Arrow 2: Cylinder -> Object -->
+  <path d="M720,210 C780,188 830,188 890,210" class="arrow"/>
+  <text x="760" y="178" class="small">步骤 B: C → P（投影/求交）</text>
+
+  <!-- Right: Target Object (kept inside bounds) -->
+  <g transform="translate(890,76)">
+    <path d="M40,190 C26,150 44,96 96,84 C142,74 178,100 188,124 C204,162 180,206 136,216 C100,224 66,208 40,190 Z"
+          fill="url(#objgrad)" stroke="#888"/>
+    <!-- Intersection point -->
+    <circle cx="178" cy="138" r="4.5" class="pt"/>
+    <text x="184" y="132" class="label">P(x,y,z)</text>
+    <text x="0" y="-10" class="label">目标物体表面 M</text>
+  </g>
+
+  <!-- Formula box (moved down to stay within canvas) -->
+  <g transform="translate(64,360)">
+    <rect x="0" y="0" width="912" height="236" class="box" rx="8"/>
+    <text x="12" y="26" class="eq">步骤 A（图像→圆柱参数→圆柱点）:</text>
+    <text x="24" y="52" class="eq">θ = 2π u， h = v， z = z_min + h (z_max - z_min)</text>
+    <text x="24" y="76" class="eq">C(u,v) = ( R_c cosθ, R_c sinθ, z )</text>
+
+    <text x="12" y="112" class="eq">步骤 B（圆柱点→物体点，射线求交示例）:</text>
+    <text x="24" y="138" class="eq">O = C， d = (cosθ, sinθ, 0)， P = O + t* d，与表面 M 的首次交点给出 t*</text>
+    <text x="24" y="170" class="eq small">注1：若物体或圆柱不在标准姿态，先用刚体变换把点变换到圆柱坐标系中再计算。</text>
+    <text x="24" y="194" class="eq small">注2：seam 处需要统一角度分支或在片元阶段对 u 取 fract。</text>
+  </g>
+</svg>

@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Shading Methods Demo</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* bg-white */
+            color: #111827; /* text-gray-900 */
+            overflow: hidden; /* Prevent scrolling */
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        #controls {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background-color: rgba(249, 250, 251, 0.8); /* bg-gray-50 with opacity */
+            backdrop-filter: blur(10px);
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1rem;
+            max-width: 320px;
+            z-index: 10;
+        }
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        .control-group h3 {
+            font-semibold;
+            margin-bottom: 0.5rem;
+            color: #10b981; /* text-emerald-500 */
+        }
+        label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        input[type="color"] {
+            width: 100%;
+            height: 2.5rem;
+            border: none;
+            padding: 0;
+            border-radius: 0.25rem; /* rounded */
+            cursor: pointer;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #1f2937; /* text-gray-800 */
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem; /* text-sm */
+        }
+        .btn:hover {
+            background-color: #e5e7eb; /* bg-gray-200 */
+        }
+        .btn.active {
+            background-color: #10b981; /* bg-emerald-500 */
+            color: #111827; /* text-gray-900 */
+            border-color: #10b981; /* border-emerald-500 */
+            font-weight: 600;
+        }
+
+        /* Custom Context Menu Styles */
+        #context-menu {
+            background-color: #f9fafb; /* bg-gray-50 */
+            color: #1f2937; /* text-gray-800 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            z-index: 50;
+            min-width: 150px;
+        }
+        #context-menu ul {
+            list-style: none;
+            padding: 0.25rem 0; /* py-1 */
+            margin: 0;
+        }
+        #context-menu li {
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            cursor: pointer;
+            font-size: 0.875rem; /* text-sm */
+        }
+        #context-menu li:hover {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    
+    <!-- Import Map for Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/",
+            "three/addons/geometries/TeapotGeometry.js": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/geometries/TeapotGeometry.js"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Custom Context Menu -->
+    <div id="context-menu" class="hidden fixed">
+        <ul>
+            <li id="save-png">Save as PNG</li>
+        </ul>
+    </div>
+
+    <!-- UI Controls -->
+    <div id="controls">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">Shading Demo</h2>
+            <button id="toggle-controls" class="btn p-2 leading-none">Hide</button>
+        </div>
+        
+        <div id="controls-content">
+            <!-- Model Selection -->
+            <div class="control-group">
+                <h3 class="text-base font-semibold text-gray-700">Model</h3>
+                <div class="flex space-x-2">
+                    <button id="btn-torus" class="btn active">Torus Knot</button>
+                    <button id="btn-sphere" class="btn">Sphere</button>
+                    <button id="btn-teapot" class="btn">Teapot</button>
+                </div>
+            </div>
+
+            <!-- Shading Method Buttons -->
+            <div class="control-group">
+                <h3 class="text-base font-semibold text-gray-700">Shading Model</h3>
+                <div class="flex space-x-2">
+                    <button id="btn-flat" class="btn">Flat</button>
+                    <button id="btn-gouraud" class="btn">Gouraud</button>
+                    <button id="btn-phong" class="btn active">Phong</button>
+                </div>
+            </div>
+            
+            <!-- Shared Properties -->
+            <div class="control-group">
+                <h3 class="text-base font-semibold text-gray-700">Shared Properties</h3>
+                <label for="material-color">Material Color</label>
+                <input type="color" id="material-color" value="#ffffff">
+                
+                <label for="light-color" class="mt-2">Light Color</label>
+                <input type="color" id="light-color" value="#ffffff">
+            </div>
+
+            <!-- Phong Model Controls -->
+            <div id="phong-controls" class="control-group">
+                <h3 class="text-base font-semibold text-emerald-400">Phong Controls</h3>
+                
+                <label for="light-x">Light Position X</label>
+                <input type="range" id="light-x" min="-50" max="50" value="20" step="1">
+
+                <label for="light-y" class="mt-2">Light Position Y</label>
+                <input type="range" id="light-y" min="-50" max="50" value="30" step="1">
+
+                <label for="light-z" class="mt-2">Light Position Z</label>
+                <input type="range" id="light-z" min="-50" max="50" value="40" step="1">
+
+                <label for="specular-color" class="mt-2">Specular Color</label>
+                <input type="color" id="specular-color" value="#111111">
+
+                <label for="shininess" class="mt-2">Shininess</label>
+                <input type="range" id="shininess" min="0" max="100" value="30" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js Module Import -->
+    <script type="module">
+        // Now importing using the names defined in the import map
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
+
+        let scene, camera, renderer, mesh, pointLight, controls;
+        let flatMaterial, gouraudMaterial, phongMaterial;
+        let torusKnotGeometry, sphereGeometry, teapotGeometry;
+        
+        let activeShading = 'phong';
+        let activeModel = 'torus';
+
+        const canvasContainer = document.getElementById('canvas-container');
+        
+        // --- Control UI Elements ---
+        const toggleBtn = document.getElementById('toggle-controls');
+        const controlsContent = document.getElementById('controls-content');
+        const phongControls = document.getElementById('phong-controls');
+        
+        const btnFlat = document.getElementById('btn-flat');
+        const btnGouraud = document.getElementById('btn-gouraud');
+        const btnPhong = document.getElementById('btn-phong');
+
+        const btnTorus = document.getElementById('btn-torus');
+        const btnSphere = document.getElementById('btn-sphere');
+        const btnTeapot = document.getElementById('btn-teapot');
+        
+        const materialColorInput = document.getElementById('material-color');
+        const lightColorInput = document.getElementById('light-color');
+        
+        const lightXInput = document.getElementById('light-x');
+        const lightYInput = document.getElementById('light-y');
+        const lightZInput = document.getElementById('light-z');
+        const specularColorInput = document.getElementById('specular-color');
+        const shininessInput = document.getElementById('shininess');
+
+        // --- Context Menu Elements ---
+        const contextMenu = document.getElementById('context-menu');
+        const savePngBtn = document.getElementById('save-png');
+
+        function init() {
+            // 1. Scene
+            scene = new THREE.Scene();
+
+            // 2. Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+
+            // 3. Renderer
+            // IMPORTANT: Added preserveDrawingBuffer: true to allow image export
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                preserveDrawingBuffer: true 
+            });
+            renderer.setClearColor(0xffffff); // Set background to white
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            canvasContainer.appendChild(renderer.domElement);
+
+            // 4. Geometries
+            torusKnotGeometry = new THREE.TorusKnotGeometry(10, 3, 128, 16);
+            sphereGeometry = new THREE.SphereGeometry(12, 32, 32);
+            teapotGeometry = new TeapotGeometry(10, 15); // Size, segments
+
+            // 5. Materials
+            // Flat Shading
+            flatMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff, 
+                flatShading: true,
+                shininess: 0 
+            });
+
+            // Gouraud Shading
+            gouraudMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffffff 
+            });
+
+            // Phong Shading
+            phongMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                specular: 0x111111,
+                shininess: 30
+            });
+
+            // 6. Mesh
+            mesh = new THREE.Mesh(torusKnotGeometry, phongMaterial); // Start with Torus & Phong
+            scene.add(mesh);
+
+            // 7. Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5); 
+            scene.add(ambientLight);
+
+            pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(
+                parseFloat(lightXInput.value), 
+                parseFloat(lightYInput.value), 
+                parseFloat(lightZInput.value)
+            );
+            scene.add(pointLight);
+
+            // Add a visual helper for the light
+            const lightHelper = new THREE.PointLightHelper(pointLight, 1, 0xff0000);
+            scene.add(lightHelper);
+
+            // 8. Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // 9. Event Listeners
+            window.addEventListener('resize', onWindowResize);
+
+            // Context Menu Listeners
+            canvasContainer.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                contextMenu.style.top = `${e.clientY}px`;
+                contextMenu.style.left = `${e.clientX}px`;
+                contextMenu.classList.remove('hidden');
+            });
+
+            window.addEventListener('click', (e) => {
+                // Hide context menu if clicking outside of it
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.classList.add('hidden');
+                }
+            });
+
+            savePngBtn.addEventListener('click', () => {
+                saveSceneAsPNG();
+                contextMenu.classList.add('hidden');
+            });
+            
+            // UI Toggle
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = controlsContent.style.display === 'none';
+                if (isHidden) {
+                    controlsContent.style.display = 'block';
+                    toggleBtn.textContent = 'Hide';
+                } else {
+                    controlsContent.style.display = 'none';
+                    toggleBtn.textContent = 'Show';
+                }
+            });
+            
+            // Shading buttons
+            btnFlat.addEventListener('click', () => switchShading('flat'));
+            btnGouraud.addEventListener('click', () => switchShading('gouraud'));
+            btnPhong.addEventListener('click', () => switchShading('phong'));
+
+            // Model buttons
+            btnTorus.addEventListener('click', () => switchModel('torus'));
+            btnSphere.addEventListener('click', () => switchModel('sphere'));
+            btnTeapot.addEventListener('click', () => switchModel('teapot'));
+
+            // Shared properties
+            materialColorInput.addEventListener('input', (e) => {
+                const color = new THREE.Color(e.target.value);
+                flatMaterial.color.set(color);
+                gouraudMaterial.color.set(color);
+                phongMaterial.color.set(color);
+            });
+
+            lightColorInput.addEventListener('input', (e) => {
+                pointLight.color.set(new THREE.Color(e.target.value));
+            });
+
+            // Phong properties
+            lightXInput.addEventListener('input', (e) => pointLight.position.x = parseFloat(e.target.value));
+            lightYInput.addEventListener('input', (e) => pointLight.position.y = parseFloat(e.target.value));
+            lightZInput.addEventListener('input', (e) => pointLight.position.z = parseFloat(e.target.value));
+            
+            specularColorInput.addEventListener('input', (e) => {
+                phongMaterial.specular.set(new THREE.Color(e.target.value));
+            });
+
+            shininessInput.addEventListener('input', (e) => {
+                phongMaterial.shininess = parseFloat(e.target.value);
+            });
+            
+            // Initial state
+            updateUIState();
+
+            // 10. Start Animation Loop
+            animate();
+        }
+
+        function switchShading(shadingType) {
+            activeShading = shadingType;
+            if (shadingType === 'flat') {
+                mesh.material = flatMaterial;
+            } else if (shadingType === 'gouraud') {
+                mesh.material = gouraudMaterial;
+            } else {
+                mesh.material = phongMaterial;
+            }
+            updateUIState();
+        }
+        
+        function switchModel(modelType) {
+            activeModel = modelType;
+            
+            // We can just swap the geometry property
+            if (modelType === 'torus') {
+                mesh.geometry = torusKnotGeometry;
+            } else if (modelType === 'sphere') {
+                mesh.geometry = sphereGeometry;
+            } else if (modelType === 'teapot') {
+                mesh.geometry = teapotGeometry;
+            }
+            updateUIState();
+        }
+
+        function updateUIState() {
+            // Update shading button active state
+            btnFlat.classList.toggle('active', activeShading === 'flat');
+            btnGouraud.classList.toggle('active', activeShading === 'gouraud');
+            btnPhong.classList.toggle('active', activeShading === 'phong');
+            
+            // Update model button active state
+            btnTorus.classList.toggle('active', activeModel === 'torus');
+            btnSphere.classList.toggle('active', activeModel === 'sphere');
+            btnTeapot.classList.toggle('active', activeModel === 'teapot');
+
+            // Show/hide Phong controls
+            phongControls.style.display = (activeShading === 'phong') ? 'block' : 'none';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function saveSceneAsPNG() {
+            try {
+                // Force a render of the current scene state RIGHT before capturing
+                renderer.render(scene, camera);
+
+                // Get the data URL from the renderer's canvas
+                const dataURL = renderer.domElement.toDataURL('image/png');
+                
+                // Create a temporary link to trigger the download
+                const link = document.createElement('a');
+                link.href = dataURL;
+                link.download = 'webgl_scene.png';
+                
+                // Simulate a click to trigger download
+                document.body.appendChild(link); // Required for Firefox
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (e) {
+                console.error('Error saving image:', e);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate the mesh
+            mesh.rotation.x += 0.001;
+            mesh.rotation.y += 0.002;
+
+            controls.update(); // for damping
+            renderer.render(scene, camera);
+        }
+
+        // Run it
+        init();
+    </script>
+
+</body>
+</html>
+
+
+

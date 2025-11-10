@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 2.0 纹理实验室 (含光照)</title>
+    <!-- 引入 Tailwind CSS 以实现快速布局 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 样式与 v1 相同 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .control-panel {
+            background-color: #2a2a2a;
+            border-right: 2px solid #444;
+        }
+        .control-group {
+            background-color: #333;
+            border: 1px solid #444;
+        }
+        label {
+            font-weight: 600;
+            color: #42affa;
+        }
+        select, input[type="file"]::file-selector-button, input[type="file"] {
+            background-color: #444;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            transition: all 0.2s ease;
+        }
+        select:hover, input[type="file"]::file-selector-button:hover {
+            background-color: #555;
+            border-color: #42affa;
+        }
+        select:disabled {
+            background-color: #3a3a3a;
+            color: #777;
+            opacity: 0.7;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4a4a4a;
+            border-radius: 9999px;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #42affa;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #42affa;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- 控制面板 (左侧) -->
+    <div class="w-1/3 min-w-[380px] max-w-[480px] p-4 overflow-y-auto control-panel space-y-3">
+        <h1 class="text-2xl font-bold text-center text-white">WebGL 2.0 纹理实验室</h1>
+        
+        <!-- 文件上传 -->
+        <div class="p-3 rounded-lg control-group">
+            <label for="imageLoader" class="block mb-2 text-lg">1. 上传纹理</label>
+            <input type="file" id="imageLoader" accept="image/*" class="w-full p-2 rounded-md text-sm">
+        </div>
+
+        <!-- 环绕模式 -->
+        <div class="p-3 rounded-lg control-group">
+            <label class="block mb-2 text-lg">2. 环绕模式 (Wrapping)</label>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label for="wrapS" class="block text-sm">TEXTURE_WRAP_S (U 轴)</label>
+                    <select id="wrapS" class="w-full p-2 mt-1 rounded-md">
+                        <option value="REPEAT">REPEAT</option>
+                        <option value="CLAMP_TO_EDGE" selected>CLAMP_TO_EDGE</option>
+                        <option value="MIRRORED_REPEAT">MIRRORED_REPEAT</option>
+                        <option value="CLAMP_TO_BORDER">CLAMP_TO_BORDER</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="wrapT" class="block text-sm">TEXTURE_WRAP_T (V 轴)</label>
+                    <select id="wrapT" class="w-full p-2 mt-1 rounded-md">
+                        <option value="REPEAT">REPEAT</option>
+                        <option value="CLAMP_TO_EDGE" selected>CLAMP_TO_EDGE</option>
+                        <option value="MIRRORED_REPEAT">MIRRORED_REPEAT</option>
+                        <option value="CLAMP_TO_BORDER">CLAMP_TO_BORDER</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 过滤模式 -->
+        <div class="p-3 rounded-lg control-group">
+            <label class="block mb-2 text-lg">3. 过滤模式 (Filtering)</label>
+            <div class="space-y-2">
+                <div>
+                    <label for="magFilter" class="block text-sm">TEXTURE_MAG_FILTER (放大)</label>
+                    <select id="magFilter" class="w-full p-2 mt-1 rounded-md">
+                        <option value="LINEAR" selected>LINEAR (双线性)</option>
+                        <option value="NEAREST">NEAREST (最近邻)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="minFilter" class="block text-sm">TEXTURE_MIN_FILTER (缩小)</label>
+                    <select id="minFilter" class="w-full p-2 mt-1 rounded-md">
+                        <option value="LINEAR_MIPMAP_LINEAR" selected>LINEAR_MIPMAP_LINEAR (三线性)</option>
+                        <option value="NEAREST_MIPMAP_LINEAR">NEAREST_MIPMAP_LINEAR</option>
+                        <option value="LINEAR_MIPMAP_NEAREST">LINEAR_MIPMAP_NEAREST</option>
+                        <option value="NEAREST_MIPMAP_NEAREST">NEAREST_MIPMAP_NEAREST</option>
+                        <option value="LINEAR">LINEAR (双线性 - 无 Mipmap)</option>
+                        <option value="NEAREST">NEAREST (最近邻 - 无 Mipmap)</option>
+                    </select>
+                </div>
+            </div>
+            <!-- [REMOVED] NPOT 警告在 WebGL 2.0 中不再需要 -->
+        </div>
+        
+        <!-- 变换控制 -->
+        <div class="p-3 rounded-lg control-group">
+            <label class="block mb-2 text-lg">4. 模型变换 (Transform)</label>
+            <div class="space-y-1">
+                <!-- 旋转 -->
+                <div>
+                    <label for="rotateX" class="block text-sm">X 轴旋转: <span id="rotateXVal">0</span>°</label>
+                    <input type="range" id="rotateX" min="-180" max="180" value="0" class="w-full">
+                </div>
+                <div>
+                    <label for="rotateY" class="block text-sm">Y 轴旋转: <span id="rotateYVal">0</span>°</label>
+                    <input type="range" id="rotateY" min="-180" max="180" value="0" class="w-full">
+                </div>
+                <div>
+                    <label for="rotateZ" class="block text-sm">Z 轴旋转: <span id="rotateZVal">0</span>°</label>
+                    <input type="range" id="rotateZ" min="-180" max="180" value="0" class="w-full">
+                </div>
+                <!-- 缩放 -->
+                <div>
+                    <label for="zoom" class="block text-sm">缩放 (Zoom): <span id="zoomVal">1.0</span>x</label>
+                    <input type="range" id="zoom" min="0.1" max="3.0" value="1.0" step="0.01" class="w-full">
+                </div>
+                 <!-- 平移 -->
+                <div>
+                    <label for="translateX" class="block text-sm">平移 (X): <span id="translateXVal">0.0</span></label>
+                    <input type="range" id="translateX" min="-3" max="3" value="0" step="0.01" class="w-full">
+                </div>
+                <div>
+                    <label for="translateY" class="block text-sm">平移 (Y): <span id="translateYVal">0.0</span></label>
+                    <input type="range" id="translateY" min="-3" max="3" value="0" step="0.01" class="w-full">
+                </div>
+                <div>
+                    <label for="translateZ" class="block text-sm">平移 (Z): <span id="translateZVal">0.0</span></label>
+                    <input type="range" id="translateZ" min="-10" max="10" value="0" step="0.01" class="w-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- UV 坐标 -->
+        <div class="p-3 rounded-lg control-group">
+            <label class="block mb-2 text-lg">5. 纹理坐标 (UV)</label>
+            <div>
+                <label for="uvScale" class="block text-sm">UV 缩放 (Tiling): <span id="uvScaleVal">1.0</span>x</label>
+                <input type="range" id="uvScale" min="0.1" max="10.0" value="1.0" step="0.01" class="w-full">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- WebGL 画布 (右侧) -->
+    <div class="flex-1 h-full">
+        <canvas id="glCanvas" class="w-full h-full"></canvas>
+    </div>
+
+    <!-- ================== -->
+    <!--  WebGL 着色器和脚本   -->
+    <!-- ================== -->
+
+    <!-- [FIX] #version 必须在第一行，没有前导换行符 -->
+    <script id="vertex-shader-3d" type="x-shader/x-vertex">#version 300 es
+        
+        // [NEW] 'attribute' 变为 'in'
+        in vec4 a_position;
+        in vec3 a_normal;
+        in vec2 a_texCoord;
+
+        uniform mat4 u_projectionMatrix;
+        uniform mat4 u_viewMatrix;
+        uniform mat4 u_modelMatrix;
+        uniform mat3 u_normalMatrix;
+        
+        uniform float u_uvScale;
+
+        // [NEW] 'varying' 变为 'out'
+        out vec2 v_texCoord;
+        out vec3 v_worldPosition;
+        out vec3 v_worldNormal;
+
+        void main() {
+            vec4 worldPosition = u_modelMatrix * a_position;
+            v_worldPosition = worldPosition.xyz;
+            
+            v_worldNormal = normalize(u_normalMatrix * a_normal);
+            
+            gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
+            
+            v_texCoord = a_texCoord * u_uvScale;
+        }
+    </script>
+
+    <!-- [FIX] #version 必须在第一行，没有前导换行符 -->
+    <script id="fragment-shader-3d" type="x-shader/x-fragment">#version 300 es
+        precision mediump float;
+
+        // [NEW] 'varying' 变为 'in'
+        in vec2 v_texCoord;
+        in vec3 v_worldPosition;
+        in vec3 v_worldNormal;
+
+        uniform sampler2D u_texture;
+        uniform vec3 u_lightPos;
+        uniform vec3 u_viewPos;
+
+        // [NEW] 'gl_FragColor' 变为 'out'
+        out vec4 fragColor;
+
+        void main() {
+           // [NEW] 'texture2D' 变为 'texture'
+           vec4 baseColor = texture(u_texture, v_texCoord);
+           
+           vec3 normal = normalize(v_worldNormal);
+           vec3 lightDir = normalize(u_lightPos - v_worldPosition);
+           vec3 viewDir = normalize(u_viewPos - v_worldPosition);
+           
+           float ambientStrength = 0.2;
+           vec3 ambient = ambientStrength * vec3(1.0, 1.0, 1.0);
+           
+           float diff = max(dot(normal, lightDir), 0.0);
+           vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
+           
+           vec3 halfwayDir = normalize(lightDir + viewDir);
+           float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+           vec3 specular = spec * vec3(1.0, 1.0, 1.0);
+           
+           vec3 lighting = (ambient + diffuse + specular);
+           
+           vec3 finalColor = lighting * baseColor.rgb;
+           
+           // [NEW] 赋值给 'out' 变量
+           fragColor = vec4(finalColor, baseColor.a);
+        }
+    </script>
+
+    <script>
+        // 3x3 矩阵库 (不变)
+        const mat3 = {
+            create: () => new Float32Array(9),
+            fromMat4: (out, a) => {
+                out[0] = a[0]; out[1] = a[1]; out[2] = a[2];
+                out[3] = a[4]; out[4] = a[5]; out[5] = a[6];
+                out[6] = a[8]; out[7] = a[9]; out[8] = a[10];
+                return out;
+            },
+            invert: (out, a) => {
+                const a00 = a[0], a01 = a[1], a02 = a[2];
+                const a10 = a[3], a11 = a[4], a12 = a[5];
+                const a20 = a[6], a21 = a[7], a22 = a[8];
+                const b01 = a22 * a11 - a12 * a21;
+                const b11 = -a22 * a10 + a12 * a20;
+                const b21 = a21 * a10 - a11 * a20;
+                let det = a00 * b01 + a01 * b11 + a02 * b21;
+                if (!det) { return null; }
+                det = 1.0 / det;
+                out[0] = b01 * det;
+                out[1] = (-a22 * a01 + a02 * a21) * det;
+                out[2] = (a12 * a01 - a02 * a11) * det;
+                out[3] = b11 * det;
+                out[4] = (a22 * a00 - a02 * a20) * det;
+                out[5] = (-a12 * a00 + a02 * a10) * det;
+                out[6] = b21 * det;
+                out[7] = (-a21 * a00 + a01 * a20) * det;
+                out[8] = (a11 * a00 - a01 * a10) * det;
+                return out;
+            },
+            transpose: (out, a) => {
+                if (out === a) {
+                    const a01 = a[1], a02 = a[2], a12 = a[5];
+                    out[1] = a[3]; out[2] = a[6];
+                    out[3] = a01; out[5] = a[7];
+                    out[6] = a02; out[7] = a12;
+                } else {
+                    out[0] = a[0]; out[1] = a[3]; out[2] = a[6];
+                    out[3] = a[1]; out[4] = a[4]; out[5] = a[7];
+                    out[6] = a[2]; out[7] = a[5]; out[8] = a[8];
+                }
+                return out;
+            }
+        };
+
+        // 4x4 矩阵库
+        const mat4 = {
+            create: () => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]),
+            identity: (out) => {
+                out[0] = 1; out[1] = 0; out[2] = 0; out[3] = 0;
+                out[4] = 0; out[5] = 1; out[6] = 0; out[7] = 0;
+                out[8] = 0; out[9] = 0; out[10] = 1; out[11] = 0;
+                out[12] = 0; out[13] = 0; out[14] = 0; out[15] = 1;
+                return out;
+            },
+            perspective: (out, fov, aspect, near, far) => {
+                const f = 1.0 / Math.tan(fov / 2);
+                out[0] = f / aspect; out[1] = 0; out[2] = 0; out[3] = 0;
+                out[4] = 0; out[5] = f; out[6] = 0; out[7] = 0;
+                out[8] = 0; out[9] = 0; out[11] = -1;
+                out[14] = -2 * near * far / (far - near);
+                if (far != null && far !== Infinity) {
+                    out[10] = -(far + near) / (far - near);
+                    out[14] = -2 * far * near / (far - near);
+                } else {
+                    out[10] = -1;
+                    out[14] = -2 * near;
+                }
+                out[15] = 0;
+                return out;
+            },
+            translate: (out, a, v) => {
+                const x = v[0], y = v[1], z = v[2];
+                if (a === out) {
+                    out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
+                    out[13] = a[1] * x + a[5] * y + a[9] * z + a[13];
+                    out[14] = a[2] * x + a[6] * y + a[10] * z + a[14];
+                    out[15] = a[3] * x + a[7] * y + a[11] * z + a[15];
+                } else {
+                    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+                    const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+                    const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+                    out[0] = a00; out[1] = a01; out[2] = a02; out[3] = a03;
+                    out[4] = a10; out[5] = a11; out[6] = a12; out[7] = a13;
+                    out[8] = a20; out[9] = a21; out[10] = a22; out[11] = a23;
+                    out[12] = a00 * x + a10 * y + a20 * z + a[12];
+                    out[13] = a01 * x + a11 * y + a21 * z + a[13];
+                    out[14] = a02 * x + a12 * y + a22 * z + a[14];
+                    out[15] = a03 * x + a13 * y + a23 * z + a[15];
+                }
+                return out;
+            },
+            scale: (out, a, v) => {
+                const x = v[0], y = v[1], z = v[2];
+                out[0] = a[0] * x; out[11] = a[11] * z;
+                out[12] = a[12]; out[13] = a[13]; out[14] = a[14]; out[15] = a[15];
+                return out;
+            },
+            rotateX: (out, a, rad) => {
+                const s = Math.sin(rad), c = Math.cos(rad);
+                const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+                const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+                out.set(a);
+                out[4] = a10 * c + a20 * s; out[5] = a11 * c + a21 * s; out[6] = a12 * c + a22 * s; out[7] = a13 * c + a23 * s;
+                out[8] = a20 * c - a10 * s; out[9] = a21 * c - a11 * s; out[10] = a22 * c - a12 * s; out[11] = a23 * c - a13 * s;
+                return out;
+            },
+            rotateY: (out, a, rad) => {
+                const s = Math.sin(rad), c = Math.cos(rad);
+                const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+                const a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+                out.set(a);
+                out[0] = a00 * c - a20 * s; out[1] = a01 * c - a21 * s; out[2] = a02 * c - a22 * s; out[3] = a03 * c - a23 * s;
+                out[8] = a00 * s + a20 * c; out[9] = a01 * s + a21 * c; out[10] = a02 * s + a22 * c; out[11] = a03 * s + a23 * c;
+                return out;
+            },
+            rotateZ: (out, a, rad) => {
+                const s = Math.sin(rad), c = Math.cos(rad);
+                const a00 = a[0], a01 = a[1] , a02 = a[2], a03 = a[3];
+                const a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+                out.set(a);
+                out[0] = a00 * c + a10 * s; out[1] = a01 * c + a11 * s; out[2] = a02 * c + a12 * s; out[3] = a03 * c + a13 * s;
+                out[4] = a10 * c - a00 * s; out[5] = a11 * c - a01 * s; out[6] = a12 * c - a02 * s; out[7] = a13 * c - a03 * s;
+                return out;
+            },
+            // [FIX] 修复了 mat4.multiply 中严重的复制/粘贴错误
+            multiply: (out, a, b) => {
+                let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+                let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+                let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+                let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+                
+                let b00 = b[0], b01 = b[1], b02 = b[2], b03 = b[3];
+                let b10 = b[4], b11 = b[5], b12 = b[6], b13 = b[7];
+                let b20 = b[8], b21 = b[9], b22 = b[10], b23 = b[11];
+                let b30 = b[12], b31 = b[13], b32 = b[14], b33 = b[15];
+
+                out[0] = b00 * a00 + b01 * a10 + b02 * a20 + b03 * a30;
+                out[1] = b00 * a01 + b01 * a11 + b02 * a21 + b03 * a31;
+                out[2] = b00 * a02 + b01 * a12 + b02 * a22 + b03 * a32;
+                out[3] = b00 * a03 + b01 * a13 + b02 * a23 + b03 * a33;
+                out[4] = b10 * a00 + b11 * a10 + b12 * a20 + b13 * a30;
+                out[5] = b10 * a01 + b11 * a11 + b12 * a21 + b13 * a31;
+                out[6] = b10 * a02 + b11 * a12 + b12 * a22 + b13 * a32;
+                out[7] = b10 * a03 + b11 * a13 + b12 * a23 + b13 * a33;
+                out[8] = b20 * a00 + b21 * a10 + b22 * a20 + b23 * a30;
+                out[9] = b20 * a01 + b21 * a11 + b22 * a21 + b23 * a31;
+                out[10] = b20 * a02 + b21 * a12 + b22 * a22 + b23 * a32;
+                out[11] = b20 * a03 + b21 * a13 + b22 * a23 + b23 * a33;
+                out[12] = b30 * a00 + b31 * a10 + b32 * a20 + b33 * a30;
+                out[13] = b30 * a01 + b31 * a11 + b32 * a21 + b33 * a31;
+                out[14] = b30 * a02 + b31 * a12 + b32 * a22 + b33 * a32;
+                out[15] = b30 * a03 + b31 * a13 + b32 * a23 + b33 * a33;
+                return out;
+            }
+        };
+
+        // 全局变量
+        let gl;
+        let program;
+        let vao; // [NEW] Vertex Array Object
+        let texture;
+
+        let uLocations = {}; // 存储 uniform 位置
+        
+        // 变换状态
+        let transform = {
+            rotateX: 0,
+            rotateY: 0,
+            rotateZ: 0,
+            zoom: 1.0,
+            translateX: 0.0,
+            translateY: 0.0,
+            translateZ: 0.0, 
+            uvScale: 1.0,
+        };
+        // 摄像机/光源
+        const cameraPos = [0.0, 0.0, 6.0];
+        const lightPos = [5.0, 5.0, 5.0];
+        
+        //  DOM 元素
+        const controls = {
+            imageLoader: document.getElementById('imageLoader'),
+            wrapS: document.getElementById('wrapS'),
+            wrapT: document.getElementById('wrapT'),
+            magFilter: document.getElementById('magFilter'),
+            minFilter: document.getElementById('minFilter'),
+            rotateX: document.getElementById('rotateX'),
+            rotateY: document.getElementById('rotateY'),
+            rotateZ: document.getElementById('rotateZ'),
+            zoom: document.getElementById('zoom'),
+            translateX: document.getElementById('translateX'),
+            translateY: document.getElementById('translateY'),
+            translateZ: document.getElementById('translateZ'), 
+            uvScale: document.getElementById('uvScale'),       
+            rotateXVal: document.getElementById('rotateXVal'),
+            rotateYVal: document.getElementById('rotateYVal'),
+            rotateZVal: document.getElementById('rotateZVal'),
+            zoomVal: document.getElementById('zoomVal'),
+            translateXVal: document.getElementById('translateXVal'),
+            translateYVal: document.getElementById('translateYVal'),
+            translateZVal: document.getElementById('translateZVal'), 
+            uvScaleVal: document.getElementById('uvScaleVal'),       
+            // [REMOVED] npotWarning
+        };
+        
+        // 临时矩阵变量
+        const normalMatrix = mat3.create();
+        const modelMatrix = mat4.create();
+        const viewMatrix = mat4.create();
+        const projectionMatrix = mat4.create();
+        const tempMatrix = mat4.create();
+
+
+        // WebGL 初始化
+        function main() {
+            const canvas = document.getElementById("glCanvas");
+            // [NEW] 获取 WebGL 2.0 上下文
+            gl = canvas.getContext("webgl2");
+            if (!gl) {
+                alert("WebGL 2.0 不可用！请检查您的浏览器是否支持。");
+                return;
+            }
+            
+            // [REMOVED] WebGL 2.0 核心支持 CLAMP_TO_BORDER，无需扩展
+
+            // 1. 编译着色器
+            const vsSource = document.getElementById("vertex-shader-3d").text;
+            const fsSource = document.getElementById("fragment-shader-3d").text;
+            program = createProgram(gl, vsSource, fsSource);
+            
+            if (!program) return;
+
+            // 2. 获取属性和统一变量位置
+            // [NEW] 'in' 属性的位置
+            const posAttrLoc = gl.getAttribLocation(program, "a_position");
+            const normalAttrLoc = gl.getAttribLocation(program, "a_normal");
+            const texCoordAttrLoc = gl.getAttribLocation(program, "a_texCoord");
+            
+            uLocations = {
+                projectionMatrix: gl.getUniformLocation(program, "u_projectionMatrix"),
+                viewMatrix: gl.getUniformLocation(program, "u_viewMatrix"),
+                modelMatrix: gl.getUniformLocation(program, "u_modelMatrix"),
+                normalMatrix: gl.getUniformLocation(program, "u_normalMatrix"),
+                texture: gl.getUniformLocation(program, "u_texture"),
+                lightPos: gl.getUniformLocation(program, "u_lightPos"),
+                viewPos: gl.getUniformLocation(program, "u_viewPos"),
+                uvScale: gl.getUniformLocation(program, "u_uvScale"), 
+            };
+
+            // 3. [NEW] 设置 VAO (顶点数组对象)
+            vao = gl.createVertexArray();
+            gl.bindVertexArray(vao); // 激活 VAO
+
+            // 4. 设置 VBO 和 EBO (所有设置都保存在 VAO 中)
+            const { positionBuffer, normalBuffer, texCoordBuffer, indexBuffer } = setupCubeBuffers();
+
+            // 启用属性 (VAO 模拟)
+            gl.enableVertexAttribArray(posAttrLoc);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(posAttrLoc, 3, gl.FLOAT, false, 0, 0);
+
+            gl.enableVertexAttribArray(normalAttrLoc);
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.vertexAttribPointer(normalAttrLoc, 3, gl.FLOAT, false, 0, 0);
+
+            gl.enableVertexAttribArray(texCoordAttrLoc);
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.vertexAttribPointer(texCoordAttrLoc, 2, gl.FLOAT, false, 0, 0);
+            
+            // 绑定 EBO 到 VAO
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            
+            // 5. 解绑 VAO (!!重要!!)
+            gl.bindVertexArray(null);
+
+            // 6. 设置 WebGL 状态
+            gl.useProgram(program);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+
+            // 7. 链接纹理单元
+            gl.uniform1i(uLocations.texture, 0);
+            
+            // 8. 设置不变的 Uniforms
+            gl.uniform3fv(uLocations.lightPos, lightPos);
+            gl.uniform3fv(uLocations.viewPos, cameraPos);
+
+            // 9. 加载默认纹理 (2x2 是 POT)
+            texture = createDefaultTexture();
+            
+            // 10. 绑定事件监听
+            setupEventListeners();
+            
+            // 11. 触发一次参数设置，以匹配 UI 默认值
+            setupTextureParameters();
+
+            // 12. 开始绘制循环
+            requestAnimationFrame(drawLoop);
+        }
+
+        // 创建着色器程序 (不变)
+        function createProgram(gl, vsSource, fsSource) {
+            const vs = compileShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fs = compileShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            
+            if (!vs || !fs) {
+                return null;
+            }
+            
+            const prog = gl.createProgram();
+            gl.attachShader(prog, vs);
+            gl.attachShader(prog, fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                console.error("着色器链接失败: ", gl.getProgramInfoLog(prog));
+                return null;
+            }
+            return prog;
+        }
+
+        // 编译单个着色器 (不变)
+        function compileShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error("着色器编译失败: ", gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        // 设置立方体缓冲 (不变)
+        function setupCubeBuffers() {
+            // ... (立方体数据不变) ...
+            const positions = new Float32Array([
+                // Front face
+                -1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0, -1.0,  1.0,  1.0,
+                // Back face
+                -1.0, -1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0, -1.0, -1.0,
+                // Top face
+                -1.0,  1.0, -1.0, -1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0,
+                // Bottom face
+                -1.0, -1.0, -1.0,  1.0, -1.0, -1.0,  1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
+                // Right face
+                 1.0, -1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0, -1.0,  1.0,
+                // Left face
+                -1.0, -1.0, -1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0, -1.0,
+            ]);
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+            const normals = new Float32Array([
+                 0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,
+                 0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,
+                 0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,
+                 0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,
+                 1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,  0.0,
+                -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0,
+            ]);
+            const normalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
+
+            const texCoords = new Float32Array([
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+                0.0,  0.0,  1.0,  0.0,  1.0,  1.0,  0.0,  1.0,
+            ]);
+            const texCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+
+            const indices = new Uint16Array([
+                0,  1,  2,      0,  2,  3,    // front
+                4,  5,  6,      4,  6,  7,    // back
+                8,  9,  10,     8,  10, 11,   // top
+                12, 13, 14,     12, 14, 15,   // bottom
+                16, 17, 18,     16, 18, 19,   // right
+                20, 21, 22,     20, 22, 23,   // left
+            ]);
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+            
+            return { positionBuffer, normalBuffer, texCoordBuffer, indexBuffer };
+        }
+
+        // [REMOVED] isPowerOf2() 不再需要
+
+        // 创建一个默认的棋盘格纹理
+        function createDefaultTexture() {
+            const tex = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+
+            const pixels = new Uint8Array([
+                255, 255, 255, 255,  // White
+                0,   0,   0,   255,  // Black
+                0,   0,   0,   255,  // Black
+                255, 255, 255, 255,  // White
+            ]);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            
+            // 2x2 是 POT，我们可以安全地生成 mipmap
+            gl.generateMipmap(gl.TEXTURE_2D);
+            
+            return tex;
+        }
+
+        // [NEW] 核心：设置纹理参数 (大大简化)
+        function setupTextureParameters() {
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            // 从字符串获取正确的 WebGL 枚举值
+            const wrapS_str = controls.wrapS.value;
+            const wrapT_str = controls.wrapT.value;
+            const magFilter_str = controls.magFilter.value;
+            const minFilter_str = controls.minFilter.value;
+            
+            // [REMOVED] 所有 isPOT 逻辑, NPOT 警告, UI 禁用逻辑
+            
+            const wrapS = gl[wrapS_str];
+            const wrapT = gl[wrapT_str];
+            const magFilter = gl[magFilter_str];
+            const minFilter = gl[minFilter_str];
+
+            if (!wrapS || !wrapT || !magFilter || !minFilter) {
+                console.error("无效的纹理参数:", wrapS_str, wrapT_str, magFilter_str, minFilter_str);
+                return;
+            }
+
+            // 1. 设置环绕
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapS);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapT);
+            
+            // [NEW] CLAMP_TO_BORDER 是 WebGL 2.0 核心功能
+            if (wrapS_str === "CLAMP_TO_BORDER" || wrapT_str === "CLAMP_TO_BORDER") {
+                 gl.texParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, [0.0, 0.0, 0.0, 1.0]);
+            }
+
+            // 2. 设置过滤
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, magFilter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, minFilter);
+
+            // 3. Mipmap 生成
+            // [NEW] 我们可以为所有纹理（包括NPOT）生成 Mipmap
+            if (minFilter_str.includes("MIPMAP")) {
+                gl.generateMipmap(gl.TEXTURE_2D);
+            }
+        }
+        
+        // [NEW] 核心：上传图像数据 (简化)
+        function uploadImageToTexture(image) {
+             gl.activeTexture(gl.TEXTURE0);
+             gl.bindTexture(gl.TEXTURE_2D, texture);
+             // 1. 上传 Level 0 的图像数据
+             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+             // 2. [NEW] 直接应用参数 (Mipmap 将为 NPOT 自动生成)
+             setupTextureParameters();
+        }
+
+
+        // [NEW] 绑定所有 UI 事件 (简化)
+        function setupEventListeners() {
+            controls.imageLoader.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(file);
+                    img.onload = () => {
+                        // [REMOVED] 不再需要 isPOT 检查
+                        uploadImageToTexture(img);
+                        URL.revokeObjectURL(img.src);
+                    };
+                }
+            };
+            
+            // 当任何过滤或环绕参数改变时，重新调用 setupTextureParameters
+            const paramControls = ['wrapS', 'wrapT', 'magFilter', 'minFilter'];
+            paramControls.forEach(id => {
+                controls[id].onchange = () => {
+                    // [REMOVED] 不再需要检查 isPOT
+                    setupTextureParameters();
+                };
+            });
+            
+            // 变换滑块 (不变)
+            const sliders = ['rotateX', 'rotateY', 'rotateZ', 'zoom', 'translateX', 'translateY', 'translateZ', 'uvScale'];
+            sliders.forEach(id => {
+                controls[id].oninput = () => {
+                    const val = parseFloat(controls[id].value);
+                    if (id.startsWith('rotate')) {
+                        transform[id] = val * Math.PI / 180;
+                    } else {
+                        transform[id] = val;
+                    }
+                    controls[id + 'Val'].textContent = val.toFixed(id.startsWith('rotate') ? 0 : (id === 'zoom' || id === 'uvScale' ? 1 : 2) );
+                };
+            });
+        }
+        
+        // 绘制循环
+        function drawLoop(time) {
+            gl.canvas.width = gl.canvas.clientWidth;
+            gl.canvas.height = gl.canvas.clientHeight;
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+            gl.clearColor(0.1, 0.1, 0.1, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            if (!program) return;
+
+            // 1. 投影矩阵 (P)
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            mat4.perspective(projectionMatrix, 45 * Math.PI / 180, aspect, 0.1, 100.0);
+            gl.uniformMatrix4fv(uLocations.projectionMatrix, false, projectionMatrix);
+
+            // 2. 视图矩阵 (V)
+            mat4.identity(viewMatrix);
+            mat4.translate(viewMatrix, viewMatrix, [0.0, 0.0, -cameraPos[2]]);
+            gl.uniformMatrix4fv(uLocations.viewMatrix, false, viewMatrix);
+            
+            // 3. 模型矩阵 (M)
+            mat4.identity(modelMatrix);
+            mat4.translate(modelMatrix, modelMatrix, [transform.translateX, transform.translateY, transform.translateZ]);
+            
+            mat4.identity(tempMatrix);
+            mat4.rotateX(tempMatrix, tempMatrix, transform.rotateX);
+            mat4.multiply(modelMatrix, modelMatrix, tempMatrix);
+            
+            mat4.identity(tempMatrix);
+            mat4.rotateY(tempMatrix, tempMatrix, transform.rotateY);
+            mat4.multiply(modelMatrix, modelMatrix, tempMatrix);
+            
+            mat4.identity(tempMatrix);
+            mat4.rotateZ(tempMatrix, tempMatrix, transform.rotateZ);
+            mat4.multiply(modelMatrix, modelMatrix, tempMatrix);
+            
+            const s = transform.zoom;
+            mat4.identity(tempMatrix);
+            mat4.scale(tempMatrix, tempMatrix, [s, s, s]);
+            mat4.multiply(modelMatrix, modelMatrix, tempMatrix);
+            
+            gl.uniformMatrix4fv(uLocations.modelMatrix, false, modelMatrix);
+            
+            // 4. 计算并上传法线矩阵 (N)
+            mat3.fromMat4(normalMatrix, modelMatrix);
+            mat3.invert(normalMatrix, normalMatrix);
+            mat3.transpose(normalMatrix, normalMatrix);
+            gl.uniformMatrix3fv(uLocations.normalMatrix, false, normalMatrix);
+            
+            // 5. 上传 UV 缩放
+            gl.uniform1f(uLocations.uvScale, transform.uvScale);
+
+            // 6. 激活纹理
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            // 7. [NEW] 绑定 VAO 并绘制
+            gl.bindVertexArray(vao);
+            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+            gl.bindVertexArray(null); // 解绑
+
+            requestAnimationFrame(drawLoop);
+        }
+
+        // 启动应用
+        window.onload = main;
+    </script>
+</body>
+</html>

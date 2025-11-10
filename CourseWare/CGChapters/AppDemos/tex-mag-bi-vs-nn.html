@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texture Filtering Demo (Nearest vs. Bilinear)</title>
+    <!-- 1. Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Load Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 3. Load OrbitControls for mouse interaction -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #controls-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 16px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 280px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+
+    <!-- Three.js Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Controls -->
+    <div id="controls-container">
+        <h2 class="text-xl font-bold text-white text-center">Texture Filtering</h2>
+        
+        <p class="text-sm text-gray-300 text-center">
+            Use your mouse to zoom in very close to the plane to see the effect!
+        </p>
+
+        <button id="nearest-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Set Filter: Nearest
+        </button>
+        
+        <button id="bilinear-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+            Set Filter: Bilinear
+        </button>
+        
+        <p class="text-xs text-gray-400 text-center mt-2">
+            <b>Nearest:</b> Sharp, pixelated edges.<br>
+            <b>Bilinear:</b> Blurry, interpolated edges.
+        </p>
+    </div>
+
+    <!-- Main Three.js Application Logic -->
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls, planeMesh, dataTexture;
+        const canvasContainer = document.getElementById('canvas-container');
+
+        /**
+         * Creates an 8x8 checkerboard DataTexture
+         */
+        function createCheckerboardTexture() {
+            const width = 8;
+            const height = 8;
+            const size = width * height;
+            const data = new Uint8Array(3 * size); // 3 bytes per pixel (RGB)
+
+            for (let i = 0; i < size; i++) {
+                const x = i % width;
+                const y = Math.floor(i / width);
+                
+                // Simple checkerboard logic
+                const isWhite = (x + y) % 2 === 0;
+                const color = isWhite ? 255 : 0;
+
+                const stride = i * 3;
+                data[stride] = color;     // R
+                data[stride + 1] = color; // G
+                data[stride + 2] = color; // B
+            }
+
+            // Create the DataTexture
+            const texture = new THREE.DataTexture(data, width, height, THREE.RGBFormat);
+            
+            // --- CRITICAL SETTINGS for PIXEL ART ---
+            // Set the magnification filter to Nearest by default
+            texture.magFilter = THREE.NearestFilter;
+            // Also set minification filter to Nearest
+            texture.minFilter = THREE.NearestFilter;
+            
+            texture.needsUpdate = true; // Tell Three.js to upload the data
+            
+            return texture;
+        }
+
+        function init() {
+            // --- Basic Scene Setup ---
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a202c); // Dark background
+
+            // --- Camera ---
+            camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+            camera.position.z = 10;
+
+            // --- Renderer ---
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            canvasContainer.appendChild(renderer.domElement);
+
+            // --- Texture ---
+            dataTexture = createCheckerboardTexture();
+
+            // --- Geometry & Material ---
+            const planeGeometry = new THREE.PlaneGeometry(10, 10);
+            const planeMaterial = new THREE.MeshBasicMaterial({
+                map: dataTexture,
+                side: THREE.DoubleSide
+            });
+
+            // --- Mesh ---
+            planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+            scene.add(planeMesh);
+
+            // --- Controls ---
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            // Allow zooming in very close
+            controls.minDistance = 0.1;
+            controls.maxDistance = 50;
+            // Disable panning to keep it centered
+            controls.enablePan = false;
+
+
+            // --- Event Listeners ---
+            document.getElementById('nearest-btn').addEventListener('click', () => {
+                if (!dataTexture) return;
+                console.log("Setting filter to NEAREST");
+                dataTexture.magFilter = THREE.NearestFilter;
+                dataTexture.needsUpdate = true; // Tell material to update
+            });
+            
+            document.getElementById('bilinear-btn').addEventListener('click', () => {
+                if (!dataTexture) return;
+                console.log("Setting filter to BILINEAR (Linear)");
+                dataTexture.magFilter = THREE.LinearFilter;
+                dataTexture.needsUpdate = true; // Tell material to update
+            });
+            
+            window.addEventListener('resize', onWindowResize);
+
+            // --- Start Animation Loop ---
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Update controls
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        }
+
+        // --- Run the app ---
+        init();
+    </script>
+</body>
+</html>

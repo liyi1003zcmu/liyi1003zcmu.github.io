@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D UV Mapping Demo</title>
+    <!-- 1. Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Load Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 3. Load OrbitControls for mouse interaction -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- 4. Load additional geometry and loaders -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TeapotGeometry.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-100">
+
+    <!-- Main container -->
+    <div class="flex h-screen">
+        <!-- 3D Canvas Area -->
+        <div id="canvas-container" class="flex-grow h-full">
+            <!-- Three.js canvas will be appended here -->
+        </div>
+
+        <!-- Right-side Control Panel -->
+        <div class="w-64 md:w-72 h-full bg-gray-900 p-6 shadow-2xl flex-shrink-0 overflow-y-auto">
+            <h1 class="text-2xl font-bold mb-6 text-white">UV Mapping</h1>
+            
+            <!-- Model Selection -->
+            <label for="model-select" class="block text-sm font-medium text-gray-400 mb-2">Select Model</label>
+            <select id="model-select" class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 mb-6">
+                <option value="" disabled>-- Select Model --</option>
+                <option value="torusknot">Torus Knot</option>
+                <option value="teapot">Utah Teapot</option>
+                <option value="bunny">Stanford Bunny</option>
+            </select>
+
+            <!-- File Upload Button -->
+            <label for="upload-model-input" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 mb-6 cursor-pointer text-center block">
+                Upload Model (.ply)
+            </label>
+            <input type="file" id="upload-model-input" class="hidden" accept=".ply">
+
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="text-yellow-400 text-sm my-4 hidden text-center">
+                Loading model...
+            </div>
+
+            <p class="text-sm text-gray-400 mb-6">
+                Click a button to dynamically generate new UV coordinates for the model and apply a checkerboard texture.
+            </p>
+            
+            <!-- Button container -->
+            <div class="space-y-3">
+                <button id="planar-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Use Planar (XY) Mapping
+                </button>
+                <button id="spherical-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                    Use Spherical Mapping
+                </button>
+                <button id="cylindrical-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+                    Use Cylindrical Mapping
+                </button>
+                <button id="reset-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 mt-4">
+                    Reset Material
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Main Three.js Application Logic -->
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls, model, geometry, checkerboardTexture;
+        let plyLoader;
+        let currentMaterial; // This will be the single, shared material
+        const geometryCache = {}; // Cache for loaded geometries
+        const canvasContainer = document.getElementById('canvas-container');
+
+        // Use a standard, reliable checkerboard texture from Three.js examples
+        const checkerboardUrl = 'https://threejs.org/examples/textures/checker.png';
+
+        function init() {
+            // --- Basic Scene Setup ---
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2d3748); // Match gray-800
+
+            // --- Camera ---
+            camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
+            camera.position.z = 3;
+
+            // --- Renderer ---
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            canvasContainer.appendChild(renderer.domElement);
+
+            // --- Lights ---
+            const ambientLight = new THREE.AmbientLight(0x808080); // Soft ambient light
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // --- Load Texture ---
+            // Load the external checkerboard texture
+            checkerboardTexture = new THREE.TextureLoader().load(
+                checkerboardUrl,
+                // onLoad callback
+                function ( texture ) {
+                    console.log("Texture loaded successfully");
+                    // These settings are still good
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.repeat.set(12, 12);
+                },
+                // onProgress callback (undefined)
+                undefined,
+                // onError callback
+                function ( err ) {
+                    console.error( 'An error happened while loading the texture.', err );
+                    // This helps debug if the issue is texture-loading
+                    alert("Failed to load texture. Model will remain blue.");
+                }
+            );
+
+            // --- Loaders and Materials ---
+            plyLoader = new THREE.PLYLoader();
+            currentMaterial = new THREE.MeshPhongMaterial({
+                color: 0x007bff, // A nice blue
+                side: THREE.DoubleSide
+            });
+            <!-- --- Create Model (Initial) --- -->
+            // We'll load the default model now
+            document.getElementById('model-select').value = 'torusknot';
+            switchModel('torusknot');
+
+            // --- Controls ---
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // --- Event Listeners ---
+            document.getElementById('planar-btn').addEventListener('click', applyPlanarMapping);
+            document.getElementById('spherical-btn').addEventListener('click', applySphericalMapping);
+            document.getElementById('cylindrical-btn').addEventListener('click', applyCylindricalMapping);
+            document.getElementById('reset-btn').addEventListener('click', resetMaterial);
+            document.getElementById('model-select').addEventListener('change', onModelSelect);
+            document.getElementById('upload-model-input').addEventListener('change', onModelUpload);
+            
+            window.addEventListener('resize', onWindowResize);
+
+            // --- Start Animation Loop ---
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Update controls
+            
+            // Gentle rotation
+            if (model) {
+                model.rotation.x += 0.001;
+                model.rotation.y += 0.002;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        }
+
+        // --- Model Switching ---
+
+        function onModelSelect(event) {
+            const modelName = event.target.value;
+            if (!modelName) return; // Do nothing if placeholder is selected
+            switchModel(modelName);
+        }
+
+        function showLoading(isLoading) {
+            const indicator = document.getElementById('loading-indicator');
+            indicator.style.display = isLoading ? 'block' : 'none';
+        }
+
+        function switchModel(modelName) {
+            showLoading(true);
+
+            // Check cache first
+            if (geometryCache[modelName]) {
+                console.log(`Loading ${modelName} from cache...`);
+                setupNewGeometry(geometryCache[modelName]);
+                showLoading(false);
+                return;
+            }
+
+            // If not in cache, load it
+            console.log(`Fetching ${modelName}...`);
+            if (modelName === 'torusknot') {
+                const geom = new THREE.TorusKnotGeometry(1, 0.3, 128, 16);
+                geom.computeBoundingBox();
+                geometryCache[modelName] = geom;
+                setupNewGeometry(geom);
+                showLoading(false);
+
+            } else if (modelName === 'teapot') {
+                // TeapotGeometry is loaded into THREE via the script tag
+                const geom = new THREE.TeapotGeometry(0.8, 10);
+                geom.computeBoundingBox();
+                geometryCache[modelName] = geom;
+                setupNewGeometry(geom);
+                showLoading(false);
+
+            } else if (modelName === 'bunny') {
+                // const bunnyUrl = 'https://threejs.org/examples/models/ply/stanford/bunny.ply'; // This URL can have CORS issues
+                // Use a URL from raw.githubusercontent.com which is more likely to have open CORS headers
+                const bunnyUrl = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/ply/stanford/bunny.ply';
+                plyLoader.load(bunnyUrl, (loadedGeom) => {
+                    loadedGeom.computeVertexNormals();
+                    loadedGeom.computeBoundingBox();
+                    loadedGeom.center(); // Center the bunny
+                    
+                    // Scale the bunny to fit
+                    const box = loadedGeom.boundingBox;
+                    const size = box.getSize(new THREE.Vector3());
+                    // Use max dimension for robust scaling
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2.0 / maxDim; // Scale to fit in a 2x2x2 box
+                    if (isFinite(scale)) {
+                        loadedGeom.scale(scale, scale, scale);
+                    }
+                    
+                    loadedGeom.computeBoundingBox(); // Re-compute bounds after scaling/centering
+                    
+                    geometryCache[modelName] = loadedGeom;
+                    setupNewGeometry(loadedGeom);
+                    showLoading(false);
+                }, undefined, (error) => {
+                    console.error("Error loading bunny:", error);
+                    alert("Failed to load Stanford Bunny model. This might be a network or CORS issue.");
+                    showLoading(false);
+                });
+            }
+        }
+
+        function setupNewGeometry(newGeometry) {
+            // Remove old model if it exists
+            if (model) {
+                scene.remove(model);
+            }
+            // Dispose of old geometry
+            if (geometry) {
+                geometry.dispose();
+            }
+
+            // Set new global geometry
+            geometry = newGeometry;
+
+            // Create new mesh with the shared material
+            model = new THREE.Mesh(geometry, currentMaterial);
+            scene.add(model);
+            
+            // CRITICAL: Reset the material to its default state for the new model
+            resetMaterial();
+        }
+
+        // --- File Upload ---
+
+        function onModelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            // Check for .ply file
+            if (!file.name.toLowerCase().endsWith('.ply')) {
+                alert("Please upload a valid .ply file.");
+                event.target.value = null; // Reset input
+                return;
+            }
+
+            showLoading(true);
+
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                try {
+                    const buffer = e.target.result;
+                    const loadedGeom = plyLoader.parse(buffer);
+
+                    if (!loadedGeom || !loadedGeom.attributes.position) {
+                        throw new Error("PLYLoader returned invalid geometry.");
+                    }
+
+                    loadedGeom.computeVertexNormals();
+                    loadedGeom.computeBoundingBox();
+                    loadedGeom.center();
+                    
+                    // Robust scaling for custom model
+                    const box = loadedGeom.boundingBox;
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2.0 / maxDim; // Scale to fit in a 2x2x2 box
+                    
+                    if (isFinite(scale)) {
+                        loadedGeom.scale(scale, scale, scale);
+                    }
+                    
+                    loadedGeom.computeBoundingBox(); // Re-compute bounds
+                    
+                    // Set up the new geometry
+                    setupNewGeometry(loadedGeom);
+
+                    // Deselect the dropdown to show it's a custom model
+                    document.getElementById('model-select').value = '';
+
+                } catch (error) {
+                    console.error("Error parsing uploaded PLY file:", error);
+                    alert("Failed to parse .ply file. The file might be corrupt or not a valid PLY format.");
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            reader.onerror = function () {
+                console.error("Error reading file.");
+                alert("An error occurred while reading the file.");
+                showLoading(false);
+            };
+
+            reader.readAsArrayBuffer(file);
+            event.target.value = null; // Reset input to allow re-uploading the same file
+        }
+
+
+        // --- UV Mapping Functions ---
+
+        function applyPlanarMapping() {
+            console.log("Applying Planar (XY) Mapping");
+            if (!geometry || !geometry.attributes.position) return; // Safety check
+            const pos = geometry.attributes.position;
+            const bounds = geometry.boundingBox;
+            if (!bounds) geometry.computeBoundingBox(); // Ensure bounds exist
+
+            const uvs = new Float32Array(pos.count * 2);
+
+            for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                
+                const u = (x - bounds.min.x) / (bounds.max.x - bounds.min.x);
+                const v = (y - bounds.min.y) / (bounds.max.y - bounds.min.y);
+                
+                uvs[i * 2] = u;
+                uvs[i * 2 + 1] = v;
+            }
+            
+            updateGeometryAndMaterial(uvs);
+        }
+
+        function applySphericalMapping() {
+            console.log("Applying Spherical Mapping");
+            if (!geometry || !geometry.attributes.position) return; // Safety check
+            const pos = geometry.attributes.position;
+            const uvs = new Float32Array(pos.count * 2);
+            const vec = new THREE.Vector3(); // Reuse vector for efficiency
+
+            for (let i = 0; i < pos.count; i++) {
+                vec.set(pos.getX(i), pos.getY(i), pos.getZ(i)).normalize();
+                
+                const u = (Math.atan2(vec.z, vec.x) + Math.PI) / (2 * Math.PI);
+                const v = (Math.asin(vec.y) + Math.PI / 2) / Math.PI;
+
+                uvs[i * 2] = u;
+                uvs[i * 2 + 1] = v;
+            }
+
+            updateGeometryAndMaterial(uvs);
+        }
+
+        function applyCylindricalMapping() {
+            console.log("Applying Cylindrical Mapping");
+            if (!geometry || !geometry.attributes.position) return; // Safety check
+            const pos = geometry.attributes.position;
+            const bounds = geometry.boundingBox;
+            if (!bounds) geometry.computeBoundingBox(); // Ensure bounds exist
+            
+            const uvs = new Float32Array(pos.count * 2);
+
+            for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const z = pos.getZ(i);
+
+                const u = (Math.atan2(z, x) + Math.PI) / (2 * Math.PI);
+                const v = (y - bounds.min.y) / (bounds.max.y - bounds.min.y);
+
+                uvs[i * 2] = u;
+                uvs[i * 2 + 1] = v;
+            }
+            
+            updateGeometryAndMaterial(uvs);
+        }
+        
+        function updateGeometryAndMaterial(uvs) {
+            // 5. Set the new 'uv' attribute on the geometry
+            geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            geometry.attributes.uv.needsUpdate = true; // Tell Three.js to update the attribute
+            
+            // 6. Update the existing shared material to use the texture
+            currentMaterial.map = checkerboardTexture;
+            currentMaterial.color.set(0xffffff); // Set color to white so texture is not tinted
+            currentMaterial.needsUpdate = true;
+        }
+
+        function resetMaterial() {
+            console.log("Resetting material");
+            if (!currentMaterial) return; // Safety check
+
+            // Reset the properties of the single shared material
+            currentMaterial.map = null;
+            currentMaterial.color.set(0x007bff); // Reset to original blue
+            currentMaterial.needsUpdate = true;
+        }
+
+        // --- Run the app ---
+        init();
+    </script>
+</body>
+</html>

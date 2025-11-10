@@ -1,0 +1,97 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800" id="diagram">
+            <style>
+              .title { font: 700 20px sans-serif; fill: #222; }
+              .subtitle { font: 600 14px sans-serif; fill: #333; }
+              .label { font: 12px sans-serif; fill: #333; }
+              .small { font: 11px sans-serif; fill: #444; }
+              .mono { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #222; }
+              .chip { fill: #f0f7ff; stroke: #8fb9ff; }
+              .mem { fill: #fffdf6; stroke: #f5c97a; }
+              .gpu { fill: #eef7f0; stroke: #79c68f; }
+              .vram { fill: #f7f0ff; stroke: #b28fe5; }
+              .bus { fill: #f7f7f7; stroke: #bdbdbd; stroke-dasharray: 6 4; }
+              .arrow { stroke: #666; stroke-width: 2; marker-end: url(#arrow); fill: none; }
+              .arrow2 { stroke: #888; stroke-width: 2; marker-end: url(#arrow); fill: none; stroke-dasharray: 4 3; }
+              .badge { fill: #2563eb; stroke: none; }
+              .badgeText { font: 11px sans-serif; fill: #fff; }
+              .warn { fill: #fde7e9; stroke: #e58b8f; }
+              .legendText { font: 12px sans-serif; fill: #111; }
+            </style>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                <path d="M0,0 L10,4 L0,8 Z" fill="#666"/>
+              </marker>
+            </defs>
+
+            <text x="20" y="30" class="title">CPU → PCIe → GPU：数据传输与总线瓶颈示意</text>
+
+            <!-- CPU + Host Memory -->
+            <g transform="translate(40,80)">
+              <rect x="0" y="0" width="240" height="180" class="chip" rx="10"/>
+              <text x="12" y="24" class="subtitle">CPU</text>
+              <text x="12" y="44" class="small">应用与驱动在此准备数据与命令</text>
+              <rect x="0" y="200" width="240" height="140" class="mem" rx="10"/>
+              <text x="12" y="224" class="subtitle">主内存（Host DRAM）</text>
+              <text x="12" y="244" class="small">纹理/顶点等原始数据驻留于此</text>
+            </g>
+
+            <!-- PCIe Bus -->
+            <g transform="translate(300,120)">
+              <rect x="0" y="0" width="400" height="220" class="bus" rx="10"/>
+              <text x="12" y="24" class="subtitle">PCIe 总线（如 x16）</text>
+              <text x="12" y="46" class="small">分组化事务，存在协议开销与往返延迟</text>
+              <rect x="12" y="66" width="120" height="28" class="badge" rx="6"/>
+              <text x="20" y="85" class="badgeText">带宽示例</text>
+              <text x="12" y="115" class="mono">PCIe 4.0 x16 ≈ 32 GB/s（双向合计，单向约 16 GB/s，有效略低）</text>
+              <text x="12" y="135" class="mono">PCIe 5.0 x16 ≈ 64 GB/s（双向合计，单向约 32 GB/s，有效略低）</text>
+              <rect x="12" y="162" width="160" height="28" class="badge" rx="6"/>
+              <text x="20" y="181" class="badgeText">GPU 显存带宽（对比）</text>
+              <text x="12" y="212" class="mono">GDDR6/X/HBM 常见 500–1000+ GB/s（远高于 PCIe）</text>
+            </g>
+
+            <!-- GPU + VRAM -->
+            <g transform="translate(720,80)">
+              <rect x="0" y="0" width="240" height="180" class="gpu" rx="10"/>
+              <text x="12" y="24" class="subtitle">GPU</text>
+              <text x="12" y="44" class="small">接受命令、执行渲染/计算；含 DMA 引擎</text>
+              <rect x="0" y="200" width="240" height="140" class="vram" rx="10"/>
+              <text x="12" y="224" class="subtitle">显存（VRAM / Device Memory）</text>
+              <text x="12" y="244" class="small">渲染资源驻留（纹理、缓冲、RT 等）</text>
+            </g>
+
+            <!-- Data upload path -->
+            <g transform="translate(40,450)">
+              <text x="0" y="0" class="subtitle">数据上传路径（示例：纹理/缓冲）</text>
+              <!-- CPU Host DRAM to PCIe -->
+              <path d="M 140 20 L 320 20" class="arrow"/>
+              <text x="150" y="14" class="small">驱动提交 DMA 请求 / 映射写入</text>
+              <!-- mid bus arrows with dashed -->
+              <path d="M 320 20 L 680 20" class="arrow2"/>
+              <text x="420" y="40" class="small">PCIe 传输：分组事务、带宽受限、存在延迟</text>
+              <!-- PCIe to GPU VRAM -->
+              <path d="M 680 20 L 720 20" class="arrow"/>
+              <text x="690" y="14" class="small">DMA 拉取 → 写入 VRAM</text>
+            </g>
+
+            <!-- Bottlenecks -->
+            <g transform="translate(40,510)">
+              <text x="0" y="0" class="subtitle">总线瓶颈（Bus Bottleneck）</text>
+              <rect x="0" y="16" width="960" height="180" class="warn" rx="10"/>
+              <g transform="translate(12,32)">
+                <text x="0" y="0" class="label">可能的瓶颈点：</text>
+                <text x="0" y="22" class="small">• 带宽限制：PCIe 的有效带宽远低于 GPU 显存内部带宽；大量帧间上传会受限。</text>
+                <text x="0" y="42" class="small">• 往返延迟与协议开销：小包频繁传输效率低，降低实际吞吐。</text>
+                <text x="0" y="62" class="small">• 同步阻塞：CPU 等待传输完成或队列同步，使传输与执行串行化。</text>
+                <text x="0" y="82" class="small">• 额外内存拷贝/NUMA：Host 侧跨节点拷贝导致有效带宽下降。</text>
+                <text x="0" y="110" class="label">优化建议：</text>
+                <text x="0" y="132" class="small">• 合并小传输为大块、异步 DMA 与命令队列、减少 map/unmap。</text>
+                <text x="0" y="152" class="small">• 压缩与流式加载、尽量预加载到 VRAM、帧间复用资源。</text>
+              </g>
+            </g>
+
+            <!-- Legend -->
+            <g transform="translate(40,730)">
+              <text x="0" y="0" class="legendText">说明：上方展示 CPU 主内存 → PCIe → GPU 显存的数据路径；中部给出 PCIe 与显存带宽对比；下方总结“总线瓶颈”的来源与优化策略。</text>
+            </g>
+          </svg>

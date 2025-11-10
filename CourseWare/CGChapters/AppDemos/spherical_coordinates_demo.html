@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Spherical Coordinates</title>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f0f0; }
+        #container { display: flex; width: 100vw; height: 100vh; }
+        #canvas-container { flex-grow: 1; }
+        #controls { width: 300px; padding: 20px; background-color: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.1); }
+        .control-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        input[type="range"] { width: 100%; }
+        .value-display { text-align: right; color: #555; font-family: "Courier New", Courier, monospace; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container"></div>
+        <div id="controls">
+            <h2>Spherical Coordinates</h2>
+            <div class="control-group">
+                <label for="radius">Radius (r): <span id="radius-value" class="value-display"></span></label>
+                <input type="range" id="radius" min="1" max="5" step="0.1" value="3">
+            </div>
+            <div class="control-group">
+                <label for="theta">Theta (θ): <span id="theta-value" class="value-display"></span></label>
+                <input type="range" id="theta" min="0" max="360" step="1" value="45">
+            </div>
+            <div class="control-group">
+                <label for="phi">Phi (φ): <span id="phi-value" class="value-display"></span></label>
+                <input type="range" id="phi" min="0" max="180" step="1" value="60">
+            </div>
+            <div>
+                <h4>Cartesian Coordinates:</h4>
+                <p id="cartesian-coords" style="font-family: 'Courier New', Courier, monospace; background: #e9ecef; padding: 10px; border-radius: 4px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.138.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let sphere, point, radiusLine, thetaArc, phiArc;
+        let radius = 3, theta = Math.PI / 4, phi = Math.PI / 3;
+
+        const radiusSlider = document.getElementById('radius');
+        const thetaSlider = document.getElementById('theta');
+        const phiSlider = document.getElementById('phi');
+        const radiusValue = document.getElementById('radius-value');
+        const thetaValue = document.getElementById('theta-value');
+        const phiValue = document.getElementById('phi-value');
+        const cartesianCoords = document.getElementById('cartesian-coords');
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('canvas-container').clientWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Axes Helper
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+            
+            // Grid Helper
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Sphere
+            const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+            const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, wireframe: true, transparent: true, opacity: 0.2 });
+            sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            scene.add(sphere);
+
+            // Point on sphere
+            const pointGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+            const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            point = new THREE.Mesh(pointGeometry, pointMaterial);
+            scene.add(point);
+
+            // Radius Line
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)]);
+            radiusLine = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(radiusLine);
+            
+            // Theta Arc
+            const thetaArcMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            const thetaArcCurve = new THREE.EllipseCurve(0, 0, 1, 1, 0, Math.PI/4, false, 0);
+            const thetaArcGeometry = new THREE.BufferGeometry().setFromPoints(thetaArcCurve.getPoints(50));
+            thetaArc = new THREE.Line(thetaArcGeometry, thetaArcMaterial);
+            scene.add(thetaArc);
+
+            // Phi Arc
+            const phiArcMaterial = new THREE.LineBasicMaterial({ color: 0xff9900 });
+            const phiArcGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0)]);
+            phiArc = new THREE.Line(phiArcGeometry, phiArcMaterial);
+            scene.add(phiArc);
+
+
+            addEventListeners();
+            updateScene();
+            animate();
+        }
+
+        function updateScene() {
+            radius = parseFloat(radiusSlider.value);
+            theta = THREE.MathUtils.degToRad(parseFloat(thetaSlider.value));
+            phi = THREE.MathUtils.degToRad(parseFloat(phiSlider.value));
+
+            radiusValue.textContent = radius.toFixed(2);
+            thetaValue.textContent = `${thetaSlider.value}°`;
+            phiValue.textContent = `${phiSlider.value}°`;
+
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const y = radius * Math.cos(phi);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            
+            point.position.set(x, y, z);
+            
+            sphere.scale.set(radius, radius, radius);
+
+            // Update radius line
+            radiusLine.geometry.setFromPoints([new THREE.Vector3(0, 0, 0), point.position]);
+            
+            // Update theta arc
+            const r_proj = radius * Math.sin(phi);
+            const thetaCurve = new THREE.EllipseCurve(0, 0, r_proj, r_proj, 0, theta, false, 0);
+            thetaArc.geometry.setFromPoints(thetaCurve.getPoints(50));
+            thetaArc.rotation.x = Math.PI / 2;
+
+
+            // Update phi arc
+            const phiPoints = [];
+            const phi_r = Math.sqrt(x*x + z*z);
+            for(let i=0; i<=50; i++) {
+                const angle = phi * (i/50);
+                phiPoints.push(new THREE.Vector3(
+                    phi_r * Math.sin(angle),
+                    radius * Math.cos(angle),
+                    0
+                ));
+            }
+            phiArc.geometry.setFromPoints(phiPoints);
+            phiArc.lookAt(new THREE.Vector3(x, 0, z));
+
+
+            cartesianCoords.innerHTML = `x: ${x.toFixed(2)}<br>y: ${y.toFixed(2)}<br>z: ${z.toFixed(2)}`;
+        }
+
+        function addEventListeners() {
+            radiusSlider.addEventListener('input', updateScene);
+            thetaSlider.addEventListener('input', updateScene);
+            phiSlider.addEventListener('input', updateScene);
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = document.getElementById('canvas-container').clientWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('canvas-container').clientWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

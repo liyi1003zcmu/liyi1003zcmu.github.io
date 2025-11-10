@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>纹理放大与缩小演示 (已修正)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h3 {
+            color: #333;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        /* 关键CSS：强制执行最近邻（像素化）缩放 */
+        #displayCanvas, #textureCanvas {
+            border: 2px solid #333;
+            background-color: #eee;
+            image-rendering: -moz-crisp-edges;         /* Firefox */
+            image-rendering: -webkit-crisp-edges;    /* Webkit (Chrome, Safari) */
+            image-rendering: pixelated;              /* W3C Standard */
+            image-rendering: crisp-edges;            /* Old standard */
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        button, .file-input-wrapper {
+            font-size: 16px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        button.active {
+            background-color: #0056b3;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .file-input-wrapper:hover {
+            background-color: #0056b3;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        #description {
+            max-width: 512px;
+            text-align: center;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>纹理放大 (Magnification) vs 缩小 (Minification)</h1>
+
+    <div class="controls">
+        <div class="file-input-wrapper">
+            <span>载入本地纹理</span>
+            <input type="file" id="imageLoader" accept="image/*">
+        </div>
+        <button id="showMag" class="active">演示放大 (源: 8x8)</button>
+        <button id="showMin">演示缩小 (源: 64x64)</button>
+    </div>
+
+    <div class="container">
+        <div>
+            <h3 id="textureSourceTitle">当前 8x8 纹理</h3>
+            <canvas id="textureCanvas" width="128" height="128"></canvas>
+            <small style="display: block; text-align: center;">(源纹理, 放大观察)</small>
+        </div>
+        <div>
+            <h3>采样结果 (放大至 256x256 观察)</h3>
+            <canvas id="displayCanvas" width="256" height="256"></canvas>
+            <small style="display: block; text-align: center;">(显示区域)</small>
+        </div>
+    </div>
+
+
+    <p id="description">
+        载入一张图片或点击按钮查看不同模式下的效果。
+    </p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // === 1. 获取元素 ===
+            const displayCanvas = document.getElementById('displayCanvas');
+            const displayCtx = displayCanvas.getContext('2d');
+            const textureCanvas = document.getElementById('textureCanvas');
+            const textureCtx = textureCanvas.getContext('2d');
+            const textureSourceTitle = document.getElementById('textureSourceTitle');
+            
+            const magButton = document.getElementById('showMag');
+            const minButton = document.getElementById('showMin');
+            const imageLoader = document.getElementById('imageLoader');
+            const description = document.getElementById('description');
+
+            displayCtx.imageSmoothingEnabled = false;
+            textureCtx.imageSmoothingEnabled = false;
+
+            // *** 修正：维护两个源纹理 ***
+            let texture8x8 = null;   // 8x8 源纹理 (Canvas)
+            let texture64x64 = null; // 64x64 源纹理 (Canvas)
+            let currentMode = 'mag';
+
+            // === 2. 创建默认纹理 (8x8 和 64x64) ===
+            function createDefaultTextures() {
+                // 创建 8x8 棋盘格
+                texture8x8 = document.createElement('canvas');
+                texture8x8.width = 8;
+                texture8x8.height = 8;
+                const ctx8 = texture8x8.getContext('2d');
+                ctx8.imageSmoothingEnabled = false;
+                for (let y = 0; y < 8; y++) {
+                    for (let x = 0; x < 8; x++) {
+                        ctx8.fillStyle = (x + y) % 2 === 0 ? '#333' : '#ccc';
+                        ctx8.fillRect(x, y, 1, 1);
+                    }
+                }
+                
+                // 创建 64x64 棋盘格 (高频)
+                texture64x64 = document.createElement('canvas');
+                texture64x64.width = 64;
+                texture64x64.height = 64;
+                const ctx64 = texture64x64.getContext('2d');
+                ctx64.imageSmoothingEnabled = false;
+                for (let y = 0; y < 64; y++) {
+                    for (let x = 0; x < 64; x++) {
+                        ctx64.fillStyle = (x + y) % 2 === 0 ? '#333' : '#ccc';
+                        ctx64.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+            
+            // === 3. 将 Image 转换为指定尺寸的 Canvas ===
+            function convertImageToCanvas(img, size) {
+                const texCanvas = document.createElement('canvas');
+                texCanvas.width = size;
+                texCanvas.height = size;
+                const ctx = texCanvas.getContext('2d');
+                // 强制最近邻，以便我们加载的图片在缩放时也保持像素化
+                ctx.imageSmoothingEnabled = false; 
+                ctx.drawImage(img, 0, 0, size, size); 
+                return texCanvas;
+            }
+
+            // === 4. 更新左侧的源纹理显示 ===
+            function updateTextureDisplay() {
+                textureCtx.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
+                if (currentMode === 'mag') {
+                    textureSourceTitle.textContent = "当前 8x8 源纹理";
+                    // 将 8x8 纹理放大到 128x128 显示
+                    textureCtx.drawImage(texture8x8, 0, 0, 128, 128);
+                } else {
+                    textureSourceTitle.textContent = "当前 64x64 源纹理";
+                    // 将 64x64 纹理放大到 128x128 显示
+                    textureCtx.drawImage(texture64x64, 0, 0, 128, 128);
+                }
+            }
+
+            // === 5. 定义绘图函数 (已修正) ===
+
+            function drawMagnification() {
+                if (!texture8x8) return;
+                currentMode = 'mag';
+                
+                // 1. 创建 64x64 的"放大结果"画布
+                const magResultCanvas = document.createElement('canvas');
+                magResultCanvas.width = 64;
+                magResultCanvas.height = 64;
+                const magResultCtx = magResultCanvas.getContext('2d');
+                magResultCtx.imageSmoothingEnabled = false;
+                
+                // 2. 执行 8x8 -> 64x64 的放大 (核心步骤)
+                magResultCtx.drawImage(texture8x8, 0, 0, 64, 64); 
+
+                // 3. 将 64x64 的结果放大到 256x256 的显示画布上以便观察
+                displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+                displayCtx.drawImage(magResultCanvas, 0, 0, 256, 256);
+
+                description.innerHTML = "<strong>放大 (Magnification): 8x8 -> 64x64</strong><br>获取 <strong>8x8</strong> 的源纹理，将其拉伸到 64x64 的区域。最近邻采样导致每个纹素被复制成一个 8x8 的大像素块，形成了“马赛克”效果。";
+                
+                magButton.classList.add('active');
+                minButton.classList.remove('active');
+                updateTextureDisplay(); // 更新左侧显示
+            }
+
+            function drawMinification() {
+                if (!texture64x64) return;
+                currentMode = 'min';
+                
+                // 1. 创建 8x8 的"缩小结果"画布
+                const minResultCanvas = document.createElement('canvas');
+                minResultCanvas.width = 8;
+                minResultCanvas.height = 8;
+                const minResultCtx = minResultCanvas.getContext('2d');
+                minResultCtx.imageSmoothingEnabled = false;
+                
+                // 2. 执行 64x64 -> 8x8 的缩小 (核心步骤)
+                // *** 这是正确的逻辑，使用 64x64 的源纹理 ***
+                minResultCtx.drawImage(texture64x64, 0, 0, 8, 8); 
+
+                // 3. 将 8x8 的结果放大到 256x256 的显示画布上以便观察
+                displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+                displayCtx.drawImage(minResultCanvas, 0, 0, 256, 256);
+
+                description.innerHTML = "<strong>缩小 (Minification): 64x64 -> 8x8</strong><br>获取 <strong>64x64</strong> 的高频源纹理，将其压缩到 8x8 的区域。最近邻采样在每 8x8 的纹素块中仅选择 1 个，丢失了 98% 的信息，导致了严重的“走样”和“摩尔纹”。";
+
+                minButton.classList.add('active');
+                magButton.classList.remove('active');
+                updateTextureDisplay(); // 更新左侧显示
+            }
+
+            // === 6. 绑定事件 ===
+            magButton.onclick = drawMagnification;
+            minButton.onclick = drawMinification;
+
+            // 图片加载事件处理
+            imageLoader.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            // *** 修正：同时创建两个版本的纹理 ***
+                            texture8x8 = convertImageToCanvas(img, 8);
+                            texture64x64 = convertImageToCanvas(img, 64);
+                            
+                            // 重新绘制当前选中的模式
+                            if (currentMode === 'mag') {
+                                drawMagnification();
+                            } else {
+                                drawMinification();
+                            }
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 初始设置：加载默认纹理并显示放大效果
+            createDefaultTextures();
+            drawMagnification(); // 默认显示放大
+        });
+    </script>
+
+</body>
+</html>

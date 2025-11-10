@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive UV Mapping Demo</title>
+    <!-- 1. Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Load Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 3. Load OrbitControls for mouse interaction -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <style>
+        /* Use Inter font */
+        body { font-family: 'Inter', sans-serif; }
+        /* Ensure canvases fill their containers */
+        canvas { display: block; width: 100%; height: 100%; }
+        /* Style for the number inputs */
+        input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Safari/Chrome */
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <!-- Main container -->
+    <div class="flex-1 flex flex-col md:flex-row h-full">
+
+        <!-- Left Panel: 2D Texture Display -->
+        <div class="w-full md:w-1/3 h-1/2 md:h-full flex flex-col p-4 bg-gray-800 shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-center">Source Texture (2D)</h2>
+            <div class="flex-1 bg-gray-700 rounded-lg overflow-hidden border-2 border-gray-600">
+                <canvas id="textureCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Middle Panel: 3D Quad Display -->
+        <div class="w-full md:w-1/3 h-1/2 md:h-full flex flex-col p-4">
+            <h2 class="text-xl font-bold mb-4 text-center">3D Quad (WebGL)</h2>
+            <div class="flex-1 bg-black rounded-lg overflow-hidden border-2 border-gray-700">
+                <canvas id="webglCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Right Panel: Controls -->
+        <div class="w-full md:w-1/3 h-full flex flex-col p-6 bg-gray-800 shadow-lg overflow-y-auto">
+            <h2 class="text-xl font-bold mb-6 text-center">UV Coordinates</h2>
+            <p class="text-sm text-gray-400 mb-6 text-center">
+                V0: Bottom-Left, V1: Bottom-Right<br>
+                V2: Top-Right, V3: Top-Left
+            </p>
+            
+            <!-- UV Input Grid -->
+            <div class="grid grid-cols-4 gap-x-3 gap-y-4">
+                <!-- Headers -->
+                <div class="text-center font-semibold">V0</div>
+                <div class="text-center font-semibold">V1</div>
+                <div class="text-center font-semibold">V2</div>
+                <div class="text-center font-semibold">V3</div>
+                
+                <!-- U values -->
+                <label class="sr-only" for="v0u">V0(u)</label>
+                <input type="number" step="0.1" id="v0u" value="0.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v1u">V1(u)</label>
+                <input type="number" step="0.1" id="v1u" value="1.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v2u">V2(u)</label>
+                <input type="number" step="0.1" id="v2u" value="1.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v3u">V3(u)</label>
+                <input type="number" step="0.1" id="v3u" value="0.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <!-- V values -->
+                <label class="sr-only" for="v0v">V0(v)</label>
+                <input type="number" step="0.1" id="v0v" value="0.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v1v">V1(v)</label>
+                <input type="number" step="0.1" id="v1v" value="0.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v2v">V2(v)</label>
+                <input type="number" step="0.1" id="v2v" value="1.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <label class="sr-only" for="v3v">V3(v)</label>
+                <input type="number" step="0.1" id="v3v" value="1.0" class="w-full bg-gray-700 text-white rounded-md p-2 text-center border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 space-y-3">
+                <button id="update-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    Update Mapping
+                </button>
+                <button id="reset-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                    Reset UVs
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 4. Main Application Logic -->
+    <script>
+        // DOM Elements
+        const textureCanvas = document.getElementById('textureCanvas');
+        const textureCtx = textureCanvas.getContext('2d');
+        const webglCanvas = document.getElementById('webglCanvas');
+
+        // Texture URLs
+        // Replaced 'placekitten' with 'placehold.co' for better reliability
+        const primaryTextureUrl = 'https://placehold.co/256x256/E8A236/FFFFFF?text=Texture';
+        // Replaced 'checker.png' with 'uv_grid_opengl.jpg' which is also excellent for this demo
+        const fallbackTextureUrl = 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/uv_grid_opengl.jpg';
+
+        let loadedTextureUrl = ''; // Store the URL of the successfully loaded texture
+
+        // Three.js Globals
+        let scene, camera, renderer, controls, quadGeometry, quadMesh;
+
+        // UV Input Elements
+        const uvInputs = {
+            v0u: document.getElementById('v0u'), v0v: document.getElementById('v0v'),
+            v1u: document.getElementById('v1u'), v1v: document.getElementById('v1v'),
+            v2u: document.getElementById('v2u'), v2v: document.getElementById('v2v'),
+            v3u: document.getElementById('v3u'), v3v: document.getElementById('v3v'),
+        };
+
+        /**
+         * Loads the image and draws it onto the 2D canvas.
+         * Also triggers the WebGL setup once the image is loaded.
+         */
+        function initTextureCanvas(imageUrl) {
+            const img = new Image();
+            img.crossOrigin = "anonymous"; // Handle CORS for canvas
+            img.onload = () => {
+                // Resize canvas to match image aspect ratio
+                const parent = textureCanvas.parentElement;
+                const aspect = img.width / img.height;
+                let w = parent.clientWidth;
+                let h = w / aspect;
+                if (h > parent.clientHeight) {
+                    h = parent.clientHeight;
+                    w = h * aspect;
+                }
+                textureCanvas.width = w;
+                textureCanvas.height = h;
+                
+                // Draw the image
+                textureCtx.drawImage(img, 0, 0, w, h);
+                
+                loadedTextureUrl = imageUrl; // Store the successfully loaded URL
+                
+                // Now that we have the image, init the WebGL side
+                initWebGLCanvas(img);
+            };
+            img.onerror = () => {
+                console.warn(`Failed to load ${imageUrl}. Loading fallback.`);
+                // Only retry fallback once
+                if (imageUrl !== fallbackTextureUrl) {
+                    initTextureCanvas(fallbackTextureUrl);
+                } else {
+                    console.error("Failed to load fallback texture. Cannot start.");
+                    textureCtx.fillStyle = 'red';
+                    textureCtx.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+                    textureCtx.fillStyle = 'white';
+                    textureCtx.fillText('Error loading texture', 10, 20);
+                }
+            };
+            img.src = imageUrl;
+        }
+
+        /**
+         * Initializes the Three.js 3D scene.
+         * This is called AFTER the image has successfully loaded.
+         */
+        function initWebGLCanvas(img) {
+            const container = webglCanvas.parentElement;
+
+            // --- Scene ---
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111827); // bg-gray-900
+
+            // --- Camera ---
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 2.5;
+
+            // --- Renderer ---
+            renderer = new THREE.WebGLRenderer({ canvas: webglCanvas, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+
+            // --- Texture ---
+            const texture = new THREE.Texture(img);
+            texture.needsUpdate = true; // Tell Three.js to upload the image to the GPU
+            // Set wrapping to Repeat to show tiling
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+
+            // --- Geometry (Custom Quad) ---
+            quadGeometry = new THREE.BufferGeometry();
+            
+            // 4 vertices (V0, V1, V2, V3)
+            const positions = new Float32Array([
+                -1.5, -1.5, 0.0, // V0 (Bottom-Left)
+                 1.5, -1.5, 0.0, // V1 (Bottom-Right)
+                 1.5,  1.5, 0.0, // V2 (Top-Right)
+                -1.5,  1.5, 0.0  // V3 (Top-Left)
+            ]);
+            
+            // 2 triangles (V0-V1-V2 and V0-V2-V3)
+            const indices = new Uint16Array([
+                0, 1, 2,
+                0, 2, 3
+            ]);
+
+            // Initial UVs (V0, V1, V2, V3)
+            const uvs = new Float32Array([
+                0.0, 0.0, // V0
+                1.0, 0.0, // V1
+                1.0, 1.0, // V2
+                0.0, 1.0  // V3
+            ]);
+
+            quadGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            quadGeometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            quadGeometry.setIndex(new THREE.BufferAttribute(indices, 1));
+            
+            // --- Material ---
+            // Use MeshBasicMaterial so we don't need lights
+            const material = new THREE.MeshBasicMaterial({ 
+                map: texture,
+                side: THREE.DoubleSide // See both sides
+            });
+
+            // --- Mesh ---
+            quadMesh = new THREE.Mesh(quadGeometry, material);
+            scene.add(quadMesh);
+
+            // --- Controls ---
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // --- Event Listeners ---
+            document.getElementById('update-btn').addEventListener('click', updateUVs);
+            document.getElementById('reset-btn').addEventListener('click', resetUVs);
+            window.addEventListener('resize', onWindowResize);
+
+            // Start the render loop
+            animate();
+        }
+
+        /**
+         * Render loop
+         */
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Update controls
+            renderer.render(scene, camera);
+        }
+
+        /**
+         * Read values from input boxes and update the quad's UV attribute
+         */
+        function updateUVs() {
+            if (!quadGeometry) return;
+
+            try {
+                // Read all 8 values
+                const u0 = parseFloat(uvInputs.v0u.value);
+                const v0 = parseFloat(uvInputs.v0v.value);
+                const u1 = parseFloat(uvInputs.v1u.value);
+                const v1 = parseFloat(uvInputs.v1v.value);
+                const u2 = parseFloat(uvInputs.v2u.value);
+                const v2 = parseFloat(uvInputs.v2v.value);
+                const u3 = parseFloat(uvInputs.v3u.value);
+                const v3 = parseFloat(uvInputs.v3v.value);
+
+                // Create the new UV array in the correct order
+                const newUVs = new Float32Array([
+                    u0, v0, // V0
+                    u1, v1, // V1
+                    u2, v2, // V2
+                    u3, v3  // V3
+                ]);
+                
+                // Update the buffer attribute
+                quadGeometry.attributes.uv.set(newUVs);
+                
+                // CRITICAL: Tell Three.js to re-upload this buffer to the GPU
+                quadGeometry.attributes.uv.needsUpdate = true;
+
+                console.log("Updated UVs to:", newUVs);
+
+            } catch (e) {
+                console.error("Error parsing UV values:", e);
+            }
+        }
+
+        /**
+         * Reset UVs to their default values
+         */
+        function resetUVs() {
+            uvInputs.v0u.value = "0.0";
+            uvInputs.v0v.value = "0.0";
+            uvInputs.v1u.value = "1.0";
+            uvInputs.v1v.value = "0.0";
+            uvInputs.v2u.value = "1.0";
+            uvInputs.v2v.value = "1.0";
+            uvInputs.v3u.value = "0.0";
+            uvInputs.v3v.value = "1.0";
+
+            // Apply the reset values
+            updateUVs();
+        }
+
+        /**
+         * Handle window resizing
+         */
+        function onWindowResize() {
+            // Resize 2D canvas
+            const texParent = textureCanvas.parentElement;
+            if (texParent.clientWidth > 0 && texParent.clientHeight > 0) {
+                const aspect = textureCanvas.width / textureCanvas.height;
+                let w = texParent.clientWidth;
+                let h = w / aspect;
+                if (h > texParent.clientHeight) {
+                    h = texParent.clientHeight;
+                    w = h * aspect;
+                }
+                textureCanvas.width = w;
+                textureCanvas.height = h;
+                // Redraw image
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => textureCtx.drawImage(img, 0, 0, w, h);
+                img.src = loadedTextureUrl || primaryTextureUrl; // Use the successfully loaded URL
+            }
+
+            // Resize 3D canvas
+            const webglParent = webglCanvas.parentElement;
+            if (webglParent.clientWidth > 0 && webglParent.clientHeight > 0) {
+                camera.aspect = webglParent.clientWidth / webglParent.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(webglParent.clientWidth, webglParent.clientHeight);
+            }
+        }
+
+        // --- Start the application ---
+        //initTextureCanvas(primaryTextureUrl);
+        initTextureCanvas(fallbackTextureUrl);
+		
+    </script>
+</body>
+</html>
