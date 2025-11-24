@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cylindrical Texture Mapping</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js OrbitControls -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js",
+                "three/addons/": "https://cdn.skypack.dev/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        #container3d canvas {
+            display: block;
+        }
+        #coords {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-white">
+    <div class="flex h-screen w-screen">
+        
+        <!-- Left Side: 3D View -->
+        <div class="flex-1 h-full relative border-r border-gray-600">
+            <div id="container3d" class="w-full h-full"></div>
+            <div id="coords" class="absolute bottom-4 left-4 bg-black/50 p-3 rounded-lg font-mono text-sm shadow-lg">
+                <h3 class="font-bold text-base mb-1">Point P (x, y, z)</h3>
+                <div id="coord-text">Click and drag on the cylinder...</div>
+            </div>
+            <div class="absolute top-4 left-4 bg-black/50 p-3 rounded-lg shadow-lg text-sm">
+                Drag cylinder surface to move point. <br/>
+                Right-click/Alt-click and drag to rotate camera.
+            </div>
+        </div>
+        
+        <!-- Right Side: 2D Texture View -->
+        <div class="flex-1 h-full flex flex-col items-center justify-center bg-gray-700 p-4">
+            <h2 class="text-xl font-bold mb-4">2D Texture Space (u, v)</h2>
+            <canvas id="canvas2d" class="bg-white rounded-lg shadow-2xl"></canvas>
+            <div id="uv-coords" class="mt-4 font-mono text-sm bg-gray-800 p-3 rounded-lg">
+                (u, v) = (-, -)
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Global Variables ---
+        let scene, camera, renderer, controls, raycaster;
+        let cylinder, pointIndicator, seamLine;
+        let mouse = new THREE.Vector2();
+        let pointP = new THREE.Vector3();
+        let isDragging = false;
+
+        const container3D = document.getElementById('container3d');
+        const coordsText = document.getElementById('coord-text');
+        const uvCoordsText = document.getElementById('uv-coords');
+
+        // 2D Canvas
+        const canvas2d = document.getElementById('canvas2d');
+        const ctx2d = canvas2d.getContext('2d');
+        const canvasSize = 400;
+        canvas2d.width = canvasSize;
+        canvas2d.height = canvasSize;
+
+        // Cylinder parameters
+        const CYLINDER_HEIGHT = 10;
+        const CYLINDER_RADIUS = 4;
+
+        // --- Initialization ---
+        init();
+        animate();
+
+        function init() {
+            // 1. Setup 3D Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2d3748); // bg-gray-800
+
+            // 2. Setup Camera
+            camera = new THREE.PerspectiveCamera(75, container3D.clientWidth / container3D.clientHeight, 0.1, 1000);
+            camera.position.set(5, CYLINDER_HEIGHT / 2, 10);
+            camera.lookAt(0, 0, 0);
+
+            // 3. Setup Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container3D.appendChild(renderer.domElement);
+
+            // 4. Setup Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.enablePan = false;
+            // Allow right-click (or alt/option-click) to rotate
+            controls.mouseButtons = {
+                LEFT: null, // Disable left-click rotate
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE
+            };
+
+            // 5. Add Lights
+            const ambientLight = new THREE.AmbientLight(0xaaaaaa);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
+
+            // 6. Create Cylinder
+            const cylinderGeo = new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, CYLINDER_HEIGHT, 64, 1, false);
+            const cylinderMat = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                metalness: 0.1,
+                roughness: 0.5,
+            });
+            cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
+            scene.add(cylinder);
+
+            // 7. Create the "Seam"
+            // The seam is where theta = +/- PI, which is along the negative X-axis (x = -radius, z = 0)
+            const seamPoints = [
+                new THREE.Vector3(-CYLINDER_RADIUS, -CYLINDER_HEIGHT / 2, 0),
+                new THREE.Vector3(-CYLINDER_RADIUS, CYLINDER_HEIGHT / 2, 0)
+            ];
+            const seamGeo = new THREE.BufferGeometry().setFromPoints(seamPoints);
+            const seamMat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 }); // Red
+            seamLine = new THREE.Line(seamGeo, seamMat);
+            scene.add(seamLine);
+
+            // 8. Create Point Indicator
+            const indicatorGeo = new THREE.SphereGeometry(0.15, 32, 32);
+            const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            pointIndicator = new THREE.Mesh(indicatorGeo, indicatorMat);
+            pointIndicator.visible = false;
+            scene.add(pointIndicator);
+
+            // 9. Setup Raycaster
+            raycaster = new THREE.Raycaster();
+
+            // 10. Setup 2D Canvas
+            drawCheckerboard();
+
+            // 11. Add Event Listeners
+            renderer.domElement.addEventListener('pointerdown', onPointerDown);
+            renderer.domElement.addEventListener('pointermove', onPointerMove);
+            renderer.domElement.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // --- 2D Canvas Functions ---
+
+        function drawCheckerboard() {
+            const numBlocks = 10;
+            const blockSize = canvasSize / numBlocks;
+            ctx2d.clearRect(0, 0, canvasSize, canvasSize);
+            
+            for (let i = 0; i < numBlocks; i++) {
+                for (let j = 0; j < numBlocks; j++) {
+                    ctx2d.fillStyle = (i + j) % 2 === 0 ? '#f0f0f0' : '#c0c0c0';
+                    ctx2d.fillRect(i * blockSize, j * blockSize, blockSize, blockSize);
+                }
+            }
+        }
+
+        function update2DCanvas(u, v) {
+            // Redraw checkerboard
+            drawCheckerboard();
+
+            // Calculate pixel coordinates
+            // u maps to x-axis, v maps to y-axis
+            // We use (1 - v) because canvas Y=0 is at the top, but texture V=0 is at the bottom
+            const px = u * canvasSize;
+            const py = (1 - v) * canvasSize;
+
+            // Draw red circle
+            ctx2d.beginPath();
+            ctx2d.arc(px, py, 8, 0, 2 * Math.PI);
+            ctx2d.fillStyle = 'rgba(255, 0, 0, 0.9)';
+            ctx2d.fill();
+            ctx2d.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx2d.lineWidth = 2;
+            ctx2d.stroke();
+            
+            // Update UV coordinates text
+            uvCoordsText.innerText = `(u, v) = (${u.toFixed(3)}, ${v.toFixed(3)})`;
+        }
+
+        // --- 3D Event Handlers ---
+
+        function onPointerDown(event) {
+            // Only respond to left-clicks (button 0)
+            if (event.button !== 0) return;
+
+            isDragging = true;
+            controls.enabled = false; // Disable camera rotation
+            updateMouseAndRaycast(event);
+        }
+
+        function onPointerMove(event) {
+            if (isDragging) {
+                updateMouseAndRaycast(event);
+            }
+        }
+
+        function onPointerUp(event) {
+            // Only respond to left-clicks (button 0)
+            if (event.button !== 0) return;
+            
+            isDragging = false;
+            controls.enabled = true; // Re-enable camera rotation
+        }
+
+        function updateMouseAndRaycast(event) {
+            // Calculate normalized device coordinates
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Update raycaster
+            raycaster.setFromCamera(mouse, camera);
+
+            // Find intersections
+            const intersects = raycaster.intersectObject(cylinder);
+
+            if (intersects.length > 0) {
+                // Get intersection point
+                pointP.copy(intersects[0].point);
+
+                // Update 3D indicator
+                pointIndicator.position.copy(pointP);
+                pointIndicator.visible = true;
+
+                // Update 3D coordinates display
+                coordsText.innerHTML = `
+                    x: ${pointP.x.toFixed(3)}<br/>
+                    y: ${pointP.y.toFixed(3)}<br/>
+                    z: ${pointP.z.toFixed(3)}
+                `;
+
+                // --- Calculate Cylindrical Mapping ---
+                
+                // v = (P.y + height/2) / height
+                // P.y ranges from -H/2 to +H/2
+                // v ranges from 0 to 1
+                const v = (pointP.y + CYLINDER_HEIGHT / 2) / CYLINDER_HEIGHT;
+
+                // theta = Math.atan2(P.z, P.x)
+                // theta ranges from -PI to +PI
+                const theta = Math.atan2(pointP.z, pointP.x);
+
+                // u = (theta + Math.PI) / (2 * Math.PI)
+                // u ranges from 0 to 1
+                const u = (theta + Math.PI) / (2 * Math.PI);
+
+                // Update 2D canvas
+                update2DCanvas(u, v);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = container3D.clientWidth / container3D.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container3D.clientWidth, container3D.clientHeight);
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Only if damping or auto-rotate is enabled
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>

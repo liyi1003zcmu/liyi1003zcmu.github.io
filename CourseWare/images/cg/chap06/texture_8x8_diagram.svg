@@ -1,0 +1,193 @@
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800" id="diagram">
+            <style>
+              .title { font: 700 20px sans-serif; fill: #222; }
+              .subtitle { font: 600 14px sans-serif; fill: #333; }
+              .label { font: 12px sans-serif; fill: #333; }
+              .small { font: 11px sans-serif; fill: #444; }
+              .mono { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #222; }
+              .box { fill: #fff; stroke: #bbb; }
+              .grid { stroke: #aaa; stroke-width: 1; }
+              .grid-bold { stroke: #666; stroke-width: 2; }
+              .tileA { fill: #e8f0fe; }
+              .tileB { fill: #e6f4ea; }
+              .tileC { fill: #fde7e9; }
+              .tileD { fill: #fff4cc; }
+              .arrow { stroke: #666; stroke-width: 2; marker-end: url(#arrow); fill: none; }
+              .legend { font: 12px sans-serif; fill: #111; }
+              .pad { fill: #f5f5f5; stroke: #ddd; }
+              .mem { fill: #fafafa; stroke: #bbb; }
+            </style>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                <path d="M0,0 L10,4 L0,8 Z" fill="#666"/>
+              </marker>
+            </defs>
+
+            <!-- Panel titles -->
+            <text x="30" y="30" class="title">8×8 纹理对象：存储与采样示意</text>
+
+            <!-- Left Panel: Linear layout -->
+            <g transform="translate(20,60)">
+              <rect x="0" y="0" width="300" height="560" class="box" rx="8"/>
+              <text x="16" y="28" class="subtitle">线性布局（Row-major）</text>
+              <text x="16" y="52" class="small">示例：格式 RGBA8（4 字节/像素），8×8 无压缩</text>
+
+              <!-- 8x8 grid -->
+              <g transform="translate(16,70)">
+                <!-- grid cells -->
+                <!-- draw grid background -->
+                <rect x="0" y="0" width="256" height="256" fill="#fff" stroke="#888" stroke-width="1"/>
+                <!-- Bold outer -->
+                <rect x="0" y="0" width="256" height="256" class="grid-bold" fill="none"/>
+                <!-- internal lines -->
+                <g>
+                  <!-- vertical lines -->
+                  <g>
+                    <line x1="32" y1="0" x2="32" y2="256" class="grid"/>
+                    <line x1="64" y1="0" x2="64" y2="256" class="grid"/>
+                    <line x1="96" y1="0" x2="96" y2="256" class="grid"/>
+                    <line x1="128" y1="0" x2="128" y2="256" class="grid"/>
+                    <line x1="160" y1="0" x2="160" y2="256" class="grid"/>
+                    <line x1="192" y1="0" x2="192" y2="256" class="grid"/>
+                    <line x1="224" y1="0" x2="224" y2="256" class="grid"/>
+                  </g>
+                  <!-- horizontal lines -->
+                  <g>
+                    <line x1="0" y1="32" x2="256" y2="32" class="grid"/>
+                    <line x1="0" y1="64" x2="256" y2="64" class="grid"/>
+                    <line x1="0" y1="96" x2="256" y2="96" class="grid"/>
+                    <line x1="0" y1="128" x2="256" y2="128" class="grid"/>
+                    <line x1="0" y1="160" x2="256" y2="160" class="grid"/>
+                    <line x1="0" y1="192" x2="256" y2="192" class="grid"/>
+                    <line x1="0" y1="224" x2="256" y2="224" class="grid"/>
+                  </g>
+                </g>
+
+                <!-- annotate coordinates on first row and column -->
+                <g class="small" fill="#333">
+                  <!-- x labels on top -->
+                  <text x="8" y="-6">x=0</text>
+                  <text x="40" y="-6">1</text>
+                  <text x="72" y="-6">2</text>
+                  <text x="104" y="-6">3</text>
+                  <text x="136" y="-6">4</text>
+                  <text x="168" y="-6">5</text>
+                  <text x="200" y="-6">6</text>
+                  <text x="232" y="-6">7</text>
+                  <!-- y labels -->
+                  <text x="-38" y="20">y=0</text>
+                  <text x="-26" y="52">1</text>
+                  <text x="-26" y="84">2</text>
+                  <text x="-26" y="116">3</text>
+                  <text x="-26" y="148">4</text>
+                  <text x="-26" y="180">5</text>
+                  <text x="-26" y="212">6</text>
+                  <text x="-26" y="244">7</text>
+                </g>
+
+                <!-- Row-major order arrow -->
+                <path d="M 0 272 L 256 272" class="arrow"/>
+                <text x="0" y="292" class="label">行序存储：每行 8 像素 × 4B = 32B</text>
+                <text x="0" y="310" class="mono">address = base + y * row_pitch + x * 4</text>
+
+                <!-- memory strip -->
+                <g transform="translate(0,330)">
+                  <rect x="0" y="0" width="256" height="22" class="mem"/>
+                  <!-- ticks per pixel -->
+                  <g>
+                    <line x1="32" y1="0" x2="32" y2="22" stroke="#ddd"/>
+                    <line x1="64" y1="0" x2="64" y2="22" stroke="#ddd"/>
+                    <line x1="96" y1="0" x2="96" y2="22" stroke="#ddd"/>
+                    <line x1="128" y1="0" x2="128" y2="22" stroke="#ddd"/>
+                    <line x1="160" y1="0" x2="160" y2="22" stroke="#ddd"/>
+                    <line x1="192" y1="0" x2="192" y2="22" stroke="#ddd"/>
+                    <line x1="224" y1="0" x2="224" y2="22" stroke="#ddd"/>
+                  </g>
+                  <text x="4" y="16" class="small">(0,0) … (7,0)  共 32B</text>
+                </g>
+
+                <text x="0" y="372" class="small">总大小（仅 level 0）：8 行 × 32B/行 = 256B</text>
+                <text x="0" y="392" class="small">每像素顺序：RGBA8 → [R,G,B,A]（各 1 字节）</text>
+                <text x="0" y="412" class="small">行对齐：如需 16B 对齐，32B 已满足，无需 padding</text>
+              </g>
+            </g>
+
+            <!-- Middle Panel: Tiled layout -->
+            <g transform="translate(340,60)">
+              <rect x="0" y="0" width="300" height="560" class="box" rx="8"/>
+              <text x="16" y="28" class="subtitle">瓦片/分块布局（示意）</text>
+              <text x="16" y="52" class="small">示例：4×4 瓦片，提升采样局部性</text>
+
+              <!-- Tiled 8x8 -->
+              <g transform="translate(16,70)">
+                <!-- outer -->
+                <rect x="0" y="0" width="256" height="256" fill="#fff" stroke="#888" stroke-width="1"/>
+                <!-- four tiles -->
+                <rect x="0" y="0" width="128" height="128" class="tileA" stroke="#777"/>
+                <rect x="128" y="0" width="128" height="128" class="tileB" stroke="#777"/>
+                <rect x="0" y="128" width="128" height="128" class="tileC" stroke="#777"/>
+                <rect x="128" y="128" width="128" height="128" class="tileD" stroke="#777"/>
+
+                <!-- inner 4x4 grid in top-left tile for clarity -->
+                <g transform="translate(0,0)">
+                  <rect x="0" y="0" width="128" height="128" fill="none" stroke="#666" stroke-width="1"/>
+                  <!-- internal 4x4 -->
+                  <line x1="32" y1="0" x2="32" y2="128" class="grid"/>
+                  <line x1="64" y1="0" x2="64" y2="128" class="grid"/>
+                  <line x1="96" y1="0" x2="96" y2="128" class="grid"/>
+                  <line x1="0" y1="32" x2="128" y2="32" class="grid"/>
+                  <line x1="0" y1="64" x2="128" y2="64" class="grid"/>
+                  <line x1="0" y1="96" x2="128" y2="96" class="grid"/>
+                </g>
+
+                <!-- order arrows showing tile order -->
+                <path d="M 16 144 L 112 144" class="arrow"/>
+                <path d="M 144 144 L 240 144" class="arrow"/>
+                <path d="M 16 272 L 112 272" class="arrow"/>
+                <path d="M 144 272 L 240 272" class="arrow"/>
+
+                <text x="0" y="300" class="small">存储顺序（示例）：左上 → 右上 → 左下 → 右下</text>
+                <text x="0" y="320" class="small">每个 4×4 瓦片字节数：16 像素 × 4B = 64B</text>
+                <text x="0" y="340" class="small">块内可能使用 Morton/Z 字形以优化二维局部性</text>
+              </g>
+            </g>
+
+            <!-- Right Panel: Mipmaps -->
+            <g transform="translate(660,60)">
+              <rect x="0" y="0" width="340" height="560" class="box" rx="8"/>
+              <text x="16" y="28" class="subtitle">Mipmap 层级与大小</text>
+              <text x="16" y="52" class="small">层级紧随其后存储（实际可能含层间对齐）</text>
+
+              <g transform="translate(16,80)">
+                <!-- level 0 -->
+                <rect x="0" y="0" width="192" height="192" fill="#fff" stroke="#777"/>
+                <text x="204" y="16" class="label">Level 0：8×8</text>
+                <text x="204" y="34" class="small">字节：8×8×4 = 256B</text>
+
+                <!-- level 1 -->
+                <rect x="0" y="210" width="96" height="96" fill="#fff" stroke="#777"/>
+                <text x="204" y="226" class="label">Level 1：4×4</text>
+                <text x="204" y="244" class="small">字节：4×4×4 = 64B</text>
+
+                <!-- level 2 -->
+                <rect x="0" y="318" width="48" height="48" fill="#fff" stroke="#777"/>
+                <text x="204" y="334" class="label">Level 2：2×2</text>
+                <text x="204" y="352" class="small">字节：2×2×4 = 16B</text>
+
+                <!-- level 3 -->
+                <rect x="0" y="378" width="24" height="24" fill="#fff" stroke="#777"/>
+                <text x="204" y="394" class="label">Level 3：1×1</text>
+                <text x="204" y="412" class="small">字节：1×1×4 = 4B</text>
+
+                <!-- total -->
+                <text x="0" y="448" class="label">合计（无对齐）：256 + 64 + 16 + 4 = 340B</text>
+                <text x="0" y="468" class="small">注意：实际分配通常对齐到行/切片边界，略大于计算值</text>
+              </g>
+            </g>
+
+            <!-- Bottom legend -->
+            <g transform="translate(20,640)">
+              <text x="0" y="0" class="legend">说明：左侧展示线性布局与行序、字节计算与寻址公式；中间展示 4×4 瓦片的块级存储顺序；右侧展示 mipmap 层级及各层大小。</text>
+            </g>
+          </svg>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDA 算法交互演示 - 计算机图形学</title>
+    
+    <!-- 引入 React, ReactDOM, Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 引入 Tailwind CSS 用于快速样式 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .canvas-container {
+            background-color: #252526;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        .panel {
+            background-color: #2d2d30;
+            border: 1px solid #3e3e42;
+        }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2d2d30; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 网格配置
+        const GRID_SIZE = 20; // 20x20 网格
+        const CELL_SIZE = 25; // 每个格子像素大小
+        const CANVAS_SIZE = GRID_SIZE * CELL_SIZE;
+
+        const App = () => {
+            // 状态管理
+            const [scenario, setScenario] = useState('k_small'); // 'k_small' (<1) or 'k_large' (>1)
+            const [step, setStep] = useState(0);
+            const [points, setPoints] = useState([]);
+            const [mathData, setMathData] = useState({ dx: 0, dy: 0, steps: 0, xInc: 0, yInc: 0 });
+            const [isPlaying, setIsPlaying] = useState(false);
+            
+            const canvasRef = useRef(null);
+
+            // 预设场景坐标
+            const scenarios = {
+                k_small: { start: { x: 2, y: 3 }, end: { x: 14, y: 9 }, title: "斜率 k < 1 (X为主轴)" },
+                k_large: { start: { x: 3, y: 2 }, end: { x: 9, y: 16 }, title: "斜率 k > 1 (Y为主轴)" }
+            };
+
+            // 初始化 DDA 计算
+            useEffect(() => {
+                calculateDDA();
+                setStep(0);
+                setIsPlaying(false);
+            }, [scenario]);
+
+            // 自动播放逻辑
+            useEffect(() => {
+                let timer;
+                if (isPlaying && step < points.length) {
+                    timer = setTimeout(() => {
+                        setStep(s => s + 1);
+                    }, 200);
+                } else if (step >= points.length) {
+                    setIsPlaying(false);
+                }
+                return () => clearTimeout(timer);
+            }, [isPlaying, step, points]);
+
+            // 绘制 Canvas
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                const currentScenario = scenarios[scenario];
+
+                // 清空画布
+                ctx.fillStyle = "#1e1e1e";
+                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+                // 1. 绘制网格
+                drawGrid(ctx);
+
+                // 2. 绘制坐标轴 (模拟第一象限，原点在左下角)
+                drawAxes(ctx);
+
+                // 3. 绘制理想直线 (红色)
+                drawIdealLine(ctx, currentScenario.start, currentScenario.end);
+
+                // 4. 绘制已光栅化的像素
+                points.slice(0, step).forEach((pt, index) => {
+                    const isCurrent = index === step - 1;
+                    drawPixel(ctx, pt.rx, pt.ry, isCurrent ? "#ffff00" : "#00d4ff", isCurrent);
+                });
+
+            }, [scenario, step, points]);
+
+            // DDA 核心算法实现
+            const calculateDDA = () => {
+                const { start, end } = scenarios[scenario];
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                
+                // 核心：判断步长由谁决定
+                // 如果 |k| <= 1, dx >= dy, steps = dx
+                // 如果 |k| > 1, dy > dx, steps = dy
+                const steps = Math.max(Math.abs(dx), Math.abs(dy));
+                
+                const xInc = dx / steps;
+                const yInc = dy / steps;
+
+                let x = start.x;
+                let y = start.y;
+
+                const newPoints = [];
+                
+                // 加入起点
+                newPoints.push({
+                    step: 0,
+                    x: x,
+                    y: y,
+                    rx: Math.round(x),
+                    ry: Math.round(y)
+                });
+
+                for (let i = 0; i < steps; i++) {
+                    x += xInc;
+                    y += yInc;
+                    newPoints.push({
+                        step: i + 1,
+                        x: parseFloat(x.toFixed(2)), // 保留两位小数方便展示
+                        y: parseFloat(y.toFixed(2)),
+                        rx: Math.round(x),
+                        ry: Math.round(y)
+                    });
+                }
+
+                setPoints(newPoints);
+                setMathData({ 
+                    dx, dy, steps, 
+                    xInc: parseFloat(xInc.toFixed(3)), 
+                    yInc: parseFloat(yInc.toFixed(3)),
+                    k: (dy/dx).toFixed(2)
+                });
+            };
+
+            // --- 绘图辅助函数 ---
+
+            // 坐标转换：数学坐标(y向上) -> 屏幕坐标(y向下)
+            // 并在每个格子中心绘制
+            const toScreen = (x, y) => {
+                return {
+                    x: x * CELL_SIZE,
+                    y: CANVAS_SIZE - (y + 1) * CELL_SIZE
+                };
+            };
+
+            const drawGrid = (ctx) => {
+                ctx.strokeStyle = "#333";
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= GRID_SIZE; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * CELL_SIZE, 0);
+                    ctx.lineTo(i * CELL_SIZE, CANVAS_SIZE);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * CELL_SIZE);
+                    ctx.lineTo(CANVAS_SIZE, i * CELL_SIZE);
+                    ctx.stroke();
+                }
+            };
+
+            const drawAxes = (ctx) => {
+                ctx.strokeStyle = "#666";
+                ctx.lineWidth = 2;
+                // Y轴
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, CANVAS_SIZE);
+                ctx.stroke();
+                // X轴
+                ctx.beginPath();
+                ctx.moveTo(0, CANVAS_SIZE);
+                ctx.lineTo(CANVAS_SIZE, CANVAS_SIZE);
+                ctx.stroke();
+            };
+
+            const drawPixel = (ctx, x, y, color, isCurrent) => {
+                const pos = toScreen(x, y);
+                ctx.fillStyle = color;
+                // 稍微留一点缝隙，体现像素感
+                ctx.fillRect(pos.x + 1, pos.y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                
+                // 如果是当前点，画个框
+                if (isCurrent) {
+                    ctx.strokeStyle = "white";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(pos.x + 1, pos.y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                }
+            };
+
+            const drawIdealLine = (ctx, p0, p1) => {
+                const start = toScreen(p0.x, p0.y);
+                const end = toScreen(p1.x, p1.y);
+                
+                // 修正到像素中心
+                const centerOffset = CELL_SIZE / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(start.x + centerOffset, start.y + centerOffset);
+                ctx.lineTo(end.x + centerOffset, end.y + centerOffset);
+                ctx.strokeStyle = "#ff4d4d";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]); // 虚线
+                ctx.stroke();
+                ctx.setLineDash([]);
+            };
+
+            return (
+                <div className="min-h-screen p-6 flex flex-col items-center">
+                    <header className="mb-6 text-center">
+                        <h1 className="text-3xl font-bold text-blue-400 mb-2">DDA 扫描转换算法演示</h1>
+                        <p className="text-gray-400 text-sm">数值微分分析器 (Digital Differential Analyzer)</p>
+                    </header>
+
+                    <main className="flex flex-col lg:flex-row gap-8 items-start max-w-6xl w-full">
+                        
+                        {/* 左侧：画布区 */}
+                        <div className="flex flex-col gap-4">
+                            <div className="canvas-container p-1 relative">
+                                <canvas 
+                                    ref={canvasRef} 
+                                    width={CANVAS_SIZE} 
+                                    height={CANVAS_SIZE}
+                                    className="cursor-crosshair block"
+                                />
+                                <div className="absolute bottom-2 right-2 text-xs text-gray-500 select-none">
+                                    Coordinate System: First Quadrant
+                                </div>
+                            </div>
+                            
+                            {/* 控制栏 */}
+                            <div className="panel p-4 rounded-lg flex gap-4 justify-between items-center">
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setScenario('k_small')}
+                                        className={`px-3 py-1 rounded text-sm font-bold transition ${scenario === 'k_small' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                                    >
+                                        情形一: 0 &le; k &le; 1
+                                    </button>
+                                    <button 
+                                        onClick={() => setScenario('k_large')}
+                                        className={`px-3 py-1 rounded text-sm font-bold transition ${scenario === 'k_large' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                                    >
+                                        情形二: k &gt; 1
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => {setIsPlaying(false); setStep(0);}}
+                                        className="px-3 py-1 bg-gray-600 hover:bg-gray-500 rounded text-white text-sm"
+                                    >
+                                        重置
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsPlaying(!isPlaying)}
+                                        className="px-3 py-1 bg-green-600 hover:bg-green-500 rounded text-white text-sm w-24"
+                                    >
+                                        {isPlaying ? "暂停" : "自动演示"}
+                                    </button>
+                                    <button 
+                                        onClick={() => {setIsPlaying(false); setStep(Math.min(step + 1, points.length));}}
+                                        className="px-3 py-1 bg-blue-500 hover:bg-blue-400 rounded text-white text-sm"
+                                        disabled={step >= points.length}
+                                    >
+                                        单步 &gt;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 右侧：信息与数据区 */}
+                        <div className="flex flex-col gap-4 flex-1 w-full lg:w-auto">
+                            
+                            {/* 算法概览 */}
+                            <div className="panel p-5 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-white border-b border-gray-600 pb-2 mb-3">算法参数解析</h3>
+                                <div className="grid grid-cols-2 gap-y-2 text-sm">
+                                    <div className="text-gray-400">起点 P0:</div>
+                                    <div className="font-mono text-white">({scenarios[scenario].start.x}, {scenarios[scenario].start.y})</div>
+                                    
+                                    <div className="text-gray-400">终点 P1:</div>
+                                    <div className="font-mono text-white">({scenarios[scenario].end.x}, {scenarios[scenario].end.y})</div>
+
+                                    <div className="text-gray-400">增量 (dx, dy):</div>
+                                    <div className="font-mono text-yellow-400">dx={mathData.dx}, dy={mathData.dy}</div>
+
+                                    <div className="text-gray-400">斜率 k:</div>
+                                    <div className="font-mono text-blue-400">{mathData.k}</div>
+
+                                    <div className="text-gray-400">主位移方向:</div>
+                                    <div className="font-bold text-green-400">
+                                        {Math.abs(mathData.dx) >= Math.abs(mathData.dy) ? "X 轴 (Steps = dx)" : "Y 轴 (Steps = dy)"}
+                                    </div>
+
+                                    <div className="text-gray-400">步数 (Steps):</div>
+                                    <div className="font-mono text-white">{mathData.steps}</div>
+
+                                    <div className="text-gray-400">每步增量:</div>
+                                    <div className="font-mono text-purple-400">
+                                        x += {mathData.xInc}, y += {mathData.yInc}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 实时追踪表 */}
+                            <div className="panel rounded-lg shadow-lg flex-1 overflow-hidden flex flex-col" style={{maxHeight: '500px'}}>
+                                <div className="p-3 bg-gray-800 border-b border-gray-600 font-bold text-sm">
+                                    计算过程追踪表
+                                </div>
+                                <div className="overflow-y-auto flex-1 p-2">
+                                    <table className="w-full text-sm text-left border-collapse">
+                                        <thead className="text-xs text-gray-400 uppercase bg-gray-700 sticky top-0">
+                                            <tr>
+                                                <th className="px-3 py-2 rounded-tl-lg">Step</th>
+                                                <th className="px-3 py-2">X (Float)</th>
+                                                <th className="px-3 py-2">Y (Float)</th>
+                                                <th className="px-3 py-2">Pixel (Round)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="font-mono">
+                                            {points.map((pt, idx) => (
+                                                <tr key={idx} 
+                                                    className={`border-b border-gray-700 transition-colors
+                                                        ${idx === step - 1 ? 'bg-yellow-900 text-white' : ''}
+                                                        ${idx >= step ? 'opacity-30' : 'opacity-100'}
+                                                    `}
+                                                >
+                                                    <td className="px-3 py-2 text-gray-400">{pt.step}</td>
+                                                    <td className="px-3 py-2 text-blue-300">{pt.x}</td>
+                                                    <td className="px-3 py-2 text-green-300">{pt.y}</td>
+                                                    <td className="px-3 py-2 text-white font-bold">({pt.rx}, {pt.ry})</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            {/* 教学提示 */}
+                            <div className="bg-blue-900/30 border border-blue-800 p-3 rounded text-xs text-blue-200">
+                                💡 <strong>专家提示：</strong> 
+                                {Math.abs(mathData.dx) >= Math.abs(mathData.dy) 
+                                    ? " 当前斜率平缓，X 变化比 Y 快。我们以 X 为单位步长（+1），计算 Y 的浮点增量。"
+                                    : " 当前斜率陡峭，Y 变化比 X 快。如果强行让 X+1，直线会断开（不连续）。因此我们必须以 Y 为单位步长（+1），计算 X 的浮点增量。"}
+                            </div>
+
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

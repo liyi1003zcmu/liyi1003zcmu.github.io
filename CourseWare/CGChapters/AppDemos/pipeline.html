@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机图形学渲染流水线详解</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .desc {
+            max-width: 800px;
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .svg-container {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            width: 100%;
+            max-width: 1200px;
+        }
+        /* Tooltip style simulation */
+        text {
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>计算机图形学渲染流水线 (Rendering Pipeline)</h1>
+    <p class="desc">从几何数据到屏幕像素的奇幻旅程。图中展示了从应用程序阶段到最终显示的关键步骤，包括坐标变换、光栅化及片元处理。</p>
+
+    <div class="svg-container">
+        <svg width="1100" height="750" viewBox="0 0 1100 750" xmlns="http://www.w3.org/2000/svg">
+            <!-- Definitions for arrows and gradients -->
+            <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,6 L9,3 z" fill="#555" />
+                </marker>
+                <linearGradient id="gradVertex" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="gradPrim" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ffe0b2;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="gradRaster" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#f3e5f5;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#e1bee7;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="gradFrag" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#e8f5e9;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#c8e6c9;stop-opacity:1" />
+                </linearGradient>
+                <filter id="dropShadow" height="130%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                    <feOffset dx="2" dy="2" result="offsetblur"/>
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.3"/>
+                    </feComponentTransfer>
+                    <feMerge> 
+                        <feMergeNode/>
+                        <feMergeNode in="SourceGraphic"/> 
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- Background Flow Lines -->
+            <path d="M150 130 L150 180" stroke="#999" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M150 380 L150 500" stroke="#999" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M300 280 L360 280" stroke="#999" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M560 280 L620 280" stroke="#999" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M820 280 L880 280" stroke="#999" stroke-width="2" marker-end="url(#arrow)"/>
+            
+            <!-- STAGE 1: INPUT -->
+            <g transform="translate(50, 50)">
+                <rect x="0" y="0" width="200" height="80" rx="10" fill="#f5f5f5" stroke="#333" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="100" y="30" text-anchor="middle" font-weight="bold" font-size="16">应用程序阶段 (CPU)</text>
+                <text x="100" y="55" text-anchor="middle" font-size="14" fill="#555">顶点数据 (Points, Indices)</text>
+            </g>
+
+            <!-- STAGE 2: VERTEX PROCESSING -->
+            <g transform="translate(50, 180)">
+                <rect x="0" y="0" width="250" height="200" rx="10" fill="url(#gradVertex)" stroke="#1976d2" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="125" y="30" text-anchor="middle" font-weight="bold" font-size="18" fill="#0d47a1">1. 顶点处理 (Vertex Shader)</text>
+                
+                <!-- Sub-steps -->
+                <rect x="20" y="50" width="210" height="30" rx="5" fill="white" stroke="#64b5f6"/>
+                <text x="125" y="70" text-anchor="middle" font-size="14">模型变换 (Model Transform)</text>
+                <text x="240" y="70" font-size="10" fill="#666">Model -> World</text>
+
+                <rect x="20" y="90" width="210" height="30" rx="5" fill="white" stroke="#64b5f6"/>
+                <text x="125" y="110" text-anchor="middle" font-size="14">视图变换 (View Transform)</text>
+                <text x="240" y="110" font-size="10" fill="#666">World -> View</text>
+
+                <rect x="20" y="130" width="210" height="30" rx="5" fill="white" stroke="#64b5f6"/>
+                <text x="125" y="150" text-anchor="middle" font-size="14">投影变换 (Projection)</text>
+                <text x="240" y="150" font-size="10" fill="#666">View -> Clip</text>
+                
+                <text x="125" y="185" text-anchor="middle" font-size="12" fill="#0d47a1" font-style="italic">* 计算光照法线 / 纹理坐标传递</text>
+            </g>
+
+            <!-- STAGE 3: PRIMITIVE ASSEMBLY -->
+            <g transform="translate(360, 180)">
+                <rect x="0" y="0" width="200" height="200" rx="10" fill="url(#gradPrim)" stroke="#f57c00" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="100" y="30" text-anchor="middle" font-weight="bold" font-size="18" fill="#e65100">2. 图元组装与裁剪</text>
+                
+                <rect x="20" y="50" width="160" height="30" rx="5" fill="white" stroke="#ffb74d"/>
+                <text x="100" y="70" text-anchor="middle" font-size="14">图元组装 (Assembly)</text>
+                
+                <rect x="20" y="90" width="160" height="30" rx="5" fill="white" stroke="#ffb74d"/>
+                <text x="100" y="110" text-anchor="middle" font-size="14">裁剪 (Clipping)</text>
+                
+                <rect x="20" y="130" width="160" height="30" rx="5" fill="white" stroke="#ffb74d"/>
+                <text x="100" y="150" text-anchor="middle" font-size="14">透视除法 ( / w )</text>
+                <text x="190" y="150" font-size="10" fill="#666">Clip -> NDC</text>
+                
+                 <rect x="20" y="165" width="160" height="25" rx="5" fill="white" stroke="#ffb74d"/>
+                <text x="100" y="182" text-anchor="middle" font-size="12">视口变换 (Viewport)</text>
+            </g>
+
+            <!-- STAGE 4: RASTERIZATION -->
+            <g transform="translate(620, 180)">
+                <rect x="0" y="0" width="200" height="200" rx="10" fill="url(#gradRaster)" stroke="#8e24aa" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="100" y="30" text-anchor="middle" font-weight="bold" font-size="18" fill="#4a148c">3. 光栅化</text>
+                
+                <rect x="20" y="60" width="160" height="40" rx="5" fill="white" stroke="#ba68c8"/>
+                <text x="100" y="85" text-anchor="middle" font-size="14">扫描转换</text>
+                
+                <rect x="20" y="120" width="160" height="40" rx="5" fill="white" stroke="#ba68c8"/>
+                <text x="100" y="140" text-anchor="middle" font-size="14">属性插值</text>
+                <text x="100" y="155" text-anchor="middle" font-size="10" fill="#666">(重心坐标插值)</text>
+
+                <text x="100" y="190" text-anchor="middle" font-size="12" fill="#4a148c" font-style="italic">生成片元 (Fragments)</text>
+            </g>
+
+            <!-- STAGE 5: FRAGMENT PROCESSING -->
+            <g transform="translate(880, 150)">
+                <rect x="0" y="0" width="200" height="260" rx="10" fill="url(#gradFrag)" stroke="#2e7d32" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="100" y="30" text-anchor="middle" font-weight="bold" font-size="18" fill="#1b5e20">4. 片元处理 & 测试</text>
+                
+                <rect x="20" y="50" width="160" height="40" rx="5" fill="white" stroke="#81c784"/>
+                <text x="100" y="70" text-anchor="middle" font-size="14" font-weight="bold">片元着色器</text>
+                <text x="100" y="85" text-anchor="middle" font-size="12">(光照计算, 纹理映射)</text>
+                
+                <path d="M100 95 L100 110" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <rect x="20" y="115" width="160" height="30" rx="5" fill="white" stroke="#81c784"/>
+                <text x="100" y="135" text-anchor="middle" font-size="13">Alpha 测试 / 裁剪测试</text>
+
+                <path d="M100 145 L100 155" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <rect x="20" y="160" width="160" height="30" rx="5" fill="white" stroke="#81c784"/>
+                <text x="100" y="180" text-anchor="middle" font-size="13" fill="#d32f2f">深度测试 (隐面消除)</text>
+                
+                <path d="M100 190 L100 200" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <rect x="20" y="205" width="160" height="30" rx="5" fill="white" stroke="#81c784"/>
+                <text x="100" y="225" text-anchor="middle" font-size="13">混合 (Blending)</text>
+            </g>
+
+             <!-- STAGE 6: FRAMEBUFFER -->
+             <g transform="translate(880, 450)">
+                <rect x="0" y="0" width="200" height="80" rx="10" fill="#333" stroke="#000" stroke-width="2" filter="url(#dropShadow)"/>
+                <text x="100" y="35" text-anchor="middle" font-weight="bold" font-size="18" fill="white">帧缓存</text>
+                <text x="100" y="55" text-anchor="middle" font-size="14" fill="#ccc">Frame Buffer</text>
+            </g>
+
+            <path d="M980 410 L980 450" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+
+            <!-- Connecting Text / Annotations -->
+            <g transform="translate(50, 500)">
+                <text x="0" y="20" font-size="14" font-weight="bold" fill="#333">坐标系变换流程 (Coordinate Spaces):</text>
+                <text x="20" y="50" font-family="monospace" font-size="14">
+                    Local Space (模型) → World Space (世界) → View Space (观察) → Clip Space (裁剪) → NDC (标准化设备) → Screen Space (屏幕)
+                </text>
+            </g>
+            
+            <!-- Legend/Notes -->
+             <g transform="translate(50, 580)">
+                <rect x="0" y="0" width="1000" height="120" rx="5" fill="#fffde7" stroke="#fbc02d" stroke-dasharray="5,5"/>
+                <text x="20" y="30" font-weight="bold" fill="#f57f17">👨‍🏫 老师的补充笔记 (Key Takeaways):</text>
+                <text x="20" y="60" font-size="14" fill="#333">• <tspan font-weight="bold">MVP变换：</tspan> 模型(Model)、视图(View)、投影(Projection)三个矩阵的乘法是顶点着色器的核心任务。</text>
+                <text x="20" y="85" font-size="14" fill="#333">• <tspan font-weight="bold">光栅化：</tspan> 这一步不仅决定了哪些像素被点亮(扫描转换)，还负责计算像素的颜色属性权重(重心坐标插值)。</text>
+                <text x="20" y="110" font-size="14" fill="#333">• <tspan font-weight="bold">Z-Buffer (深度缓存)：</tspan> 是实现“隐面消除”的关键技术，它保证了近处的物体遮挡远处的物体。</text>
+            </g>
+
+        </svg>
+    </div>
+</body>
+</html>

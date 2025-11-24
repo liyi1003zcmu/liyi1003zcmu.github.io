@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>管线如何”使用”缓存(含分支示意)</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text);
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 12px; }
+    p.lead { color: var(--muted); margin: 0 0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      overflow: auto;
+    }
+    .actions { margin: 12px 0 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button:hover { border-color: #cbd5e1; }
+    .zoom {
+      width: 100%;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px dashed #e5e7eb;
+      background: #fff;
+    }
+    .svg-wrap {
+      width: 1400px;
+      padding: 16px;
+    }
+    .legend {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 860px) {
+      .svg-wrap { width: 1100px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>管线如何使用缓存(VBO/EBO/UBO/Texture)—含分支示意</h1>
+    <p class="lead">数据已在 VRAM 中；glDraw... 后，IA 从 EBO/VBO 抓取，VS 读 UBO 做变换，FS 读 UBO/纹理并输出；展示深度/模板测试与多渲染目标(MRT)等分支。</p>
+
+    <div class="card">
+      <div class="zoom" id="zoom">
+        <div class="svg-wrap" id="svgWrap">
+          <!-- Inline SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="890" viewBox="0 0 1280 860" id="diagram">
+            <style>
+              .title { font: 700 22px "Segoe UI", system-ui, sans-serif; fill: #1f2937; }
+              .subtitle { font: 600 14px "Segoe UI", system-ui, sans-serif; fill: #374151; }
+              .label { font: 12px "Segoe UI", system-ui, sans-serif; fill: #374151; }
+              .small { font: 11px "Segoe UI", system-ui, sans-serif; fill: #4b5563; }
+              .mono { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #111827; }
+              .box { fill: #ffffff; stroke: #e5e7eb; }
+              .stage { fill: #f8fafc; stroke: #cbd5e1; }
+              .chip { fill: #eef2ff; stroke: #a5b4fc; }
+              .vram { fill: #f5f3ff; stroke: #c4b5fd; }
+              .ebo { fill: #ecfeff; stroke: #67e8f9; }
+              .vbo { fill: #eff6ff; stroke: #93c5fd; }
+              .ubo { fill: #f0fdf4; stroke: #86efac; }
+              .tex { fill: #fff7ed; stroke: #fdba74; }
+              .rt { fill: #fef2f2; stroke: #fecaca; }
+              .ds { fill: #f0f9ff; stroke: #bae6fd; }
+              .bus { stroke: #64748b; stroke-width: 2; marker-end: url(#arrow); fill: none; }
+              .bus2 { stroke: #9ca3af; stroke-width: 2; stroke-dasharray: 5 4; marker-end: url(#arrow); fill: none; }
+              .note { fill: #fef3c7; stroke: #facc15; }
+            </style>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"></path>
+              </marker>
+            </defs>
+
+            <text x="24" y="10" class="title">管线如何使用缓存(含分支示意)</text>
+            <text x="24" y="25" class="small">虚线：从 VRAM(显存) 读取(缓冲/纹理/深度)；实线：阶段间流水与写回</text>
+
+            <!-- VRAM resource bank -->
+            <g transform="translate(24,40)">
+              <rect x="0" y="0" width="300" height="800" class="vram" rx="10"></rect>
+              <text x="12" y="24" class="subtitle">显存(VRAM / 设备内存)</text>
+
+              <!-- EBO -->
+              <g transform="translate(16,50)">
+                <rect x="0" y="0" width="268" height="70" class="ebo" rx="8"></rect>
+                <text x="12" y="22" class="label">EBO(索引缓存)</text>
+                <text x="12" y="44" class="small">uint16/uint32 索引数组</text>
+              </g>
+
+              <!-- VBO -->
+              <g transform="translate(16,130)">
+                <rect x="0" y="0" width="268" height="110" class="vbo" rx="8"></rect>
+                <text x="12" y="24" class="label">VBO(顶点缓存)</text>
+                <text x="12" y="46" class="small">位置/法线/切线/UV/颜色...</text>
+                <text x="12" y="66" class="small">示例布局：vec3 pos, vec3 nrm, vec2 uv</text>
+              </g>
+
+              <!-- UBO -->
+              <g transform="translate(16,250)">
+                <rect x="0" y="0" width="268" height="100" class="ubo" rx="8"></rect>
+                <text x="12" y="24" class="label">UBO(统一缓存)</text>
+                <text x="12" y="46" class="small">矩阵 M/V/P、光源/相机参数</text>
+              </g>
+
+              <!-- Textures -->
+              <g transform="translate(16,360)">
+                <rect x="0" y="0" width="268" height="150" class="tex" rx="8"></rect>
+                <text x="12" y="24" class="label">纹理对象(Texture)</text>
+                <text x="12" y="46" class="small">Albedo/Normal/Roughness/Metalness等</text>
+                <text x="12" y="66" class="small">采样器：过滤、寻址、mipmap</text>
+              </g>
+
+              <!-- Depth/Stencil -->
+              <g transform="translate(16,520)">
+                <rect x="0" y="0" width="268" height="100" class="ds" rx="8"></rect>
+                <text x="12" y="24" class="label">深度/模板缓冲(Depth/Stencil, DS)</text>
+                <text x="12" y="46" class="small">供测试读取与写入</text>
+              </g>
+
+              <!-- Render Targets -->
+              <g transform="translate(16,630)">
+                <rect x="0" y="0" width="268" height="80" class="rt" rx="8"></rect>
+                <text x="12" y="26" class="label">渲染目标(Render Targets)</text>
+                <text x="12" y="48" class="small">支持 MRT：RT0, RT1, RT2...</text>
+              </g>
+            </g>
+
+            <!-- GPU device frame -->
+            <g transform="translate(420,40)">
+              <rect x="0" y="0" width="1200" height="800" class="chip" rx="10"></rect>
+              <text x="12" y="24" class="subtitle">GPU(命令处理 + 图形流水线)</text>
+
+              <!-- Command -->
+              <g transform="translate(12,50)">
+                <rect x="0" y="0" width="320" height="70" class="note" rx="10"></rect>
+                <text x="12" y="24" class="label">命令与调度</text>
+                <text x="12" y="46" class="small">CPU 提交 glDraw... → 命令队列 → 调度波前/线程组</text>
+              </g>
+
+              <!-- IA -->
+              <g transform="translate(12,140)">
+                <rect x="0" y="0" width="320" height="100" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">输入装配器(Input Assembler, IA)</text>
+                <text x="12" y="48" class="small">• 读 EBO 索引</text>
+                <text x="12" y="68" class="small">• 依据索引从VBO获得顶点属性</text>
+                <text x="12" y="88" class="small">• 组装图元(三角形等)</text>
+
+                <!-- from VRAM: EBO/VBO -->
+                <path d="M -120 -60 L  -60 -60 L -60 40 -10 40" class="bus2"/>
+                <text x="-180" y="-58" class="small">EBO → IA</text>
+                <path d="M -120 70 C -80 70, -60 70, -10 70" class="bus2"/>
+                <text x="-180" y="74" class="small">VBO → IA</text>
+              </g>
+
+              <!-- VS -->
+              <g transform="translate(12,280)">
+                <rect x="0" y="0" width="320" height="120" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">顶点着色器(Vertex Shader, VS)</text>
+                <text x="12" y="48" class="small">输入：IA的顶点属性</text>
+                <text x="12" y="68" class="small">读取：UBO(M、V、P)</text>
+                <text x="12" y="88" class="small">处理：坐标变换</text>
+                <text x="12" y="110" class="mono">gl_Position = P × V × M × vPos</text>
+
+                <!-- UBO to VS -->
+                <path d="M -120 30 C -80 30, -60 30, -10 30" class="bus2"/>
+                <text x="-180" y="32" class="small">UBO → VS</text>
+              </g>
+
+              <!-- Rasterizer + Early-Z -->
+              <g transform="translate(420,280)">
+                <rect x="0" y="0" width="210" height="70" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">裁剪/光栅化</text>
+                <text x="12" y="48" class="small">生成片元、插值属性</text>
+
+                <!-- Early-Z branch -->
+                <path d="M 105 70 L 105 160" class="bus"/>
+                <text x="116" y="90" class="small">Early-Z</text>
+              </g>
+
+              <!-- FS -->
+              <g transform="translate(12,440)">
+                <rect x="0" y="0" width="320" height="140" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">片元着色器(Fragment Shader, FS)</text>
+                <text x="12" y="48" class="small">读取：UBO(光源/相机等)</text>
+                <text x="12" y="68" class="small">读取：Texture(采样 Albedo/Normal 等)</text>
+                <text x="12" y="88" class="small">处理：光照/材质，输出颜色</text>
+
+                <!-- UBO/Texture to FS -->
+                <!-- path d="M -40 40 C -90 40, -130 40, -170 40" class="bus2"/-->
+				<path d="M -120 -110, L -80 -110, -80 20, -10 20" class="bus2"/>
+                <text x="-180" y="-108" class="small">UBO → FS</text>
+                <!--path d="M -40 80 C -100 80, -150 80, -200 80" class="bus2"/-->
+				<path d="M -120 50, C -80 50, -40 50, -10 50" class="bus2"/>
+                <text x="-220" y="52" class="small">Texture → FS(采样)</text>
+              </g>
+
+              <!-- Early-Z test block -->
+              <g transform="translate(420,440)">
+                <rect x="0" y="0" width="210" height="140" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">深度/模板测试(Z/Stencil)</text>
+                <text x="12" y="48" class="small">分支：通过 或 丢弃</text>
+                <text x="12" y="68" class="small">可Early-Z(在FS之前)或Late-Z(在FS之后)</text>
+
+                <!-- DS Buffer read/write -->
+                <path d="M 0 50 C -10 50, -60 50, -90 50" class="bus2"/>
+                <text x="-160" y="52" class="small">读取 DS(测试)</text>
+                <!-- path d="M 0 90 C -10 90, -60 90, -90 90" class="bus"/-->
+				<path d="M -90 80 C -60 80, -10 80, 0 80" class="bus"/>
+                <text x="-160" y="82" class="small">写入 DS(更新)</text>
+
+                <!-- Discard branch -->
+                <path d="M 210 40 L 310 40" class="bus"/>
+                <text x="220" y="32" class="small">丢弃(不进入OM)</text>
+              </g>
+
+              <!-- OM with MRT -->
+              <g transform="translate(420,600)">
+                <rect x="0" y="0" width="210" height="140" class="stage" rx="10"></rect>
+                <text x="12" y="26" class="label">输出合并(Output Merger, OM)</text>
+                <text x="12" y="48" class="small">颜色混合、写入多渲染目标(MRT)</text>
+                <text x="12" y="68" class="small">可同时输出 RT0/RT1/RT2...</text>
+
+                <!-- FS -> OM -->
+                <path d="M -90 -50 L -50 -50 L -50 70, 0 70" class="bus"/>
+                <text x="-125" y="60" class="small">片元颜色/附件</text>
+
+                <!-- MRT branches to VRAM -->
+                <path d="M 210 40 L 310 40" class="bus"/>
+                <text x="220" y="32" class="small">写入 RT0</text>
+                <path d="M 210 70 L 310 70" class="bus"/>
+                <text x="220" y="62" class="small">写入 RT1</text>
+                <path d="M 210 100 L 310 100" class="bus"/>
+                <text x="220" y="92" class="small">写入 RT2</text>
+              </g>
+
+              <!-- Links between stages (VS -> Raster) -->
+              <path d="M 332 310 C 346 310, 352 310, 420 310" class="bus"/>
+              <text x="340" y="290" class="small">图元顶点</text>
+			  <text	x="340" y="300" class="small">→ 裁剪/光栅化</text>
+
+              <!-- Raster -> FS path (interpolated fragments) -->
+              <path d="M 525 400 L 480 400, 380 400 L 380 460 L 332 460" class="bus"/>
+              <text x="420" y="375" class="small">插值后片元</text>
+
+              <!-- Early-Z vertical link label -->
+              <text x="395" y="390" class="small">若 Early-Z 通过 → 进入 FS</text>
+            </g>
+
+            <!-- Legend -->
+            <g transform="translate(24,870)">
+              <text x="0" y="0" class="small">注：Early-Z 可在某些状态(如无透明度写入/无副作用)下提前执行以减少 FS 开销；MRT 常用于延迟渲染/多输出。</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const svgWrap = document.getElementById('svgWrap');
+    const fitBtn = document.getElementById('fitBtn');
+    const actualBtn = document.getElementById('actualBtn');
+    const downloadSvgBtn = document.getElementById('downloadSvgBtn');
+    const diagram = document.getElementById('diagram');
+
+    function fitWidth() {
+      svgWrap.style.width = '100%';
+    }
+    function actualSize() {
+      svgWrap.style.width = '1400px';
+    }
+    function downloadSVG() {
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(diagram);
+      if (!source.match(/^<\\?xml/)) {
+        source = '<?xml version="1.0" standalone="no"?>\\n' + source;
+      }
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gpu_pipeline_consume_buffers.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    fitBtn.addEventListener('click', fitWidth);
+    actualBtn.addEventListener('click', actualSize);
+    downloadSvgBtn.addEventListener('click', downloadSVG);
+  </script>
+</body>
+</html>
