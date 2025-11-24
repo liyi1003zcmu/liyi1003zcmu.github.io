@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-纹理映射</title>
+
+    <meta name="description" content="纹理映射">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+    <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 30%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+    <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+    <style>
+        :root {
+            --r-main-font: "Inter", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --r-heading-font: "Inter", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --r-code-font: "Fira Code", "Consolas", monospace;
+        }
+        .memory-layout {
+            font-family: var(--r-code-font);
+            font-size: 0.8em;
+            text-align: left;
+            background: #b3dcf0;
+            color: #0c0e0f;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .pixel-r { color: #ff6b6b; }
+        .pixel-g { color: #6bff6b; }
+        .pixel-b { color: #6b6bff; }
+        .pixel-a { color: #dddddd; }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第六章(1) 缓存</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <section>
+                    <h3>回到源代码</h3>
+                    <p class="fragment">在屏幕上绘制一个三角形</p>
+                    <pre class="fragment" style="font-size:16pt"><code class="JavaScript" data-trim data-line-numbers>
+    // 1. 在 CPU 内存 (RAM) 中定义几何数据
+    const positions = [
+        0.0,  0.5, 0.0,  // 顶点 1 (x, y, z)
+        -0.5, -0.5, 0.0,  // 顶点 2
+        0.5, -0.5, 0.0   // 顶点 3
+    ];
+
+    // 2. 数据如何传送到GPU？
+
+    // 3. 告诉 GPU 使用哪个着色器程序
+    gl.useProgram(myShaderProgram);
+
+    // 4. 告诉 GPU 执行绘制
+    gl.drawArrays(gl.TRIANGLES, 0, 3);  
+                            </code></pre>
+                            <p class="fragment" style="text-align:center"><strong>数据如何传送到GPU？</strong></p>
+                </section>
+                <section>
+                    <h3>CPU与GPU的体系差异</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><strong>CPU (Central Processing Unit):</strong> 专为<strong>低延迟 (Low Latency)</strong>优化，拥有少量复杂核心 (Complex Cores)、巨大的缓存 (Cache) 和强大的分支预测器，擅长处理复杂的、串行的逻辑任务</p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><strong>GPU (Graphics Processing Unit):</strong> 专为<strong>高吞吐量 (High Throughput)</strong>优化，拥有大量简单核心 (Simple Cores)，设计用于并行处理大量数据，适合图形渲染和并行计算任务</p>
+                        </div>
+                    </div>
+                    <p class="fragment" style="font-size:20pt">二者通过<strong>PCIe总线(Bus)</strong> 连接，而CPU访问系统内存(RAM)与GPU访问显存(VRAM)的速度，远快于跨总线访问的速度</p>
+                    <p class="fragment" style="font-size:20pt">如果CPU频繁、零散地往GPU传送数据，如gl.drawArrays()需访问的顶点数据，<text style="color:red">开销极高</text></p>
+                    <p class="fragment" style="font-size:20pt">解决方案：采用<strong>缓存对象(Buffer Object)</strong>，通过<strong>DMA(直接内存访问)</strong>机制，将海量数据<strong>一次性生成，异步</strong>从RAM批量传输到VRAM中，减少CPU与GPU之间的数据传输次数</p>
+                </section>
+                <section>
+                    <h3>数据传输瓶颈</h3>
+                    <img class="fragment" src="../../images/cg/chap06/pcie_cpu_gpu_dataflow.svg" alt="PCIe数据传输瓶颈" style="height:100%; margin:auto"/>
+                </section>
+                <section>
+                    <h3>“保留模式”传送数据</h3>
+                    <pre class="fragment" style="font-size:16pt"><code class="JavaScript" data-trim data-line-numbers>
+// 1. 在 CPU 端准备 *所有* 数据 (40MB!)
+const allPositions = new Float32Array(10000 * 3 * 3); 
+fillWithData(allPositions); // CPU 在 RAM 中操作
+
+// 2. [??] 一次性将 *全部* 数据批量发送到 GPU 的“专属内存”
+const myBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, myBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, allPositions, gl.STATIC_DRAW);
+
+// 3. 告诉 GPU 如何解析这块内存
+gl.vertexAttribPointer(...);
+gl.enableVertexAttribArray(...);
+
+// 4. 一次性告诉 GPU 绘制 *所有* 三角形
+gl.drawArrays(gl.TRIANGLES, 0, 10000 * 3);                    
+                    </code></pre>
+                    <div>
+                        <p class="fragment">这个位于 VRAM 上的、由 GPU 管理的内存区域，就叫做<strong>缓存对象</strong>，它是CPU为GPU准备的“原材料仓库”，是克服总线瓶颈、实现高性能渲染的基石</p>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <li class="fragment">认识<strong>缓存对象</strong>的概念</li>
+                <li class="fragment">理解<strong>缓存</strong>的<strong>工作原理</strong></li>
+                <li class="fragment">描述<strong>缓存对象</strong>的<strong>生命周期</strong>，并掌握缓存对象的创建、使用、销毁</li>
+                <li class="fragment">识别渲染管线所使用的<strong>关键缓存</strong>类型及作用</li>
+            </section>
+            <section>
+                <section>
+                    <h3>需要传输多少数据？</h3>
+                    <ul>
+                        <li class="fragment" style="font-size:20pt">一幅大小为$128\times 128$的彩色图像，每通道以8bits表示，在内存中占多少字节？</li>
+                        <li class="fragment" style="font-size:20pt">要绘制一个立方体，需要提交多少个<strong>唯一的顶点坐标</strong>，又需要提交多少个顶点用于绘制？</li>
+                        <li class="fragment" style="font-size:20pt">能否减少提交的数据量？</li>
+                    </ul>
+                </section>
+            </section>
+            <section>
+                <section>
+                    <h3>缓存的概念</h3>
+                    <p class="fragment" style="font-size:20pt">缓存对象是 在显存(VRAM)上一块由GPU驱动管理，用来存储顶点数据、纹理数据、渲染结果等数据的<strong>内存区域</strong>，是GPU<strong>专用</strong>，CPU无法访问缓存对象</p>
+                    <p class="fragment" style="font-size:20pt">不同的缓存对象有不同的作用，当今计算机图形学技术大量依赖各种缓存，通过应用程序与缓存进行交互实现各种效果</p>
+                    <p class="fragment" style="font-size:20pt">缓存对象有<strong>生命周期</strong>，其使用包括，创建缓存对象、使用缓存对象、销毁缓存对象，由API进行控制管理</p>
+                    <ul>
+                        <li class="fragment" style="font-size:20pt"><strong>创建缓存对象</strong>：glGenBuffers()，向GPU驱动申请一个或多个未使用的缓存对象，返回一个或多个对应的缓存对象ID，以整数标识</li>
+                        <li class="fragment" style="font-size:20pt"><strong>使用缓存对象</strong>：将数据写入缓存对象，并使用缓存对象进行数据读取</li>
+                        <ul>
+                            <li class="fragment" style="font-size:20pt"><strong>绑定缓存对象</strong>：glBindBuffer(target， id)，将缓存对象ID绑定到目标缓存对象，后续对目标缓存对象的操作，都作用于该缓存对象。由于OpenGL基于状态机进行操作，需要告诉GPU，接下来的操作是针对<strong>这个ID</strong></li>
+                            <li class="fragment" style="font-size:20pt"><strong>用数据填充缓存对象</strong>：glBufferData(target， size， data， usage)，这是操作的<strong>关键步骤</strong>，将CPU内存RAM中的数据拷贝到当前target上绑定的缓存对象ID所指向的GPU显存VRAM中，写入数据，需指定缓存对象数据大小，数据，以及缓存对象使用方式，帮助驱动优化数据在内存中的放置</li>
+                        </ul>
+                        <li class="fragment" style="font-size:20pt"><strong>销毁缓存对象</strong>：glDeleteBuffers()，销毁缓存对象，释放VRAM资源</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>顶点缓存(Vertex Buffer Object, VBO)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>目标(Target):</strong><code>GL_ARRAY_BUFFER</code></p>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role):</strong> 存储<strong>逐顶点 (Per-Vertex)</strong> 的属性数据。这是 GPU 绘制几何体的基础“原材料”</p>
+                    <p class="fragment" style="font-size:20pt"><strong>内容(Content):</strong>顶点位置 (vec3), 顶点法线(vec3), <strong>纹理坐标(vec2)</strong>, 顶点颜色(vec4) 等</p>
+                    <p class="fragment" style="font-size:20pt"><strong>数据布局(Layout):</strong>通常采用<strong>交错 (Interleaved)</strong>布局以提高内存局部性(Data Locality)</p>
+                    <div class="memory-layout fragment">
+/* 顶点 1 */
+[ X₁, Y₁, Z₁, &lt;!-- 3xfloat, 位置 --&gt;
+  <span class="pixel-r">U₁</span>, <span class="pixel-g">V₁</span>,     &lt;!-- 2xfloat, 纹理坐标 --&gt;
+/* 顶点 2 */
+  X₂, Y₂, Z₂,
+  <span class="pixel-r">U₂</span>, <span class="pixel-g">V₂</span>, 
+  ... ]
+                </div>
+                </section>
+                <section>
+                    <h3>索引缓存(Element/Indices Buffer Object, EBO/IBO)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>目标(Target):</strong><code>GL_ELEMENT_ARRAY_BUFFER</code></p>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role):</strong>不存储顶点数据，存储指向VBO的整数，用于顶点索引，指定顶点缓存中的顶点如何组成几何体</p>
+                    <p class="fragment" style="font-size:20pt"><strong>内容(Content):</strong>无符号整数 (uint16 / uint32) 的数组，每个整数索引对应顶点缓存中的一个顶点</p>
+                    <p class="fragment" style="font-size:20pt"><strong>优势：</strong>顶点重用</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="text-align:center">顶点缓存(VBO)(4顶点)</p>
+                            <div class="memory-layout fragment" style="font-size: 0.7em;">
+[ X₀,Y₀,Z₀, U₀,V₀ ... ] (v0)
+[ X₁,Y₁,Z₁, U₁,V₁ ... ] (v1)
+[ X₂,Y₂,Z₂, U₂,V₂ ... ] (v2)
+[ X₃,Y₃,Z₃, U₃,V₃ ... ] (v3)
+                            </div>
+                        </div>
+                        <div class="fragment">
+                            <p class="fragment" style="text-align:center">索引缓存(EBO)(2三角形)</p>
+                            <div class="memory-layout fragment">
+[ 0, 1, 2, &lt;!-- 三角 1 --&gt;
+  0, 2, 3  &lt;!-- 三角 2 --&gt; ]
+                            </div>
+                        </div>
+                    </div>
+                    <p class="fragment" style="font-size:20pt"><strong>索引缓存(EBO)</strong>与<strong>顶点缓存(VBO)</strong>一起使用，GPU根据索引缓存中的索引，从顶点缓存中获取顶点数据，进行绘制</p>
+                    <p class="fragment" style="font-size:20pt">如果绘制一个四边形，只需传输4个顶点的数据和6个整数索引，而不是6个完整的顶点数据。对于复杂模型，这将极大地减少内存占用和总线带宽</p>
+                </section>
+                <section>
+                    <h3>统一缓存(Uniform Buffer Object, UBO)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>目标(Target):</strong><code>GL_UNIFORM_BUFFER</code></p>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role):</strong>存储在多次绘制调用甚至多个着色器程序(Shaders)之间<strong>共享、不变</strong>的属性数据，即“全局变量”</p>
+                    <p class="fragment" style="font-size:20pt"><strong>内容(Content):</strong>模型矩阵，视图矩阵，投影矩阵，光照参数(位置、颜色)，纹理参数等</p>
+                    <p class="fragment" style="font-size:20pt"><strong>优势：</strong>一次设置，多次使用。当相机移动时，CPU<strong>只需更新一次UBO</strong>，所有使用该UBO的着色器程序，如处理角色、场景、天空的Shader，都会自动获取到新的矩阵，而无需通过CPU让每个程序都调用glUniformMatrix4fv获取矩阵</p>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap06/ch06-ubo-binding.png" alt="UBO Binding" style="height: 100%; height: auto; margin: 0 auto;">
+                        <p class="fragment" style="text-align:center">UBO 通过“绑定点”被多个着色器共享</p>
+                    </div>
+                </section>
+                <section>
+                    <h3>纹理对象(Texture Object)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>纹理对象</strong>，是一种特殊的VRAM资源，在概念上类似于缓存，并针对图像数据专门做了优化</p>
+                    <p class="fragment" style="font-size:20pt"><strong>存储(Storage)：</strong>图像数据被“拍平”成<strong>一维线性数组</strong>，按<strong>行(Row-Major Order)</strong>进行存储</p>
+                    <p class="fragment" style="font-size:20pt; text-align:center;">一幅$2\times 2$的RGBA图像存储为：</p>
+                    <div class="memory-layout fragment">
+[ <span class="pixel-r">R</span>,<span class="pixel-g">G</span>,<span class="pixel-b">B</span>,<span class="pixel-a">A</span>, &lt;!-- 像素 (0,0) --&gt;
+  <span class="pixel-r">R</span>,<span class="pixel-g">G</span>,<span class="pixel-b">B</span>,<span class="pixel-a">A</span>, &lt;!-- 像素 (0,1) --&gt;
+  <span class="pixel-r">R</span>,<span class="pixel-g">G</span>,<span class="pixel-b">B</span>,<span class="pixel-a">A</span>, &lt;!-- 像素 (1,0) --&gt;
+  <span class="pixel-r">R</span>,<span class="pixel-g">G</span>,<span class="pixel-b">B</span>,<span class="pixel-a">A</span>  &lt;!-- 像素 (1,1) --&gt; ]
+                    </div>
+                    <p class="fragment" style="font-size:20pt"><strong>处理(Processing)：</strong>GPU有固定功能的硬件<strong>纹理采样单元(Texture Sampling Units)</strong>，根据$(u,v)$纹理坐标，对这块线性内存执行<strong>寻址采样</strong>，并进行<strong>过滤(Filtering)</strong>和<strong>环绕(Wrapping)</strong>处理，速度很快</p>
+                </section>
+                <section>
+                    <h3>帧缓存(Frame Buffer Object, FBO)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>定义(Definition)：</strong><code>GL_FRAMEBUFFER</code>，是一个<strong>容器</strong>，聚合了一组<strong>渲染目标(Render Targets)</strong>，是GPU渲染管线的<strong>输出目的地</strong></p>
+                    <ul>
+                        <li class="fragment" style="font-size:20pt">默认情况下，渲染目的地是默认帧缓存，即<strong>窗口/屏幕</strong></li>
+                        <li class="fragment" style="font-size:20pt">通过创建处定义FBO，可以将渲染结果重定向到<strong>离屏(Off-screen)纹理</strong></li>
+                    </ul>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role):</strong>存储渲染结果，即图像数据</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><strong>内容(Content):</strong>FBO本身不存储数据，只是指向其他VRAM资源的“附件”，包括：</p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt"><code>GL_COLOR_ATACHMENT0</code>：一个<strong>纹理对象</strong>，用于接收面片着色器输出的颜色</li>
+                                <li class="fragment" style="font-size:20pt"><code>GL_DEPTH_ATTACHMENT</code>：<strong>深度缓存</strong>，用于接收深度测试结果</li>
+                                <li class="fragment" style="font-size:20pt"><code>GL_STENCIL_ATTACHMENT</code>：<strong>模板缓存</strong>，用于接收模板测试结果</li>
+                            </ul>
+                            <p class="fragment" style="font-size:20pt"><strong>用处：</strong>可以离屏渲染到缓存，实现<strong>后处理(Post-Processing)</strong>效果，如模糊、边缘检测、阴影贴图、光照、反射等</p>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-rendered-fbo.png" alt="Rendered FBO" style="height: 100%; height: auto; margin: 0 auto;">
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>深度缓存(Depth Buffer)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>定义(Definition)：</strong><code>GL_DEPTH_BUFFER</code>，b也称“Z-Buffer”，是一块与颜色缓存同样大小的VRAM区域，用于存储每个面片(像素)的<strong>深度信息(Z-value)</strong>，一般为24-bit或32-bit浮点数</p>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role)：</strong>用于<strong>深度测试(Depth Testing)</strong>，即判断当前面片与已有的像素的<strong>深度信息</strong>，并决定是否进行渲染，在管线的“输出合并”（Output Merge）阶段，GPU执行的操作为：</p>
+                    <pre class="fragment"><code class="GLSL" data-trim data-line-number="1-7" style="font-size:16pt">
+if (new_fragment.Z < depth_buffer[x, y]) {
+    // 新片元更近
+    color_buffer[x, y] = new_fragment.Color;  // 写入颜色
+    depth_buffer[x, y] = new_fragment.Z;      // 更新深度
+} else {
+    // 新片元被遮挡
+    discard; // 丢弃该片元
+}                    
+                    </code></pre>  
+                    <p class="fragment" style="font-size:20pt"><strong>用途(Usage)：</strong>深度缓存是<strong>隐式</strong>的，不需要用户显式创建，只需要调用<code>glEnable(GL_DEPTH_TEST)</code>即可启用，用于自动计算<strong>隐藏面消除(Hidden Surface Removal)</strong>，确保不透明物体无论CPU提交绘制顺序如何，都能按正确的远近顺序进行遮挡，绘制正确的结果</p>
+                </section>
+                <section>
+                    <h3>模板缓存(Stencil Buffer)</h3>
+                    <p class="fragment" style="font-size:20pt"><strong>定义(Definition)：</strong><code>GL_STENCIL_BUFFER</code>，用于存储每个面片的<strong>模板信息</strong>，一般为8-bit无符号整数</p>
+                    <p class="fragment" style="font-size:20pt"><strong>作用(Role)：</strong>用于<strong>模板测试(Stencil Testing)</strong>，即允许基于自定义规则，比较当前面片与已有的像素的<strong>模板信息</strong>，并决定是否对面片进行渲染，类似一个可编程的“遮罩”（mask）。模板测试在管线的“输出合并”（Output Merge）阶段，在深度测试前或后均可执行。GPU执行的操作为：</p>
+                    <ul>
+                        <li class="fragment" style="font-size:20pt"><strong>(Pass 1)，写入</strong>：渲染一个物体（如地板），并配置GPU将特定值定稿模板缓存中该物体覆盖的区域</li>
+                        <li class="fragment" style="font-size:20pt"><strong>(Pass 2)，读取</strong>：渲染另一个物体（如人），并配置GPU仅渲染模板缓存中为特定值的区域</li>
+                    </ul>
+                    <p class="fragment" style="font-size:20pt"><strong>用途(Usage)：</strong>模板缓存是<strong>隐式</strong>的，不需要用户显式创建，只需要调用<code>glEnable(GL_STENCIL_TEST)</code>即可启用，用于实现<strong>高级遮挡效果</strong>，如物体描边、平面反射、阴影体积、遮罩效果等</p>
+                </section>
+                <section>
+                    <h3>管线如何“使用”缓存</h3>
+                    <p class="fragment" style="font-size:20pt">数据已在显存(VRAM)中，当GPU收到glDraw...的命令后开始工作</p>
+                    <ol>
+                        <li class="fragment" style="font-size:20pt"><strong>输入装配器(Input Assembler)：</strong>
+                        <ul>
+                            <li class="fragment" style="font-size:20pt">从<strong>EBO(索引缓存)</strong>读取绑定的数据</li>
+                            <li class="fragment" style="font-size:20pt">根据EBO中的索引数据，去<strong>VBO(顶点缓存)</strong>中获取对应的顶点数据</li>
+                            <li class="fragment" style="font-size:20pt">将顶点数据打包成图元(如三角形)</li>
+                        </ul>
+                        </li>
+                        <li class="fragment" style="font-size:20pt"><strong>顶点着色器(Geometry Shader)：</strong>
+                        <ul>
+                            <li class="fragment" style="font-size:20pt">输入VBO中的顶点属性</li>
+                            <li class="fragment" style="font-size:20pt">读取UBO中存储的矩阵数据，如model, view, projection</strong></li>
+                            <li class="fragment" style="font-size:20pt">执行变换，有gl_Position=P*V*M*vPos</li>
+                        </ul>
+                        </li>
+                        <li class="fragment" style="font-size:20pt"><strong>光栅化(Rasterizer)：</strong></li>
+                        <li class="fragment" style="font-size:20pt"><strong>面片着色器(Fragment Shader)：</strong>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">读取UBO中的数据，如光源属性、相机位置等</li>
+                                <li class="fragment" style="font-size:20pt">获取纹理对象中的像素数据</li>
+                                <li class="fragment" style="font-size:20pt">进行光照计算，得到最终颜色</li>
+                            </ul>
+                        </li>
+                        <li class="fragment" style="font-size:20pt"><strong>输出合并(Output Merge)：</strong>
+                        <ul>
+                            <li class="fragment" style="font-size:20pt">将片元数据写入<strong>颜色缓存(Color Buffer)</strong></li>
+                            <li class="fragment" style="font-size:20pt">将片元数据写入<strong>深度缓存(Depth Buffer)</strong></li>
+                            <li class="fragment" style="font-size:20pt">将片元数据写入<strong>模板缓存(Stencil Buffer)</strong></li>
+                            <li class="fragment" style="font-size:20pt">进行各种后期处理，将片元数据写入<strong>帧缓存(Frame Buffer)</strong></li>
+                        </ul>
+                        </li>
+
+                    </ol>
+                </section>
+                <section>
+                    <h3>管线如何“使用”缓存</h3>
+                    <div class="card">
+                        <div class="zoom" id="zoom">
+                          <div class="svg-wrap" id="svgWrap">
+                            <!-- Inline SVG -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="890" viewBox="0 0 1280 860" id="diagram">
+                              <style>
+                                .title { font: 700 22px "Segoe UI", system-ui, sans-serif; fill: #1f2937; }
+                                .subtitle { font: 600 14px "Segoe UI", system-ui, sans-serif; fill: #374151; }
+                                .label { font: 12px "Segoe UI", system-ui, sans-serif; fill: #374151; }
+                                .small { font: 11px "Segoe UI", system-ui, sans-serif; fill: #4b5563; }
+                                .mono { font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #111827; }
+                                .box { fill: #ffffff; stroke: #e5e7eb; }
+                                .stage { fill: #f8fafc; stroke: #cbd5e1; }
+                                .chip { fill: #eef2ff; stroke: #a5b4fc; }
+                                .vram { fill: #f5f3ff; stroke: #c4b5fd; }
+                                .ebo { fill: #ecfeff; stroke: #67e8f9; }
+                                .vbo { fill: #eff6ff; stroke: #93c5fd; }
+                                .ubo { fill: #f0fdf4; stroke: #86efac; }
+                                .tex { fill: #fff7ed; stroke: #fdba74; }
+                                .rt { fill: #fef2f2; stroke: #fecaca; }
+                                .ds { fill: #f0f9ff; stroke: #bae6fd; }
+                                .bus { stroke: #64748b; stroke-width: 2; marker-end: url(#arrow); fill: none; }
+                                .bus2 { stroke: #9ca3af; stroke-width: 2; stroke-dasharray: 5 4; marker-end: url(#arrow); fill: none; }
+                                .note { fill: #fef3c7; stroke: #facc15; }
+                              </style>
+                              <defs>
+                                <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                                  <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"></path>
+                                </marker>
+                              </defs>
+                  
+                              <text x="24" y="10" class="title">管线如何使用缓存(含分支示意)</text>
+                              <text x="24" y="25" class="small">虚线：从 VRAM(显存) 读取(缓冲/纹理/深度)；实线：阶段间流水与写回</text>
+                  
+                              <!-- VRAM resource bank -->
+                              <g transform="translate(24,40)">
+                                <rect x="0" y="0" width="300" height="800" class="vram" rx="10"></rect>
+                                <text x="12" y="24" class="subtitle">显存(VRAM / 设备内存)</text>
+                  
+                                <!-- EBO -->
+                                <g transform="translate(16,50)">
+                                  <rect x="0" y="0" width="268" height="70" class="ebo" rx="8"></rect>
+                                  <text x="12" y="22" class="label">EBO(索引缓存)</text>
+                                  <text x="12" y="44" class="small">uint16/uint32 索引数组</text>
+                                </g>
+                  
+                                <!-- VBO -->
+                                <g transform="translate(16,130)">
+                                  <rect x="0" y="0" width="268" height="110" class="vbo" rx="8"></rect>
+                                  <text x="12" y="24" class="label">VBO(顶点缓存)</text>
+                                  <text x="12" y="46" class="small">位置/法线/切线/UV/颜色...</text>
+                                  <text x="12" y="66" class="small">示例布局：vec3 pos, vec3 nrm, vec2 uv</text>
+                                </g>
+                  
+                                <!-- UBO -->
+                                <g transform="translate(16,250)">
+                                  <rect x="0" y="0" width="268" height="100" class="ubo" rx="8"></rect>
+                                  <text x="12" y="24" class="label">UBO(统一缓存)</text>
+                                  <text x="12" y="46" class="small">矩阵 M/V/P、光源/相机参数</text>
+                                </g>
+                  
+                                <!-- Textures -->
+                                <g transform="translate(16,360)">
+                                  <rect x="0" y="0" width="268" height="150" class="tex" rx="8"></rect>
+                                  <text x="12" y="24" class="label">纹理对象(Texture)</text>
+                                  <text x="12" y="46" class="small">Albedo/Normal/Roughness/Metalness等</text>
+                                  <text x="12" y="66" class="small">采样器：过滤、寻址、mipmap</text>
+                                </g>
+                  
+                                <!-- Depth/Stencil -->
+                                <g transform="translate(16,520)">
+                                  <rect x="0" y="0" width="268" height="100" class="ds" rx="8"></rect>
+                                  <text x="12" y="24" class="label">深度/模板缓冲(Depth/Stencil, DS)</text>
+                                  <text x="12" y="46" class="small">供测试读取与写入</text>
+                                </g>
+                  
+                                <!-- Render Targets -->
+                                <g transform="translate(16,630)">
+                                  <rect x="0" y="0" width="268" height="80" class="rt" rx="8"></rect>
+                                  <text x="12" y="26" class="label">渲染目标(Render Targets)</text>
+                                  <text x="12" y="48" class="small">支持 MRT：RT0, RT1, RT2...</text>
+                                </g>
+                              </g>
+                  
+                              <!-- GPU device frame -->
+                              <g transform="translate(420,40)">
+                                <rect x="0" y="0" width="1200" height="800" class="chip" rx="10"></rect>
+                                <text x="12" y="24" class="subtitle">GPU(命令处理 + 图形流水线)</text>
+                  
+                                <!-- Command -->
+                                <g transform="translate(12,50)">
+                                  <rect x="0" y="0" width="320" height="70" class="note" rx="10"></rect>
+                                  <text x="12" y="24" class="label">命令与调度</text>
+                                  <text x="12" y="46" class="small">CPU 提交 glDraw... → 命令队列 → 调度波前/线程组</text>
+                                </g>
+                  
+                                <!-- IA -->
+                                <g transform="translate(12,140)">
+                                  <rect x="0" y="0" width="320" height="100" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">输入装配器(Input Assembler, IA)</text>
+                                  <text x="12" y="48" class="small">• 读 EBO 索引</text>
+                                  <text x="12" y="68" class="small">• 依据索引从VBO获得顶点属性</text>
+                                  <text x="12" y="88" class="small">• 组装图元(三角形等)</text>
+                  
+                                  <!-- from VRAM: EBO/VBO -->
+                                  <path d="M -120 -60 L  -60 -60 L -60 40 -10 40" class="bus2"/>
+                                  <text x="-180" y="-58" class="small">EBO → IA</text>
+                                  <path d="M -120 70 C -80 70, -60 70, -10 70" class="bus2"/>
+                                  <text x="-180" y="74" class="small">VBO → IA</text>
+                                </g>
+                  
+                                <!-- VS -->
+                                <g transform="translate(12,280)">
+                                  <rect x="0" y="0" width="320" height="120" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">顶点着色器(Vertex Shader, VS)</text>
+                                  <text x="12" y="48" class="small">输入：IA的顶点属性</text>
+                                  <text x="12" y="68" class="small">读取：UBO(M、V、P)</text>
+                                  <text x="12" y="88" class="small">处理：坐标变换</text>
+                                  <text x="12" y="110" class="mono">gl_Position = P × V × M × vPos</text>
+                  
+                                  <!-- UBO to VS -->
+                                <path d="M -120 30 C -80 30, -60 30, -10 30" class="bus2"/>
+                                <text x="-180" y="32" class="small">UBO → VS</text>
+                                </g>
+                  
+                                <!-- Rasterizer + Early-Z -->
+                                <g transform="translate(420,280)">
+                                  <rect x="0" y="0" width="210" height="70" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">裁剪/光栅化</text>
+                                  <text x="12" y="48" class="small">生成片元、插值属性</text>
+                  
+                                  <!-- Early-Z branch -->
+                                  <path d="M 105 70 L 105 160" class="bus"/>
+                                  <text x="116" y="90" class="small">Early-Z</text>
+                                </g>
+                  
+                                <!-- FS -->
+                                <g transform="translate(12,440)">
+                                  <rect x="0" y="0" width="320" height="140" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">片元着色器(Fragment Shader, FS)</text>
+                                  <text x="12" y="48" class="small">读取：UBO(光源/相机等)</text>
+                                  <text x="12" y="68" class="small">读取：Texture(采样 Albedo/Normal 等)</text>
+                                  <text x="12" y="88" class="small">处理：光照/材质，输出颜色</text>
+                  
+                                <!-- UBO/Texture to FS -->
+                                <!-- path d="M -40 40 C -90 40, -130 40, -170 40" class="bus2"/-->
+                                <path d="M -120 -110, L -80 -110, -80 20, -10 20" class="bus2"/>
+                                <text x="-180" y="-108" class="small">UBO → FS</text>
+                                <!--path d="M -40 80 C -100 80, -150 80, -200 80" class="bus2"/-->
+                                <path d="M -120 50, C -80 50, -40 50, -10 50" class="bus2"/>
+                                <text x="-220" y="52" class="small">Texture → FS(采样)</text>
+                                </g>
+                  
+                                <!-- Early-Z test block -->
+                                <g transform="translate(420,440)">
+                                  <rect x="0" y="0" width="210" height="140" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">深度/模板测试(Z/Stencil)</text>
+                                  <text x="12" y="48" class="small">分支：通过 或 丢弃</text>
+                                  <text x="12" y="68" class="small">可Early-Z(在FS之前)或Late-Z(在FS之后)</text>
+                  
+                                  <!-- DS Buffer read/write -->
+                                  <path d="M 0 50 C -10 50, -60 50, -90 50" class="bus2"/>
+                                  <text x="-160" y="52" class="small">读取 DS(测试)</text>
+                                  <!-- path d="M 0 90 C -10 90, -60 90, -90 90" class="bus"/-->
+                                  <path d="M -90 80 C -60 80, -10 80, 0 80" class="bus"/>
+                                  <text x="-160" y="82" class="small">写入 DS(更新)</text>
+                  
+                                  <!-- Discard branch -->
+                                  <path d="M 210 40 L 310 40" class="bus"/>
+                                  <text x="220" y="32" class="small">丢弃(不进入OM)</text>
+                                </g>
+                  
+                                <!-- OM with MRT -->
+                                <g transform="translate(420,600)">
+                                  <rect x="0" y="0" width="210" height="140" class="stage" rx="10"></rect>
+                                  <text x="12" y="26" class="label">输出合并(Output Merger, OM)</text>
+                                  <text x="12" y="48" class="small">颜色混合、写入多渲染目标(MRT)</text>
+                                  <text x="12" y="68" class="small">可同时输出 RT0/RT1/RT2...</text>
+                  
+                                  <!-- FS -> OM -->
+                                  <path d="M -90 -50 L -50 -50 L -50 70, 0 70" class="bus"/>
+                                  <text x="-125" y="60" class="small">片元颜色/附件</text>
+                  
+                                  <!-- MRT branches to VRAM -->
+                                  <path d="M 210 40 L 310 40" class="bus"/>
+                                  <text x="220" y="32" class="small">写入 RT0</text>
+                                  <path d="M 210 70 L 310 70" class="bus"/>
+                                  <text x="220" y="62" class="small">写入 RT1</text>
+                                  <path d="M 210 100 L 310 100" class="bus"/>
+                                  <text x="220" y="92" class="small">写入 RT2</text>
+                                </g>
+                  
+                                <!-- Links between stages (VS -> Raster) -->
+                                <path d="M 332 310 C 346 310, 352 310, 420 310" class="bus"/>
+                                <text x="340" y="290" class="small">图元顶点</text>
+                                <text	x="340" y="300" class="small">→ 裁剪/光栅化</text>
+                  
+                                <!-- Raster -> FS path (interpolated fragments) -->
+                                <path d="M 525 400 L 480 400, 380 400 L 380 460 L 332 460" class="bus"/>
+                                <text x="420" y="375" class="small">插值后片元</text>
+                  
+                                <!-- Early-Z vertical link label -->
+                                <text x="395" y="390" class="small">若 Early-Z 通过 → 进入 FS</text>
+                              </g>
+                  
+                              <!-- Legend -->
+                              <g transform="translate(24,870)">
+                                <text x="0" y="0" class="small">注：Early-Z 可在某些状态(如无透明度写入/无副作用)下提前执行以减少 FS 开销；MRT 常用于延迟渲染/多输出。</text>
+                              </g>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                </section>
+            </section>
+            <!-- Summary -->
+             
+                <section>
+                    <section>
+                        <h3>题目一（问答题）</h3>
+                        <div class="quiz-container">
+                            <p>glBindBuffer()的作用是什么？为什么它在 glBufferData()之前被调用？</p>
+                            <div class="fragment answer-explanation">
+                                <p><strong>答案解析:</strong>glBindBuffer()将一个缓存ID设置为某个目标(Target)上的“当前活动缓存”。因为OpenGL是一个<strong>状态机</strong>，glBufferData会作用于当前绑定的缓存</p>
+                            </div>
+                        </div>
+                    </section>
+    
+                    <section>
+                        <h3>题目二 (问答题)</h3>
+                        <div class="quiz-container">
+                            <p>要绘制一个由 8 个唯一顶点构成的立方体，最高效的缓存组合是什么？</p>
+                            <div class="fragment answer-explanation">
+                                <p><strong>答案解析:</strong> 一个 <strong>VBO (顶点缓存)</strong> 存储8个顶点的数据；一个<strong>EBO(索引缓存)</strong> 存储36个索引(12个三角形*3)</p>
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <h3>题目三 (问答题)</h3>
+                        <div class="quiz-container">
+                            <p>视图矩阵应该存储在哪种缓存对象中？为什么？</p>
+                            <div class="fragment answer-explanation">
+                                <p><strong>答案解析:</strong>                              <strong>UBO (统一缓存)</strong>。因为视图矩阵是“全局”数据，管线中的所有顶点着色器都需要读取它，且通常在每帧中保持不变。</p>
+                            </div>
+                        </div>
+                    </section>
+                    <section>
+                        <h3>题目四 (问答题)</h3>
+                        <div class="quiz-container">
+                            <p>要实现后期处理，如全屏模糊，渲染管线的“输出目的地”应该选择什么？</p>
+                            <div class="fragment answer-explanation">
+                                <p><strong>答案解析:</strong>一个自定义的<strong>帧缓存对象(FBO)</strong>，它将场景渲染到一个<strong>离屏纹理</strong>上，而不是默认的帧缓存(屏幕)</div>
+                    </section>
+                </section>
+            <section>
+                <h3>课堂总结</h3>
+                <ul>
+                    <li><strong>缓存对象(Buffer Object):</strong> 为克服 <strong>总线瓶颈</strong> 而设计的 VRAM 内存块，通过 <strong>DMA</strong> 批量填充</li>
+                    <li><strong>生命周期:</strong> <code>Gen</code> (创建ID) ➔ <code>Bind</code> (设为活动) ➔ <code>BufferData</code> (传输数据)</li>
+                    <li><strong>VBO (顶点缓存):</strong> 存储“逐顶点”属性 (位置, UV, 法线)</li>
+                    <li><strong>EBO (索引缓存):</strong> 存储“整数索引”，实现 <strong>顶点重用</strong>，极大优化性能</li>
+                    <li><strong>UBO (统一缓存):</strong> GUP 存储“全局共享”数据 (矩阵, 光源)</li>
+                    <li><strong>FBO (帧缓存):</strong> 渲染到“离屏”目标的容器，是后期处理的关键</li>
+                    <li><strong>Depth/Stencil:</strong> 逐面片执行“测试与丢弃”的专用缓存，用于遮挡和特效</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: '100%',
+    height: '100%',
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    })
+</script>
+</body>
+</html>

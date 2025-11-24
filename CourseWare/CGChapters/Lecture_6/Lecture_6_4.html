@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-纹理映射</title>
+
+    <meta name="description" content="纹理映射">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+ <style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .reveal td{
+            font-size:12pt;
+            text-align:center;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+         
+        .four-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 31%;
+        }
+
+        .four-column > dir {
+            width: 20%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+    <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第六章(4) 纹理采样与过滤</h2>
+                
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById( "date" ).innerHTML = year + "年" + ( 1 + month ) + "月" + day + "日";
+                </script>
+            </section>
+            <section>
+                <h3>纹理放大和缩小</h3>
+                <p class="fragment" style="font-size:20pt">当采用重心坐标插值计算得到三角形内部每个面片$P$对应的纹理坐标$(u_p, v_p)$，下一步需要从纹理中获得相应的颜色</p>
+                <p class="fragment" style="font-size:20pt">如果取色的计算方式不正确，就无法获得正确的渲染效果</p>
+                <iframe class="fragment" src="./AppDemos/tex-mag-min-demo.html" width="100%" height="540px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul class="fragment">
+                    <li><strong>解释</strong>纹理采样中<strong>走样</strong>的原因</li>
+                    <li><strong>比较</strong>两种基本过滤方法，最近邻(Nearest Neighbor)和双线性(Bilinear)插值</li>
+                    <li><strong>描述</strong>预过滤技术<strong>Mipmapping</strong>的核心原理</strong></li>
+                    <li><strong>应用</strong>不同的纹理<strong>环绕</strong>模式</li>
+            </section>
+            <section>
+                <section>
+                    <h3>采样的问题</h3>
+                    <p class="fragment" style="font-size:20pt">假设有一个<strong>$512\times 512$</strong>像素的高清砖墙纹理，但渲染的物体在屏幕上非常小，只覆盖了$2\times 2$个像素</p>
+                    <div class="three-column fragment">
+                        <div style="flex:0.4;">
+                            <img src="../../images/cg/chap06/ch06-wall-brick-512x512.png" alt="texture 512x512" style="width:50%;">
+                            <p style="text-align:center;font-size:16pt">原始纹理 $512\times 512$</p>
+                        </div>
+                        <div style="flex:0.4;">
+                            <img src="https://placehold.co/800x100/ffffff/000000?text=512x512+Texels+---%3E+2x2+Pixels" alt="texture downsample" style="width:100%;">
+                            
+                        </div>
+                        <div style="flex:0.2;">
+                            <img src="../../images/cg/chap06/ch06-wall-brick-2x2.png" alt="texture 2x2" style="width:10%;">
+                            <p style="text-align:center;font-size:16pt">最终渲染结果 $2\times 2$</p>
+                        </div>
+                    </div>
+                    <p class="fragment" style="font-size:20pt">GPU要为这4个屏幕像素中的1个着色，应该读取纹理图像中哪个像素的颜色？</p>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment" style="font-size:16pt"><strong>方案A：</strong>随便选一个点？</p>
+                            <p class="fragment" style="font-size:16pt"><strong>结果：</strong>不稳定，下一帧面片中心虽然只在纹理坐标上偏移0.01，但可能会对应到纹理上完全不同的一个点，比如从砖块跳到了砖缝上，导致纹理闪烁</p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:16pt"><strong>方案B：</strong>计算出面片覆盖的纹理区域，取该区域内所有像素的平均值？</p>
+                            <p class="fragment" style="font-size:16pt"><strong>结果：</strong>理论上正确且稳定，但计算量大，尤其是当面片覆盖的纹理区域很大时，GPU无法在一个时钟周期内完成计算</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>采样的本质</h3>
+                    <p class="fragment">根据信号处理理论，纹理是一组<strong>的离散二维信号</strong>，即数据点</p>
+                    <p class="fragment">屏幕像素(面片)是对这个信号进行<strong>重新采样</strong>的结果</p>
+                    <div class="note-box fragment">
+                        <p><strong>香农-奈奎斯特采样定理：</strong>为了完美地重建一个信号，采样频率必须<strong>至少是</strong>原始信号最高频率的<strong>两倍</strong></p>
+                    </div>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment"><strong>走样</strong></p>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-aliasingerror.png" alt="bad sampling" style="width:100%;">
+                        </div>
+                        <div>
+                            <p></p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt"><strong>缩小(Minification)：</strong>当采样频率(屏幕像素)<strong>远低于</strong>纹理信号的频率(高分辨率纹素)，会产生<strong>欠采样(Undersampling)</strong>，GPU丢失了大量信息，导致闪烁和<a href="https://juliapoo.github.io/mathematics/2023/02/06/drawing-with-nothing.html" target="_blank">摩尔纹</a></li>
+                                <li class="fragment" style="font-size:20pt"><strong>放大(Magnification)：</strong>当采样频率<strong>高于</strong>纹理信号频率，有<strong>足够</strong>的样本，需要在已知的数据点(纹素)之间进行<strong>(插值(Interpolation)</strong>重建信号</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <section>
+                <h3>纹理环绕(Texture Wrapping)</h3>
+                <p class="fragment" style="font-size:20pt">纹理坐标$(u, v)$通常被规范化到$[0, 1]$范围内，但在实际应用中，纹理坐标可能会超出这个范围，比如$u=1.5$, 此时GPU该怎么办</p>
+                <p class="fragment" style="font-size:20pt">可通过设置纹理环绕模式造告诉GPU如何处理</p>
+                <div class="four-column">
+                    <div>
+                        <p class="fragment" style="font-size:20pt"><code>GL_REPEAT</code>(默认)</p>
+                        <p class="fragment" style="font-size:20pt">重复纹理，($1.5\rightarrow 0.5$)</p>
+                        <p class="fragment" style="font-size:20pt"><small><strong>用途：</strong>地板、墙纸、草地等</small></p>
+                    </div>
+                    <div>
+                        <p class="fragment" style="font-size:20pt"><code>GL_MIRRORED_REPEAT</code></p>
+                        <p class="fragment" style="font-size:20pt">镜像重复</p>
+                        <p class="fragment" style="font-size:20pt"><small><strong>用途：</strong>特殊的对称图案</small></p>
+                    </div>
+                    <div>
+                        <p class="fragment" style="font-size:20pt"><code>GL_CLAMP_TO_EDGE</code></p>
+                        <p class="fragment" style="font-size:20pt">夹取边缘颜色，将$(u,v)$保持在$[0,1]$之间，($1.5\rightarrow 1.0$)</p>
+                        <p class="fragment" style="font-size:20pt"><small><strong>用途：</strong>UI元素、海报等不重复元素</small></p>
+                    </div>
+                    <div>
+                        <p class="fragment" style="font-size:20pt"><code>GL_CLAMP_TO_BORDER</code></p>
+                        <p class="fragment" style="font-size:20pt">使用<strong>指定的边框颜色</strong></p>
+                        <p class="fragment" style="font-size:20pt"><small><strong>用途：</strong>特殊效果，如阴影贴图</small></p>
+                    </div>
+                </div>
+                <div>
+                    <img class="fragment" src="../../images/cg/chap06/ch06-texture_wrapping.png" alt="texture wrapping modes" style="width:80%;margin-top:20px;">
+                </div>
+            </section>
+            <section>
+                <section>
+                    <h3>纹理放大(Magnification)</h3>
+                    <p class="fragment">当一个纹素(Texel)覆盖<strong>多个屏幕像素(面片)</strong>时，需要对已知的纹素数据点之间进行插值</p>
+                    <div class="three-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-tex-mag.png" alt="texture magnification" style="width:80%;margin-top:20px;">
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:16pt"><strong>最近邻插值(Nearest Neighbor)</strong></p>
+                            <p class="fragment" style="font-size:16pt">选择距离采样点$(u_p, v_p)$最近的纹素颜色作为面片颜色</p>
+                            <p class="fragment" style="font-size:16pt">
+                                $$
+                                \begin{cases}
+                                x=floor(u\times W + 0.5) \\
+                                y=floor(v\times H + 0.5)
+                                \end{cases}
+                                $$
+                                取纹素$(x, y)$的颜色
+                            </p>
+                            <p class="fragment" style="font-size:16pt">优点：计算简单，速度快</p>
+                            <p class="fragment" style="font-size:16pt">缺点：边缘锯齿明显，画面粗糙，产生明显的“马赛克”效果</p>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:16pt"><strong>双线性插值(Bilinear Interpolation)</strong></p>
+                            <p class="fragment" style="font-size:16pt">使用采样点$(u_p, v_p)$周围的<strong>四个纹素</strong>，根据距离加权平均得到面片颜色，这是更为平滑的信号重建方式</p>
+                            <ol>
+                                <li class="fragment" style="font-size:16pt">找到$(u_p, v_p)$周围<strong>最近的4个</strong>纹素中心</li>
+                                <li class="fragment" style="font-size:16pt">计算$(u_p, v_p)$到这4个中心的相对距离</li>
+                                <li class="fragment" style="font-size:16pt">根据距离，进行<strong>加权平均</strong></li>
+                            </ol>
+                            <p class="fragment" style="font-size:16pt">优点：颜色过渡平滑，画面细腻，“马赛克”会消失</p>
+                            <p class="fragment" style="font-size:16pt">缺点：计算量较大，速度较慢，纹理会变得模糊</p>
+                        </div>
+                    </div>
+                </section>
+                    <section>
+                    <h3>双线性插值</h3>
+                    <p class="fragment">双线性插值指在两个方向(X和Y)分别进行<strong>线性插值</strong></p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-Bilinear_interpolation_visualisation.svg.png" alt="bilinear interpolation" style="width: 50%;">
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:16pt">假设采样点$(u_p, v_p)$位于纹素$(x_1, y_1)$和$(x_2, y_2)$之间，四个纹素的颜色分别为$C_{11}, C_{12}, C_{21}, C_{22}$</p>
+                            <ol>
+                                <li class="fragment" style="font-size:16pt">先在X方向上进行线性插值：</li>
+                                <p class="fragment" style="font-size:16pt">
+                                    $$
+                                    \begin{cases}
+                                    C_{1} = C_{11} \times (1 - s) + C_{21} \times s \\
+                                    C_{2} = C_{12} \times (1 - s) + C_{22} \times s
+                                    \end{cases}
+                                    $$
+                                    其中$s = \frac{u_p - u_{x1}}{u_{x2} - u_{x1}}$
+                                </p>
+                                <li class="fragment" style="font-size:16pt">再在Y方向上进行线性插值：</li>
+                                <p class="fragment" style="font-size:16pt">
+                                    $$
+                                    C_p = C_{1} \times (1 - t) + C_{2} \times t
+                                    $$
+                                    其中$t = \frac{v_p - v_{y1}}{v_{y2} - v_{y1}}$
+                                </p>
+                            </ol>
+                            <p class="fragment" style="font-size:16pt">最终通过3次线性插值，读取4个纹素数据，重建出$(u_p, v_p)$的一个过渡平滑的采样颜色$C_p$</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>放大滤波Demo</h3>
+                    <iframe class="fragment" src="./AppDemos/tex-mag-bi-vs-nn.html" width="100%" height="540px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+                </section>
+                <section>
+                    <h3>纹理缩小(Minification)</h3>
+                    <p class="fragment">当一个屏幕像素(面片)覆盖<strong>多个纹素(Texel)</strong>时，GPU需要从这些纹素中计算出一个颜色值</p>
+                    <p class="fragment">根据采样定理，会遇到<strong>欠采样</strong>问题，面片的采样率不足以捕获纹理的高频细节</p>
+                    <p class="fragment">如果直接使用“最近邻插值”或“双线性插值”，会导致随机抓取高频样本，产生闪烁和摩尔纹</p>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-tex-min.png" alt="texture minification" style="width:80%;margin-top:20px;">
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt">对面片所覆盖的<strong>所有纹素</strong>(例如，$256\times 256$个)进行<strong>平均</strong>，得到面片颜色</p>
+                            <p class="fragment" style="font-size:20pt">但是实时计算时性能开销极大</p>
+                            <p class="fragment" style="font-size:20pt">可以采用<strong>预过滤</strong>与<strong>Mipmapping</strong></p>
+                            <p class="fragment" style="font-size:20pt">以<strong>空间换时间</strong>，GPU不在运行时动态计算平均值，而是在<strong>加载纹理时，预先计算好</strong></p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>多级渐远纹理映射(Mipmapping)</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap06/ch06-mipmap-level.png" alt="mipmapping levels" style="width:50%;margin-top:20px;">
+                            <img class="fragment" src="../../images/cg/chap06/ch06-mipmap-example.jpg" alt="mipmapping example" style="width:50%;margin-top:20px;">
+                        </div>
+                        <div>
+                            <div class="fragment note-box">
+                                <p><strong>Mipmap (多级渐远纹理)</strong> 是一系列预先计算好的、分辨率递减的<strong>平均值图像</strong>序列</p>
+                            
+                            </div>
+                            <p class="fragment">GPU渲染每个面片时，会根据该面片在屏幕上的大小(通过LOD计算)，<strong>自动选择</strong>一个最合适的Mipmap层级<strong>(即最接近该面片覆盖区域大小的<strong style="color:darkred">平均图</strong>)</strong>去采样</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>缩小滤波</h3>
+                    <p class="fragment">Mipmapping实现纹理滤波有了更多的选项</p>
+                    <div class="four-column">
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><code>GL_NEAREST_MIPMAP_NEAREST</code></p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">层间：<strong>NEAREST</strong>，选<strong>最近</strong>的一层</li>
+                                <li class="fragment" style="font-size:20pt">层内：<strong>NEAREST</strong>，使用<strong>最近邻插值</strong>进行点采样</li>
+                                <li class="fragment" style="font-size:20pt">速度最快，有马赛克，且Mip层级过渡有明显条带</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><code>GL_LINEAR_MIPMAP_NEAREST</code></p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">层间：<strong>NEAREST</strong>，选<strong>最近</strong>的一层</li>
+                                <li class="fragment" style="font-size:20pt">层内：<strong>LINEAR</strong>，使用<strong>双线性插值</strong>进行点采样</li>
+                                <li class="fragment" style="font-size:20pt">层内平滑，无马赛克，但Mip层级过渡有明显条带</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><code>GL_NEAREST_MIPMAP_LINEAR</code></p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">层间：<strong>LINEAR</strong>，混合<strong>两个</strong>Mip层</li>
+                                <li class="fragment" style="font-size:20pt">层内：<strong>NEAREST</strong>，使用<strong>最近邻插值</strong>进行点采样</li>
+                                <li class="fragment" style="font-size:20pt">层间平滑过渡，无条带，但层内有马赛克感，实践中已很少使用</li>
+                        </div>
+                        <div>
+                            <p class="fragment" style="font-size:20pt"><code>GL_LINEAR_MIPMAP_LINEAR</code></p>
+                            <ul>
+                                <li class="fragment" style="font-size:20pt">层间：<strong>LINEAR</strong>，混合<strong>两个</strong>Mip层</li>
+                                <li class="fragment" style="font-size:20pt">层内：<strong>NEAREST</strong>，使用<strong>双线性插值</strong>进行点采样</li>
+                                <li class="fragment" style="font-size:20pt"><strong>三线性滤波</strong>(Trilinear)，完全平滑，质量最佳，但速度稍慢。在所有距离和角度下都平滑，是现代游戏的首选方案</li>
+                        </div>
+                    </div>
+                    <div>
+                        <figure class="fragment">
+                            <img src="../../images/cg/chap06/ch06-Mipmap_Aliasing_Comparison.png" alt="mipmapping filtering comparison" style="width:65%;">
+                            <figcaption style="font-size:16pt">No Mipmapping vs mipmapping
+                            <br>左图：仅使用“最近邻插值”进行缩小滤波，出现严重走样和摩尔纹；右图：使用Mipmapping和三线性滤波，画面平滑且细节丰富
+                            </figcaption>
+                        </figure>
+                    </div>
+                </section>
+                <section>
+                    <h3>Mipmap使用效果</h3>
+                    <p class="fragment">不同采样方法效果展示</p>
+                    <figure class="fragment">
+                        <img src="../../images/cg/chap06/ch06-texmipmapfil.png" alt="mipmapping comparison" style="width: 35%;margin-top:20px;">
+                        <figcaption style="font-size:20pt">(a)点采样，(b)线性滤波, (c)Mipmapping点采样, (d)Mipmapping线性滤波</figcaption>
+                    </figure>
+                </section>
+            </section>
+            <section>
+                <section>
+                <h3>课堂测试</h3>
+                <div class="quiz-container">
+                    <p style="font-size:24pt;">在纹理缩小过程中，使用Mipmapping和三线性滤波的主要优点是什么？</p>
+                    <ul id="quiz-options" class="quiz-options" data-answer="correct">
+                        <li data-answer="incorrect">提高纹理的分辨率</li>
+                        <li data-answer="incorrect">减少内存使用</li>
+                        <li data-answer="correct">减少走样和摩尔纹现象</li>
+                        <li data-answer="incorrect">加快渲染速度</li>
+                    </ul>
+                    <div id="answer-explanation" class="answer-explanation" style="display:none;">
+                        <strong>答案解析：</strong>
+                        <p>使用Mipmapping和三线性滤波的主要优点是<strong>减少走样和摩尔纹现象</strong>。Mipmapping通过预计算不同分辨率的纹理图像，允许GPU根据面片在屏幕上的大小选择合适的纹理层级，从而避免了欠采样问题。而三线性滤波则通过在两个Mip层之间进行平滑过渡，进一步提升了视觉质量，确保纹理在不同距离下都能保持平滑和细节丰富。</p>
+                    </div>
+                </section>
+            <section>
+                <h3>情景问答</h3>
+                <p class="fragment">你正在开发一个开放世界赛车游戏。你需要为赛道（柏油马路）应用纹理。这条马路会从玩家的眼前一直延伸到地平线。</p>
+
+                <p class="fragment">问题：为了达到最佳的视觉效果（近处清晰、远处不闪烁、过渡平滑），你认为应该组合使用以下哪些技术？</p>
+                
+                <ol class="fragment">
+                    <li><strong>环绕模式 (Wrapping):</strong> ?</li>
+                    <li><strong>放大过滤 (Mag Filter):</strong> ? (解决近处的信号重建)</li>
+                    <li><strong>缩小过滤 (Min Filter):</strong> ? (解决远处的欠采样)</li>
+                </ol>
+                <div class="fragment" style="background: #aad2ea; padding: 10px; border-radius: 5px; margin-top: 30px;">
+                    <p style="color: #000000; margin-bottom: 5px;"><strong>推荐答案:</strong></p>
+                    <p style="color: #000000; margin: 0;">
+                        1.  <strong>环绕模式:</strong> <code>GL_REPEAT</code>。因为马路是连续重复的
+                    </p>
+                    <p style="color: #000000; margin-top: 10px;">
+                        2.  <strong>放大过滤:</strong> <code>GL_LINEAR</code> (双线性)。当玩家贴近马路时，不希望看到马赛克，而是平滑的“周围平均”重建结果
+                    </p>
+                    <p style="color: #000000; margin-top: 10px;">
+                        3.  <strong>缩小过滤:</strong> <code>GL_LINEAR_MIPMAP_LINEAR</code> (三线性)。因为马路会延伸到极远处，这是解决“欠采样”走样的唯一最佳方案
+                    </T>
+                </div>
+            </section>
+            </section>
+            <!-- Slide 2: Summary -->
+            <section>
+                <h3>课堂总结</h3>
+                <ul>
+                    <li><strong>环绕 (Wrapping):</strong> 通过Repeat, Clamp,Mirror, Clamp-to-Border控制了UV坐标超过1时的行为</li>
+                    <li><strong>走样 (Aliasing):</strong> 根本原因是<strong>面片采样频率</strong>与<strong>纹素信号频率</strong>不匹配（违反了奈奎斯特定理）</li>
+                    <li class="fragment"><strong>放大(Magnification):</strong> 是一个<strong>信号重建</strong>问题。可以使用用<strong>双线性插值 </strong>替代<strong>最近邻插值</strong>，消除马赛克</li>
+                    <li class="fragment"><strong>缩小 (Minification):</strong> 是一个<strong>欠采样</strong>问题。引入<strong>Mipmapping</strong> 作为一种“<strong>预过滤</strong>”技术，通过预计算的平均值图像金字塔，解决远景闪烁</li>
+                    <li class="fragment"><strong>三线性过滤 (Trilinear):</strong> 结合 Mipmapping 和双线性过滤，实现了在所有距离下最平滑的纹理过渡，是现代渲染的基石。</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+<script>
+
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: '100%',
+    height: '100%',
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    })
+
+    function handleQuizClick(optionsId) {
+            const options = document.getElementById(optionsId);
+            if (!options) return;
+
+            options.addEventListener('click', function(event) {
+                const clickedLi = event.target.closest('li');
+                if (!clickedLi) return;
+
+                // 移除所有选项的 selected 状态
+                options.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // 为被点击的选项添加 selected 状态
+                clickedLi.classList.add('selected');
+
+                // 判断答案并添加相应样式
+                if (clickedLi.dataset.answer === 'correct') {
+                    clickedLi.classList.add('correct');
+                } else {
+                    clickedLi.classList.add('incorrect');
+                }
+            });
+        }
+</script>
+</body>
+</html>
