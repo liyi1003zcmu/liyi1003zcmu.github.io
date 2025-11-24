@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>计算机图形学-从几何到像素</title>
+
+    <meta name="description" content="光栅化">
+    <meta name="author" content="Liyi">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobil-web-app-status-bar-style" content="black">
+    
+    <link rel="stylesheet" href="../../../dist/reset.css">
+    <link rel="stylesheet" href="../../../dist/reveal.css">
+    <link rel="stylesheet" href="../../../dist/theme/white.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="../../../plugin/highlight/monokai.css" id="highligh">
+    
+<style>
+        .interactive-placeholder {
+            width: 100%;
+            height: 550px;
+            background-color: #f0f8ff;
+            border: 2px dashed #a0c4e4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            text-align: left;
+            color: #4682b4;
+            font-size: 0.7em;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+        .interactive-placeholder h4 {
+            margin-top: 0;
+            color: #2a5a8a;
+        }
+        /* Custom styles for image placeholders */
+        .placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #888;
+            font-size: 1.2em;
+            height: 400px;
+            width: 100%;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .placeholder-half {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .reveal strong {
+            color: #2a76dd;
+        }
+
+        .reveal p, .reveal dd{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal li{
+            font-size:24pt;
+            text-align:left;
+        }
+        .reveal dt{
+            font-size:28pt;
+            color:red;
+            font-weight:bold;
+        }
+
+        .two-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .three-column {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .two-column > div {
+            width: 48%;
+        }
+
+        .three-column > div {
+            width: 32%;
+        }
+    </style>
+    <style>
+        /* Styles for the interactive application */
+        .app-container {
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            gap: 20px;
+            font-size: 14px;
+            height: 550px;
+        }
+        .controls-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .canvas-panel { flex: 1.5; border: 1px solid #ccc; border-radius: 8px; }
+        .control-group { background-color: #f8f9fa; padding: 10px; border-radius: 8px; }
+        .control-group h5 { margin: 0 0 10px 0; }
+        #transform-list { list-style: none; padding: 0; margin: 0; min-height: 150px; border: 1px dashed #ccc; border-radius: 8px; background-color: white;}
+        #transform-list li {
+            padding: 8px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #transform-list li.dragging { opacity: 0.5; background: #eef; }
+        .param-inputs { display: flex; gap: 5px; align-items: center; }
+        .param-inputs label { font-size: 0.9em; }
+        .param-inputs input { width: 50px; }
+        .delete-btn { margin-left: auto; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; line-height: 20px; text-align: center; font-weight: bold;}
+        .matrix-display { font-family: 'Courier New', Courier, monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: right; }
+        .matrix-display span { padding: 2px 5px; background: white; border-radius: 2px; }
+    </style>
+    <style>
+        .reveal .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+            height: 0;
+        }
+
+        .interactive-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            font-family: sans-serif;
+        }
+        .controls-formulas {
+            flex: 1;
+            font-size: 0.6em;
+            text-align: left;
+        }
+        .canvas-container {
+            flex: 2;
+        }
+        #rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+         #rotation-canvas:active {
+            cursor: grabbing;
+        }
+        .formula-display p {
+            margin: 5px 0;
+        }
+        .formula-highlight-x {
+             background-color: #fff8c4;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula-highlight-y {
+             background-color: #e8ffed;
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .formula {
+            margin: 20px 0;
+        }
+
+        #arbitrary-rotation-canvas {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: grab;
+        }
+        #arbitrary-rotation-canvas:active {
+            cursor: grabbing;
+        }
+        #composite-3d-canvas { 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+        }
+        .reason-box { 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #ffc107; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .note-box {
+            background-color: #e8f4f8;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* 3D transform styles */
+        .matrix-display-3d {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            text-align: right;
+        }
+        .matrix-display-3d span {
+            padding: 2px 5px;
+            background: white;
+            border-radius: 2px;
+        }
+    </style>
+    <style type="text/css">
+            .columnleft {
+                float: left;
+                width: 50%;
+            }
+            .columnright{
+                float: right;
+                width: 50%;
+            }
+    </style>
+     <style>
+        .quiz-container {
+            font-size: 24px;
+        }
+        .quiz-options {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .quiz-options li {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .quiz-options li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .quiz-options li.selected.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+        }
+        .quiz-options li.selected.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .answer-explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-left: 5px solid #495057;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .answer-explanation strong {
+            color: #2a76dd;
+        }
+    </style>
+    <style>
+        :root {
+            --r-main-font: "Inter", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --r-heading-font: "Inter", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+            --r-code-font: "Fira Code", "Consolas", monospace;
+        }
+        .memory-layout {
+            font-family: var(--r-code-font);
+            font-size: 0.8em;
+            text-align: left;
+            background: #b3dcf0;
+            color: #0c0e0f;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .pixel-r { color: #ff6b6b; }
+        .pixel-g { color: #6bff6b; }
+        .pixel-b { color: #6b6bff; }
+        .pixel-a { color: #dddddd; }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: Title -->
+            <section id="titlepage">
+                <h1>计算机图形学</h1>
+                <h2>第七章(2) 光栅化</h2>
+
+                <p id="date" style="font-size:28pt;text-align:center"></p>
+                <script>
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = now.getMonth();
+                    var day = now.getDate();
+                    document.getElementById("date").innerHTML = year + "年" + (1 + month) + "月" + day + "日";
+                </script>
+            </section>
+            <!-- Intro -->
+            <section>
+                <h3>光栅化 (Rasterization)</h3>
+                <p class="fragment"><strong>问题：</strong> 屏幕是由<strong>离散</strong>的像素点组成的网格。如何将<strong>连续</strong>的几何图元（如直线、圆、三角形）映射到这些离散的像素上？</p>
+                <p class="fragment"><strong>扫描转换 (Scan Conversion)：</strong> 确定最佳逼近几何图元的像素集合的过程。</p>
+                <div class="two-column">
+                    <div>
+                        <p class="fragment" style="text-align:center">数学世界，<strong>连续、无限精度</strong></p>
+                        <svg width="200" height="200" style="border:1px solid black">
+                        <line x1="10" y1="190" x2="190" y2="10" stroke="#00d4ff" stroke-width="2"/>
+                    </svg>
+                    </div>
+                    <div>
+                        <p class="fragment" style="text-align:center">光栅世界，<strong>离散、像素排列</strong></p>
+                        <div id="pixel-demo" style="display:grid; grid-template-columns:repeat(10, 1fr); gap:1px; width:200px; height:200px; margin:auto;"></div>
+                        <script>
+                            const pixelDemo = document.getElementById("pixel-demo");
+                            for(let i=0; i<100; i++){
+                                let div = document.createElement("div");
+                                div.style.backgroundColor = (i%11==0)? "#00d4ff" : "#333";
+                                pixelDemo.appendChild(div);
+                            }
+                        </script>
+                    </div>
+                </div>
+                <p class="fragment" style="text-align:center">如何在有限的方格中准确地绘制出“直线”</p>
+            </section>
+            <section>
+                <h3>学习目标</h3>
+                <ul>
+                    <li class="fragment">理解 <span class="highlight-text">直线绘制算法<strong>DDA</strong>与<strong>Bresenham</strong>算法</li>
+                    <li class="fragment">理解使用<strong>Bresenham</strong>算法结合<span class="highlight-text">八路对称性</span>高效画圆</li>
+                </ul>
+            </section>
+            <section>
+                <h3>什么是光栅化</h3>
+                <p class="fragment">光栅化 (Rasterization) 是将几何图元（如点、线、多边形）转换为像素的过程，也称为扫描转换。</p>
+                <p class="fragment">从数学和信号处理的角度，光栅化的本质是一个<strong>离散化采样</strong>的过程，即将在<strong>连续</strong>的几何空间中，由<strong>顶点</strong>定义的<strong>矢量图形</strong>，转变为在<strong>离散</strong>的屏幕空间中，由有限个<strong>像素点</strong>构成的阵列</p>
+                <p class="fragment">光栅化在图形渲染管线中，通常发生在<strong>顶点处理</strong>之后，<strong>片元处理</strong>之前，主要有两个任务：</p>
+                <ul>
+                    <li class="fragment"><strong>覆盖检测</strong>，判断投影后的几何图元覆盖了屏幕上的哪些像素点，通过采样实现</li>
+                    <li class="fragment"><strong>属性计算</strong>，利用<strong>重心坐标插值</strong>等方法，计算每个像素点的属性值，包括颜色、法线、纹理坐标等，以便进行后续着色</li>
+                </ul>
+            </section>
+            <!-- Line Drawing -->
+            <section>
+                <section>
+                    <h3>直线的扫描转换</h3>
+                    <div class="two-column">
+                        <div>
+                            <p class="fragment">根据线段两个端点的坐标(通常是<strong>浮点数</strong>)，确定一组最佳逼近该线段的<Strong>整数坐标像素点</Strong>，并将这些像素点写入帧缓存的过程</p>
+                            <ul>
+                                <li class="fragment">假设有线段，两顶点坐标分别为$(x_1,y_1)$和$(x_2,y_2)$, 直线方程为$y=mx+h$，其中斜率为$m=\frac{y_2-y_1}{x_2-x_1} =\frac{\Delta x}{\Delta y}$</li>
+                                <li class="fragment">并假设已定义函数write_pixel用于绘制每个像素</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap07/ch07-linescanconv.png" alt="直线扫描转换" style="width:80%">
+                        </div>
+                    </div>
+                </section>
+                <!-- DDA -->
+                <section>
+                    <h3>DDA 算法 (Digital Differential Analyzer)</h3>
+                    <p class="fragment"><strong>基本思想：</strong> 利用增量，在沿着扫描线$\Delta x=1$的方向上计算</p>
+                    <p class="fragment">假设 $0< m \le 1$，让 $x$ 每次步进 1 ($x_{k+1} = x_k + 1$)</p>
+                    <p class="fragment">则 $y$ 的增量为 $m$：</p>
+                    <p class="fragment" style="text-align: center; font-size: 32pt;">$y_{k+1} = y_k + m$</p>
+                    <p class="fragment">计算出的$y$值通常为浮点数，需要四舍五入取整，即$y_k=round(y_k)$</p>
+                    <div>
+                        <pre class="fragment"><code class="c" data-trim>
+for(x=x1;x<=x2;x++){
+	y+=m;
+	write_pixel(x,round(y),line_color);
+}                           
+                        </code></pre>
+                    </div>
+                </section>
+                <section>
+                    <h3>DDA算法</h3>
+                    <p class="fragment">DDA算法的主要思想是，对每一个$x$，计算距离其对应值最近的$y$值</p>
+                    <div class="two-column">
+                        <div>
+                           <p class="fragment">对于斜率较大的线段，如$m >1$，$y$的增量较大，导致浮点数误差积累，影响最终效果</p>
+                           <img class="fragment" src="../../images/cg/chap07/ch07-ddapbl.png" alt="DDA算法" style="width:50%">
+                        </div>
+                        <div>
+                            <p class="fragment">可利用<strong>对称性</strong>，原方法适用于$0\leq m \leq 1$的情况，当$m > 1$时，可交换$x$和$y$的角色，即对每个$y$，找到对应的$x$</p>
+                            <img class="fragment" src="../../images/cg/chap07/ch07-ddasol.png" alt="DDA算法" style="width:50%">
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="../AppDemos/DDA_demo.html" target="_blank">DDA算法Demo</a></p>
+                </section>
+                <section>
+                    <h3>DDA 算法的优缺点</h3>
+                    <ul>
+                        <li class="fragment"><strong>优点：</strong> 算法简单，利用了相邻像素的相关性</li>
+                        <li class="fragment"><strong>缺点：</strong>
+                            <ul>
+                                <li>涉及浮点数加法和取整运算，速度较慢（在早期硬件上）</li>
+                                <li>浮点数累加可能导致精度误差积累</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+                <!-- Bresenham -->
+                <section>
+                    <h3>Bresenham画线算法</h3>
+                    <div class="two-column">
+                    <div>
+                        <ul>
+                        <li class="fragment">DDA算法需要在每一步都执行<strong>浮点运算</strong>，在Bresenham算法中可避免浮点运算</li>
+                        <li class="fragment">算法运行可利用<strong>对称性</strong>先考虑$0\leq m\leq 1$的情况，其它情况可根据对称性进行计算</li>
+                        <li class="fragment">假设像素的中心位置为<strong>整数的一半</strong></li>
+                        <li class="fragment">根据算法，如果从某一个特定像素开始绘制，下一个能够绘制的像素只有两种可能</li>
+                    </ul>
+                    </div>
+                    <div>
+                        <img class="fragment" src="../../images/cg/chap07/ch07-bresencand.png" alt="Bresenham算法候选点" style="width:80%">
+                    </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>Bresenham画线算法</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap07/ch07-bresenhamdec.png" alt="Bresenham算法决定值" style="width:80%">
+                        </div>
+                        <div>
+                            <p class="fragment">根据$p=\Delta_x(b-a)$的值，下一个候选点有两种情形：</p>
+                            <ul>
+                                <li class="fragment">若$p<0$，取下方像素，即下一个点为$(x_k+1, y_k)$</li>
+                                <li class="fragment">若$p\ge 0$，取上方像素，即下一个点为$(x_k+1, y_k+1)$</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <h3>Bresenham画线算法</h3>
+                    <p class="fragment">建立Bresenham画线算法的增量递推式提高计算$p$的效率。当$x=k$时，记为$p_k$，当$x=k+1$时，为$p_{k+1}$，有：</p>
+                    <ul>
+                        <li class="fragment">$p_{k+1}=p_k+2\Delta_y$, $p_k\leq 0$</li>
+                        <li class="fragment">$p_{k+1}=p_k+2(\Delta_y-\Delta_x)$, $p_k>0$</li>
+                        <li class="fragment">$p_0=2\Delta_y-\Delta_x$</li>
+                    </ul>
+                    <p class="fragment">对每个$x$，只需一次整数加法和一次判断即可，在显卡核心上，只需要一条指令就能完成计算</p>
+                    <p class="fragment"><a href="../AppDemos/Bresenham_line_demo.html" target="_blank">Bresenham算法Demo</a></p>
+                </section>
+                <section>
+                    <h3>Bresenham 算法示例代码</h3>
+                    <pre><code class="cpp" data-trim data-line-numbers>
+void BresenhamLine(int x0, int y0, int x1, int y1) {
+    int dx = abs(x1 - x0), dy = abs(y1 - y0);
+    int p = 2 * dy - dx;
+    int twoDy = 2 * dy, twoDyMinusDx = 2 * (dy - dx);
+    int x, y;
+    // ... (处理不同象限和斜率，此处简化为 0 < m < 1 )
+    if (x0 > x1) { x = x1; y = y1; x1 = x0; } 
+    else { x = x0; y = y0; }
+    
+    setPixel(x, y);
+    while (x < x1) {
+        x++;
+        if (p < 0)
+            p += twoDy;
+        else {
+            y++;
+            p += twoDyMinusDx;
+        }
+        setPixel(x, y);
+    }
+}
+                    </code></pre>
+                </section>
+            </section>
+<!-- Circle Drawing -->
+            <section>
+                <section>
+                    <h3>圆的绘制</h3>
+                    <p class="fragment">对圆心位于原点的圆，定义函数：$f(x,y)=x^2+y^2-r^2$</p>
+                    <p class="fragment">对任意一点$(x,y)$，有
+                        $$
+                        f(x,y)=\begin{cases}
+                            & f < 0, & if(x,y)在圆内 \\
+                            & f = 0, & if(x,y)在圆弧上 \\
+                            & f > 0, & if(x,y)在圆弧外
+                        \end{cases}
+                        $$
+                    </p>
+                    <p class="fragment">圆的边界由函数$f(x,y)=0$确定</p>
+                    <p class="fragment">圆的绘制需要判断每个像素是否在圆内或圆外</p>
+                    <p class="fragment">如果直接采用方程式计算$y=\pm\sqrt{r^2-x^2}$, 因涉及开方运算，效率低且不均匀</p>
+                </section>
+                <section>
+                    <h3>圆的绘制</h3>
+                     <p class="fragment">圆具有高度对称性。只要画出 $\frac{1}{8}$ 圆弧（例如 $0^\circ$ 到 $45^\circ$），就可以通过对称变换得到整个圆</p>
+                    <div class="fragment">
+                        <p>若点 $(x, y)$ 在圆上，则以下点也在圆上：</p>
+                        <p>$(y, x), (y, -x), (x, -y), (-x, -y), (-y, -x), (-y, x), (-x, y)$</p>
+                    </div>
+                    <p class="fragment">因此，我们只需要计算 $0 \le x \le y$ 的部分</p>
+                </section>
+                <section>
+                    <h3>Bresenham算法画圆</h3>
+                    <p class="fragmeht">类似Bresenham算法绘制直线，使用整数运算，根据圆弧上当前已占据的像素计算下一个像素的位置</p>
+                    <ul>
+                        <li class="fragment">当前像素为$x_k,y_k$时，下一个像素要么为$(x_k+1, y_k)$，或者是$(x_k+1, y_k-1)$</li>
+                        <li class="fragment">取哪个点，取决于这两个点中哪一个<strong>离圆弧更近</strong></li>
+                        <li class="fragment">根据距离，同样可以建立递推式有：
+                            $$
+p_{k+1}=
+\begin{cases}
+p_k+2x_{k+1}+1 & if p_k<0\\
+p_k+2x_{k+1}+1-2y_{k+1} & if p_k>=0
+\end{cases}
+                            $$
+                            其中，$2x_{k+1}=2x_k+2, 2y_{k+1}=2y_k-2$
+                        </li>
+                        <li class="fragment">当$p_k < 0$,取下一像素点为$(x_k+1,y_k)$，当$p_k \geq 0$，取下一像素点为$(x_k+1,y_k-1)$</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>圆的绘制</h3>
+                    <div class="two-column">
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap07/ch07-circle-brenexa.png" alt="Bresenham算法画圆八分之一" style="width:80%">
+                        </div>
+                        <div>
+                            <img class="fragment" src="../../images/cg/chap07/ch07-circle-brenexa-1.png" alt="Bresenham算法画圆八分之一" style="width:80%">
+                        </div>
+                    </div>
+                    <p class="fragment"><a href="../AppDemos/Bresenham_circle_demo.html" target="_blank">Bresenham画圆示例Demo</a></p>
+                </section>
+                <section>
+                    <h3>圆的绘制</h3>
+                    <p class="fragment">Bresenham算法画圆的示例代码</p>
+                    <pre class="fragment"><code class="c" data-trim data-line-numbers>
+void BresenhamCircle(int x0, int y0, int r) {
+    int x = 0, y = r; // 从 (0,r) 开始
+    int p = 1 - r;
+    setPixel(x0 + x, y0 + y);
+    setPixel(x0 - x, y0 + y);
+    setPixel(x0 + x, y0 - y);
+    setPixel(x0 - x, y0 - y);
+    setPixel(x0 + y, y0 + x);
+    setPixel(x0 - y, y0 + x);
+    setPixel(x0 + y, y0 - x);
+    setPixel(x0 - y, y0 - x);
+    while (x < y) {
+        if (p < 0)
+            p += 2 * x + 3;
+        else {
+            p += 2 * (x - y) + 5;
+            y--;
+        }
+        x++;
+        setPixel(x0 + x, y0 + y);
+        setPixel(x0 - x, y0 + y);
+        setPixel(x0 + x, y0 - y);
+        setPixel(x0 - x, y0 - y);
+        setPixel(x0 + y, y0 + x);
+        setPixel(x0 - y, y0 + x);
+        setPixel(x0 + y, y0 - x);
+        setPixel(x0 - y, y0 - x);
+    }
+}
+</code></pre>
+                </section>
+            </section>
+            <!-- 7. 课堂后测 (Post-assessment) - NEW -->
+            <section>
+                <!-- Q1 -->
+                <section>
+                    <h4>随堂测试(1)</h4>
+                    <div class="quiz-container">
+                        <p>相比于 DDA 算法，Bresenham 算法在硬件实现上最大的优势是什么？</p>
+                        <ul class="quiz-options" id="q1-options">
+                            <li data-answer="incorrect">A. 代码行数更少</li>
+                            <li data-answer="incorrect">B. 能够绘制曲线</li>
+                            <li data-answer="correct">C. 仅使用整数加减和移位运算</li>
+                            <li data-answer="incorrect">D. 生成的直线更平滑</li>
+                        </ul>
+                        <div class="fragment answer-explanation" style="display: none;">
+                        <p><strong>C. 仅使用整数加减和移位运算</strong></p>
+                        <p>解析：这是避免浮点运算开销的关键。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Q2 -->
+                <section>
+                    <h4>随堂测试(2)</h4>
+                    <div class="quiz-container">
+                        <p>在 Bresenham 画线算法（第一象限，斜率 $0 < k < 1$）中，<br>如果决策参数 $P_k \ge 0$，下一个像素点应选哪里？</p>
+                        <ul class="quiz-options" id="q2-options">
+                            <li data-answer="incorrect">E (xk+1, yk)</li>
+                            <li data-answer="correct">NE (xk+1, yk+1)</li>
+                        </ul>
+                        <div class="fragment answer-explanation" style="display: none;">
+                            <p><strong>NE (xk+1, yk+1)</strong></p>
+                            <p>解析：Pk >= 0 意味着中点在直线的下方，直线更靠近上方的像素 (NE)。</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Q3 -->
+                <section>
+                    <h4>随堂测试(3)</h4>
+                    <div class="quiz-container">
+                        <p>利用圆的八路对称性，如果我们计算出了第一象限中 <br>$0^\circ$ 到 $45^\circ$ 区域的点 $(x, y)$，<br>那么点 $(y, x)$ 对应的是哪个区域？</p>
+                        <ul class="quiz-options" id="q3-options">
+                            <li data-answer="correct">A. 第一象限 $45^\circ$ 到 $90^\circ$</li>
+                            <li data-answer="incorrect">B. 第二象限</li>
+                            <li data-answer="incorrect">C. 第四象限</li>
+                        </ul>
+                        <div class="fragment answer-explanation" style="display: none;">
+                            <p> <strong>A. 第一象限 $45^\circ$ 到 $90^\circ$</strong></p>
+                            <p>解析：(x, y) 关于 y=x 对称得到 (y, x)，仍在第一象限。</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+            <!-- Summary -->
+            <section>
+                <h3>总结</h3>
+                <ul>
+                    <li class="fragment"><strong>光栅化</strong>是将连续几何转换为离散像素的过程</li>
+                    <li class="fragment"><strong>DDA算法</strong>利用增量思想，但涉及浮点运算</li>
+                    <li class="fragment"><strong>Bresenham算法</strong>仅使用整数运算，效率高，是画线的标准算法</li>
+                    <li class="fragment"><strong>Bresenham画圆算法</strong>利用圆的<strong>八分对称性</strong>和整数决策参数，高效绘制圆</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+<script src="../../../dist/reveal.js"></script>
+<script src="../../../plugin/zoom/zoom.js"></script>
+<script src="../../../plugin/notes/notes.js"></script>
+<script src="../../../plugin/search/search.js"></script>
+<script src="../../../plugin/markdown/markdown.js"></script>
+<script src="../../../plugin/highlight/highlight.js"></script>
+<script src="../../../plugin/math/math.js"></script>
+
+<script>
+Reveal.initialize({
+	bash: true,
+	// display controls in the bottom right corner
+    controls: true,
+
+    hash: true,
+
+    // display a presentation progress bar
+    progress: true,
+
+    // set default timing of 2 minutes per slides
+    defaultTiming: 120,
+
+    // Display the page number of the current slides
+    slideNumber: true,
+
+    // Push each slide change to the browser history
+    history: false,
+
+    // Enable keyboard shortcuts for navigation
+    keyboard: true,
+
+    // Enable the slide overview mode
+    overview: true,
+
+    // Vertical centering of slides
+    center: true,
+
+    // Enable touch navigation on devices with touch input
+    touch: true,
+
+    // Loop the presentation
+    loop: false,
+
+    // Change teh presentation direction to be RTL
+    rtl: false,
+
+    // Randomizes the order of slides each time the presentation loads
+    shuffle: false,
+
+    // Turns fragments on and off globally
+    fragment: true,
+
+    // Flags if the presentation is running in an embedded mode,
+    // i.e. contained within a limited portion of the screen
+    embedded: false,
+
+    // Flags if we should show a help overlay when the questionmark key is pressed
+    help: true,
+
+    // Flags if speaker notes should be visible to all viewers
+    showNotes: false,
+
+    // Global override for autoplaying embedded media( video/audio/iframe)
+    // - null: media will only autoplay if data-autopay is present
+    // - true: all media will autoplay, regradless of individual setting
+    // - false: no media will autoplay, regardless of individual setting
+    autoPlayMedia: null,
+
+    // Number of milliseconds between automatically proceeding to the next slide, 
+    //disabled when set to 0, this value can be overwritten by
+    // using a data-autoslide attribute on your slides
+    autoSlide: 0,
+
+    // Stop auto-sliding after user input
+    autoSlideStoppable: true,
+
+    // Use this method for navigation when auto-sliding
+    autoSlideMethod: Reveal.navigateNext,
+
+    // Enable slide navigation via mouse wheel
+    mouseWheel: false,
+
+    // Hides the address bar on mobile devices
+    hideAddressBar: true,
+
+    // Opens links in an iframe preview overlay
+    previewLinks: false,
+
+    // Transition style
+    transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+    // Transition speed
+    transitionSpeed: 'default', // default/fast/slow
+
+    // Transition style for full page slide backgrounds
+    backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+
+    // Number of slides away from the current that are visible
+    viewDistance: 3,
+
+    // Parallax background image
+    parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakin-static/reveal-js/reveal-parallax-1.jpg'"
+
+    // Parallax background size
+    parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+    // Number of pixels to move the parallax background per slide
+    // - calculated automatically unless specified
+    // - set to 0 to disable movement along an axis
+    parallaxBackgroundHorizontal: null,
+    parallaxBackgroundVertical: null,
+
+    // The display mode that will be used to show slides
+    display: 'block',
+
+    // print to pdf while no slide grows to more than one printed page
+    pdfMaxPagesPerSlide: 1,
+
+    // presentation
+    width: '100%',
+    height: '100%',
+
+    margin: 0.1,
+
+    minScale: 0.2,
+    maxScale: 1.5, 
+    plugins: [RevealMath.KaTeX, RevealHighlight, RevealNotes],
+    });
+</script>
+<script>
+    // Interactive Quiz Logic
+function handleQuizClick(optionsId) {
+            const options = document.getElementById(optionsId);
+            if (!options) return;
+
+            options.addEventListener('click', function(event) {
+                const clickedLi = event.target.closest('li');
+                if (!clickedLi) return;
+
+                const clickOptions = event.target.closest('.quiz-options');
+                const quizContainer = clickOptions.closest('.quiz-container');
+                const explanation = quizContainer.querySelector('.answer-explanation');
+
+                // 移除所有选项的 selected 状态
+                options.querySelectorAll('li').forEach(li => {
+                    li.classList.remove('selected', 'correct', 'incorrect');
+                });
+
+                // 为被点击的选项添加 selected 状态
+                clickedLi.classList.add('selected');
+
+                // 判断答案并添加相应样式
+                if (clickedLi.dataset.answer === 'correct') {
+                    clickedLi.classList.add('correct');
+                    explanation.style.display = 'block';
+                } else {
+                    clickedLi.classList.add('incorrect');
+                }
+            });
+        }
+
+        handleQuizClick('q1-options');
+        handleQuizClick('q2-options');
+        handleQuizClick('q3-options');
+
+</script>
+</body>
+</html>

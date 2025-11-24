@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="900" height="400" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            cursor: default;
+        }
+        .code { font-family: 'Consolas', 'Monaco', monospace; fill: #d32f2f; font-weight: bold; }
+    </style>
+    
+    <!-- Background -->
+    <rect x="0" y="0" width="900" height="400" fill="white"/>
+
+    <!-- Title -->
+    <text x="450" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#333">Z-Buffer 算法：逻辑流程图</text>
+    <text x="450" y="70" text-anchor="middle" font-size="16" fill="#666">深度测试的核心判断逻辑 (Depth Test Logic)</text>
+
+    <!-- Definitions -->
+    <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#333" />
+        </marker>
+        <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#2e7d32" />
+        </marker>
+        <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#c62828" />
+        </marker>
+    </defs>
+
+    <!-- ================= LOGICAL FLOWCHART ================= -->
+    <!-- Shifted up to fit the new compact view -->
+    <g transform="translate(50, 120)">
+        
+        <!-- Step 1: Input Fragment -->
+        <g transform="translate(0, 50)">
+            <rect x="0" y="0" width="180" height="60" rx="5" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+            <text x="90" y="25" text-anchor="middle" font-weight="bold" font-size="14">输入片元 (Fragment)</text>
+            <text x="90" y="45" text-anchor="middle" font-size="12" fill="#555">位置(x,y), 深度 Z_curr</text>
+        </g>
+        
+        <line x1="180" y1="80" x2="240" y2="80" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+
+        <!-- Step 2: Comparison Diamond -->
+        <g transform="translate(240, 30)">
+            <polygon points="100,0 200,50 100,100 0,50" fill="#fff9c4" stroke="#fbc02d" stroke-width="2"/>
+            <text x="100" y="40" text-anchor="middle" font-weight="bold" font-size="14">深度测试</text>
+            <text x="100" y="65" text-anchor="middle" font-size="12" class="code">Z_curr &lt; Z_buffer[x,y] ?</text>
+        </g>
+
+        <!-- Arrows from Diamond -->
+        <!-- Yes Branch -->
+        <line x1="440" y1="80" x2="520" y2="80" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrowGreen)"/>
+        <text x="460" y="70" font-size="14" font-weight="bold" fill="#2e7d32">是 (更近)</text>
+
+        <!-- No Branch -->
+        <line x1="340" y1="130" x2="340" y2="180" stroke="#c62828" stroke-width="2" marker-end="url(#arrowRed)"/>
+        <text x="350" y="160" font-size="14" font-weight="bold" fill="#c62828">否 (被遮挡)</text>
+
+        <!-- Step 3: Pass (Update) -->
+        <g transform="translate(520, 30)">
+            <rect x="0" y="0" width="220" height="100" rx="5" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+            <text x="110" y="25" text-anchor="middle" font-weight="bold" font-size="14" fill="#2e7d32">更新缓冲区 (Update)</text>
+            <line x1="20" y1="35" x2="200" y2="35" stroke="#a5d6a7"/>
+            
+            <text x="20" y="60" font-size="12" fill="#333">1. 颜色缓冲 = 新颜色</text>
+            <text x="20" y="85" font-size="12" fill="#333">2. 深度缓冲 = Z_curr</text>
+        </g>
+
+        <!-- Step 4: Fail (Discard) -->
+        <g transform="translate(260, 180)">
+            <rect x="0" y="0" width="160" height="50" rx="5" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+            <text x="80" y="30" text-anchor="middle" font-weight="bold" font-size="14" fill="#c62828">丢弃片元 (Discard)</text>
+        </g>
+    </g>
+
+</svg>
