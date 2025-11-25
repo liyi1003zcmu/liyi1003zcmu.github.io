@@ -47,6 +47,41 @@
 | ---- |
 |[第6章](./CourseWare/CProgChapters/cpchapter-6.html)|
 
+### 第7章
+
+|    | 
+| ---- |
+|[第7章](./CourseWare/CProgChapters/cpchapter-7.html)|
+
+### 第8章
+
+|    | 
+| ---- |
+|[第8章](./CourseWare/CProgChapters/cpchapter-8.html)|
+
+### 第9章
+
+|    | 
+| ---- |
+|[第9章](./CourseWare/CProgChapters/cpchapter-9.html)|
+
+### 第10章
+
+|    | 
+| ---- |
+|[第10章](./CourseWare/CProgChapters/cpchapter-10.html)|
+
+### 第11章
+
+|    | 
+| ---- |
+|[第11章](./CourseWare/CProgChapters/cpchapter-11.html)|
+
+### 第12章
+
+|    | 
+| ---- |
+|[第12章](./CourseWare/CProgChapters/cpchapter-12.html)|
 
 
 
