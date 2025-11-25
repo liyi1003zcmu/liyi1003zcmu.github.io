@@ -92,3 +92,10 @@
 | ---- | ---- | ---- |
 |[Chap5-demo1](./demos/chap5-demo-1.html)|[Chap5-demo2](./demos/chap5-demo-2.html)|[Chap5-demo3](./demos/chap5-demo-3.html)|
 |[Chap5-demo4](./demos/chap5-demo-4.html)|    |    |
+
+### 第6章
+
+|    |    |    |
+| ---- | ---- | ---- |
+|[Chap6-demo1](./demos/chap6-demo-1.html)|[Chap6-demo2](./demos/chap6-demo-2.html)|[Chap6-demo3](./demos/chap6-demo-3.html)|
+|[Chap6-demo4](./demos/chap6-demo-4.html)|    |    |
