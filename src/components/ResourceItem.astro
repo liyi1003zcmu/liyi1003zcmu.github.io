@@ -5,7 +5,7 @@ interface Props {
   resource: CollectionEntry<'resources'>;
 }
 const { resource } = Astro.props;
-const hasFile = Boolean(resource.data.fileUrl && resource.data.downloadable);
+const hasInternalResource = Boolean(resource.data.fileUrl);
 const hasExternal = Boolean(resource.data.externalUrl);
 ---
 
@@ -23,12 +23,16 @@ const hasExternal = Boolean(resource.data.externalUrl);
   </h2><p>{resource.data.description}</p><p class="card-meta">
     章节：{resource.data.chapter}{resource.data.fileFormat && ` · ${resource.data.fileFormat}`}{
       resource.data.fileSize && ` · ${resource.data.fileSize}`
-    } · 版本 {resource.data.version}
+    } · 顺序 {resource.data.order} · 版本 {resource.data.version}
   </p><TagList tags={resource.data.tags} linked={false} /><div class="resource-actions">
     {
-      hasFile && (
-        <a class="button" href={resource.data.fileUrl} download>
-          下载站内文件
+      hasInternalResource && (
+        <a
+          class="button"
+          href={resource.data.fileUrl}
+          download={resource.data.downloadable || undefined}
+        >
+          {resource.data.downloadable ? '下载站内文件' : '在线查看课件'}
         </a>
       )
     }{
@@ -42,6 +46,6 @@ const hasExternal = Boolean(resource.data.externalUrl);
           访问外部资源
         </a>
       )
-    }{!hasFile && !hasExternal && <span class="muted">演示条目，暂未提供下载地址</span>}
+    }{!hasInternalResource && !hasExternal && <span class="muted">演示条目，暂未提供访问地址</span>}
   </div>
 </article>

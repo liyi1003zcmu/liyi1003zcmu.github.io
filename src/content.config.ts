@@ -44,6 +44,7 @@ const resources = defineCollection({
     description: z.string(),
     course: z.string(),
     chapter: z.string().default('通用'),
+    order: z.number().int().min(1).default(999),
     resourceType: z.enum(resourceTypes),
     date: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),

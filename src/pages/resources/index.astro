@@ -4,7 +4,10 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import ResourceList from '@/components/ResourceList.astro';
 const resources = (await getCollection('resources', ({ data }) => data.public)).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+  (a, b) =>
+    a.data.course.localeCompare(b.data.course, 'zh-CN') ||
+    a.data.order - b.data.order ||
+    b.data.date.valueOf() - a.data.date.valueOf(),
 );
 const unique = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 const courses = unique(resources.map(({ data }) => data.course));
