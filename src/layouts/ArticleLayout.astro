@@ -1,0 +1,71 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Pagination from '@/components/Pagination.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import TagList from '@/components/TagList.astro';
+import { formatDate } from '@/lib/content';
+import type { MarkdownHeading } from 'astro';
+interface Props {
+  title: string;
+  description: string;
+  publishDate: Date;
+  updatedDate?: Date;
+  category: string;
+  tags?: string[];
+  headings?: MarkdownHeading[];
+  readingTime: number;
+  canonical?: string;
+  image?: string;
+  previous?: { href: string; label: string };
+  next?: { href: string; label: string };
+}
+const {
+  title,
+  description,
+  publishDate,
+  updatedDate,
+  category,
+  tags = [],
+  headings = [],
+  readingTime,
+  canonical,
+  image,
+  previous,
+  next,
+} = Astro.props;
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: publishDate.toISOString(),
+  dateModified: (updatedDate ?? publishDate).toISOString(),
+  author: { '@type': 'Person', name: 'lameduck' },
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+};
+---
+
+<BaseLayout {title} {description} {canonical} {image} type="article" publishedTime={publishDate}
+  ><Fragment slot="head"
+    ><script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(articleJsonLd)}
+    /></Fragment
+  ><div class="container">
+    <Breadcrumbs items={[{ label: '博客', href: '/blog/' }, { label: title }]} /><header
+      class="page-header"
+    >
+      <p class="eyebrow">示例文章 · {category}</p><h1 data-pagefind-meta="title">{title}</h1><p>
+        {description}
+      </p><p class="card-meta">
+        发布于 {formatDate(publishDate)}{updatedDate && ` · 更新于 ${formatDate(updatedDate)}`} · 约 {
+          readingTime
+        } 分钟
+      </p><TagList {tags} />
+    </header><div class="article-grid">
+      <article class="prose"><slot /></article><TableOfContents {headings} />
+    </div><Pagination {previous} {next} />
+  </div></BaseLayout
+>

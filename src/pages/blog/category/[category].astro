@@ -1,0 +1,30 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import BlogCard from '@/components/BlogCard.astro';
+import { publishedPosts } from '@/lib/content';
+export async function getStaticPaths() {
+  const posts = publishedPosts(await getCollection('blog'));
+  const categories = [...new Set(posts.map(({ data }) => data.category))];
+  return categories.map((category) => ({
+    params: { category },
+    props: { category, posts: posts.filter(({ data }) => data.category === category) },
+  }));
+}
+interface Props {
+  category: string;
+  posts: CollectionEntry<'blog'>[];
+}
+const { category, posts } = Astro.props;
+---
+
+<BaseLayout title={`分类：${category}`} description={`${category}分类下的博客文章。`}
+  ><div class="container">
+    <Breadcrumbs
+      items={[{ label: '博客', href: '/blog/' }, { label: `分类：${category}` }]}
+    /><header class="page-header">
+      <p class="eyebrow">文章分类</p><h1>{category}</h1><p>共 {posts.length} 篇文章。</p>
+    </header><div class="grid grid-2">{posts.map((post) => <BlogCard {post} />)}</div>
+  </div></BaseLayout
+>

@@ -1,0 +1,52 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import BlogCard from '@/components/BlogCard.astro';
+import { publishedPosts } from '@/lib/content';
+const posts = publishedPosts(await getCollection('blog'));
+const categories = [...new Set(posts.map(({ data }) => data.category))];
+const tags = [...new Set(posts.flatMap(({ data }) => data.tags))];
+---
+
+<BaseLayout title="博客日志" description="教学反思、程序设计与技术笔记。"
+  ><div class="container">
+    <Breadcrumbs items={[{ label: '博客日志' }]} /><header class="page-header">
+      <p class="eyebrow">博客日志</p><h1>教学反思与技术笔记</h1><p>
+        示例文章用于展示分类、标签、代码、表格、公式、图片与提示块，草稿不会生成页面。
+      </p><div class="button-row">
+        <a class="button" href="/blog/archive/">按年份归档</a><a class="button" href="/rss.xml"
+          >订阅 RSS</a
+        >
+      </div>
+    </header><section aria-labelledby="featured">
+      <h2 id="featured">推荐文章</h2><div class="grid grid-2">
+        {posts.filter(({ data }) => data.featured).map((post) => <BlogCard {post} />)}
+      </div>
+    </section><section class="page-section" aria-labelledby="all-posts">
+      <h2 id="all-posts">全部文章</h2><div class="grid grid-2">
+        {posts.map((post) => <BlogCard {post} />)}
+      </div>
+    </section><section class="page-section">
+      <h2>浏览主题</h2><p>
+        分类：{
+          categories.map((category, index) => (
+            <>
+              <a href={`/blog/category/${encodeURIComponent(category)}/`}>{category}</a>
+              {index < categories.length - 1 ? ' · ' : ''}
+            </>
+          ))
+        }
+      </p><p>
+        标签：{
+          tags.map((tag, index) => (
+            <>
+              <a href={`/blog/tag/${encodeURIComponent(tag)}/`}>#{tag}</a>
+              {index < tags.length - 1 ? ' · ' : ''}
+            </>
+          ))
+        }
+      </p>
+    </section>
+  </div></BaseLayout
+>

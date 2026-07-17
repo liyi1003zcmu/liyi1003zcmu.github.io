@@ -1,0 +1,25 @@
+---
+interface Props {
+  tags?: string[];
+  linked?: boolean;
+}
+const { tags = [], linked = true } = Astro.props;
+---
+
+{
+  tags.length > 0 && (
+    <ul class="tag-list" aria-label="标签">
+      {tags.map((tag) => (
+        <li>
+          {linked ? (
+            <a class="tag" href={`/blog/tag/${encodeURIComponent(tag)}/`}>
+              {tag}
+            </a>
+          ) : (
+            <span class="tag">{tag}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}

@@ -1,0 +1,60 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ArticleLayout from '@/layouts/ArticleLayout.astro';
+import BlogCard from '@/components/BlogCard.astro';
+import { entrySlug, estimateReadingTime, publishedPosts } from '@/lib/content';
+export async function getStaticPaths() {
+  const posts = publishedPosts(await getCollection('blog'));
+  return posts.map((post) => ({ params: { slug: entrySlug(post.id) }, props: { post, posts } }));
+}
+interface Props {
+  post: CollectionEntry<'blog'>;
+  posts: CollectionEntry<'blog'>[];
+}
+const { post, posts } = Astro.props;
+const index = posts.findIndex(({ id }) => id === post.id);
+const previousPost = posts[index + 1];
+const nextPost = posts[index - 1];
+const related = posts
+  .filter(
+    (item) =>
+      item.id !== post.id &&
+      (item.data.category === post.data.category ||
+        item.data.tags.some((tag) => post.data.tags.includes(tag))),
+  )
+  .slice(0, 2);
+const { Content, headings } = await render(post);
+const readingTime = post.data.readingTime ?? estimateReadingTime(post.body);
+---
+
+<ArticleLayout
+  title={post.data.title}
+  description={post.data.description}
+  publishDate={post.data.publishDate}
+  updatedDate={post.data.updatedDate}
+  category={post.data.category}
+  tags={post.data.tags}
+  {headings}
+  {readingTime}
+  canonical={post.data.canonical || undefined}
+  image={post.data.cover || undefined}
+  previous={previousPost
+    ? { href: `/blog/${entrySlug(previousPost.id)}/`, label: previousPost.data.title }
+    : undefined}
+  next={nextPost
+    ? { href: `/blog/${entrySlug(nextPost.id)}/`, label: nextPost.data.title }
+    : undefined}
+  ><Content /><section aria-labelledby="related">
+    <h2 id="related">相关文章</h2>{
+      related.length ? (
+        <div class="grid grid-2">
+          {related.map((item) => (
+            <BlogCard post={item} />
+          ))}
+        </div>
+      ) : (
+        <p>暂无相关文章。</p>
+      )
+    }
+  </section></ArticleLayout
+>

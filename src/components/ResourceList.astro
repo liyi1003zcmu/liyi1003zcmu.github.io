@@ -1,0 +1,21 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import EmptyState from './EmptyState.astro';
+import ResourceItem from './ResourceItem.astro';
+interface Props {
+  resources: CollectionEntry<'resources'>[];
+}
+const { resources } = Astro.props;
+---
+
+{
+  resources.length ? (
+    <div id="resource-list">
+      {resources.map((resource) => (
+        <ResourceItem resource={resource} />
+      ))}
+    </div>
+  ) : (
+    <EmptyState title="暂无资源" message="请稍后再来，或按照维护文档添加第一项资源。" />
+  )
+}

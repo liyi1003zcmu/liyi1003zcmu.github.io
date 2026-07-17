@@ -1,0 +1,41 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import ProjectLayout from '@/layouts/ProjectLayout.astro';
+import { entrySlug } from '@/lib/content';
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: entrySlug(project.id) },
+    props: { project },
+  }));
+}
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { Content } = await render(project);
+---
+
+<ProjectLayout
+  title={project.data.title}
+  description={project.data.description}
+  projectType={project.data.projectType}
+  status={project.data.status}
+  ><Content /><h2>阶段成果</h2><ul>
+    {project.data.outcomes.map((outcome) => <li>{outcome}</li>)}
+  </ul><h2>相关链接</h2>{
+    project.data.links.length ? (
+      <ul>
+        {project.data.links.map((link) => (
+          <li>
+            <a href={link.url} target="_blank" rel="noopener noreferrer">
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>该示例项目暂未配置外部链接。</p>
+    )
+  }</ProjectLayout
+>

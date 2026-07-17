@@ -1,0 +1,61 @@
+---
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import SeoHead from '@/components/SeoHead.astro';
+import '@/styles/global.css';
+import 'katex/dist/katex.min.css';
+import { siteConfig } from '@/config/site';
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+  type?: 'website' | 'article';
+  publishedTime?: Date;
+  noIndex?: boolean;
+}
+const {
+  title = siteConfig.name,
+  description,
+  image,
+  canonical,
+  type,
+  publishedTime,
+  noIndex = false,
+} = Astro.props;
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteConfig.name,
+  url: Astro.site?.href,
+  inLanguage: siteConfig.language,
+  description: siteConfig.description,
+  author: { '@type': 'Person', name: siteConfig.author },
+};
+---
+
+<!doctype html>
+<html lang={siteConfig.language}>
+  <head
+    ><meta charset="UTF-8" /><meta name="viewport" content="width=device-width" /><meta
+      name="generator"
+      content={Astro.generator}
+    /><SeoHead {title} {description} {image} {canonical} {type} {publishedTime} />{
+      noIndex && <meta name="robots" content="noindex" />
+    }<link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" /><link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${siteConfig.shortName} RSS`}
+      href="/rss.xml"
+    /><script is:inline type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} /><slot
+      name="head"
+    /></head
+  ><body
+    ><a class="skip-link" href="#main-content">跳到主要内容</a><Header /><main
+      id="main-content"
+      class="site-main"
+      data-pagefind-body
+    >
+      <slot />
+    </main><Footer /></body>
+</html>

@@ -1,0 +1,38 @@
+---
+title: 用最小示例定位 C 程序问题（示例文章）
+description: 演示代码高亮、引用与调试步骤的技术文章。
+publishDate: 2026-03-28
+draft: false
+featured: true
+category: 程序设计
+tags: [C 语言, 调试, 测试]
+author: lameduck
+---
+
+import Callout from '../../components/Callout.astro';
+
+> 本文代码仅用于演示文章能力。
+
+## 先缩小问题
+
+复制原程序，逐步移除与异常无关的输入、输出和分支，直到只剩最小复现：
+
+```c
+#include <stdio.h>
+
+int main(void) {
+  int values[3] = {1, 2, 3};
+  for (int i = 0; i < 3; ++i) {
+    printf("%d\n", values[i]);
+  }
+  return 0;
+}
+```
+
+<Callout title="调试提示">
+  先写出预期结果，再运行程序。这样观察到的是“预期与实际的差异”，而不只是屏幕上出现的数字。
+</Callout>
+
+## 再建立检查顺序
+
+依次检查编译器警告、边界条件、变量生命周期和输入合法性。一次只改变一个因素，保留能证明修复有效的测试用例。

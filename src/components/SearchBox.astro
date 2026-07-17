@@ -1,0 +1,59 @@
+<div id="search" class="card">
+  <label for="search-input"><strong>搜索站内内容</strong></label><p class="muted">
+    可检索课程、资源、博客和项目；搜索词仅在本机处理。
+  </p><input
+    id="search-input"
+    class="search-input"
+    type="search"
+    placeholder="例如：人工智能、实验、Java"
+    autocomplete="off"
+  /><p id="search-status" class="muted">正在加载搜索索引…</p><div
+    id="search-results"
+    aria-live="polite"
+  >
+  </div><noscript><p>搜索需要少量 JavaScript；关闭后仍可通过各栏目浏览全部内容。</p></noscript>
+</div>
+<script>
+  const input = document.querySelector<HTMLInputElement>('#search-input');
+  const status = document.querySelector<HTMLElement>('#search-status');
+  const results = document.querySelector<HTMLElement>('#search-results');
+  let pagefind:
+    | {
+        search: (term: string) => Promise<{
+          results: Array<{
+            data: () => Promise<{
+              url: string;
+              meta: { title?: string };
+              excerpt: string;
+              filters?: { type?: string[] };
+            }>;
+          }>;
+        }>;
+      }
+    | undefined;
+  try {
+    const pagefindPath = '/pagefind/pagefind.js';
+    pagefind = await import(/* @vite-ignore */ pagefindPath);
+    status!.textContent = '搜索索引已就绪。';
+  } catch {
+    status!.textContent = '开发模式下搜索索引尚未生成；运行正式构建后即可使用。';
+  }
+  input?.addEventListener('input', async () => {
+    const term = input.value.trim();
+    if (!pagefind || !results || !status) return;
+    if (!term) {
+      results.replaceChildren();
+      status.textContent = '请输入关键词。';
+      return;
+    }
+    const search = await pagefind.search(term);
+    const items = await Promise.all(search.results.slice(0, 20).map((result) => result.data()));
+    status.textContent = `找到 ${search.results.length} 条结果。`;
+    results.innerHTML = items
+      .map(
+        (item) =>
+          `<article class="resource-item"><p class="eyebrow">${item.filters?.type?.[0] ?? '内容'}</p><h2><a href="${item.url}">${item.meta.title ?? '未命名内容'}</a></h2><p>${item.excerpt}</p></article>`,
+      )
+      .join('');
+  });
+</script>

@@ -1,0 +1,17 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout title="项目与成果" description="教材、教学改革、科研与软件项目记录。"
+  ><div class="container">
+    <Breadcrumbs items={[{ label: '项目与成果' }]} /><header class="page-header">
+      <p class="eyebrow">项目与成果</p><h1>从目标到阶段记录</h1><p>
+        以下为示例项目，不代表作者真实成果；正式使用时请据实替换。
+      </p>
+    </header><div class="grid grid-3">{projects.map((project) => <ProjectCard {project} />)}</div>
+  </div></BaseLayout
+>

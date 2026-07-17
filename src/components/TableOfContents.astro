@@ -1,0 +1,25 @@
+---
+import type { MarkdownHeading } from 'astro';
+interface Props {
+  headings?: MarkdownHeading[];
+}
+const { headings = [] } = Astro.props;
+const visible = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  visible.length > 0 && (
+    <nav class="toc" aria-label="文章目录">
+      <>
+        <h2>文章目录</h2>
+        <ul>
+          {visible.map((heading) => (
+            <li style={`margin-left:${heading.depth === 3 ? '1rem' : '0'}`}>
+              <a href={`#${heading.slug}`}>{heading.text}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    </nav>
+  )
+}

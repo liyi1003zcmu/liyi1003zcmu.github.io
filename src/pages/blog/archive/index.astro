@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import { entrySlug, formatDate, publishedPosts } from '@/lib/content';
+const posts = publishedPosts(await getCollection('blog'));
+const years = Map.groupBy(posts, (post) => post.data.publishDate.getFullYear());
+---
+
+<BaseLayout title="博客归档" description="按年份浏览已发布文章。"
+  ><div class="container">
+    <Breadcrumbs items={[{ label: '博客', href: '/blog/' }, { label: '归档' }]} /><header
+      class="page-header"
+    >
+      <p class="eyebrow">文章归档</p><h1>按年份回顾</h1>
+    </header>{
+      [...years.entries()].map(([year, items]) => (
+        <section class="page-section">
+          <>
+            <h2>{year}</h2>
+            <ul>
+              {items.map((post) => (
+                <li>
+                  <time datetime={post.data.publishDate.toISOString()}>
+                    {formatDate(post.data.publishDate)}
+                  </time>
+                  　<a href={`/blog/${entrySlug(post.id)}/`}>{post.data.title}</a>
+                </li>
+              ))}
+            </ul>
+          </>
+        </section>
+      ))
+    }
+  </div></BaseLayout
+>

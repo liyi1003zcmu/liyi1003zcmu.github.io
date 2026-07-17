@@ -1,0 +1,23 @@
+---
+import { navigation } from '@/config/site';
+const { pathname } = Astro.url;
+const active = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
+---
+
+<nav class="desktop-nav" aria-label="主导航">
+  <ul class="nav-list">
+    {
+      navigation.map((item) => (
+        <li>
+          <a
+            class="nav-link"
+            href={item.href}
+            aria-current={active(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

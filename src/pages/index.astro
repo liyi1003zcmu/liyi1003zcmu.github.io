@@ -1,0 +1,113 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import CourseCard from '@/components/CourseCard.astro';
+import BlogCard from '@/components/BlogCard.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import ResourceItem from '@/components/ResourceItem.astro';
+import { publishedPosts } from '@/lib/content';
+import { siteConfig } from '@/config/site';
+const [courses, posts, resources, projects] = await Promise.all([
+  getCollection('courses'),
+  getCollection('blog'),
+  getCollection('resources', ({ data }) => data.public),
+  getCollection('projects'),
+]);
+const featuredCourses = courses
+  .filter(({ data }) => data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+const latestPosts = publishedPosts(posts).slice(0, 3);
+const latestResources = resources
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+const featuredProjects = projects
+  .filter(({ data }) => data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+---
+
+<BaseLayout title={siteConfig.name}
+  ><section class="hero">
+    <div class="container">
+      <p class="hero-kicker">大学教学 · 技术实践 · 持续记录</p><h1>{siteConfig.name}</h1><p
+        class="hero-lead"
+      >
+        {
+          siteConfig.description
+        }。这里集中整理课程、教学资源、技术笔记与项目记录；当前内容均为可替换的演示样例。
+      </p><div class="button-row">
+        <a class="button button-primary" href="/courses/">浏览课程</a><a
+          class="button"
+          href="/resources/">查找教学资源</a
+        >
+      </div>
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">网站介绍</p><h2>围绕教学过程组织内容</h2><p>
+          课程说明学习路径，资源支持课堂活动，博客记录思考，项目沉淀阶段成果。所有内容都使用
+          Markdown 或 MDX 维护。
+        </p>
+      </div><div class="card">
+        <p class="eyebrow">作者简介</p><h2>{siteConfig.author}</h2><p>
+          大学教师个人教学门户的演示简介。为避免编造信息，研究方向、单位、职称与联系方式留待作者自行补充。
+        </p><p><a href="/about/">完善关于页面 →</a></p>
+      </div>
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="section-heading">
+        <div><p class="eyebrow">主要课程</p><h2>从课程目标到学习任务</h2></div><a href="/courses/"
+          >全部课程</a
+        >
+      </div><div class="grid grid-3">
+        {featuredCourses.map((course) => <CourseCard {course} />)}
+      </div>
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="section-heading">
+        <div><p class="eyebrow">最新博客</p><h2>教学与技术笔记</h2></div><a href="/blog/"
+          >全部文章</a
+        >
+      </div><div class="grid grid-3">{latestPosts.map((post) => <BlogCard {post} />)}</div>
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="section-heading">
+        <div><p class="eyebrow">最新资源</p><h2>讲义、代码与实验材料</h2></div><a href="/resources/"
+          >筛选资源</a
+        >
+      </div>{latestResources.map((resource) => <ResourceItem {resource} />)}
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="section-heading">
+        <div><p class="eyebrow">项目与成果</p><h2>记录目标、过程与下一步</h2></div><a
+          href="/projects/">全部项目</a
+        >
+      </div><div class="grid grid-3">
+        {featuredProjects.map((project) => <ProjectCard {project} />)}
+      </div>
+    </div>
+  </section>
+  <section class="page-section">
+    <div class="container">
+      <div class="section-heading">
+        <div><p class="eyebrow">常用入口</p><h2>从这里开始</h2></div>
+      </div><div class="grid grid-3">
+        <a class="card" href="/blog/archive/"><h3>文章归档</h3><p>按年份回顾博客记录。</p></a><a
+          class="card"
+          href="/search/"><h3>站内搜索</h3><p>搜索课程、资源、博客和项目。</p></a
+        ><a class="card" href="/rss.xml"><h3>RSS 订阅</h3><p>使用阅读器跟踪最新文章。</p></a>
+      </div>
+    </div>
+  </section></BaseLayout
+>

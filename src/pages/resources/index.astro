@@ -1,0 +1,75 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ResourceList from '@/components/ResourceList.astro';
+const resources = (await getCollection('resources', ({ data }) => data.public)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const unique = (items: string[]) => [...new Set(items)].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const courses = unique(resources.map(({ data }) => data.course));
+const types = unique(resources.map(({ data }) => data.resourceType));
+const chapters = unique(resources.map(({ data }) => data.chapter));
+const tags = unique(resources.flatMap(({ data }) => data.tags));
+---
+
+<BaseLayout title="教学资源" description="按课程、类型、章节和标签浏览教学资源。"
+  ><div class="container">
+    <Breadcrumbs items={[{ label: '教学资源' }]} /><header class="page-header">
+      <p class="eyebrow">教学资源</p><h1>课件、实验与参考资料</h1><p>
+        筛选只使用少量原生 JavaScript；即使关闭脚本，全部公开资源仍会显示。
+      </p>
+    </header><form class="filters" id="resource-filters">
+      <label
+        >课程<select name="course"
+          ><option value="">全部课程</option>{
+            courses.map((value) => <option>{value}</option>)
+          }</select
+        ></label
+      ><label
+        >类型<select name="type"
+          ><option value="">全部类型</option>{
+            types.map((value) => <option>{value}</option>)
+          }</select
+        ></label
+      ><label
+        >章节<select name="chapter"
+          ><option value="">全部章节</option>{
+            chapters.map((value) => <option>{value}</option>)
+          }</select
+        ></label
+      ><label
+        >标签<select name="tag"
+          ><option value="">全部标签</option>{tags.map((value) => <option>{value}</option>)}</select
+        ></label
+      ><button class="button" type="reset">清除筛选</button><p
+        id="filter-status"
+        class="muted"
+        aria-live="polite"
+      >
+      </p>
+    </form><ResourceList {resources} />
+  </div>
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#resource-filters');
+    const status = document.querySelector<HTMLElement>('#filter-status');
+    const applyFilters = () => {
+      if (!form || !status) return;
+      const data = new FormData(form);
+      let visible = 0;
+      document.querySelectorAll<HTMLElement>('[data-resource]').forEach((item) => {
+        const matches =
+          (!data.get('course') || item.dataset.course === data.get('course')) &&
+          (!data.get('type') || item.dataset.type === data.get('type')) &&
+          (!data.get('chapter') || item.dataset.chapter === data.get('chapter')) &&
+          (!data.get('tag') || item.dataset.tags?.split('|').includes(String(data.get('tag'))));
+        item.hidden = !matches;
+        if (matches) visible++;
+      });
+      status.textContent = `显示 ${visible} 项资源`;
+    };
+    form?.addEventListener('change', applyFilters);
+    form?.addEventListener('reset', () => setTimeout(applyFilters));
+    applyFilters();
+  </script></BaseLayout
+>

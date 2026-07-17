@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { entrySlug, formatDate, estimateReadingTime } from '@/lib/content';
+import TagList from './TagList.astro';
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+const { post } = Astro.props;
+---
+
+<article class="card" data-pagefind-filter="type:博客">
+  <p class="eyebrow">示例文章 · {post.data.category}</p><h3>
+    <a href={`/blog/${entrySlug(post.id)}/`}>{post.data.title}</a>
+  </h3><p class="card-meta">
+    <time datetime={post.data.publishDate.toISOString()}>{formatDate(post.data.publishDate)}</time> ·
+    {post.data.readingTime ?? estimateReadingTime(post.body)} 分钟
+  </p><p class="card-description">{post.data.description}</p><TagList tags={post.data.tags} />
+</article>
