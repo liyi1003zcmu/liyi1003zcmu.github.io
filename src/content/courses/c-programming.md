@@ -7,9 +7,15 @@ semester: 2026 秋季
 audience: 计算机专业大学新生
 featured: true
 order: 1
-status: 即将开始
+status: 即将开课
 syllabus: [语法基础, 数据类型与表达式, 分支与循环, 函数, 数组与指针, 结构体与文件]
-objectives: [理解程序设计基本概念, 能够编写和调试中小型程序解决问题, 形成测试与代码规范意识, 掌握基本的算法设计与实现技巧]
+objectives:
+  [
+    理解程序设计基本概念,
+    能够编写和调试中小型程序解决问题,
+    形成测试与代码规范意识,
+    掌握基本的算法设计与实现技巧,
+  ]
 prerequisites: [会操作计算机]
 teachers: [跛脚鸭]
 updatedDate: 2026-09-01
