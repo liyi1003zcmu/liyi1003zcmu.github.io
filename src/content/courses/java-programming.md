@@ -1,12 +1,12 @@
 ---
-title: Java 程序设计（演示课程）
+title: Java 程序设计
 slug: java-programming
 shortTitle: Java
 description: 以面向对象建模、集合与工程实践为主线的演示课程。
 semester: 2026 春季（演示）
 audience: 已具备一门程序设计语言基础的本科生
 featured: true
-order: 2
+order: 4
 status: 即将开课
 syllabus: [Java 语法, 类与对象, 继承与接口, 集合, 异常, 文件与测试]
 objectives: [理解面向对象设计, 掌握 Java 核心类库, 完成可测试的小型应用]

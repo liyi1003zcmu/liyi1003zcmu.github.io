@@ -97,4 +97,25 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { courses, resources, blog, projects };
+const libraryTypes = ['论文', '阅读笔记', '个人整理', '电子书', '数据资料', '其他'] as const;
+const library = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/library' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    materialType: z.enum(libraryTypes),
+    authors: z.array(z.string()).default([]),
+    publication: z.string().default(''),
+    publicationYear: z.number().int().optional(),
+    dateAdded: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    tags: z.array(z.string()).default([]),
+    cloudUrl: optionalPath,
+    noteUrl: optionalPath,
+    public: z.boolean().default(true),
+    featured: z.boolean().default(false),
+    order: z.number().int().default(99),
+  }),
+});
+
+export const collections = { courses, resources, blog, projects, library };

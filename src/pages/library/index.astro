@@ -1,0 +1,102 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import LibraryItem from '@/components/LibraryItem.astro';
+import { siteConfig } from '@/config/site';
+
+const items = (await getCollection('library', ({ data }) => data.public)).sort(
+  (a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) ||
+    a.data.order - b.data.order ||
+    b.data.dateAdded.valueOf() - a.data.dateAdded.valueOf(),
+);
+const unique = (values: string[]) =>
+  [...new Set(values)].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const types = unique(items.map(({ data }) => data.materialType));
+const tags = unique(items.flatMap(({ data }) => data.tags));
+---
+
+<BaseLayout title="文献资料" description="个人阅读论文、笔记与整理资料的索引及网盘入口。">
+  <div class="container">
+    <Breadcrumbs items={[{ label: '文献资料' }]} />
+    <header class="page-header">
+      <p class="eyebrow">个人知识库</p>
+      <h1>论文、笔记与整理资料</h1>
+      <p>这里保存个人阅读和整理记录的索引。电子文件存放于网盘，网站仅提供目录和访问入口。</p>
+      <div class="button-row">
+        {
+          siteConfig.cloudDriveUrl ? (
+            <a
+              class="button button-primary"
+              href={siteConfig.cloudDriveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {siteConfig.cloudDriveLabel}
+            </a>
+          ) : (
+            <span class="button" aria-disabled="true">
+              网盘地址待配置
+            </span>
+          )
+        }
+      </div>
+    </header>
+
+    <form class="filters" id="library-filters">
+      <label>
+        类型
+        <select name="type">
+          <option value="">全部类型</option>
+          {types.map((value) => <option>{value}</option>)}
+        </select>
+      </label>
+      <label>
+        标签
+        <select name="tag">
+          <option value="">全部标签</option>
+          {tags.map((value) => <option>{value}</option>)}
+        </select>
+      </label>
+      <button class="button" type="reset">清除筛选</button>
+      <p id="library-filter-status" class="muted" aria-live="polite"></p>
+    </form>
+
+    {
+      items.length > 0 ? (
+        <div>
+          {items.map((item) => (
+            <LibraryItem {item} />
+          ))}
+        </div>
+      ) : (
+        <div class="card">
+          <h2>尚未添加资料</h2>
+          <p>请在 src/content/library 目录中新建 Markdown 文件。</p>
+        </div>
+      )
+    }
+  </div>
+
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#library-filters');
+    const status = document.querySelector<HTMLElement>('#library-filter-status');
+    const applyFilters = () => {
+      if (!form || !status) return;
+      const data = new FormData(form);
+      let visible = 0;
+      document.querySelectorAll<HTMLElement>('[data-library-item]').forEach((item) => {
+        const matches =
+          (!data.get('type') || item.dataset.type === data.get('type')) &&
+          (!data.get('tag') || item.dataset.tags?.split('|').includes(String(data.get('tag'))));
+        item.hidden = !matches;
+        if (matches) visible++;
+      });
+      status.textContent = `显示 ${visible} 项资料`;
+    };
+    form?.addEventListener('change', applyFilters);
+    form?.addEventListener('reset', () => setTimeout(applyFilters));
+    applyFilters();
+  </script>
+</BaseLayout>
