@@ -1,12 +1,12 @@
 ---
-title: 人工智能通识（演示课程）
+title: Introduction to Artificial Intelligence in Medicine
 slug: ai-literacy
-shortTitle: AI 通识
+shortTitle: Intro to AI in Med.
 description: 面向非计算机专业的人工智能概念、应用边界与责任实践演示课程。
 semester: 2026 秋季（演示）
 audience: 全校本科生
 featured: true
-order: 4
+order: 3
 status: 即将开课
 syllabus: [人工智能简史, 机器学习直觉, 生成式 AI, 评价方法, 伦理与治理]
 objectives: [形成基本 AI 素养, 能评估工具输出, 理解数据与伦理边界]

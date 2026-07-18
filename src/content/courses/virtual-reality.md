@@ -1,12 +1,12 @@
 ---
-title: 虚拟现实技术（演示课程）
+title: 虚拟现实技术与应用
 slug: virtual-reality
 shortTitle: 虚拟现实
 description: 从空间交互、实时渲染到体验评估的虚拟现实演示课程。
 semester: 长期开放
 audience: 数字媒体与计算机相关专业本科生
 featured: true
-order: 3
+order: 5
 status: 长期开放
 syllabus: [VR 系统, 三维空间, 交互设计, 实时渲染, 用户体验]
 objectives: [理解 VR 系统构成, 设计基础空间交互, 评估沉浸式体验]

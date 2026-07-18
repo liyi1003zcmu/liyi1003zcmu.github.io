@@ -1,12 +1,12 @@
 ---
-title: 计算机图形学（演示课程）
+title: 计算机图形学
 slug: computer-graphics
-shortTitle: 图形学
+shortTitle: 计算机图形学
 description: 由几何变换、光栅化与着色构成的计算机图形学演示课程。
 semester: 2025 秋季（演示）
 audience: 计算机相关专业高年级本科生
 featured: false
-order: 5
+order: 2
 status: 已结束
 syllabus: [几何变换, 光栅化, 曲线曲面, 光照, 渲染管线]
 objectives: [理解图形管线, 实现基础光栅算法, 分析质量与性能权衡]

@@ -56,6 +56,7 @@ npm run dev
 
 - 新增课程：复制 `docs/templates/course.md`，参阅 `docs/COURSE_GUIDE.md`。
 - 新增资源：复制 `docs/templates/resource.md`，参阅 `docs/RESOURCE_GUIDE.md`。
+- 新增 Reveal.js 分章课件：参阅 `docs/REVEAL_SLIDES_GUIDE.md`。
 - 新增博客：复制 `docs/templates/blog.mdx`，参阅 `docs/BLOG_GUIDE.md`。
 - 项目内容：复制 `docs/templates/project.md`。
 - 总体命名、slug、图片与草稿规范见 `docs/CONTENT_GUIDE.md`。

@@ -2,8 +2,11 @@
 
 复制 `docs/templates/resource.md` 到 `src/content/resources/`。`course` 使用课程短名称，`chapter` 使用稳定章节名；页面会据此生成筛选项。
 
+`order` 控制同一课程内的章节顺序，建议第 1 章写 `10`、第 2 章写 `20`，为以后插入内容预留空间。Reveal.js 在线课件的完整做法见 `docs/REVEAL_SLIDES_GUIDE.md`。
+
 - 小型 PDF、图片和示例代码可放入 `public/files`，`fileUrl` 写根路径，例如 `/files/courses/guide.pdf`。
-- 只有确实允许下载时才设置 `downloadable: true`。
+- `fileUrl` 指向普通文件且允许下载时设置 `downloadable: true`，按钮显示“下载站内文件”。
+- `fileUrl` 指向 Reveal.js 目录（例如 `/slides/c-programming/ch01/`）时设置 `downloadable: false`，按钮显示“在线查看课件”。
 - 外部资源填写完整 `externalUrl`，页面会明确标记为外部链接。
 - URL 为空时页面不会显示虚假下载按钮。
 - 大型 PPT、视频、数据集和安装包不建议提交 Git。可迁移到 VPS、GitHub Releases、学校平台或对象存储，只需更新内容字段，无需改组件。

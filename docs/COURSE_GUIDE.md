@@ -5,3 +5,5 @@
 `status` 只能是“进行中、即将开课、已结束、长期开放”。`syllabus`、`objectives`、`prerequisites` 与 `teachers` 是 YAML 数组。没有封面时省略 `cover`，页面会显示 CSS 占位，不会请求失效图片。
 
 正文按课程简介、适用对象、课程目标、先修要求、教学安排、章节目录、课件资源、实验任务、作业与项目、参考资料和更新记录组织。章节或进度更新后同步修改 `updatedDate`。配套资料在资源集合中通过 `course` 字段关联。
+
+如果每章使用 Reveal.js 制作在线课件，按照 `docs/REVEAL_SLIDES_GUIDE.md` 建立 `public/slides/<课程 slug>/<章节>/`，再为每章创建一个资源条目。章节排序由资源条目的 `order` 字段控制。

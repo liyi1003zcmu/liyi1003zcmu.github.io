@@ -1,0 +1,57 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import TagList from './TagList.astro';
+
+interface Props {
+  item: CollectionEntry<'library'>;
+}
+
+const { item } = Astro.props;
+const authorText = item.data.authors.join('、');
+const publicationText = [item.data.publication, item.data.publicationYear]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<article
+  class="resource-item"
+  data-library-item
+  data-type={item.data.materialType}
+  data-tags={item.data.tags.join('|')}
+  data-pagefind-filter="type:文献资料"
+>
+  <p class="eyebrow">{item.data.materialType}</p>
+  <h2>{item.data.title}</h2>
+  <p>{item.data.description}</p>
+  {
+    (authorText || publicationText) && (
+      <p class="card-meta">
+        {authorText && `作者：${authorText}`}
+        {authorText && publicationText && ' · '}
+        {publicationText}
+      </p>
+    )
+  }
+  <TagList tags={item.data.tags} linked={false} />
+  <div class="resource-actions">
+    {
+      item.data.noteUrl && (
+        <a class="button" href={item.data.noteUrl}>
+          查看笔记
+        </a>
+      )
+    }
+    {
+      item.data.cloudUrl && (
+        <a class="button" href={item.data.cloudUrl} target="_blank" rel="noopener noreferrer">
+          打开网盘资料
+        </a>
+      )
+    }
+    {
+      !item.data.noteUrl && !item.data.cloudUrl && (
+        <span class="muted">索引条目，访问地址暂未配置</span>
+      )
+    }
+  </div>
+</article>
