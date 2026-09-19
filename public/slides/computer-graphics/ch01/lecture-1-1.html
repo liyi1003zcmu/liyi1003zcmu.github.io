@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>计算机图形学 第一章(1) 从虚拟世界到屏幕像素（2026·嵌套版）</title>
+<link href="/vendor/reveal/reset.css" rel="stylesheet"/>
+<link href="/vendor/reveal/reveal.css" rel="stylesheet"/>
+<link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet"/>
+<style>
+:root{--bg:#f7f9fc;--panel:#ffffff;--panel2:#f2f6fb;--text:#203044;--muted:#5f7186;--cyan:#157db8;--blue:#2f64c8;--amber:#9a5d00;--green:#1e8a64;--red:#c74b5a;--line:rgba(30,56,96,.12)}
+*{box-sizing:border-box}
+body{background:var(--bg)}
+.reveal{font-family:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--text)}
+.reveal .slides{text-align:left}
+.reveal h1,.reveal h2,.reveal h3{text-transform:none;letter-spacing:-.025em;color:var(--text);font-weight:750}
+.reveal h1{font-size:2.2em;line-height:1.08;margin:.12em 0 .25em}
+.reveal h2{font-size:1.55em;line-height:1.15;margin:.1em 0 .4em}
+.reveal h3{font-size:1.08em;color:var(--cyan);margin:.2em 0 .45em}
+.reveal p,.reveal li{font-size:.72em;line-height:1.55}
+.reveal ul{margin:.25em 0 .25em 1.05em}
+.reveal li{margin:.22em 0}
+.reveal strong{color:#14345e}
+.reveal a{color:var(--blue);text-decoration:none}
+.reveal pre{width:100%;font-size:.46em;border-radius:16px;box-shadow:none;border:1px solid var(--line)}
+.reveal code{max-height:520px}
+.reveal section img{border:0;box-shadow:none;max-height:560px;object-fit:contain}
+.reveal table{font-size:.62em;border-collapse:separate;border-spacing:0;width:100%}
+.reveal th{background:#dfeaf5;color:var(--text);padding:.55em .7em;border-bottom:1px solid var(--line)}
+.reveal td{padding:.55em .7em;border-bottom:1px solid var(--line);color:var(--text)}
+.slide-no{position:absolute;right:0;top:-5px;font-size:.28em;color:#8a97aa;letter-spacing:.12em}
+.eyebrow{display:inline-flex;align-items:center;gap:.45em;font-size:.38em;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:.75em}
+.eyebrow::before{content:"";width:28px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--blue))}
+.lead{font-size:.92em!important;line-height:1.45!important;color:var(--text);max-width:1300px}
+.muted{color:var(--muted)!important}
+.accent{color:var(--cyan)} .amber{color:var(--amber)} .green{color:var(--green)} .red{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:stretch}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.card{background:linear-gradient(180deg,#ffffff,#f7fafe);border:1px solid var(--line);border-radius:22px;padding:26px 28px;box-shadow:0 12px 28px rgba(31,56,88,.08)}
+.card h3{margin-top:0}
+.kpi{font-size:1.5em;font-weight:800;color:#14345e;line-height:1}
+.kicker{font-size:.42em;color:var(--muted);text-transform:uppercase;letter-spacing:.13em;font-weight:700}
+.pill{display:inline-block;padding:.28em .65em;border-radius:999px;background:rgba(21,125,184,.08);border:1px solid rgba(21,125,184,.2);font-size:.42em;color:var(--cyan);font-weight:700}
+.activity{margin-top:28px;background:linear-gradient(135deg,rgba(21,125,184,.08),rgba(47,100,200,.04));border:1px solid rgba(21,125,184,.22);border-left:7px solid var(--cyan);border-radius:18px;padding:20px 24px}
+.activity.ai{background:linear-gradient(135deg,rgba(30,138,100,.08),rgba(21,125,184,.03));border-color:rgba(30,138,100,.22);border-left-color:var(--green)}
+.activity .tag{font-size:.34em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+.activity.ai .tag{color:var(--green)}
+.activity p{margin:.25em 0 0;font-size:.58em}
+.timer{float:right;font-size:.88em;color:var(--amber);font-weight:800}
+.flow{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}
+.node{min-width:180px;padding:18px 20px;border-radius:18px;background:#ffffff;border:1px solid rgba(30,56,96,.14);text-align:center;font-size:.58em;font-weight:700;color:var(--text);box-shadow:0 8px 18px rgba(31,56,88,.06)}
+.node.primary{background:linear-gradient(180deg,#edf7fc,#e8f0ff);border-color:rgba(21,125,184,.28)}
+.node.ai{background:linear-gradient(180deg,#eefaf5,#eef8fb);border-color:rgba(30,138,100,.24)}
+.arrow{font-size:.85em;color:var(--cyan);font-weight:800}
+.media-shell{height:470px;border-radius:22px;overflow:hidden;background:#ffffff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 10px 24px rgba(31,56,88,.06)}
+.media-shell img,.media-shell video{width:100%;height:100%;object-fit:contain;background:#ffffff}
+.media-shell.cover img,.media-shell.cover video{object-fit:cover}
+.media-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:42px;background:radial-gradient(circle at 50% 10%,rgba(21,125,184,.08),transparent 45%),#f2f6fb;color:var(--muted)}
+.media-placeholder .icon{font-size:2em;margin-bottom:.2em}
+.media-placeholder strong{font-size:.58em;color:#14345e}
+.media-placeholder small{display:block;max-width:800px;margin-top:.8em;font-size:.33em;line-height:1.5;color:#7a8899}
+.quote{font-size:1.05em!important;line-height:1.48!important;padding:24px 30px;border-left:6px solid var(--cyan);background:rgba(21,125,184,.06);border-radius:0 16px 16px 0}
+.title-slide{height:760px;display:flex!important;flex-direction:column;justify-content:center}
+.title-slide::after{content:"";position:absolute;inset:-80px -160px;background:radial-gradient(circle at 80% 30%,rgba(21,125,184,.08),transparent 33%),radial-gradient(circle at 15% 80%,rgba(47,100,200,.06),transparent 28%);z-index:-1}
+.title-mark{font-size:.38em;color:var(--muted);margin-top:1.2em}
+.question{font-size:1.08em!important;line-height:1.32!important;font-weight:780;max-width:1250px}
+.big{font-size:1.22em!important}
+.micro{font-size:.38em!important;color:var(--muted)}
+.compare{display:grid;grid-template-columns:1fr 90px 1fr;gap:18px;align-items:center}
+.vs{text-align:center;font-size:1.1em;font-weight:900;color:var(--amber)}
+.check{color:var(--green)}
+.warn{color:var(--amber)}
+.footer-src{position:absolute;bottom:-22px;left:0;font-size:.22em!important;color:#8d98a8!important;max-width:1450px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline{display:grid;grid-template-columns:130px 1fr;gap:12px 20px;align-items:center}
+.time{font-size:.52em;font-weight:800;color:var(--amber);text-align:right}
+.event{padding:15px 20px;background:#ffffff;border:1px solid var(--line);border-radius:14px;font-size:.55em;box-shadow:0 8px 18px rgba(31,56,88,.05)}
+.dotline{position:absolute;left:151px;top:172px;bottom:95px;border-left:2px dashed rgba(154,93,0,.18);z-index:-1}
+.badge-new{display:inline-block;background:rgba(30,138,100,.08);border:1px solid rgba(30,138,100,.22);color:var(--green);font-size:.3em;font-weight:800;padding:.35em .55em;border-radius:7px;vertical-align:middle;letter-spacing:.06em}
+/* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+.med-tag{display:inline-block;padding:.32em .72em;border-radius:999px;background:rgba(30,138,100,.08);border:1px solid rgba(30,138,100,.24);color:var(--green);font-size:.34em;font-weight:800;letter-spacing:.08em;margin-bottom:.7em}
+.med-strip{margin-top:22px;padding:16px 20px;border-radius:16px;background:linear-gradient(90deg,rgba(30,138,100,.08),rgba(21,125,184,.04));border:1px solid rgba(30,138,100,.2);font-size:.56em;line-height:1.5}
+.med-strip strong{color:var(--green)}
+</style>
+<link href="../shared/classroom-large.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+<section>
+<div class="title-slide">
+<div class="eyebrow">Computer Graphics · Chapter 1 · 01</div>
+<h1>从虚拟世界到屏幕像素</h1>
+<p class="lead">认识计算机图形学：研究对象、图形系统、核心渲染路径与课程内容体系</p>
+<div class="flow title-flow" style="justify-content:flex-start;margin-top:38px">
+<div class="node primary">Scene / Model</div><div class="arrow">→</div>
+<div class="node">Rendering</div><div class="arrow">→</div>
+<div class="node primary">Pixels / Image</div>
+</div>
+</div>
+</section>
+<section>
+<section class="compact">
+<div class="eyebrow">Bridge-in · 0–4 min</div>
+<h2>四种画面，同一个核心问题</h2>
+<div class="grid4 media-grid">
+<div class="card media-card"><h3>电影特效</h3><div class="media-shell cover media-compact"><video controls="" data-fallback="电影特效视频" data-prompt="电影特效幕后制作，演员与数字场景合成，对比拍摄现场与最终CG镜头，16:9，专业纪录片风格，无文字" poster="./images/videos/ch01-wetafx-poster.png" preload="none"></video></div></div>
+<div class="card media-card"><h3>实时游戏</h3><div class="media-shell cover media-compact"><video controls="" data-fallback="实时游戏视频" data-prompt="现代3A游戏实时渲染画面，城市夜景、材质、灯光与反射，16:9，无品牌文字" poster="./images/videos/ch01-cyberpunk2077-poster.png" preload="none"></video></div></div>
+<div class="card media-card"><h3>合成数据</h3><div class="media-shell cover media-compact"><video controls="" data-fallback="合成数据视频" data-prompt="自动驾驶或机器人仿真中生成大量合成训练数据，虚拟城市与传感器视图，16:9" poster="./images/videos/ch01-nvidia_omni_sim-poster.png" preload="none"></video></div></div>
+<div class="card media-card"><h3>科学可视化</h3><div class="media-shell cover media-compact"><video controls="" data-fallback="科学可视化视频" data-prompt="黑洞、流体或医学体数据的科学可视化，真实感但教学化，16:9" poster="./images/videos/ch01-intersteller-poster.png" preload="none"></video></div></div>
+</div>
+<div class="activity"><span class="tag">提问</span><span class="timer">1 min</span><p>这些画面背后的共同核心技术是什么？A 图像处理 B AI计算机视觉 D 计算机图形学 E 多种技术共同参与</p></div>
+</section>
+<section>
+<div class="eyebrow">Bridge-in · Follow-up</div>
+<h2>这背后的共同问题是什么？</h2>
+<p class="question">如何用<strong class="accent">代码、数学和计算硬件</strong>，把一个数字化的对象或场景变成我们能够看到的图像？</p>
+<div class="flow hero-flow">
+<div class="node primary">数字场景</div><div class="arrow">→</div><div class="node primary">计算</div><div class="arrow">→</div><div class="node primary">图像</div>
+</div>
+<p class="lead fragment">这就是本课程贯穿始终的主线：<strong>从模型到像素（Model → Pixels）</strong>。</p>
+</section>
+<section>
+<div class="med-tag">MED × CG · 医工交叉</div>
+<h2>在医学院校，同一个核心问题意味着什么？</h2>
+<div class="flow hero-flow"><div class="node">CT / MRI / 人体结构</div><div class="arrow">→</div><div class="node primary">三维模型 / 场景</div><div class="arrow">→</div><div class="node primary">图形计算</div><div class="arrow">→</div><div class="node">医学可视化</div></div>
+<div class="grid2"><div class="card"><h3>医学侧的问题</h3><p>怎样把人体结构、医学数据和医学过程转化为医生、学生能够观察和理解的视觉表达？</p></div><div class="card"><h3>图形学侧的问题</h3><p>当三维结构已经得到后，怎样表示、观察、投影、着色并实时显示？</p></div></div>
+<div class="med-strip"><strong>贯穿第一章的案例：</strong>从医学数据得到三维器官模型后，怎样把它变成屏幕上可观察、可交互的图像？</div>
+</section>
+<section>
+<div class="eyebrow">AI as a learning tool · 4–9 min</div>
+<h2>先问 AI，再判断 AI</h2>
+<div class="grid2"><div class="card"><h3>向任意大模型提问</h3><p class="quote">“请用不超过50字解释：什么是计算机图形学？它与计算机视觉有什么区别？”</p></div><div class="card"><h3>不是抄答案，而是核验</h3><ul><li>圈出回答中的<strong>核心动词</strong></li><li>判断 Graphics / Image / Vision 是否混淆</li><li>用教材定义重新修正一句话</li></ul></div></div>
+<div class="activity ai"><span class="tag">AI核验活动</span><span class="timer">2 min</span><p>两人一组：AI回答 → 人工判断 → 教材/可信来源核验 → 形成自己的定义。</p></div>
+</section>
+<section>
+<div class="eyebrow">Learning objectives</div>
+<h2>这一课要建立的不是名词表，而是一张“图形学地图”</h2>
+<div class="grid4"><div class="card"><div class="kicker">01</div><h3>研究对象</h3><p>图形学研究什么？</p></div><div class="card"><div class="kicker">02</div><h3>系统组成</h3><p>模型如何走到屏幕？</p></div><div class="card"><div class="kicker">03</div><h3>核心路径</h3><p>光栅化与光追是什么？</p></div><div class="card"><div class="kicker">04</div><h3>课程地图</h3><p>后续章节解决什么问题？</p></div></div>
+</section>
+</section>
+<section>
+<section>
+<div class="eyebrow">What is Computer Graphics · 9–15 min</div>
+<h2>计算机图形学：从“场景”到“图像”</h2>
+<p class="question">研究如何利用计算机<strong class="accent">生成、处理和显示视觉内容</strong>；本课程尤其关注：怎样把数字化的二维/三维对象与场景转化为图像。</p>
+<div class="flow hero-flow"><div class="node primary">Graphics / Scene</div><div class="arrow">→</div><div class="node primary">Image</div></div>
+<p class="lead fragment">核心过程可以先粗略理解为：<strong>表示 → 观察 → 计算 → 显示</strong>。</p>
+</section>
+<section>
+<div class="eyebrow">Applications · 15–21 min</div>
+<h2>四类经典应用，今天已经彼此融合</h2>
+<div class="grid4"><div class="card"><div class="kicker">01</div><h3>信息显示</h3><p>科学/医学可视化、地图、数据表达</p></div><div class="card"><div class="kicker">02</div><h3>设计</h3><p>CAD、建筑、工业设计、数字内容生产</p></div><div class="card"><div class="kicker">03</div><h3>仿真与动画</h3><p>游戏、影视、数字孪生、训练模拟</p></div><div class="card"><div class="kicker">04</div><h3>人机界面</h3><p>GUI、触控、VR/AR、空间交互</p></div></div>
+<div class="activity"><span class="tag">快速分类</span><span class="timer">90 s</span><p>CT 三维重建、自动驾驶仿真、数字孪生工厂、VR手术训练分别属于哪一类？哪些案例跨越多个类别？</p></div>
+</section>
+<section>
+<div class="eyebrow">Case · Bunny</div>
+<h2>一只 Bunny，经历了什么？</h2>
+<div class="grid2 image-text bunny-layout"><div><div class="media-shell bunny-shell"><img alt="Stanford Bunny 演化图" data-fallback="Stanford Bunny 演化图" data-prompt="Stanford Bunny 从三维扫描点云、三角网格、线框、平滑着色到真实感材质的横向演化图，浅色背景，16:9 教学信息图" src="images/chap01/ch01-bunnystory.png"/></div></div><div class="card"><h3>从现实对象到屏幕像素</h3><div class="flow vertical-flow"><div class="node">采集 / 建模</div><div class="arrow">↓</div><div class="node">几何表示</div><div class="arrow">↓</div><div class="node">相机 / 光照 / 材质</div><div class="arrow">↓</div><div class="node primary">渲染 → 像素</div></div></div></div>
+<p class="footer-src">扩展资源：Stanford 3D Scanning Repository · https://graphics.stanford.edu/data/3Dscanrep/</p>
+</section>
+<section>
+<div class="eyebrow">Think · From Bunny to system</div>
+<h2>要得到这些效果，需要哪些“人”和“工具”？</h2>
+<div class="grid3"><div class="card"><h3>数据与设备</h3><p>扫描、建模、纹理、输入设备等提供场景数据。</p></div><div class="card"><h3>算法与软件</h3><p>几何处理、可见性、着色、纹理等算法决定“怎样算”。</p></div><div class="card"><h3>计算与显示硬件</h3><p>CPU / GPU 执行计算，帧缓存和显示器呈现结果。</p></div></div>
+<div class="activity"><span class="tag">思考</span><p>如果只给你 Bunny 的三角网格文件，距离“看到最终效果”还缺什么？</p></div>
+</section>
+</section>
+<section>
+<section>
+<div class="eyebrow">Graphics system · 21–27 min</div>
+<h2>基本图形系统：一整条协作链</h2>
+<div class="flow system-flow"><div class="node">Input / Data</div><div class="arrow">→</div><div class="node primary">CPU</div><div class="arrow">→</div><div class="node primary">Graphics API</div><div class="arrow">→</div><div class="node primary">GPU</div><div class="arrow">→</div><div class="node">Framebuffer</div><div class="arrow">→</div><div class="node">Display</div></div>
+<div class="grid3"><div class="card"><h3>输入/存储</h3><p>模型、纹理、相机、交互数据</p></div><div class="card"><h3>处理</h3><p>CPU 组织任务，GPU 执行大规模并行图形计算</p></div><div class="card"><h3>输出</h3><p>结果写入帧缓存，再显示为像素阵列</p></div></div>
+</section>
+<section>
+<div class="eyebrow">CPU vs GPU</div>
+<h2>CPU 和 GPU：不是谁更“强”，而是擅长的任务不同</h2>
+<div class="compare"><div class="card"><h3>CPU</h3><ul><li>复杂控制与通用任务</li><li>场景管理、程序逻辑、资源调度</li><li>较少但功能强的处理核心</li></ul></div><div class="vs">+</div><div class="card"><h3>GPU</h3><ul><li>大量相似数据并行处理</li><li>顶点、片元、纹理等图形任务</li><li>大量并行计算单元</li></ul></div></div>
+<p class="lead fragment">图形学里最典型的计算特征是：<strong>对大量顶点和像素执行相似操作</strong>。</p>
+</section>
+<section>
+<div class="eyebrow">Core problem</div>
+<h2>图形学的核心问题：从三维场景到二维屏幕</h2>
+<div class="media-shell diagram-shell"><img alt="从三维到二维" data-fallback="从三维到二维示意图" data-prompt="计算机图形学教学图：左侧三维场景含物体、相机、光源，中间渲染处理，右侧二维屏幕像素图，浅色背景、蓝灰色、清晰箭头、16:9" src="./images/chap01/ch01-render-process.png"/></div>
+<div class="activity"><span class="tag">核心问题</span><p>同一个三维场景，从不同相机位置、不同光照、不同算法观察，为什么会得到不同二维图像？</p></div>
+</section>
+</section>
+<section>
+<section>
+<div class="med-tag">MED × CG · Core problem</div>
+<h2>同一个“3D → 2D”问题：从三维器官到医学屏幕</h2>
+<div class="flow hero-flow"><div class="node">3D Organ / Anatomy</div><div class="arrow">→</div><div class="node">Camera + Light</div><div class="arrow">→</div><div class="node primary">Rendering</div><div class="arrow">→</div><div class="node">2D Medical Display</div></div>
+<div class="activity"><span class="tag">医工思考</span><p>如果医生改变观察方向、切换投影方式或调整光照，同一个三维器官为什么会呈现出不同的二维图像？这些变化中哪些属于“数据变了”，哪些只是“观察与绘制方式变了”？</p></div>
+</section>
+<section>
+<div class="eyebrow">Rendering paths · 27–34 min</div>
+<h2>生成图像的两条重要技术主线</h2>
+<div class="compare"><div class="card"><h3>Rasterization</h3><p class="big"><strong>物体 → 屏幕</strong></p><p>把图元投影到屏幕，确定它覆盖哪些片元。</p></div><div class="vs">VS</div><div class="card"><h3>Ray Tracing</h3><p class="big"><strong>像素 / 光线 → 场景</strong></p><p>从观察方向追踪光线，判断它与场景如何交互。</p></div></div>
+</section>
+<section>
+<div class="eyebrow">Path 1</div>
+<h2>光栅化 Rasterization：把几何图元“投”到屏幕上</h2>
+<div class="grid2 image-text"><div class="media-shell"><img alt="光栅化路径" data-fallback="光栅化路径示意图" data-prompt="教学示意图：三维三角形经过投影后覆盖二维像素网格，突出 triangle → fragments → pixels，浅色背景，蓝色线条，16:9" src="./images/chap01/ch01-rasterization-path.png"/></div><div class="card"><ul><li><strong>以图元/物体为出发点</strong></li><li>核心问题：这个三角形覆盖哪些片元？</li><li>吞吐量高，是实时图形长期的核心路径</li><li>现代 GPU 流水线围绕这一思路高度优化</li></ul></div></div>
+</section>
+<section>
+<div class="eyebrow">Path 2</div>
+<h2>光线追踪 Ray Tracing：从观察方向“问场景”</h2>
+<div class="grid2 image-text"><div class="media-shell"><img alt="光线追踪路径" data-fallback="光线追踪路径示意图" data-prompt="教学示意图：相机通过像素向三维场景发射光线，光线与物体求交并产生阴影、反射，浅色背景，蓝灰与浅金点缀，16:9" src="./images/chap01/ch01-raytracing-path.png"/></div><div class="card"><ul><li><strong>以观察者/像素为出发点</strong></li><li>核心问题：这条光线最终看到了什么？</li><li>更自然地描述反射、阴影、透明和多次光照</li><li>过去偏离线；现代 GPU 已能硬件加速实时光追</li></ul></div></div>
+</section>
+<section>
+<div class="eyebrow">Update · 2026</div>
+<h2>今天的实时图形：不是二选一，而是混合渲染</h2>
+<div class="flow hybrid-flow"><div class="node primary">Rasterization</div><div class="arrow">+</div><div class="node primary">Ray Tracing</div><div class="arrow">+</div><div class="node ai">AI Denoising / Upscaling</div><div class="arrow">→</div><div class="node">Final Frame</div></div>
+<div class="grid3"><div class="card"><h3>效率</h3><p>大量基础可见性仍适合光栅化。</p></div><div class="card"><h3>真实感</h3><p>反射、阴影、间接光可由光追补充。</p></div><div class="card"><h3>AI增强</h3><p>降噪、超分、帧生成降低高质量渲染成本。</p></div></div>
+<div class="activity"><span class="tag">情境判断</span><p>120 FPS 手机游戏与单帧可渲染数小时的电影镜头，各自优先考虑什么？为什么今天又不能简单说“游戏=光栅化、电影=光追”？</p></div>
+</section>
+<section>
+<div class="eyebrow">New landscape</div>
+<h2>AI 时代：场景的“表示方法”也在变化</h2>
+<div class="grid3"><div class="card"><h3>经典图形学</h3><div class="flow mini-flow"><div class="node">Geometry</div><div class="arrow">→</div><div class="node">Pixels</div></div><p>显式几何 + 图形流水线</p></div><div class="card"><h3>Neural Rendering <span class="badge-new">NEW</span></h3><div class="flow mini-flow"><div class="node ai">Images</div><div class="arrow">→</div><div class="node ai">Learned Scene</div><div class="arrow">→</div><div class="node">New View</div></div><p>如 NeRF：学习场景表示，再从新视角绘制。</p></div><div class="card"><h3>3D Gaussian Splatting <span class="badge-new">NEW</span></h3><div class="flow mini-flow"><div class="node ai">3D Gaussians</div><div class="arrow">→</div><div class="node">Splat</div><div class="arrow">→</div><div class="node">Novel View</div></div><p>显式高斯表示 + 快速新视角渲染。</p></div></div>
+<div class="activity ai"><span class="tag">思考</span><p>方法改变了，但共同问题仍是：<strong>怎样表示一个场景，并从指定视角生成图像？</strong></p></div>
+</section>
+</section>
+<section>
+<section>
+<div class="eyebrow">Course map · 34–38 min</div>
+<h2>课程内容体系：后续章节在解决哪一类问题？</h2>
+<div class="course-map">
+<div class="course-block"><span>01</span><strong>基础与数学</strong><small>图形系统 · WebGL · 向量矩阵 · 坐标</small></div>
+<div class="course-arrow">→</div>
+<div class="course-block"><span>02</span><strong>建模与表示</strong><small>点线面 · 网格 · 曲线曲面 · 场景</small></div>
+<div class="course-arrow">→</div>
+<div class="course-block"><span>03</span><strong>成像与绘制</strong><small>变换 · 观察 · 投影 · 光照 · 纹理</small></div>
+<div class="course-arrow">→</div>
+<div class="course-block"><span>04</span><strong>交互与应用</strong><small>输入 · 拾取 · 动画 · 实时控制</small></div>
+</div>
+<p class="lead">贯穿主线：<strong>场景如何表示 → 从哪里观察 → 怎样计算颜色 → 如何实时交互</strong></p>
+</section>
+<section>
+<div class="eyebrow">Course map · 01</div>
+<h2>基础模块：为后续所有图形计算建立共同语言</h2>
+<div class="grid2"><div class="card"><h3>图形系统与编程</h3><ul><li>图形系统基本组成</li><li>图形 API、WebGL 与着色器</li><li>CPU / GPU 的数据与任务协作</li></ul></div><div class="card"><h3>数学与空间</h3><ul><li>向量、矩阵、齐次坐标</li><li>坐标系统与变换</li><li>二维/三维空间关系</li></ul></div></div>
+<p class="lead">这些内容回答：<strong>“怎样把几何问题写成计算机可以高效执行的数学运算？”</strong></p>
+</section>
+<section>
+<div class="eyebrow">Course map · 02</div>
+<h2>建模与表示：计算机里究竟“有什么”？</h2>
+<div class="grid3"><div class="card"><h3>几何元素</h3><p>点、线、三角形、多边形、曲线与曲面。</p></div><div class="card"><h3>结构关系</h3><p>坐标、连接关系、几何与拓扑信息。</p></div><div class="card"><h3>复杂场景</h3><p>从单个对象逐步组织成层次化场景。</p></div></div>
+<div class="activity"><span class="tag">关键区分</span><p><strong>建模（modeling）</strong>解决“对象是什么、怎样表示”；<strong>绘制（rendering）</strong>解决“给定对象后，怎样生成图像”。</p></div>
+</section>
+<section>
+<div class="eyebrow">Course map · 03</div>
+<h2>成像与绘制：怎样让模型“被看见”？</h2>
+<div class="flow render-flow"><div class="node">Application</div><div class="arrow">→</div><div class="node">Geometry Processing</div><div class="arrow">→</div><div class="node primary">Rasterization / Shading</div><div class="arrow">→</div><div class="node">Framebuffer</div></div>
+<div class="grid3"><div class="card"><h3>观察与投影</h3><p>决定从哪里看，以及三维如何映射为二维。</p></div><div class="card"><h3>可见性</h3><p>决定哪些表面真正能够被观察者看到。</p></div><div class="card"><h3>外观</h3><p>光照、材质、纹理决定最终视觉效果。</p></div></div>
+</section>
+<section>
+<div class="eyebrow">Course map · 04</div>
+<h2>交互技术：图像不是“算完就结束”</h2>
+<div class="grid3"><div class="card"><h3>输入</h3><p>鼠标、键盘、触控、姿态与其他传感输入。</p></div><div class="card"><h3>选择与操作</h3><p>定位、拾取、拖拽、视图控制等。</p></div><div class="card"><h3>实时反馈</h3><p>输入改变场景，系统重新绘制，再反馈给用户。</p></div></div>
+<div class="flow loop-flow"><div class="node primary">User Input</div><div class="arrow">→</div><div class="node">Scene Update</div><div class="arrow">→</div><div class="node">Render</div><div class="arrow">→</div><div class="node primary">Visual Feedback</div><div class="arrow">↺</div></div>
+</section>
+</section>
+<section>
+<section>
+<div class="eyebrow">Core concepts · Why distinguish them?</div>
+<h2>图形 Graphics 与图像 Image：一个是“结构”，一个是“结果”</h2>
+<div class="compare"><div class="card"><h3>Graphics / 图形</h3><ul><li>由点、线、面、体等元素构成</li><li>包含几何、拓扑或场景结构信息</li><li>可以被变换、观察和重新绘制</li></ul></div><div class="vs">≠</div><div class="card"><h3>Image / 图像</h3><ul><li>二维采样结果</li><li>通常表示为像素阵列</li><li>像素记录颜色、亮度等数值</li></ul></div></div>
+<p class="lead fragment">图形学经常做的事情就是：<strong>把结构化的场景信息转化为二维像素图像。</strong></p>
+</section>
+<section class="compact">
+<div class="eyebrow">Core concepts · Modern view</div>
+<h2>图形学、图像处理、计算机视觉与生成式 AI</h2>
+<table class="concept-table"><thead><tr><th>领域</th><th>典型输入</th><th>核心目标</th><th>一句话理解</th></tr></thead><tbody>
+<tr><td><strong>计算机图形学</strong></td><td>模型 / 场景 / 相机 / 光照</td><td>生成与呈现视觉结果</td><td>“怎样画出来？”</td></tr>
+<tr><td><strong>图像处理</strong></td><td>图像</td><td>增强、变换、分析图像数据</td><td>“怎样把图处理得更合适？”</td></tr>
+<tr><td><strong>计算机视觉</strong></td><td>图像 / 视频</td><td>恢复结构、语义与环境信息</td><td>“图里是什么、在哪里？”</td></tr>
+<tr><td><strong>生成式 AI</strong></td><td>文本 / 图像 / 多模态条件</td><td>生成新的图像、视频或3D内容</td><td>“根据条件创造新内容。”</td></tr>
+</tbody></table>
+<p class="micro">说明：这是面向入门学习的任务导向区分。现代研究中这些领域大量交叉，例如神经渲染、3D生成和视觉重建。</p>
+</section>
+<section>
+<div class="eyebrow">One object, different questions</div>
+<h2>同一只猫，不同学科问的是不同问题</h2>
+<div class="grid2 image-text"><div class="media-shell cat-shell"><img alt="猫" data-fallback="猫图像" data-prompt="一只猫的清晰正面照片，简单背景，适合计算机图形学课堂概念辨析，16:9" src="images/chap01/ch01-cat.jpg"/></div><div class="card"><ul><li><strong>图形学：</strong>怎样建模并绘制一只猫？</li><li><strong>图像处理：</strong>怎样去噪、增强或变换这张图？</li><li><strong>计算机视觉：</strong>这是什么？猫在哪里？姿态如何？</li><li><strong>生成式 AI：</strong>怎样根据描述生成另一只猫或新的3D资产？</li></ul></div></div>
+</section>
+</section>
+<section>
+<section>
+<div class="eyebrow">Post-assessment · 38 min</div>
+<h2>情境分析：你会选哪条技术路径？</h2>
+<div class="grid2"><div class="card"><h3>场景 A · 高质量电影镜头</h3><p>复杂毛发、间接光、反射与阴影；允许单帧进行较长时间计算。</p></div><div class="card"><h3>场景 B · 手机实时游戏</h3><p>需要稳定高帧率，对输入立即响应，同时尽可能提高视觉质量。</p></div></div>
+<div class="activity"><span class="tag">小组回答</span><span class="timer">2 min</span><p>分别会优先采用哪些技术？为什么？如果采用现代混合渲染，又可以怎样组合？</p></div>
+</section>
+<section>
+<div class="eyebrow">Summary</div>
+<h2>本课内容总结</h2>
+<div class="grid2 summary-grid"><div class="card"><h3>① 核心任务</h3><p><strong>从数字模型/场景到可显示的图像。</strong></p></div><div class="card"><h3>② 图形系统</h3><p>输入/数据 → CPU → API → GPU → 帧缓存 → 显示。</p></div><div class="card"><h3>③ 两条渲染主线</h3><p>光栅化强调高吞吐；光追更自然描述光的传播；现代系统常混合使用。</p></div><div class="card"><h3>④ 课程地图</h3><p>基础与数学 → 建模与表示 → 成像与绘制 → 交互与应用。</p></div></div>
+<p class="lead">后续课程将逐个回答：<strong>对象怎么表示？怎么变换？从哪里看？怎样着色？如何最终变成像素？</strong></p><div class="med-strip"><strong>医工连接：</strong>医学数据 / 人体结构 → 三维模型 → 观察与绘制 → 医学可视化。后续章节将不断回到这条案例主线。</div>
+</section>
+<section>
+<div class="eyebrow">Exit ticket · 39–40 min</div>
+<h2>用一句话结束第一课</h2>
+<p class="question">计算机图形学研究的核心问题是：<span class="accent">______________________________</span></p>
+<div class="activity"><span class="tag">提交</span><span class="timer">1 min</span><p>再勾选你目前最不确定的概念：模型 / 相机 / 光 / 光栅化 / 光线追踪 / GPU。下一课从最高频问题开始。</p></div>
+<p class="lead next-lesson">下一课：<strong>三维世界为什么能够变成二维图像？</strong></p>
+</section>
+</section>
+</div></div>
+<script src="/vendor/reveal/reveal.js"></script>
+<script src="/vendor/reveal/zoom/zoom.js"></script>
+<script src="/vendor/reveal/notes/notes.js"></script>
+<script src="/vendor/reveal/search/search.js"></script>
+<script src="/vendor/reveal/highlight/highlight.js"></script>
+<script src="../shared/classroom-fragments.js"></script>
+<script>
+function fallbackMedia(el){
+ const prompt=el.dataset.prompt||'请替换为与本页主题一致的高清教学插图。';
+ const title=el.dataset.fallback||'素材占位';
+ const shell=el.closest('.media-shell')||el.parentElement;
+ shell.innerHTML=`<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
+}
+document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach(el=>{el.addEventListener('error',()=>fallbackMedia(el),{once:true});});
+Reveal.initialize({
+ width:1600,height:900,margin:0.055,minScale:0.2,maxScale:1.5,
+ controls:true,progress:true,slideNumber:'c/t',history:false,center:true,touch:true,
+ transition:'fade',backgroundTransition:'fade',hash:false,
+ plugins:[RevealZoom,RevealNotes,RevealSearch,RevealHighlight]
+});
+</script>
+</body></html>

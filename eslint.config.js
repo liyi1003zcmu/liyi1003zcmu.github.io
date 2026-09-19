@@ -7,5 +7,15 @@ export default [
     files: ['**/*.astro'],
     languageOptions: { parserOptions: { parser: tsParser } },
   },
-  { ignores: ['dist/**', '.astro/**', 'node_modules/**', 'public/pagefind/**'] },
+  {
+    ignores: [
+      'CourseWare_2026/**',
+      'dist/**',
+      '.astro/**',
+      'node_modules/**',
+      'public/pagefind/**',
+      'public/slides/**',
+      'public/vendor/**',
+    ],
+  },
 ];

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>计算机图形学 第一章(2) 图形成像系统概述（2026·嵌套版）</title>
+<link href="/vendor/reveal/reset.css" rel="stylesheet"/>
+<link href="/vendor/reveal/reveal.css" rel="stylesheet"/>
+<link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet"/>
+<style>
+
+:root{--bg:#f7f9fc;--panel:#ffffff;--panel2:#f2f6fb;--text:#203044;--muted:#5f7186;--cyan:#157db8;--blue:#2f64c8;--amber:#9a5d00;--green:#1e8a64;--red:#c74b5a;--line:rgba(30,56,96,.12)}
+*{box-sizing:border-box}
+body{background:var(--bg)}
+.reveal{font-family:"Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--text)}
+.reveal .slides{text-align:left}
+.reveal h1,.reveal h2,.reveal h3{text-transform:none;letter-spacing:-.025em;color:var(--text);font-weight:750}
+.reveal h1{font-size:2.2em;line-height:1.08;margin:.12em 0 .25em}
+.reveal h2{font-size:1.55em;line-height:1.15;margin:.1em 0 .4em}
+.reveal h3{font-size:1.08em;color:var(--cyan);margin:.2em 0 .45em}
+.reveal p,.reveal li{font-size:.72em;line-height:1.55}
+.reveal ul{margin:.25em 0 .25em 1.05em}
+.reveal li{margin:.22em 0}
+.reveal strong{color:#14345e}
+.reveal a{color:var(--blue);text-decoration:none}
+.reveal pre{width:100%;font-size:.46em;border-radius:16px;box-shadow:none;border:1px solid var(--line)}
+.reveal code{max-height:520px}
+.reveal section img{border:0;box-shadow:none;max-height:560px;object-fit:contain}
+.reveal table{font-size:.62em;border-collapse:separate;border-spacing:0;width:100%}
+.reveal th{background:#dfeaf5;color:var(--text);padding:.55em .7em;border-bottom:1px solid var(--line)}
+.reveal td{padding:.55em .7em;border-bottom:1px solid var(--line);color:var(--text)}
+.slide-no{position:absolute;right:0;top:-5px;font-size:.28em;color:#8a97aa;letter-spacing:.12em}
+.eyebrow{display:inline-flex;align-items:center;gap:.45em;font-size:.38em;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:.75em}
+.eyebrow::before{content:"";width:28px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--blue))}
+.lead{font-size:.92em!important;line-height:1.45!important;color:var(--text);max-width:1300px}
+.muted{color:var(--muted)!important}
+.accent{color:var(--cyan)} .amber{color:var(--amber)} .green{color:var(--green)} .red{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:stretch}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.card{background:linear-gradient(180deg,#ffffff,#f7fafe);border:1px solid var(--line);border-radius:22px;padding:26px 28px;box-shadow:0 12px 28px rgba(31,56,88,.08)}
+.card h3{margin-top:0}
+.kpi{font-size:1.5em;font-weight:800;color:#14345e;line-height:1}
+.kicker{font-size:.42em;color:var(--muted);text-transform:uppercase;letter-spacing:.13em;font-weight:700}
+.pill{display:inline-block;padding:.28em .65em;border-radius:999px;background:rgba(21,125,184,.08);border:1px solid rgba(21,125,184,.2);font-size:.42em;color:var(--cyan);font-weight:700}
+.activity{margin-top:28px;background:linear-gradient(135deg,rgba(21,125,184,.08),rgba(47,100,200,.04));border:1px solid rgba(21,125,184,.22);border-left:7px solid var(--cyan);border-radius:18px;padding:20px 24px}
+.activity.ai{background:linear-gradient(135deg,rgba(30,138,100,.08),rgba(21,125,184,.03));border-color:rgba(30,138,100,.22);border-left-color:var(--green)}
+.activity .tag{font-size:.34em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+.activity.ai .tag{color:var(--green)}
+.activity p{margin:.25em 0 0;font-size:.58em}
+.timer{float:right;font-size:.88em;color:var(--amber);font-weight:800}
+.flow{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}
+.node{min-width:180px;padding:18px 20px;border-radius:18px;background:#ffffff;border:1px solid rgba(30,56,96,.14);text-align:center;font-size:.58em;font-weight:700;color:var(--text);box-shadow:0 8px 18px rgba(31,56,88,.06)}
+.node.primary{background:linear-gradient(180deg,#edf7fc,#e8f0ff);border-color:rgba(21,125,184,.28)}
+.node.ai{background:linear-gradient(180deg,#eefaf5,#eef8fb);border-color:rgba(30,138,100,.24)}
+.arrow{font-size:.85em;color:var(--cyan);font-weight:800}
+.media-shell{height:470px;border-radius:22px;overflow:hidden;background:#ffffff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 10px 24px rgba(31,56,88,.06)}
+.media-shell img,.media-shell video{width:100%;height:100%;object-fit:contain;background:#ffffff}
+.media-shell.cover img,.media-shell.cover video{object-fit:cover}
+.media-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:42px;background:radial-gradient(circle at 50% 10%,rgba(21,125,184,.08),transparent 45%),#f2f6fb;color:var(--muted)}
+.media-placeholder .icon{font-size:2em;margin-bottom:.2em}
+.media-placeholder strong{font-size:.58em;color:#14345e}
+.media-placeholder small{display:block;max-width:800px;margin-top:.8em;font-size:.33em;line-height:1.5;color:#7a8899}
+.quote{font-size:1.05em!important;line-height:1.48!important;padding:24px 30px;border-left:6px solid var(--cyan);background:rgba(21,125,184,.06);border-radius:0 16px 16px 0}
+.title-slide{height:760px;display:flex!important;flex-direction:column;justify-content:center}
+.title-slide::after{content:"";position:absolute;inset:-80px -160px;background:radial-gradient(circle at 80% 30%,rgba(21,125,184,.08),transparent 33%),radial-gradient(circle at 15% 80%,rgba(47,100,200,.06),transparent 28%);z-index:-1}
+.title-mark{font-size:.38em;color:var(--muted);margin-top:1.2em}
+.question{font-size:1.32em!important;line-height:1.32!important;font-weight:780;max-width:1250px}
+.big{font-size:1.22em!important}
+.micro{font-size:.38em!important;color:var(--muted)}
+.compare{display:grid;grid-template-columns:1fr 90px 1fr;gap:18px;align-items:center}
+.vs{text-align:center;font-size:1.1em;font-weight:900;color:var(--amber)}
+.check{color:var(--green)}
+.warn{color:var(--amber)}
+.footer-src{position:absolute;bottom:-22px;left:0;font-size:.22em!important;color:#8d98a8!important;max-width:1450px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timeline{display:grid;grid-template-columns:130px 1fr;gap:12px 20px;align-items:center}
+.time{font-size:.52em;font-weight:800;color:var(--amber);text-align:right}
+.event{padding:15px 20px;background:#ffffff;border:1px solid var(--line);border-radius:14px;font-size:.55em;box-shadow:0 8px 18px rgba(31,56,88,.05)}
+.dotline{position:absolute;left:151px;top:172px;bottom:95px;border-left:2px dashed rgba(154,93,0,.18);z-index:-1}
+.badge-new{display:inline-block;background:rgba(30,138,100,.08);border:1px solid rgba(30,138,100,.22);color:var(--green);font-size:.3em;font-weight:800;padding:.35em .55em;border-radius:7px;vertical-align:middle;letter-spacing:.06em}
+/* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+.med-tag{display:inline-block;padding:.32em .72em;border-radius:999px;background:rgba(30,138,100,.08);border:1px solid rgba(30,138,100,.24);color:var(--green);font-size:.34em;font-weight:800;letter-spacing:.08em;margin-bottom:.7em}
+.med-strip{margin-top:22px;padding:16px 20px;border-radius:16px;background:linear-gradient(90deg,rgba(30,138,100,.08),rgba(21,125,184,.04));border:1px solid rgba(30,138,100,.2);font-size:.56em;line-height:1.5}
+.med-strip strong{color:var(--green)}
+</style>
+<link href="../shared/classroom-large.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="reveal"><div class="slides">
+<section>
+<div class="title-slide fragment">
+<div class="eyebrow">Computer Graphics · Chapter 1 · 02</div>
+<h1>图像是怎样形成的？</h1>
+<p class="lead">从对象、观察者和光，到虚拟相机与二维图像</p>
+<div class="flow title-flow" style="justify-content:flex-start;margin-top:44px">
+<div class="node">Object</div><div class="arrow">+</div>
+<div class="node primary">Viewer / Camera</div><div class="arrow">+</div>
+<div class="node">Light / Material</div><div class="arrow">→</div>
+<div class="node primary">Image</div>
+</div>
+<p class="title-mark">40 min · 思想实验 + 成像模型 + 概念辨析 + AI纠错</p>
+</div>
+</section>
+<!-- 1 导入与问题建立 -->
+<section>
+<section>
+<div class="eyebrow">Bridge-in · 0–5 min</div>
+<h2>人眼、相机和计算机图形学，有什么共同问题？</h2>
+<div class="grid2 image-text">
+<div class="media-shell dual-image-shell fragment">
+<div class="dual-image-grid">
+<img alt="小孔成像原理图" data-fallback="小孔成像原理图" data-prompt="小孔成像教学示意图：物体、针孔、成像平面与投影线，白色背景、蓝灰线条、适合大学教材与PPT，16:9，无大段文字" src="./images/chap01/ch01-pinholecamera.png"/>
+<img alt="相机成像示意图" data-fallback="相机成像示意图" data-prompt="相机成像几何示意图：观察者、成像平面、三维物体、投影线，浅色背景、蓝灰线条、学术信息图风格，16:9" src="./images/chap01/ch01-pinholecamera-2.png"/>
+</div>
+</div>
+<div class="card fragment">
+<h3>共同问题</h3>
+<p class="question">怎样把<strong>三维世界中的对象</strong>，变成<strong>二维平面上的图像</strong>？</p>
+<p>真实相机依赖光学；计算机图形学则要把这个过程<strong class="accent">抽象成数学模型</strong>，再交给程序和GPU计算。</p>
+</div>
+</div>
+</section>
+<section>
+<div class="med-tag fragment">MED × CG · 医工交叉</div>
+<h2>把成像问题放进医学场景：三维器官怎样“被看见”？</h2>
+<div class="flow hero-flow"><div class="node fragment">CT / MRI 数据</div><div class="arrow fragment">→</div><div class="node fragment">图像处理 / 重建</div><div class="arrow fragment">→</div><div class="node primary fragment">3D Organ Model</div><div class="arrow fragment">→</div><div class="node primary fragment">Camera + Rendering</div><div class="arrow fragment">→</div><div class="node fragment">2D Display</div></div>
+<div class="grid2"><div class="card fragment"><h3>边界要分清</h3><p>从原始 CT / MRI 到分割、重建三维结构，主要涉及医学图像处理与重建。</p></div><div class="card fragment"><h3>本课关注</h3><p>从已有三维结构出发：从哪里看？怎样投影？光与材质怎样影响最终显示？</p></div></div>
+</section>
+<section>
+<div class="eyebrow">Learning goals</div>
+<h2>今天要建立三层认识</h2>
+<div class="grid3 summary-grid">
+<div class="card fragment"><div class="kicker">01</div><h3>成像需要什么？</h3><p>对象、观察者和光为什么缺一不可。</p></div>
+<div class="card fragment"><div class="kicker">02</div><h3>三维怎样投到二维？</h3><p>小孔相机、透视关系与视域。</p></div>
+<div class="card fragment"><div class="kicker">03</div><h3>计算机怎样模拟？</h3><p>虚拟相机、裁剪窗口与成像过程。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Pre-assessment · Thought experiment</div>
+<h2>思想实验：在窗户上“描”出你眼前的世界</h2>
+<div class="grid2">
+<div class="card fragment">
+<h3>限制条件</h3>
+<ul><li>眼睛位置固定不动</li><li>玻璃窗的位置固定</li><li>物体也不移动</li></ul>
+<p>怎样在玻璃上画出与眼睛所见一致的轮廓？</p>
+</div>
+<div class="card fragment">
+<h3>你会自然得到</h3>
+<div class="flow vertical-flow">
+<div class="node primary">观察点 / Viewpoint</div><div class="arrow">↓</div>
+<div class="node">投影线 / Projector</div><div class="arrow">↓</div>
+<div class="node">成像平面 / Image Plane</div>
+</div>
+</div>
+</div>
+<div class="activity fragment"><span class="tag">两人讨论</span><span class="timer">2 min</span><p>先画图，不查资料：你认为“观察点”和“玻璃平面”的位置改变后，最终图像会发生什么变化？</p></div>
+</section>
+</section>
+<!-- 2 成像三要素 -->
+<section>
+<section>
+<div class="eyebrow">Imaging system · 5–10 min</div>
+<h2>成像三要素：对象、观察者、光</h2>
+<div class="grid2 image-text">
+<div class="media-shell diagram-shell fragment"><img alt="对象观察者光源关系" data-fallback="成像三要素示意图" data-prompt="计算机图形学成像三要素示意图：三维对象、观察者/相机、光源，箭头表示光线到物体再进入相机，浅色背景、蓝灰配色、教材信息图、16:9" src="images/chap01/ch01-objview.png"/></div>
+<div class="card fragment">
+<div class="flow vertical-flow">
+<div class="node">Object · 对象</div><div class="node primary">Viewer · 观察者</div><div class="node">Light · 光</div>
+</div>
+<p class="lead">最终图像是三者相互作用的结果，而不是某一个对象“自带”的属性。</p>
+</div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Object &amp; Viewer</div>
+<h2>对象与观察者：同一个对象，可以有完全不同的图像</h2>
+<div class="grid3">
+<div class="card fragment"><h3>对象</h3><p>由空间中的几何信息定义，本身独立于某个特定观察者。</p></div>
+<div class="card fragment"><h3>观察者</h3><p>位置与方向决定<strong>从哪里看、朝哪里看</strong>。</p></div>
+<div class="card fragment"><h3>二维图像</h3><p>是三维对象在特定观察条件下的<strong>投影结果</strong>。</p></div>
+</div>
+<div class="activity fragment"><span class="tag">快速判断</span><p>“图像就是对象的二维副本。”这句话哪里不准确？</p></div>
+</section>
+<section>
+<div class="eyebrow">A useful abstraction</div>
+<h2>先把今天的核心关系写成一条“概念公式”</h2>
+<div class="formula-box fragment">Image = f ( Object / Scene, Camera / Viewer, Light, Material )</div>
+<div class="grid2" style="margin-top:28px">
+<div class="card fragment"><h3>改相机</h3><p>位置、方向、视野变化 → 构图和透视变化。</p></div>
+<div class="card fragment"><h3>改光与材质</h3><p>亮暗、颜色、阴影、反射等视觉效果变化。</p></div>
+</div>
+</section>
+</section>
+<!-- 3 光与成像 -->
+<section>
+<section>
+<div class="eyebrow">Light · 10–17 min</div>
+<h2>为什么“看见”离不开光？</h2>
+<div class="grid2 image-text">
+<div class="media-shell light-shell fragment"><img alt="光线传播示意图" data-fallback="光线传播示意图" data-prompt="几何光学教学图：点光源向外发出多条光线，部分照射三维物体并反射进入相机，浅色背景、蓝灰线条、大学教材风格、16:9" src="images/chap01/ch01-lightray.png"/></div>
+<div class="card fragment">
+<h3>图形学常采用几何光学近似</h3>
+<ul><li>把光近似成沿直线传播的<strong>光线</strong></li><li>光线与物体表面发生反射、折射、吸收</li><li>进入观察者/相机的光决定最终可见结果</li></ul>
+<p class="micro">第一章只建立模型，不深入电磁波物理细节。</p>
+</div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Physical transport vs algorithm</div>
+<h2>物理世界从光源出发，算法为什么常从相机出发？</h2>
+<div class="compare">
+<div class="card fragment"><h3>物理光传播</h3><div class="flow mini-flow"><div class="node">Light</div><div class="arrow">→</div><div class="node">Surface</div><div class="arrow">→</div><div class="node">Camera</div></div><p>真实光线从光源发出，经过场景后只有极少一部分进入相机。</p></div>
+<div class="vs fragment">↔</div>
+<div class="card fragment"><h3>经典 Ray Tracing</h3><div class="flow mini-flow"><div class="node primary">Camera / Pixel</div><div class="arrow">→</div><div class="node">Scene</div><div class="arrow">→</div><div class="node">Light</div></div><p>从“真正要生成的像素”出发反向查询场景，更高效。</p></div>
+</div>
+<div class="activity fragment"><span class="tag">概念连接</span><p>这与上一课的“光栅化：物体→屏幕；光追：像素/相机→场景”怎样对应？</p></div>
+</section>
+<section>
+<div class="eyebrow">Ray tracing</div>
+<h2>光线追踪：沿着“看见什么”继续追问光从哪里来</h2>
+<div class="grid2 image-text">
+<div class="media-shell light-shell fragment"><img alt="光线追踪示意图" data-fallback="光线追踪示意图" data-prompt="光线追踪教学示意图：相机穿过像素向场景发射主光线，与球体或平面相交，产生阴影光线、反射光线和折射光线，浅色背景、蓝灰配色、16:9" src="images/chap01/ch01-raytracing.png"/></div>
+<div class="card fragment">
+<h3>每个交点可能继续产生</h3>
+<ul><li>到光源的阴影测试</li><li>反射光线</li><li>折射光线</li><li>递归查询其他表面</li></ul>
+<p>因此它特别适合表达镜面反射、透明物体和复杂阴影。</p>
+</div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Local vs Global Illumination</div>
+<h2>局部光照与全局光照：差别在“是否考虑间接光”</h2>
+<div class="grid2 image-text">
+<div class="media-shell light-shell fragment"><img alt="局部和全局光照示意" data-fallback="局部与全局光照对比图" data-prompt="局部光照与全局光照对比教学图：同一室内场景左侧只含直接光和硬阴影，右侧包含墙面反弹的间接光、颜色渗透和柔和阴影，浅色背景、16:9" src="images/chap01/ch01-globalillu.png"/></div>
+<div class="card fragment"><h3>关键区别</h3><p><strong>局部光照：</strong>主要根据光源到当前表面的直接作用计算颜色。</p><p><strong>全局光照：</strong>还考虑其他表面反射/透射来的间接光。</p><p class="micro">光线追踪是一类求解路径；是否“全局”取决于追踪和光照模型考虑了哪些传播过程。</p></div>
+</div>
+</section>
+<section class="compact">
+<div class="eyebrow">Extension · 可略讲</div>
+<h2>基于物理的图像生成：不只有一种算法</h2>
+<div class="grid3">
+<div class="card fragment"><h3>Ray Tracing</h3><p>沿光线路径求交与递归，现代实时图形也大量使用。</p></div>
+<div class="card fragment"><h3>Radiosity</h3><p>以能量交换为基础，经典上特别适合漫反射表面的间接光照。</p></div>
+<div class="card fragment"><h3>Path Tracing</h3><p>通过随机采样大量光路估计完整光传输，是现代离线真实感渲染的重要方法。</p></div>
+</div>
+<p class="lead fragment" style="margin-top:24px">第一章只需要认识：<strong>越接近完整光传输，通常计算代价越高。</strong></p>
+</section>
+</section>
+<!-- 4 颜色与人类视觉 -->
+<section>
+<section>
+<div class="eyebrow">Color &amp; perception · 17–23 min</div>
+<h2>灰度和彩色：像素究竟存什么？</h2>
+<div class="grid2">
+<div class="card fragment"><h3>灰度图 · Luminance / Intensity</h3><p>每个像素用一个数值表示亮暗。</p><div class="gray-ramp"><span></span><span></span><span></span><span></span><span></span></div></div>
+<div class="card fragment"><h3>彩色图 · Color Image</h3><p>每个像素需要多个分量共同描述颜色；显示系统最常见的是 RGB。</p><div class="rgb-dots"><span class="r"></span><span class="g"></span><span class="b"></span><span class="mix">RGB</span></div></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Human visual system</div>
+<h2>为什么显示器只用 RGB，就能覆盖大量可见颜色？</h2>
+<div class="grid2 image-text">
+<div class="media-shell vision-shell fragment"><img alt="视杆和视锥细胞示意" data-fallback="人眼视杆与视锥细胞示意图" data-prompt="人眼视网膜中视杆细胞与三类视锥细胞的教材示意图，突出低照度与三色感知关系，不强调复杂生理解剖，浅色背景、16:9" src="images/chap01/ch01-rod_cone.png"/></div>
+<div class="card fragment"><h3>第一章记住两点</h3><ul><li><strong>视杆细胞</strong>主要支持低照度下的亮暗感知</li><li><strong>视锥细胞</strong>具有不同光谱响应，是三色视觉的基础</li></ul><p>因此，显示系统可以用三个基色分量来近似形成丰富的颜色感知。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Color models</div>
+<h2>RGB 与 CMY(K)：一个“发光”，一个“减光”</h2>
+<div class="grid2">
+<div class="card fragment"><h3>RGB · 加色系统</h3><div class="media-shell color-shell"><img alt="RGB 加色模型" data-fallback="RGB加色模型" data-prompt="RGB加色模型教学图，红绿蓝三个半透明圆重叠形成青、品红、黄和白，浅色背景、简洁矢量风、无额外文字" src="images/chap01/ch01-RGB.png"/></div><p>显示器、投影等主动发光设备。</p></div>
+<div class="card fragment"><h3>CMY(K) · 减色系统</h3><div class="media-shell color-shell"><img alt="CMYK 减色模型" data-fallback="CMYK减色模型" data-prompt="CMYK减色模型教学图，青品红黄三个半透明圆重叠，并以黑色辅助印刷，浅色背景、简洁矢量风、无额外文字" src="images/chap01/ch01-CMYK.png"/></div><p>印刷等依靠材料吸收部分白光的系统。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Connection</div>
+<h2>颜色不是“物体固定拥有的一个RGB值”</h2>
+<div class="flow hero-flow"><div class="node fragment">Light spectrum / intensity</div><div class="arrow fragment">×</div><div class="node fragment">Material response</div><div class="arrow fragment">×</div><div class="node fragment">Viewing / display</div><div class="arrow fragment">→</div><div class="node primary fragment">Perceived color</div></div>
+<div class="activity fragment"><span class="tag">概念辨析</span><p>为什么同一件衣服在日光、暖色灯和显示器照片中，看起来可能不是同一种颜色？</p></div>
+</section>
+</section>
+<!-- 5 小孔与虚拟相机 -->
+<section>
+<section>
+<div class="eyebrow">Camera model · 23–30 min</div>
+<h2>小孔成像：把三维到二维写成一个比例关系</h2>
+<div class="grid2 image-text">
+<div class="media-shell camera-shell fragment"><img alt="针孔照相机" data-fallback="针孔照相机模型" data-prompt="针孔照相机几何模型：针孔位于原点，三维点(x,y,z)、成像平面距离d、投影点(xp,yp)，浅色背景、蓝灰线条、数学教材风" src="images/chap01/ch01-pinholecamera.png"/></div>
+<div class="card fragment"><h3>由相似三角形得到</h3><div class="formula-box compact-formula">\(x_p=-d\frac{x}{z}\)<br/>\(y_p=-d\frac{y}{z}\)</div><ul><li>z 增大 → 投影尺寸减小</li><li>d 改变 → 视野与图像尺度改变</li><li>负号来自真实胶片成像的倒立关系</li></ul></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Perspective</div>
+<h2>透视的核心直觉：近大远小</h2>
+<div class="grid3">
+<div class="card fragment"><div class="kpi">z</div><p>物体离相机越远，投影越小。</p></div>
+<div class="card fragment"><div class="kpi">d</div><p>焦距/投影平面距离改变，观察范围随之变化。</p></div>
+<div class="card fragment"><div class="kpi">FOV</div><p>视域描述相机能够“纳入画面”的角度范围。</p></div>
+</div>
+<div class="activity fragment"><span class="tag">一分钟推理</span><p>物体距离变成原来的 2 倍，其他条件不变，它在图像上的线性尺寸大约怎样变化？</p></div>
+</section>
+<section>
+<div class="eyebrow">Synthetic camera</div>
+<h2>虚拟相机：把真实相机“翻到镜头前面”</h2>
+<div class="grid2 image-text">
+<div class="media-shell camera-shell fragment"><img alt="合成相机模型" data-fallback="合成相机模型" data-prompt="计算机图形学合成相机模型：投影中心、位于相机前方的投影平面、三维对象、投影线与裁剪窗口，浅色背景、蓝灰配色、16:9" src="images/chap01/ch01-syncam.png"/></div>
+<div class="card fragment"><h3>为什么这样做？</h3><p>真实胶片位于针孔后面且图像倒立；虚拟相机把成像平面移到投影中心前方，得到更直观的正立几何模型。</p><p class="lead">物理装置可以不同，但<strong>投影几何关系等价</strong>。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Why synthetic camera?</div>
+<h2>合成相机模型为什么适合图形 API？</h2>
+<div class="grid2">
+<div class="card fragment"><h3>对象与观察者分离</h3><p>可以独立定义模型和相机，再自由组合视图。</p></div>
+<div class="card fragment"><h3>二维图像 = 三维对象的投影</h3><p>统一了透视、平行投影等不同观察方式。</p></div>
+<div class="card fragment"><h3>API 参数清晰</h3><p>位置、方向、焦距/FOV、成像窗口等都能显式描述。</p></div>
+<div class="card fragment"><h3>利于GPU实现</h3><p>投影和坐标变换可转化为规则的矩阵计算。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Clipping</div>
+<h2>相机不是“什么都看见”：还需要确定可见窗口</h2>
+<div class="grid2 image-text">
+<div class="media-shell camera-shell fragment"><img alt="窗口裁剪" data-fallback="窗口裁剪示意图" data-prompt="虚拟相机裁剪窗口示意图：观察者透过矩形窗口观察三维场景，窗口移动导致可见对象范围变化，浅色背景、蓝灰线条、教材风" src="images/chap01/ch01-windowclip.png"/></div>
+<div class="card fragment"><h3>Clipping Window / Volume</h3><ul><li>决定画面边界</li><li>窗口外的对象不进入最终图像</li><li>跨越边界的图元只保留可见部分</li></ul><p>这就是后续“裁剪”算法的几何来源。</p></div>
+</div>
+</section>
+<section>
+<div class="eyebrow">Interactive thinking</div>
+<h2>相机动了，还是物体动了？</h2>
+<div class="compare">
+<div class="card fragment"><h3>方案 A</h3><p class="big">相机向前移动 2m</p><div class="flow mini-flow"><div class="node primary">Camera →</div><div class="node">Object</div></div></div>
+<div class="vs fragment">≈ ?</div>
+<div class="card fragment"><h3>方案 B</h3><p class="big">物体向相机移动 2m</p><div class="flow mini-flow"><div class="node primary">Camera</div><div class="node">← Object</div></div></div>
+</div>
+<div class="activity fragment"><span class="tag">现场演示 / 讨论</span><span class="timer">2 min</span><p>什么条件下两幅图像可以完全相同？——这正是后续“世界坐标 → 相机坐标”变换的直觉基础。</p></div>
+</section>
+</section>
+<!-- 6 成像过程与流水线连接 -->
+<section>
+<section>
+<div class="eyebrow">Image formation pipeline · 30–34 min</div>
+<h2>从合成相机到计算机成像过程</h2>
+<div class="media-shell process-shell fragment"><img alt="成像过程" data-fallback="计算机成像过程示意图" data-prompt="计算机图形学成像流程图：三维对象、相机、投影平面、裁剪窗口到二维图像，浅色背景、蓝灰信息图、16:9" src="images/chap01/ch01-imgform.png"/></div>
+</section>
+<section>
+<div class="med-tag fragment">MED × CG · Imaging pipeline</div>
+<h2>一个三维器官模型怎样进入图形成像过程？</h2>
+<div class="flow hero-flow"><div class="node fragment">Organ Mesh</div><div class="arrow fragment">→</div><div class="node fragment">View / Projection</div><div class="arrow fragment">→</div><div class="node fragment">Clip</div><div class="arrow fragment">→</div><div class="node primary fragment">Rasterize + Shade</div><div class="arrow fragment">→</div><div class="node fragment">Medical Image</div></div>
+<div class="activity fragment"><span class="tag">课堂判断</span><p>医生旋转三维肝脏模型、放大病灶区域时，原始器官几何一定发生改变了吗？请区分“模型变化”和“观察条件变化”。</p></div>
+</section>
+<section>
+<div class="eyebrow">From concept to GPU</div>
+<h2>三层过程：应用程序 → 几何处理 → 像素处理</h2>
+<div class="course-map imaging-map">
+<div class="course-block fragment"><span>01</span><strong>应用程序</strong><small>定义对象、相机、光源、材质与绘制任务</small></div>
+<div class="course-arrow fragment">→</div>
+<div class="course-block fragment"><span>02</span><strong>几何处理</strong><small>坐标变换、投影、裁剪、屏幕映射</small></div>
+<div class="course-arrow fragment">→</div>
+<div class="course-block fragment"><span>03</span><strong>像素处理</strong><small>光栅化、片元着色、深度与帧缓冲处理</small></div>
+<div class="course-arrow fragment">→</div>
+<div class="course-block fragment"><span>04</span><strong>显示</strong><small>最终像素进入帧缓冲并输出到屏幕</small></div>
+</div>
+<p class="lead fragment">下一课将把这条链真正“打开”，进入 GPU 绘制流水线。</p>
+</section>
+</section>
+<!-- 7 AI纠错与新方法桥梁 -->
+<section>
+<section>
+<div class="eyebrow">AI as a learning tool · 34–37 min</div>
+<h2>让 AI 犯一次“听起来很对”的错误</h2>
+<div class="card fragment"><p class="quote">“计算机图形学中的相机负责捕获三维世界中真实存在的光线，并将其转换为二维图像。”</p></div>
+<div class="grid2" style="margin-top:22px">
+<div class="card fragment"><h3>合理之处</h3><p>它描述了真实相机的物理直觉。</p></div>
+<div class="card fragment"><h3>不严谨之处</h3><p>虚拟相机主要定义观察与投影关系，图像由渲染算法计算，而不是物理设备直接“捕获”。</p></div>
+</div>
+<div class="activity ai fragment"><span class="tag">AI纠错活动</span><span class="timer">2 min</span><p>请把原句改成一条适用于计算机图形学的准确表述，再让 AI 评价你修改后的版本，并判断 AI 的评价是否可信。</p></div>
+</section>
+<section>
+<div class="eyebrow">Bridge to neural rendering · Extension</div>
+<h2>从虚拟相机到神经场景表示：什么变了，什么没变？</h2>
+<div class="compare">
+<div class="card fragment"><h3>经典图形学</h3><div class="flow mini-flow"><div class="node">Geometry</div><div class="arrow">+</div><div class="node">Camera</div><div class="arrow">→</div><div class="node">Image</div></div></div>
+<div class="vs fragment">↔</div>
+<div class="card fragment"><h3>Neural Rendering</h3><div class="flow mini-flow"><div class="node ai">Learned Scene</div><div class="arrow">+</div><div class="node">Camera Ray</div><div class="arrow">→</div><div class="node">Image</div></div></div>
+</div>
+<p class="lead fragment" style="margin-top:24px">场景表示和绘制算法可以变化，但<strong>“场景 + 观察条件 → 图像”</strong>仍是核心问题。</p>
+</section>
+</section>
+<!-- 8 后测总结 -->
+<section>
+<section>
+<div class="eyebrow">Post-assessment · 37–39 min</div>
+<h2>知识检验：把概念放回正确位置</h2>
+<table class="check-table">
+<thead><tr><th>问题</th><th>你的答案</th></tr></thead>
+<tbody>
+<tr class="fragment"><td>一幅合成图像的三个基本要素是什么？</td><td>对象 / ______ / ______</td></tr>
+<tr class="fragment"><td>为什么远处物体看起来更小？</td><td>来自 ______ 投影关系</td></tr>
+<tr class="fragment"><td>全局光照比局部光照多考虑了什么？</td><td>______ 光</td></tr>
+<tr class="fragment"><td>虚拟相机最核心的任务是什么？</td><td>定义观察与 ______ 关系</td></tr>
+</tbody>
+</table>
+</section>
+<section>
+<div class="eyebrow">Summary</div>
+<h2>本课内容总结：从物理成像到合成相机</h2>
+<div class="grid4 summary-grid">
+<div class="card fragment"><div class="kicker">01</div><h3>成像三要素</h3><p>对象、观察者和光共同决定图像。</p></div>
+<div class="card fragment"><div class="kicker">02</div><h3>光与颜色</h3><p>光的传播、材质响应和视觉系统决定可见结果。</p></div>
+<div class="card fragment"><div class="kicker">03</div><h3>透视投影</h3><p>小孔模型解释三维点如何映射到二维平面。</p></div>
+<div class="card fragment"><div class="kicker">04</div><h3>虚拟相机</h3><p>用几何参数描述观察、投影与裁剪，连接到GPU流水线。</p></div>
+</div>
+<div class="med-strip fragment"><strong>医工连接：</strong>三维器官模型 → 虚拟相机 / 投影 → 裁剪 → 成像。下一课继续追踪它如何进入 GPU，并最终成为屏幕像素。</div>
+</section>
+<section>
+<div class="eyebrow">Exit ticket · 39–40 min</div>
+<h2>用一句话解释今天最核心的关系</h2>
+<p class="question fragment">“三维场景变成二维图像，本质上需要 ______________________________。”</p>
+<div class="activity fragment"><span class="tag">提交</span><span class="timer">1 min</span><p>再勾选目前最不确定的一项：光 / 颜色 / 透视 / FOV / 合成相机 / 裁剪。</p></div>
+<p class="lead next-lesson fragment">下一课：<strong>GPU 怎样真正把三角形变成屏幕像素？</strong></p>
+</section>
+</section>
+</div></div>
+<script src="/vendor/reveal/reveal.js"></script>
+<script src="/vendor/reveal/zoom/zoom.js"></script>
+<script src="/vendor/reveal/notes/notes.js"></script>
+<script src="/vendor/reveal/search/search.js"></script>
+<script src="/vendor/reveal/highlight/highlight.js"></script>
+<script src="/vendor/reveal/math/math.js"></script>
+<script>
+function fallbackMedia(el){
+ const prompt=el.dataset.prompt||'请替换为与本页主题一致的高清教学插图。';
+ const title=el.dataset.fallback||'素材占位';
+ const shell=el.closest('.media-shell')||el.parentElement;
+ shell.innerHTML=`<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
+}
+document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach(el=>{el.addEventListener('error',()=>fallbackMedia(el),{once:true});});
+Reveal.initialize({
+ width:1600,height:900,margin:0.055,minScale:0.2,maxScale:1.5,
+ controls:true,progress:true,slideNumber:'c/t',history:false,center:true,touch:true,
+ transition:'fade',backgroundTransition:'fade',hash:false,
+ plugins:[RevealZoom,RevealNotes,RevealSearch,RevealHighlight,RevealMath.KaTeX]
+});
+</script>
+</body></html>
