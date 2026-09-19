@@ -83,11 +83,17 @@ updatedDate: 2026-09-19
 
 ## 实验任务
 
-实验将围绕 WebGL 基础、二维与三维变换、观察与投影、光照着色、纹理映射及基础光栅算法逐步展开，具体要求随实验指导发布。
+实验将围绕 WebGL 基础、二维与三维变换、观察与投影、光照着色、纹理映射及基础光栅算法逐步展开。每次实验必须按照统一要求完成邮件与课程平台双渠道提交，并检查压缩包命名、目录结构和运行入口。
 
-## 作业与项目
+- [在线查看《2026 秋季计算机图形学实验提交规范》](/files/courses/computer-graphics/guides/experiment-submission.html)
+- [下载 Markdown 源文件](/files/courses/computer-graphics/guides/experiment-submission.md)
 
-课程设计要求综合运用场景建模、交互控制与实时绘制，完成一个可运行、可演示并包含技术说明的图形应用。
+## 课程设计
+
+本学期课程设计主题为“纪念”，要求 3～4 人组队，综合运用场景建模、相机、光照、纹理、交互控制与图像输出，完成一个可运行、可演示并包含技术说明的三维应用。指南同时说明阶段任务、提交材料、AI 辅助开发及过程记录要求。
+
+- [在线查看《2026 秋季计算机图形学课程设计指南》](/files/courses/computer-graphics/guides/course-design-guide.html)
+- [下载 Markdown 源文件](/files/courses/computer-graphics/guides/course-design-guide.md)
 
 ## 参考资料
 
@@ -97,5 +103,6 @@ updatedDate: 2026-09-19
 
 ## 更新记录
 
+- 2026-09-19：发布实验提交规范和课程设计指南，完善课程主页相关说明。
 - 2026-09-19：同步 2026 秋季课程结构，发布第〇章课程概述和第一章三份在线课件。
 - 2026-03-05：建立课程条目。
