@@ -4,8 +4,9 @@
  * 单页如不需要自动动画，可在叶子 section 上添加 data-auto-fragments="off"。
  */
 (function () {
-  const slides = Array.from(document.querySelectorAll('.reveal .slides section'))
-    .filter(section => !Array.from(section.children).some(child => child.tagName === 'SECTION'));
+  const slides = Array.from(document.querySelectorAll('.reveal .slides section')).filter(
+    (section) => !Array.from(section.children).some((child) => child.tagName === 'SECTION'),
+  );
 
   function mark(element, index) {
     if (!element || element.matches('.eyebrow, h1, h2, .footer-src')) return;
@@ -30,13 +31,17 @@
   }
 
   function sequenceBlock(block, index) {
-    if (block.matches('.grid2, .grid3, .grid4, .compare, .course-map, .pipeline-road, .pipeline-final-flow, .webgpu-flow, .flow, .ch0-resource-list, .ch0-score-grid')) {
+    if (
+      block.matches(
+        '.grid2, .grid3, .grid4, .compare, .course-map, .pipeline-road, .pipeline-final-flow, .webgpu-flow, .flow, .ch0-resource-list, .ch0-score-grid',
+      )
+    ) {
       return sequenceChildren(block, index);
     }
     if (block.matches('table')) {
       const rows = block.querySelectorAll('tbody > tr');
       if (rows.length) {
-        rows.forEach(row => {
+        rows.forEach((row) => {
           mark(row, index);
           index += 1;
         });
@@ -47,7 +52,7 @@
     return index + 1;
   }
 
-  slides.forEach(slide => {
+  slides.forEach((slide) => {
     if (slide.dataset.autoFragments === 'off') return;
 
     const heading = slide.querySelector(':scope > h2');
@@ -59,10 +64,10 @@
 
     let index = 0;
     const directChildren = Array.from(slide.children);
-    directChildren.forEach(block => {
+    directChildren.forEach((block) => {
       if (block.matches('.eyebrow, h1, h2, .footer-src')) return;
       if (block.classList.contains('title-slide')) {
-        Array.from(block.children).forEach(titleBlock => {
+        Array.from(block.children).forEach((titleBlock) => {
           if (titleBlock.matches('.eyebrow, h1')) return;
           index = sequenceBlock(titleBlock, index);
         });
@@ -72,4 +77,3 @@
     });
   });
 })();
-
