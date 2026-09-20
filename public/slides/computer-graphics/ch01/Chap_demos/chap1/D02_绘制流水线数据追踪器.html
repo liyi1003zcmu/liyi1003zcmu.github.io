@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D02｜绘制流水线逐阶段可视化 · 已验证输出版</title>
+    <style>
+      :root {
+        --ink: #1b3549;
+        --muted: #496477;
+        --blue: #146c9e;
+        --line: #c5dbe8;
+        --paper: #fff;
+        --bg: #edf4f8;
+        --orange: #ba651e;
+        --green: #176c52;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          18px/1.5 system-ui,
+          -apple-system,
+          'Microsoft YaHei',
+          sans-serif;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      canvas:focus-visible {
+        outline: 3px solid #d88a24;
+        outline-offset: 3px;
+      }
+      .wrap {
+        max-width: 1640px;
+        margin: 0 auto;
+        padding: 24px 28px 46px;
+      }
+      .eyebrow {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 30px;
+        background: #ddedf5;
+        color: #135b82;
+        font-size: 15px;
+        font-weight: 750;
+      }
+      h1 {
+        font-size: clamp(30px, 3vw, 43px);
+        line-height: 1.2;
+        margin: 10px 0;
+      }
+      h2 {
+        font-size: 25px;
+        margin: 0 0 12px;
+      }
+      h3 {
+        font-size: 19px;
+        margin: 0 0 6px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+      }
+      .sub {
+        margin: 4px 0 20px;
+        color: var(--muted);
+      }
+      .panel {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 19px;
+        box-shadow: 0 3px 16px #10375209;
+        min-width: 0;
+      }
+      .stages {
+        display: flex;
+        overflow-x: auto;
+        gap: 6px;
+        padding: 2px 0 12px;
+      }
+      .stage {
+        flex: 1 0 115px;
+        border: 1.5px solid #bdd5e2;
+        background: #f2f8fb;
+        border-radius: 10px;
+        padding: 8px 7px;
+        min-height: 69px;
+        line-height: 1.35;
+        font-size: 15px;
+        font-weight: 750;
+        color: #34566e;
+      }
+      .stage small {
+        display: block;
+        font-size: 12px;
+        color: #6a8291;
+      }
+      .stage.current {
+        background: #156b9c;
+        color: white;
+        border-color: #156b9c;
+      }
+      .stage.current small {
+        color: #e0f4ff;
+      }
+      .stage.done {
+        background: #eaf6ef;
+        border-color: #93cbb1;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 9px;
+      }
+      .btn {
+        border: 1.5px solid var(--blue);
+        background: white;
+        color: #115f8f;
+        font-size: 18px;
+        font-weight: 750;
+        border-radius: 10px;
+        padding: 9px 17px;
+        min-height: 44px;
+      }
+      .btn.main {
+        background: var(--blue);
+        color: white;
+      }
+      .btn:disabled {
+        opacity: 0.36;
+        cursor: not-allowed;
+      }
+      .progress {
+        font-size: 16px;
+        color: #13628f;
+        font-weight: 800;
+        margin-left: auto;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 15px;
+      }
+      .control {
+        border: 1px solid #d6e6ee;
+        background: #f4f9fc;
+        border-radius: 10px;
+        padding: 11px 13px;
+        min-width: 0;
+      }
+      .control label {
+        font-size: 16px;
+        font-weight: 750;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+      .control select,
+      .control input[type='range'] {
+        width: 100%;
+        margin-top: 6px;
+        accent-color: #186b9d;
+      }
+      .control select {
+        background: white;
+        border: 1px solid #a9c8db;
+        border-radius: 7px;
+        padding: 6px;
+      }
+      .toggles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .toggle {
+        font-size: 15px;
+        font-weight: 690;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border: 1px solid #cbdfe9;
+        border-radius: 8px;
+        background: #f5fafc;
+      }
+      .toggle input {
+        width: 19px;
+        height: 19px;
+        accent-color: #176fa0;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 0.86fr) minmax(540px, 1.5fr);
+        gap: 15px;
+        margin-top: 15px;
+        align-items: start;
+      }
+      .narrative {
+        display: grid;
+        gap: 14px;
+      }
+      .headrow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        font-size: 14px;
+        color: #135c84;
+        font-weight: 800;
+        background: #e9f4fa;
+        padding: 4px 9px;
+        border-radius: 7px;
+      }
+      .summary {
+        font-size: 18px;
+        min-height: 74px;
+      }
+      .info {
+        background: #f2f8fc;
+        border: 1px solid #d8e7ef;
+        border-radius: 10px;
+        padding: 11px 13px;
+        margin-top: 9px;
+      }
+      .info.out {
+        background: #ebf8f1;
+        border-color: #bedfcf;
+      }
+      .info h3 {
+        color: #155f89;
+      }
+      .info.out h3 {
+        color: #1b7556;
+      }
+      .info p {
+        font-size: 16px;
+        margin: 4px 0;
+      }
+      .tip {
+        background: #fff7e8;
+        border-left: 4px solid #d68b34;
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 16px;
+      }
+      .question {
+        background: #edf6fb;
+        border-radius: 9px;
+        padding: 11px 14px;
+        font-size: 16px;
+      }
+      .question button {
+        border: 1px solid #9bc1d5;
+        background: white;
+        border-radius: 6px;
+        color: #145f89;
+        padding: 4px 10px;
+        margin-top: 8px;
+      }
+      .answer {
+        display: none;
+        color: #18664c;
+      }
+      .answer.show {
+        display: block;
+      }
+      .visual-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 11px;
+      }
+      .viewport {
+        min-width: 0;
+        background: #f3f9fc;
+        border: 1px solid #cfdeea;
+        border-radius: 11px;
+        padding: 9px;
+      }
+      .viewport h3 {
+        font-size: 17px;
+        color: #1a597e;
+        margin-bottom: 7px;
+      }
+      .viewport canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 6px;
+        border: 1px solid #cbdae3;
+        aspect-ratio: 800 / 520;
+        background: #f6faff;
+      }
+      .output {
+        border-color: #78b3d2;
+        background: #f0f8ff;
+      }
+      .output h3 {
+        color: #096294;
+      }
+      .caption {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 7px 0;
+      }
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0;
+      }
+      .stat {
+        background: #e8f3fa;
+        border-radius: 7px;
+        padding: 4px 9px;
+        font-size: 15px;
+        font-weight: 720;
+      }
+      .legend {
+        font-size: 14px;
+        color: #4a6072;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 7px;
+      }
+      .swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        vertical-align: -1px;
+        margin-right: 5px;
+      }
+      .data {
+        margin-top: 16px;
+      }
+      .data-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 13px;
+      }
+      .data-box {
+        background: #173449;
+        color: #f4fbff;
+        border-radius: 12px;
+        padding: 14px;
+        min-width: 0;
+      }
+      .data-box h3 {
+        color: white;
+      }
+      .data-box pre {
+        margin: 8px 0 0;
+        overflow: auto;
+        max-height: 270px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font:
+          14px/1.6 ui-monospace,
+          Consolas,
+          monospace;
+      }
+      .matrix {
+        font-size: 14px;
+        color: #bfe2f4;
+      }
+      .foot {
+        font-size: 15px;
+        color: #526d7e;
+        margin: 13px 0;
+      }
+      .no {
+        font-size: 14px;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      @media (max-width: 1150px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .narrative {
+          grid-template-columns: 1fr 1fr;
+        }
+        .narrative > .panel:first-child {
+          grid-column: 1/-1;
+        }
+      }
+      @media (max-width: 750px) {
+        .wrap {
+          padding: 13px;
+        }
+        .panel {
+          padding: 13px;
+        }
+        header {
+          display: block;
+        }
+        .controls,
+        .pair,
+        .data-grid,
+        .narrative {
+          grid-template-columns: 1fr;
+        }
+        .narrative > .panel:first-child {
+          grid-column: auto;
+        }
+        .progress {
+          margin-left: 0;
+          width: 100%;
+        }
+        .stage {
+          flex-basis: 110px;
+        }
+        h2 {
+          font-size: 23px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <div>
+          <span class="eyebrow">计算机图形学 · D02 已验证输出版 · 第一章 / 第二章</span>
+          <h1>多模型绘制流水线：每一步看见结果</h1>
+          <p class="sub">
+            用一个含多个模型的场景，顺着流水线看：相机在哪里、模型怎样互相遮挡、教学裁剪窗口如何保留或舍弃几何、像素最终怎样留下。
+          </p>
+        </div>
+        <span class="eyebrow">离线单文件 · Canvas 教学模拟</span>
+      </header>
+      <section class="panel" aria-label="流水线步骤和交互参数">
+        <h2>① 选择阶段：连续比较输入与输出</h2>
+        <nav id="stages" class="stages" aria-label="流水线阶段导航"></nav>
+        <div class="toolbar">
+          <button id="prev" class="btn">← Back 上一步</button
+          ><button id="next" class="btn main">Next 下一步 →</button
+          ><button id="reset" class="btn">↺ 复位</button
+          ><span class="progress" id="progress" aria-live="polite"></span>
+        </div>
+        <div class="controls">
+          <div class="control">
+            <label for="focus">重点追踪模型</label
+            ><select id="focus">
+              <option value="cube">立方体</option>
+              <option value="pyramid">棱锥</option>
+              <option value="panel">三角面板</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="rotate">所选模型额外旋转 <output id="rotate-out">0°</output></label
+            ><input id="rotate" type="range" min="-90" max="90" value="0" step="5" />
+          </div>
+          <div class="control">
+            <label for="camera">相机绕场景旋转 <output id="camera-out">18°</output></label
+            ><input id="camera" type="range" min="-65" max="65" value="18" step="5" />
+          </div>
+        </div>
+        <div class="controls" style="margin-top: 12px">
+          <div class="control">
+            <label for="clip-center">裁剪窗口中心 <output id="clip-center-out">0.00</output></label
+            ><input id="clip-center" type="range" min="-0.50" max="0.50" value="0" step="0.05" />
+          </div>
+          <div class="control">
+            <label for="clip-width">裁剪窗口宽度 <output id="clip-width-out">0.70</output></label
+            ><input id="clip-width" type="range" min="0.70" max="2.00" value="0.70" step="0.05" />
+          </div>
+          <div class="control">
+            <label for="depth"
+              >模拟绘制前已有深度（LESS） <output id="depth-out">1.00</output></label
+            ><input id="depth" type="range" min="0.20" max="1" value="1" step="0.05" />
+            <p class="caption">
+              降低数值，可模拟屏幕上先已有更近的片元；与模型间遮挡一起观察深度测试。
+            </p>
+          </div>
+        </div>
+        <div class="toggles">
+          <label class="toggle"><input id="stress" type="checkbox" />将面板推向裁剪边界</label
+          ><label class="toggle"><input id="clip" type="checkbox" checked />执行规范裁剪</label
+          ><label class="toggle"><input id="raster" type="checkbox" checked />生成片元</label
+          ><label class="toggle"><input id="axes" type="checkbox" checked />显示坐标轴</label>
+        </div>
+      </section>
+      <div class="layout">
+        <div class="narrative">
+          <section class="panel">
+            <div class="headrow">
+              <span id="stage-no" class="eyebrow"></span><span id="owner" class="chip"></span>
+            </div>
+            <h2 id="title" style="margin-top: 12px"></h2>
+            <p id="explain" class="summary"></p>
+            <div class="info">
+              <h3>输入 Input</h3>
+              <p id="input-desc"></p>
+            </div>
+            <div class="info out">
+              <h3>输出 Output · 本阶段真正产生什么</h3>
+              <p id="output-desc"></p>
+            </div>
+            <div class="info">
+              <h3>数据类型与执行位置</h3>
+              <p id="data-desc"></p>
+            </div>
+            <div class="tip" id="note"></div>
+          </section>
+          <section class="panel">
+            <h3>课堂观察与提问</h3>
+            <div class="question">
+              <div id="question"></div>
+              <button id="answer-btn">显示参考提示</button>
+              <p id="answer" class="answer"></p>
+            </div>
+            <p class="caption">
+              任意阶段可调整模型与相机，再观察输入、输出和下方坐标数值怎样同步改变。
+            </p>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="visual-head">
+            <h2>② 每一阶段：输入画面 → 输出画面</h2>
+            <span class="chip" id="mode"></span>
+          </div>
+          <div class="pair">
+            <div class="viewport">
+              <h3 id="in-label">输入（上一阶段）</h3>
+              <canvas
+                id="before"
+                width="800"
+                height="520"
+                role="img"
+                aria-label="当前阶段输入可视化"
+              ></canvas>
+              <p id="before-caption" class="caption"></p>
+            </div>
+            <div class="viewport output">
+              <h3 id="out-label">输出（当前阶段）</h3>
+              <canvas
+                id="after"
+                width="800"
+                height="520"
+                tabindex="0"
+                role="img"
+                aria-label="当前阶段输出可视化。片元阶段可点击像素格选取位置。"
+              ></canvas>
+              <p id="after-caption" class="caption"></p>
+            </div>
+          </div>
+          <div class="stats" id="stats" aria-live="polite"></div>
+          <div class="legend">
+            <span><i class="swatch" style="background: #478ac8"></i>立方体</span
+            ><span><i class="swatch" style="background: #df9952"></i>棱锥</span
+            ><span><i class="swatch" style="background: #4fa989"></i>三角面板</span
+            ><span><i class="swatch" style="background: #ee5446"></i>当前追踪模型 / 三角形</span
+            ><span><i class="swatch" style="background: #a5dbe8"></i>候选片元</span>
+          </div>
+          <p class="caption">
+            演示视口 56 × 34
+            个教学像素。两幅图的“场景观察视角”和“流水线相机视角”有时不同，以图内标题为准；严禁将前者误认作变换产生的渲染结果。
+          </p>
+        </section>
+      </div>
+      <section class="panel data">
+        <h2>③ 查数据：选定同一个顶点，追踪坐标变化</h2>
+        <p class="caption">
+          默认追踪所选模型的顶点 V0；右侧可在片元阶段单击任意网格，查看该像素的候选片元与深度比较。
+        </p>
+        <div class="data-grid">
+          <div class="data-box">
+            <h3>模型坐标 → 世界坐标 → 相机坐标 → 裁剪坐标</h3>
+            <pre id="vertex-data"></pre>
+          </div>
+          <div class="data-box">
+            <h3>当前阶段的矩阵 / 图元 / 片元细节</h3>
+            <pre id="detail-data"></pre>
+          </div>
+        </div>
+        <div class="tip" style="margin-top: 13px">
+          <strong>准确性说明：</strong>为便于初学者学习，本 Demo
+          将典型顶点着色器内部的模型、观察、投影数学运算分成三个观察页。所有计算、几何裁剪、网格化与深度比较均由浏览器
+          JavaScript / Canvas 2D 模拟；并非获取真实 WebGL 驱动或 GPU
+          的中间执行数据。关闭裁剪或光栅化是教学对照，不代表 WebGL
+          中有同名的可关闭开关。观察用的辅助相机不会进入模型的渲染流水线。
+        </div>
+      </section>
+      <p class="foot">
+        教学使用：第一章关注「不同坐标空间如何产生不同几何结果」与流水线整体；第二章进一步分析矩阵、齐次裁剪、顶点数据、片元生成；其他章节可复用模型旋转、相机与深度测试。
+      </p>
+    </main>
+    <script>
+      'use strict';
+      const $ = (id) => document.getElementById(id),
+        W = 56,
+        H = 34,
+        VP = { x: 28, y: 26, w: 744, h: 452 },
+        DEG = Math.PI / 180;
+      const v3 = (a, b, c) => [a, b, c],
+        add = (a, b) => a.map((x, i) => x + b[i]),
+        sub = (a, b) => a.map((x, i) => x - b[i]),
+        dot = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0),
+        cross = (a, b) => [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0],
+        ],
+        unit = (a) => {
+          let l = Math.hypot(...a);
+          return a.map((x) => x / l);
+        };
+      const I = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+      function mul(a, b) {
+        let o = Array(16).fill(0);
+        for (let r = 0; r < 4; r++)
+          for (let c = 0; c < 4; c++)
+            for (let k = 0; k < 4; k++) o[r * 4 + c] += a[r * 4 + k] * b[k * 4 + c];
+        return o;
+      }
+      function apply(m, v) {
+        return [0, 1, 2, 3].map(
+          (r) => m[r * 4] * v[0] + m[r * 4 + 1] * v[1] + m[r * 4 + 2] * v[2] + m[r * 4 + 3] * v[3],
+        );
+      }
+      function trans(x, y, z) {
+        let m = I();
+        m[3] = x;
+        m[7] = y;
+        m[11] = z;
+        return m;
+      }
+      function ry(t) {
+        let c = Math.cos(t),
+          s = Math.sin(t);
+        return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
+      }
+      function rx(t) {
+        let c = Math.cos(t),
+          s = Math.sin(t);
+        return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
+      }
+      function scl(s) {
+        return [s, 0, 0, 0, 0, s, 0, 0, 0, 0, s, 0, 0, 0, 0, 1];
+      }
+      function lookAt(eye, target) {
+        let z = unit(sub(eye, target)),
+          x = unit(cross([0, 1, 0], z)),
+          y = cross(z, x);
+        return [...x, -dot(x, eye), ...y, -dot(y, eye), ...z, -dot(z, eye), 0, 0, 0, 1];
+      }
+      function perspective(fov, aspect, n, f) {
+        let q = 1 / Math.tan(fov / 2);
+        return [
+          q / aspect,
+          0,
+          0,
+          0,
+          0,
+          q,
+          0,
+          0,
+          0,
+          0,
+          (f + n) / (n - f),
+          (2 * f * n) / (n - f),
+          0,
+          0,
+          -1,
+          0,
+        ];
+      }
+      const meshes = {
+        cube: {
+          name: '立方体',
+          base: '#478ac8',
+          verts: [
+            [-0.68, -0.68, -0.68],
+            [0.68, -0.68, -0.68],
+            [0.68, 0.68, -0.68],
+            [-0.68, 0.68, -0.68],
+            [-0.68, -0.68, 0.68],
+            [0.68, -0.68, 0.68],
+            [0.68, 0.68, 0.68],
+            [-0.68, 0.68, 0.68],
+          ],
+          faces: [
+            [0, 2, 1],
+            [0, 3, 2],
+            [4, 5, 6],
+            [4, 6, 7],
+            [0, 1, 5],
+            [0, 5, 4],
+            [3, 7, 6],
+            [3, 6, 2],
+            [1, 2, 6],
+            [1, 6, 5],
+            [0, 4, 7],
+            [0, 7, 3],
+          ],
+          pos: [-0.95, 0, 0.2],
+          yaw: 18,
+          tilt: 6,
+          scale: 1,
+        },
+        pyramid: {
+          name: '棱锥',
+          base: '#df9952',
+          verts: [
+            [-0.83, -0.6, -0.83],
+            [0.83, -0.6, -0.83],
+            [0.83, -0.6, 0.83],
+            [-0.83, -0.6, 0.83],
+            [0, 0.95, 0],
+          ],
+          faces: [
+            [0, 1, 4],
+            [1, 2, 4],
+            [2, 3, 4],
+            [3, 0, 4],
+            [0, 2, 1],
+            [0, 3, 2],
+          ],
+          pos: [0.15, -0.08, -0.28],
+          yaw: -24,
+          tilt: 0,
+          scale: 0.98,
+        },
+        panel: {
+          name: '三角面板',
+          base: '#4fa989',
+          verts: [
+            [-1, -0.72, 0],
+            [1, -0.72, 0],
+            [0, 1, 0],
+          ],
+          faces: [[0, 1, 2]],
+          pos: [0.82, 0, 0.05],
+          yaw: 36,
+          tilt: -12,
+          scale: 1.05,
+        },
+      };
+      const modelIds = ['cube', 'pyramid', 'panel'];
+      const stages = [
+        {
+          name: 'CPU 数据',
+          owner: 'CPU / 应用程序',
+          explain:
+            '程序准备 3 套局部顶点数组、三角形索引、各模型的变换参数和一次或多次绘制命令。此时没有一张已经绘制好的画面。',
+          input: '三个模型的顶点、三角形索引与位置 / 旋转设置。',
+          output: '按各模型的局部坐标显示网格；CPU 将顶点资源、矩阵等参数和绘制指令交给图形 API。',
+          data: '局部顶点 vec3、索引数组；本页是 CPU 资源示意，不是帧缓存。',
+          note: '左侧列出资源，右侧画出三个模型在各自局部坐标系中的形状；为了便于并排看，右图采用排版偏移，不是世界坐标。',
+          q: 'CPU 一开始提交的是三个完整的像素图像吗？',
+          a: '不是。CPU 提交顶点、索引、变换参数和绘制命令；像素将在后续网格化之后产生。',
+        },
+        {
+          name: '模型变换 Model',
+          owner: '顶点着色器 · 教学拆分①',
+          explain:
+            '每个模型都有自己的 Model 矩阵。立方体、棱锥和面板的局部顶点分别经过旋转和平移，进入同一个世界坐标系。',
+          input: '各模型的局部坐标 local position 与各自 M 矩阵。',
+          output: '世界坐标 world = M × local；模型现在位于场景中的不同位置与方向。',
+          data: 'vec4 → vec4；模型矩阵 mat4；典型实现由顶点着色器计算。',
+          note: '先选择「三角面板」并调整额外旋转：世界场景中只应有该模型转动，其他模型位置不变。',
+          q: '三个模型为什么不能共用一套“平移+旋转”结果？',
+          a: '它们有不同的 Model 矩阵；即使网格局部坐标相同，变换后也可能位于不同位置与朝向。',
+        },
+        {
+          name: '观察变换 View',
+          owner: '顶点着色器 · 教学拆分②',
+          explain:
+            '观察矩阵 V 将所有世界坐标转换为相对于同一台相机的坐标。相机在自身坐标系里位于原点、面向 −Z。',
+          input: '三个模型的世界坐标，以及同一个相机的位置、朝向。',
+          output: '相机坐标 view = V × world；场景相对相机发生整体变化。',
+          data: '世界空间 vec4 → 观察空间 vec4；观察矩阵 mat4。',
+          note: '调整「相机绕场景旋转」，比较左右两幅图：不是三个 Model 矩阵同时改变，而是同一个 View 矩阵改变。',
+          q: '旋转相机，三个模型的世界坐标会改变吗？',
+          a: '不会。改变的是观察矩阵 V 和 view 坐标；模型自己的 world 坐标保持不变。',
+        },
+        {
+          name: '投影变换 Projection',
+          owner: '顶点着色器 · 教学拆分③',
+          explain:
+            '透视投影矩阵 P 计算齐次裁剪坐标 clip = P × view，并由顶点着色器写出 gl_Position；近处物体在后续透视除法后看起来更大。',
+          input: '相机坐标与投影矩阵 P（本例透视、near = 0.6、far = 28）。',
+          output: '齐次裁剪坐标 (x,y,z,w)，尚未执行实际的透视除法。',
+          data: 'gl_Position：vec4；后续按 −w ≤ x,y,z ≤ w 判断是否在视锥内。',
+          note: '本页右图为了显示剪裁坐标的相对位置，临时使用 x/w、y/w 作为【预览绘图】；真正的透视除法在第 7 页进行。数值面板仍提供原始 clip vec4。',
+          q: '为什么不能只保留投影后的 x、y，丢掉 w？',
+          a: 'w 用于齐次裁剪与后续透视除法，也与透视校正插值相关。',
+        },
+        {
+          name: '图元装配',
+          owner: 'GPU · Primitive assembly',
+          explain:
+            '把各模型顶点按索引和 TRIANGLES 模式组织成独立三角形：立方体 12 个，棱锥 6 个，面板 1 个。',
+          input: '各顶点着色器输出的裁剪坐标与三角形索引。',
+          output: '19 个待处理三角形图元；红线标记所选模型的第一个三角形。',
+          data: '顶点 → 图元；图元携带其顶点和可插值属性。',
+          note: '立方体可只用 8 个几何顶点，却通过索引组织成 12 个三角形。本例的每个三角形使用示意性面颜色。',
+          q: '有 8 个顶点的立方体是否意味着只有 8 个像素？',
+          a: '不是。顶点被组织成三角形，随后每个三角形可以覆盖许多像素位置。',
+        },
+        {
+          name: '裁剪 Clipping',
+          owner: 'GPU · 规范裁剪（概念）',
+          explain:
+            '把三角形与可见窗口比较：里面的保留，外面的舍弃，跨边界的截出可见部分。横向窗口范围可调，以便观察结果。',
+          input: '19 个裁剪空间三角形；横向采用可调教学窗口，纵向和深度维持标准裁剪边界。',
+          output: '得到窗口内的几何；部分跨越边界的三角形产生新边，完全在外面的三角形舍弃。',
+          data: '齐次裁剪坐标 vec4；可调窗口是教学演示的额外裁剪范围，原标准视锥仍使用 ±w。',
+          note: '初始窗口稍窄，裁剪输出即可看到部分三角形被截掉；也可改变窗口宽度、位置或勾选“将面板推向裁剪边界”观察完全舍弃。',
+          q: '为什么通常应先裁剪，再进行透视除法？',
+          a: '齐次裁剪使用 x、y、z 与 w 的边界关系，可避免处理跨越观察近平面的不合适投影结果。',
+        },
+        {
+          name: '透视除法 NDC',
+          owner: 'GPU · Perspective divide',
+          explain: '将裁剪后各顶点的 x、y、z 分别除以 w，得到归一化设备坐标 NDC。',
+          input: '裁剪后的齐次坐标 (x,y,z,w)。',
+          output: 'NDC = (x/w, y/w, z/w)；标准可见范围为 [−1,1]³。',
+          data: 'vec4 → vec3；这里进行真正的透视除法。',
+          note: '注意较远模型会显得更小，但三维世界位置没有因此改变；这是观察与投影之后的屏幕成像关系。',
+          q: 'NDC 的 x=0 是屏幕最左侧吗？',
+          a: '不是。x=0 对应视口横向中心，x=−1 对应左边界，x=1 对应右边界。',
+        },
+        {
+          name: '视口变换 Viewport',
+          owner: 'GPU · Viewport transform',
+          explain:
+            '将 NDC 映射到教学视口的连续像素坐标（56 × 34）；这一步确定位置，但还没有生成片元。',
+          input: 'NDC 坐标、视口宽度与高度。',
+          output: '屏幕坐标 screen(x,y) 和深度 depth=(zNDC+1)/2。',
+          data: 'NDC [−1,1] → 教学像素坐标；像素坐标仍为连续实数。',
+          note: '右侧网格只是坐标参照；此时的彩色线条是几何图示，还不是实际写入的像素。',
+          q: '一个三角形的 3 个屏幕顶点是否等于 3 个像素？',
+          a: '不是。三角形覆盖哪些像素中心要由接下来的光栅化决定。',
+        },
+        {
+          name: '光栅化 Rasterize',
+          owner: 'GPU · Rasterization',
+          explain:
+            '根据已裁剪三角形在视口内的投影，逐像素检测像素中心是否被三角形覆盖，生成候选片元；重叠区域可有多个候选片元。',
+          input: '屏幕三角形、视口 56 × 34 的采样点。',
+          output: '候选片元集合：屏幕位置、重心坐标、深度与待插值颜色属性。',
+          data: '图元 → 片元（Fragment）；尚未决定最后谁可见。',
+          note: '右图青色为至少存在一个候选片元的位置。此时不代表颜色已经存进帧缓存。点击像素网格查看候选数。',
+          q: '两个模型投影到同一像素上，会只生成一个候选片元吗？',
+          a: '可能分别生成多个候选片元，最终需要深度等测试判断哪一个能够写入。',
+        },
+        {
+          name: '片元着色 Fragment',
+          owner: 'GPU · Fragment shader（概念）',
+          explain:
+            '对候选片元计算颜色。本例演示性地使用各三角形顶点颜色，进行透视校正属性插值；重叠处暂按绘制次序查看最近一次候选颜色。',
+          input: '各候选片元的位置、重心权重、1/w 与顶点颜色。',
+          output: '带候选 RGB 和深度的片元；尚不是最终可见结果。',
+          data: '片元属性 → 候选颜色；该模拟不实现贴图与真实光照。',
+          note: '在右图选择一格，查看其中所有候选片元：后画的片元颜色不能仅凭绘制次序判断最终是否可见。',
+          q: '片元着色器算出的 RGB 一定会显示在屏幕上吗？',
+          a: '不一定。片元可能被深度等测试拒绝，最终不会写入对应颜色缓冲。',
+        },
+        {
+          name: '深度测试 Depth',
+          owner: 'GPU · 深度 / 缓冲更新',
+          explain:
+            '依照绘制顺序逐个比较新片元深度与当前深度缓冲。LESS：新深度严格更小才通过，并同时更新深度和颜色。',
+          input: '候选颜色及深度；已有深度和颜色缓冲。',
+          output: '通过片元写入颜色 / 深度；失败片元被丢弃，遮挡关系得到解决。',
+          data: '逐像素深度范围 [0,1]；新深度 < 旧深度时写入。',
+          note: '模型本身会互相遮挡；再调低“模拟绘制前已有深度”，可额外看到已有前景如何挡住新片元。',
+          q: '后绘制的棱锥是否一定盖住先绘制的立方体？',
+          a: '不一定。启用深度测试时，只有通过深度比较的片元才能替换颜色。',
+        },
+        {
+          name: '帧缓存 / 显示',
+          owner: 'GPU 缓冲 / 显示链路',
+          explain:
+            '深度测试后的颜色形成本例颜色缓冲，再把 56 × 34 像素模拟图像放大显示；可单击像素检查真实存储的颜色。',
+          input: '通过深度测试后的颜色和深度缓冲。',
+          output: '最终颜色图像：三个模型的形状、透视与相互遮挡共同体现到二维像素。',
+          data: '候选片元 → 颜色缓冲 → 显示图像。',
+          note: '最终画面中的对象来自同一场景、同一相机投影；立方体、棱锥与面板没有被各自独立截图后拼接。',
+          q: '从世界中的多个三维模型到屏幕图像，哪些步骤决定了位置、大小、覆盖与可见性？',
+          a: '模型与观察变换决定相对空间位置；投影与透视除法影响成像；视口变换定位；光栅化决定覆盖；着色与深度测试决定最终颜色。',
+        },
+      ];
+      let step = 0,
+        selected = { x: 28, y: 17 },
+        scene = null;
+      function settings() {
+        return {
+          focus: $('focus').value,
+          rot: +$('rotate').value,
+          cam: +$('camera').value,
+          stress: $('stress').checked,
+          clip: $('clip').checked,
+          raster: $('raster').checked,
+          axes: $('axes').checked,
+          depth: +$('depth').value,
+          clipCenter: +$('clip-center').value,
+          clipWidth: +$('clip-width').value,
+        };
+      }
+      function faceColor(id, i) {
+        let c = { cube: [64, 133, 204], pyramid: [218, 145, 72], panel: [54, 170, 133] }[id],
+          factor = 0.76 + (i % 5) * 0.075;
+        return c.map((v) => Math.min(255, Math.round(v * factor)));
+      }
+      function sceneBuild() {
+        let cfg = settings(),
+          rad = 5.4,
+          yaw = cfg.cam * DEG,
+          eye = [
+            rad * Math.sin(yaw) * Math.cos(0.24),
+            rad * Math.sin(0.24),
+            rad * Math.cos(yaw) * Math.cos(0.24),
+          ],
+          V = lookAt(eye, [0, 0, 0]),
+          P = perspective(55 * DEG, W / H, 0.6, 28),
+          obj = {};
+        let faces = [],
+          original = 0,
+          clippedTri = 0,
+          cutCount = 0,
+          partial = 0,
+          discarded = 0,
+          kept = 0;
+        let half = Math.max(0.1, Math.min(1, cfg.clipWidth / 2)),
+          cx = Math.max(-1 + half, Math.min(1 - half, cfg.clipCenter)),
+          planes = makePlanes(cx, half);
+        cfg.clipCenter = cx;
+        for (let id of modelIds) {
+          let mesh = meshes[id],
+            pos = mesh.pos.slice();
+          if (id === 'panel' && cfg.stress) pos[0] += 3.0;
+          let M = mul(
+            trans(...pos),
+            mul(
+              ry((mesh.yaw + (id === cfg.focus ? cfg.rot : 0)) * DEG),
+              mul(rx(mesh.tilt * DEG), scl(mesh.scale)),
+            ),
+          );
+          let vertices = mesh.verts.map((p, j) => {
+            let local = [...p, 1],
+              world = apply(M, local),
+              view = apply(V, world),
+              clip = apply(P, view);
+            return {
+              id,
+              j,
+              name: `V${j}`,
+              local,
+              world,
+              view,
+              clip,
+              color: faceColor(id, j),
+              w: clip[3],
+            };
+          });
+          obj[id] = { mesh, M, vertices, pos };
+          mesh.faces.forEach((idx, i) => {
+            let verts = idx.map((j) => {
+              let v = vertices[j];
+              return {
+                ...v,
+                color: faceColor(id, i).map((c) =>
+                  Math.min(255, Math.round(c * (0.78 + (j % 3) * 0.13))),
+                ),
+              };
+            });
+            let clipped = clipPolygon(verts, planes),
+              polys = cfg.clip ? clipped : verts;
+            original++;
+            let isDiscarded = clipped.length < 3,
+              isPartial = !isDiscarded && (clipped.length !== 3 || clipped.some((v) => v.created));
+            if (isDiscarded) discarded++;
+            else if (isPartial) partial++;
+            else kept++;
+            if (isDiscarded || isPartial) cutCount++;
+            if (polys.length >= 3) clippedTri += polys.length - 2;
+            faces.push({
+              id,
+              triIndex: i,
+              verts,
+              clipped: polys,
+              actualClipped: clipped,
+              colour: faceColor(id, i),
+              discarded: isDiscarded,
+              partial: isPartial,
+              kept: !isDiscarded && !isPartial,
+            });
+          });
+        }
+        let rasterFaces = [];
+        for (let face of faces) {
+          for (let j = 1; j + 1 < face.clipped.length; j++) {
+            let tv = [face.clipped[0], face.clipped[j], face.clipped[j + 1]].map(toScreen);
+            if (tv.some((v) => !Number.isFinite(v.s[0]) || !Number.isFinite(v.s[1]))) continue;
+            rasterFaces.push({ id: face.id, triIndex: face.triIndex, vertices: tv });
+          }
+        }
+        let samples = Array.from({ length: H }, () => Array.from({ length: W }, () => [])),
+          buffer = Array.from({ length: H }, () => Array.from({ length: W }, () => null)),
+          frags = 0,
+          pass = 0,
+          overlaps = 0;
+        if (cfg.raster)
+          for (let f of rasterFaces) {
+            let pts = f.vertices,
+              area = edge(pts[0].s, pts[1].s, pts[2].s);
+            if (Math.abs(area) < 1e-9) continue;
+            let minX = Math.max(0, Math.ceil(Math.min(...pts.map((v) => v.s[0])) - 0.5)),
+              maxX = Math.min(W - 1, Math.floor(Math.max(...pts.map((v) => v.s[0])) - 0.5)),
+              minY = Math.max(0, Math.ceil(Math.min(...pts.map((v) => v.s[1])) - 0.5)),
+              maxY = Math.min(H - 1, Math.floor(Math.max(...pts.map((v) => v.s[1])) - 0.5));
+            for (let y = minY; y <= maxY; y++)
+              for (let x = minX; x <= maxX; x++) {
+                let p = [x + 0.5, y + 0.5],
+                  weights = [
+                    edge(pts[1].s, pts[2].s, p) / area,
+                    edge(pts[2].s, pts[0].s, p) / area,
+                    edge(pts[0].s, pts[1].s, p) / area,
+                  ];
+                if (Math.min(...weights) < -1e-8) continue;
+                let denom = weights.reduce((s, w, i) => s + w / pts[i].clip[3], 0);
+                if (Math.abs(denom) < 1e-9) continue;
+                let rgb = [0, 1, 2].map((k) =>
+                  Math.max(
+                    0,
+                    Math.min(
+                      255,
+                      Math.round(
+                        weights.reduce((s, w, i) => s + (w * pts[i].color[k]) / pts[i].clip[3], 0) /
+                          denom,
+                      ),
+                    ),
+                  ),
+                );
+                let depth = weights.reduce((s, w, i) => s + w * pts[i].ndc[2], 0) * 0.5 + 0.5;
+                if (depth < 0 || depth > 1) continue;
+                let frag = { id: f.id, tri: f.triIndex, rgb, depth, weights, pass: false, old: 1 };
+                samples[y][x].push(frag);
+                frags++;
+              }
+          }
+        for (let y = 0; y < H; y++)
+          for (let x = 0; x < W; x++) {
+            let arr = samples[y][x],
+              z = cfg.depth;
+            overlaps += arr.length > 1 ? 1 : 0;
+            for (let f of arr) {
+              f.old = z;
+              f.pass = f.depth < z;
+              if (f.pass) {
+                z = f.depth;
+                buffer[y][x] = f;
+                pass++;
+              }
+            }
+          }
+        return {
+          cfg,
+          V,
+          P,
+          eye,
+          obj,
+          faces,
+          rasterFaces,
+          samples,
+          buffer,
+          original,
+          clippedTri,
+          cutCount,
+          partial,
+          discarded,
+          kept,
+          frags,
+          pass,
+          overlaps,
+          pixels: samples.flat().filter((a) => a.length).length,
+        };
+      }
+      function makePlanes(center, half) {
+        return [
+          (p) => p[0] - (center - half) * p[3],
+          (p) => (center + half) * p[3] - p[0],
+          (p) => p[3] + p[1],
+          (p) => p[3] - p[1],
+          (p) => p[3] + p[2],
+          (p) => p[3] - p[2],
+        ];
+      }
+      function clipPolygon(vertices, planes) {
+        let out = vertices.slice();
+        for (let plane of planes) {
+          let input = out;
+          out = [];
+          if (!input.length) break;
+          for (let i = 0; i < input.length; i++) {
+            let a = input[i],
+              b = input[(i + 1) % input.length],
+              da = plane(a.clip),
+              db = plane(b.clip),
+              ai = da >= -1e-9,
+              bi = db >= -1e-9;
+            if (ai && bi) out.push(b);
+            else if (ai && !bi) out.push(interp(a, b, da / (da - db)));
+            else if (!ai && bi) {
+              out.push(interp(a, b, da / (da - db)));
+              out.push(b);
+            }
+          }
+        }
+        return out;
+      }
+      function interp(a, b, t) {
+        let out = { ...a, j: null, name: '交点', created: true };
+        for (let k of ['local', 'world', 'view', 'clip', 'color'])
+          out[k] = a[k].map((v, i) => v + (b[k][i] - v) * t);
+        return out;
+      }
+      function toScreen(v) {
+        let w = v.clip[3],
+          ndc = v.clip.slice(0, 3).map((n) => n / w);
+        return {
+          ...v,
+          ndc,
+          s: [((ndc[0] + 1) * W) / 2, ((1 - ndc[1]) * H) / 2],
+          depth: (ndc[2] + 1) / 2,
+        };
+      }
+      function edge(a, b, p) {
+        return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+      }
+      const rgb = (a) => `rgb(${a.map(Math.round).join(',')})`,
+        fmt = (a, d = 2) => a.map((n) => (Number.isFinite(n) ? n.toFixed(d) : '—')).join(', '),
+        str = (a, d = 2) => '(' + fmt(a, d) + ')';
+      function drawFrame(ctx, title) {
+        ctx.clearRect(0, 0, 800, 520);
+        ctx.fillStyle = '#f5faff';
+        ctx.fillRect(0, 0, 800, 520);
+        ctx.fillStyle = '#fbfdff';
+        ctx.fillRect(VP.x, VP.y, VP.w, VP.h);
+        ctx.strokeStyle = '#829fb3';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(VP.x, VP.y, VP.w, VP.h);
+        ctx.fillStyle = '#365a72';
+        ctx.font = 'bold 16px system-ui';
+        ctx.fillText(title, VP.x, 16);
+        ctx.font = '15px system-ui';
+        ctx.fillText('教学模拟 · 56 × 34', VP.x, 508);
+      }
+      function axis3D(ctx, project) {
+        if (!scene.cfg.axes) return;
+        for (let [a, b, color, name] of [
+          [[0, 0, 0], [1.45, 0, 0], '#e45b61', 'X'],
+          [[0, 0, 0], [0, 1.45, 0], '#42a97b', 'Y'],
+          [[0, 0, 0], [0, 0, 1.45], '#608dd9', 'Z'],
+        ]) {
+          let p = project(a),
+            q = project(b);
+          if (!p || !q) continue;
+          ctx.beginPath();
+          ctx.moveTo(...p);
+          ctx.lineTo(...q);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.fillStyle = color;
+          ctx.font = 'bold 19px system-ui';
+          ctx.fillText(name, q[0] + 4, q[1] - 4);
+        }
+      }
+      function render3D(ctx, kind) {
+        let local = kind === 'local',
+          cam = kind === 'view';
+        let C = lookAt(cam ? [4, 3, 7] : [5, 3.4, 8], [0, 0, 0]),
+          proj = perspective(60 * DEG, W / H, 0.3, 40),
+          project = (p) => {
+            let clip = apply(proj, apply(C, [...p, 1]));
+            if (clip[3] < 0.001) return null;
+            return [
+              VP.x + ((clip[0] / clip[3] + 1) * VP.w) / 2,
+              VP.y + ((1 - clip[1] / clip[3]) * VP.h) / 2,
+              clip[2] / clip[3],
+            ];
+          };
+        let tri = [];
+        modelIds.forEach((id, i) => {
+          let obj = scene.obj[id],
+            vtx = obj.vertices.map((v) =>
+              local
+                ? add(v.local.slice(0, 3), [(i - 1) * 2.4, 0, 0])
+                : cam
+                  ? v.view.slice(0, 3)
+                  : v.world.slice(0, 3),
+            );
+          for (let [faceI, indices] of obj.mesh.faces.entries()) {
+            let v = indices.map((j) => vtx[j]),
+              p = v.map(project);
+            if (p.every(Boolean))
+              tri.push({ id, faceI, p, depth: p.reduce((s, q) => s + q[2], 0) / 3 });
+          }
+        });
+        tri.sort((a, b) => b.depth - a.depth);
+        for (let t of tri) {
+          ctx.beginPath();
+          t.p.forEach((v, i) => (i ? ctx.lineTo(v[0], v[1]) : ctx.moveTo(v[0], v[1])));
+          ctx.closePath();
+          ctx.fillStyle = rgb(faceColor(t.id, t.faceI));
+          ctx.globalAlpha = 0.83;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = t.id === scene.cfg.focus ? '#b93f35' : '#55718b';
+          ctx.lineWidth = t.id === scene.cfg.focus ? 2.5 : 1.2;
+          ctx.stroke();
+        }
+        let projectAxes = local ? project : project;
+        axis3D(ctx, projectAxes);
+        modelIds.forEach((id, i) => {
+          let obj = scene.obj[id],
+            c = local
+              ? [(i - 1) * 2.4, -1.35, 0]
+              : cam
+                ? apply(scene.V, [...obj.pos, 1]).slice(0, 3)
+                : obj.pos,
+            p = project(c);
+          if (!p) return;
+          ctx.fillStyle = '#183f58';
+          ctx.font = 'bold 21px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText(obj.mesh.name + (id === scene.cfg.focus ? ' ★' : ''), p[0], p[1] + 20);
+          ctx.textAlign = 'left';
+        });
+        if (kind === 'world') {
+          let cp = project(scene.eye),
+            center = project([0, 0, 0]);
+          if (cp && center) {
+            ctx.fillStyle = '#c15430';
+            ctx.beginPath();
+            ctx.arc(cp[0], cp[1], 7, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.font = 'bold 17px system-ui';
+            ctx.fillText('相机', cp[0] + 8, cp[1] - 10);
+            ctx.setLineDash([6, 5]);
+            ctx.beginPath();
+            ctx.moveTo(cp[0], cp[1]);
+            ctx.lineTo(center[0], center[1]);
+            ctx.strokeStyle = '#c15430';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+      }
+      function sc(v) {
+        if (!v || v.clip[3] < 1e-7) return null;
+        let x = v.clip[0] / v.clip[3],
+          y = v.clip[1] / v.clip[3];
+        if (!Number.isFinite(x) || !Number.isFinite(y) || Math.abs(x) > 20 || Math.abs(y) > 20)
+          return null;
+        return [VP.x + ((x + 1) * VP.w) / 2, VP.y + ((1 - y) * VP.h) / 2];
+      }
+      function screenPath(ctx, verts, color, width = 1.6, dash = false, fill = false) {
+        let p = verts.map(sc);
+        if (!p.every(Boolean)) return;
+        ctx.beginPath();
+        p.forEach((v, i) => (i ? ctx.lineTo(...v) : ctx.moveTo(...v)));
+        ctx.closePath();
+        ctx.setLineDash(dash ? [7, 6] : []);
+        if (fill) {
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.42;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      // 在实际的二维输出视口绘制可移动的教学裁剪窗口；所有阶段使用同一 x/w 范围。
+      function drawClipWindow(ctx, label = '当前裁剪窗口') {
+        const c = scene.cfg.clipCenter,
+          half = scene.cfg.clipWidth / 2;
+        const left = Math.max(-1, c - half),
+          right = Math.min(1, c + half);
+        const x0 = VP.x + ((left + 1) * VP.w) / 2,
+          x1 = VP.x + ((right + 1) * VP.w) / 2;
+        ctx.save();
+        ctx.fillStyle = 'rgba(42,126,169,0.065)';
+        ctx.fillRect(x0, VP.y, x1 - x0, VP.h);
+        ctx.fillStyle = 'rgba(164,174,183,0.13)';
+        if (x0 > VP.x) ctx.fillRect(VP.x, VP.y, x0 - VP.x, VP.h);
+        if (x1 < VP.x + VP.w) ctx.fillRect(x1, VP.y, VP.x + VP.w - x1, VP.h);
+        ctx.strokeStyle = '#126ca0';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([9, 5]);
+        ctx.strokeRect(x0 + 1, VP.y + 1, Math.max(0, x1 - x0 - 2), VP.h - 2);
+        ctx.setLineDash([]);
+        ctx.font = 'bold 16px system-ui';
+        ctx.fillStyle = '#155b86';
+        ctx.fillText(label, Math.max(VP.x + 7, Math.min(x0 + 10, VP.x + VP.w - 440)), VP.y + 61);
+        ctx.restore();
+      }
+      function drawProj(ctx, s) {
+        if (s >= 7) drawGrid(ctx, false);
+        if (s >= 5)
+          drawClipWindow(ctx, s === 5 ? '裁剪窗口：窗口内保留，窗口外舍弃' : '当前裁剪窗口');
+        for (let f of scene.faces) {
+          let v = s >= 5 ? f.clipped : f.verts;
+          let col = f.id === scene.cfg.focus ? '#d35143' : rgb(faceColor(f.id, f.triIndex));
+          if (s === 5 && scene.cfg.clip) {
+            if (f.actualClipped.length < 3) {
+              screenPath(ctx, f.verts, '#b5c0c8', 1.3, true, false);
+              continue;
+            }
+            if (f.partial) screenPath(ctx, f.verts, '#9cabb6', 1.5, true, false);
+          }
+          if (v.length < 3) continue;
+          screenPath(ctx, v, col, f.id === scene.cfg.focus ? 2.3 : 1.3, false, s >= 4);
+        }
+        if (s === 4 || s === 5 || s === 6 || s === 7) {
+          let f = scene.faces.find((f) => f.id === scene.cfg.focus && f.triIndex === 0);
+          if (f && (s < 5 || f.actualClipped.length >= 3 || !scene.cfg.clip)) {
+            let target = s >= 5 ? f.clipped : f.verts;
+            if (target.length >= 3) screenPath(ctx, target, '#e23e35', 4, false, false);
+          }
+        }
+        ctx.fillStyle = '#1a587b';
+        ctx.font = 'bold 17px system-ui';
+        ctx.fillText(
+          s === 3
+            ? 'clip 坐标 · 仅为显示而预览 x/w、y/w'
+            : s === 4
+              ? '图元装配 · 高亮选中模型的 Δ0'
+              : s === 5
+                ? '规范裁剪 · 灰虚线=原三角形，实线=保留部分'
+                : s === 6
+                  ? 'NDC [−1, 1]² · 已完成透视除法'
+                  : s === 7
+                    ? '视口 56 × 34 · 连续坐标，未生成片元'
+                    : '',
+          VP.x + 9,
+          VP.y + 23,
+        );
+        if (s === 5) {
+          ctx.font = '15px system-ui';
+          ctx.fillStyle = '#567183';
+          ctx.fillText(
+            `保留 ${scene.kept} · 部分裁剪 ${scene.partial} · 完全舍弃 ${scene.discarded}`,
+            VP.x + 9,
+            VP.y + 42,
+          );
+        }
+      }
+      function drawGrid(ctx, heavy) {
+        let cw = VP.w / W,
+          ch = VP.h / H;
+        ctx.strokeStyle = heavy ? '#cbdde8' : '#dbe8ef';
+        ctx.lineWidth = heavy ? 0.9 : 0.55;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x++) {
+          let a = VP.x + x * cw;
+          ctx.moveTo(a, VP.y);
+          ctx.lineTo(a, VP.y + VP.h);
+        }
+        for (let y = 0; y <= H; y++) {
+          let b = VP.y + y * ch;
+          ctx.moveTo(VP.x, b);
+          ctx.lineTo(VP.x + VP.w, b);
+        }
+        ctx.stroke();
+      }
+      function drawPixels(ctx, s) {
+        let cw = VP.w / W,
+          ch = VP.h / H;
+        let buffer = document.createElement('canvas');
+        buffer.width = W;
+        buffer.height = H;
+        let bc = buffer.getContext('2d'),
+          image = bc.createImageData(W, H);
+        for (let y = 0; y < H; y++)
+          for (let x = 0; x < W; x++) {
+            let a = scene.samples[y][x],
+              last = a[a.length - 1],
+              best = scene.buffer[y][x],
+              color = [245, 249, 253];
+            if (s === 8 && a.length) color = [161, 216, 232];
+            else if (s === 9 && last) color = last.rgb;
+            else if (s >= 10 && best) color = best.rgb;
+            let k = (y * W + x) * 4;
+            image.data.set([...color, 255], k);
+          }
+        bc.putImageData(image, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(buffer, VP.x, VP.y, VP.w, VP.h);
+        ctx.imageSmoothingEnabled = true;
+        drawGrid(ctx, s !== 11);
+        let px = VP.x + selected.x * cw,
+          py = VP.y + selected.y * ch;
+        ctx.strokeStyle = '#152e45';
+        ctx.lineWidth = 2.8;
+        ctx.strokeRect(px, py, cw, ch);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px + 2, py + 2, cw - 4, ch - 4);
+        ctx.font = 'bold 17px system-ui';
+        ctx.fillStyle = '#163e58';
+        ctx.fillText(
+          s === 8
+            ? '青色 = 生成候选片元（不代表写入）'
+            : s === 9
+              ? '候选着色结果 · 尚未进行深度判断'
+              : s === 10
+                ? '深度测试后 · 已通过者写入'
+                : '最终帧缓存图像 · 点击格子查像素',
+          VP.x + 9,
+          VP.y + 23,
+        );
+      }
+      function drawStage(canvas, s) {
+        let ctx = canvas.getContext('2d'),
+          title =
+            s < 0
+              ? '输入：应用程序的顶点、索引和参数'
+              : s === 0
+                ? '局部模型 · 不包含世界位置'
+                : s === 1
+                  ? '世界空间 · 三个模型位置/旋转不同'
+                  : s === 2
+                    ? '相机空间 · 相机位于原点'
+                    : s === 3
+                      ? '裁剪坐标二维预览（实际数据是 vec4）'
+                      : s === 4
+                        ? '图元装配结果：独立三角形'
+                        : s === 5
+                          ? '裁剪输出：只保留视锥内几何'
+                          : s === 6
+                            ? 'NDC 二维投影（含 NDC 深度数据）'
+                            : s === 7
+                              ? '视口坐标 · 仅有几何位置'
+                              : s === 8
+                                ? '候选片元覆盖图'
+                                : s === 9
+                                  ? '片元着色 · 候选 RGB'
+                                  : s === 10
+                                    ? '深度比较后的颜色缓冲'
+                                    : '最终颜色图像';
+        drawFrame(ctx, title);
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(VP.x, VP.y, VP.w, VP.h);
+        ctx.clip();
+        if (s < 0) {
+          let texts = [
+            ['立方体', '8 个局部顶点', '12 个索引三角形'],
+            ['棱锥', '5 个局部顶点', '6 个索引三角形'],
+            ['三角面板', '3 个局部顶点', '1 个索引三角形'],
+          ];
+          texts.forEach((a, i) => {
+            let x = VP.x + 30 + (i % 2) * 360,
+              y = VP.y + 78 + Math.floor(i / 2) * 140;
+            ctx.fillStyle = ['#e5f0fb', '#fff0dd', '#e0f5ec'][i];
+            ctx.fillRect(x, y, 325, 105);
+            ctx.fillStyle = '#23465c';
+            ctx.font = 'bold 25px system-ui';
+            ctx.fillText(a[0], x + 14, y + 32);
+            ctx.font = '20px system-ui';
+            ctx.fillText(a[1], x + 14, y + 61);
+            ctx.fillText(a[2], x + 14, y + 87);
+          });
+        } else if (s < 3) render3D(ctx, ['local', 'world', 'view'][s]);
+        else if (s < 8) drawProj(ctx, s);
+        else drawPixels(ctx, s);
+        ctx.restore();
+        ctx.strokeStyle = '#849eaf';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(VP.x, VP.y, VP.w, VP.h);
+        if (s >= 7 && s <= 11) {
+          ctx.fillStyle = '#294f68';
+          ctx.font = 'bold 15px system-ui';
+          ctx.fillText(`选中像素 (${selected.x},${selected.y})`, VP.x + 425, 508);
+        }
+      }
+      function coordsText() {
+        let obj = scene.obj[scene.cfg.focus],
+          v = obj.vertices[0],
+          s = toScreen(v),
+          focusLabel = obj.mesh.name;
+        return (
+          `追踪：${focusLabel} / 顶点 V0\n` +
+          `local  = ${str(v.local, 3)}\n` +
+          `world  = ${str(v.world, 3)}\n` +
+          `view   = ${str(v.view, 3)}\n` +
+          `clip   = ${str(v.clip, 3)}\n` +
+          `NDC    = ${str(s.ndc, 3)}\n` +
+          `screen = ${str(s.s, 2)}  (56×34)\n` +
+          `depth  = ${s.depth.toFixed(4)}\n\n` +
+          `计算链：\nclip = P × V × M × local\n` +
+          `当前强调：${['顶点资源', 'M × local', 'V × world', 'P × view', '三角形索引', '齐次裁剪', 'clip.xyz / clip.w', 'NDC → 视口', '覆盖与片元', '候选 RGB', 'LESS 深度测试', '颜色缓冲'][step]}\n` +
+          (step < 1
+            ? '未开始实际坐标变换'
+            : step < 2
+              ? '观察 world 数值变化'
+              : step < 3
+                ? '观察 view 数值变化'
+                : step < 4
+                  ? '注意 clip 第 4 个分量 w'
+                  : '后续继续跟踪同一顶点与图元')
+        );
+      }
+      function matrixText(m) {
+        return [0, 1, 2, 3]
+          .map(
+            (i) =>
+              '│ ' +
+              m
+                .slice(i * 4, i * 4 + 4)
+                .map((n) => n.toFixed(2).padStart(7))
+                .join(' ') +
+              ' │',
+          )
+          .join('\n');
+      }
+      function fragmentText() {
+        let a = scene.samples[selected.y][selected.x],
+          best = scene.buffer[selected.y][selected.x],
+          t = `教学像素 (${selected.x},${selected.y})\n中心采样 (${(selected.x + 0.5).toFixed(1)}, ${(selected.y + 0.5).toFixed(1)})\n`;
+        if (step < 8) return t + '当前未执行光栅化：没有候选片元。';
+        if (!scene.cfg.raster) return t + '已暂停光栅化：没有候选片元。';
+        t += `候选数量：${a.length}\n`;
+        if (!a.length) return t + '该像素未被任何图元覆盖，颜色是背景。';
+        a.slice(0, 8).forEach((f, i) => {
+          t += `\n片元 ${i + 1}：${meshes[f.id].name} / Δ${f.tri}\n`;
+          t += `  深度 ${f.depth.toFixed(4)}；RGB ${str(f.rgb, 0)}\n`;
+          if (step >= 10)
+            t += `  原深度 ${f.old.toFixed(4)} → ${f.pass ? '通过 / 写入' : '拒绝 / 保留'}\n`;
+          else t += '  候选状态：尚未进行最终深度测试\n';
+        });
+        if (a.length > 8) t += `\n另有 ${a.length - 8} 个片元（仅显示前8个）。\n`;
+        if (step >= 10)
+          t += `\n最终：${best ? `${meshes[best.id].name} · RGB ${str(best.rgb, 0)} · 深度 ${best.depth.toFixed(4)}` : '保留背景颜色与初始深度'}\n`;
+        return t;
+      }
+      function detailText() {
+        let f = scene.faces.find((f) => f.id === scene.cfg.focus && f.triIndex === 0),
+          selectedName = meshes[scene.cfg.focus].name,
+          head = `当前对象：${selectedName}\n原始三角形 Δ0 索引：${scene.obj[scene.cfg.focus].mesh.faces[0].join(', ')}\n`;
+        if (step === 0)
+          return (
+            head +
+            `三个模型合计：${scene.original} 个三角形。\n${modelIds.map((id) => meshes[id].name + '：' + meshes[id].verts.length + '顶点 / ' + meshes[id].faces.length + '三角形').join('\n')}\n\nCPU 准备数据 ≠ CPU 已生成像素`
+          );
+        if (step <= 3) {
+          let m = step === 1 ? scene.obj[scene.cfg.focus].M : step === 2 ? scene.V : scene.P;
+          return (
+            head +
+            `${step === 1 ? '当前模型 M' : step === 2 ? '场景共用 V' : '场景共用 P'} 矩阵（按行显示）：\n${matrixText(m)}\n\n` +
+            (step === 2
+              ? `相机世界位置 ${str(scene.eye, 2)}\n相机目标 (0, 0, 0)`
+              : step === 3
+                ? '近裁剪面 0.6；远裁剪面 28\nWebGL clip 判断：−w ≤ x,y,z ≤ w'
+                : '改变滑块，观察矩阵与顶点坐标')
+          );
+        }
+        if (step <= 7)
+          return (
+            head +
+            `初始三角形总数：${scene.original}\n裁剪边界受影响的原始三角形：${scene.cutCount}\n当前有效三角形（裁剪后重新剖分）：${scene.rasterFaces.length}\n\n` +
+            `Δ0 裁剪前顶点：${f.verts.length}\nΔ0 裁剪后顶点：${f.actualClipped.length}\n` +
+            f.actualClipped
+              .slice(0, 6)
+              .map((v, i) => `  ${v.created ? '新交点' : '原顶点'}${i} clip=${str(v.clip, 2)}`)
+              .join('\n') +
+            `\n\n${step >= 6 ? 'NDC = clip.xyz / clip.w' : '裁剪过程不需要先除以 w'}`
+          );
+        return (
+          head +
+          `候选片元总数：${scene.frags}\n被覆盖的不同像素位置：${scene.pixels}\n重叠像素位置数：${scene.overlaps}\n通过深度比较的片元数：${scene.pass}\n（多个片元可依次通过同一像素）\n\n${fragmentText()}`
+        );
+      }
+      function update() {
+        scene = sceneBuild();
+        $('stages').replaceChildren();
+        stages.forEach((st, i) => {
+          let b = document.createElement('button');
+          b.className = 'stage' + (i === step ? ' current' : i < step ? ' done' : '');
+          let small = document.createElement('small');
+          small.textContent = '阶段 ' + String(i + 1).padStart(2, '0');
+          b.append(small, document.createTextNode(st.name));
+          b.setAttribute('aria-current', i === step ? 'step' : 'false');
+          b.onclick = () => {
+            step = i;
+            update();
+          };
+          $('stages').append(b);
+        });
+        let st = stages[step];
+        $('stage-no').textContent = `阶段 ${step + 1} / ${stages.length}`;
+        $('progress').textContent = `${step + 1} / ${stages.length} · ${st.name}`;
+        $('owner').textContent = st.owner;
+        $('title').textContent = st.name;
+        $('explain').textContent = st.explain;
+        $('input-desc').textContent = st.input;
+        $('output-desc').textContent = st.output;
+        $('data-desc').textContent = st.data;
+        $('note').textContent = st.note;
+        $('question').textContent = st.q;
+        $('answer').textContent = st.a;
+        $('answer').classList.remove('show');
+        $('answer-btn').textContent = '显示参考提示';
+        $('prev').disabled = step === 0;
+        $('next').disabled = step === stages.length - 1;
+        $('rotate-out').textContent = scene.cfg.rot + '°';
+        $('camera-out').textContent = scene.cfg.cam + '°';
+        $('clip-center-out').textContent = scene.cfg.clipCenter.toFixed(2);
+        $('clip-width-out').textContent = scene.cfg.clipWidth.toFixed(2);
+        $('depth-out').textContent = scene.cfg.depth.toFixed(2);
+        $('in-label').textContent = `输入 · ${step === 0 ? 'CPU 资源' : stages[step - 1].name}`;
+        $('out-label').textContent = `输出 · ${st.name}`;
+        $('before-caption').textContent =
+          step === 0
+            ? '网格与顶点索引是绘图的输入，不是像素图像。'
+            : `上一阶段输出：${stages[step - 1].output.split('；')[0]}。`;
+        $('after-caption').textContent =
+          step === 1
+            ? '多个模型进入同一世界场景；默认布局已经保证后续裁剪到光栅化阶段始终能看到输出。'
+            : step === 2
+              ? '相机位置会显示在世界空间示意中；默认相机稍远一些，保证当前成像窗口中持续有可见内容。'
+              : step === 3
+                ? '为了在二维画布里看见齐次坐标，绘图暂按 x/w、y/w 显示；数值未执行下一步的实际除法。'
+                : step === 5
+                  ? '虚线表示裁剪前，实线表示保留下来的部分；窗口外会被舍弃。'
+                  : step < 8
+                    ? '几何线框和背景网格为教学图示，并非帧缓存。'
+                    : '点击输出画面的像素网格，可查看所有候选片元及写入结果。';
+        $('mode').textContent =
+          step < 3
+            ? '三维几何示意'
+            : step < 8
+              ? '二维几何结果（尚非真实像素）'
+              : '真实模拟像素输出';
+        drawStage($('before'), step - 1);
+        drawStage($('after'), step);
+        $('stats').replaceChildren();
+        let stats = [`模型 3 个`, `三角形 ${scene.original} 个`];
+        if (step <= 3)
+          stats.push(
+            `相机位置 ${str(scene.eye, 1)}`,
+            ...modelIds.map((id) => {
+              let o = scene.obj[id],
+                m = o.mesh;
+              return `${m.name}：位置 ${str(o.pos, 1)} · 绕Y轴 ${m.yaw + (id === scene.cfg.focus ? scene.cfg.rot : 0)}°`;
+            }),
+          );
+        if (step >= 5)
+          stats.push(
+            `完整保留 ${scene.kept} 个`,
+            `部分裁剪 ${scene.partial} 个`,
+            `完全舍弃 ${scene.discarded} 个`,
+            `有效剖分三角形 ${scene.rasterFaces.length} 个`,
+          );
+        if (step >= 8)
+          stats.push(
+            `候选片元 ${scene.frags}`,
+            `覆盖像素 ${scene.pixels}`,
+            `重叠像素 ${scene.overlaps}`,
+          );
+        if (step >= 10) stats.push(`深度测试通过 ${scene.pass}`);
+        for (let x of stats) {
+          let span = document.createElement('span');
+          span.className = 'stat';
+          span.textContent = x;
+          $('stats').append(span);
+        }
+        $('vertex-data').textContent = coordsText();
+        $('detail-data').textContent = detailText();
+      }
+      $('prev').onclick = () => {
+        if (step > 0) {
+          step--;
+          update();
+        }
+      };
+      $('next').onclick = () => {
+        if (step < stages.length - 1) {
+          step++;
+          update();
+        }
+      };
+      $('reset').onclick = () => {
+        step = 0;
+        selected = { x: 28, y: 17 };
+        $('focus').value = 'cube';
+        $('rotate').value = 0;
+        $('camera').value = 18;
+        $('clip-center').value = 0;
+        $('clip-width').value = 0.7;
+        $('stress').checked = false;
+        $('clip').checked = true;
+        $('raster').checked = true;
+        $('axes').checked = true;
+        $('depth').value = 1;
+        update();
+      };
+      [
+        'focus',
+        'rotate',
+        'camera',
+        'clip-center',
+        'clip-width',
+        'stress',
+        'clip',
+        'raster',
+        'axes',
+        'depth',
+      ].forEach((id) => $(id).addEventListener('input', update));
+      $('answer-btn').onclick = () => {
+        let open = $('answer').classList.toggle('show');
+        $('answer-btn').textContent = open ? '隐藏参考提示' : '显示参考提示';
+      };
+      $('after').addEventListener('click', (e) => {
+        if (step < 8) return;
+        let r = e.currentTarget.getBoundingClientRect(),
+          x = ((e.clientX - r.left) / r.width) * 800,
+          y = ((e.clientY - r.top) / r.height) * 520;
+        if (x < VP.x || x >= VP.x + VP.w || y < VP.y || y >= VP.y + VP.h) return;
+        selected.x = Math.min(W - 1, Math.floor(((x - VP.x) / VP.w) * W));
+        selected.y = Math.min(H - 1, Math.floor(((y - VP.y) / VP.h) * H));
+        update();
+      });
+      $('after').addEventListener('keydown', (e) => {
+        if (step < 8) return;
+        let moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+        if (!moves[e.key]) return;
+        e.preventDefault();
+        let d = moves[e.key];
+        selected.x = Math.max(0, Math.min(W - 1, selected.x + d[0]));
+        selected.y = Math.max(0, Math.min(H - 1, selected.y + d[1]));
+        update();
+      });
+      update();
+    </script>
+  </body>
+</html>

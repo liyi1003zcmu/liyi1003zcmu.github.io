@@ -295,6 +295,29 @@
         margin: 22px 0;
       }
 
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
       .node {
         min-width: 180px;
         padding: 18px 20px;
@@ -348,6 +371,22 @@
       .media-shell.cover img,
       .media-shell.cover video {
         object-fit: cover;
+      }
+
+      .media-card {
+        padding: 14px 16px;
+        border-radius: 18px;
+      }
+
+      .media-card h3 {
+        font-size: 0.72em;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .media-compact {
+        height: 200px !important;
+        border-radius: 14px;
       }
 
       .media-placeholder {
@@ -419,7 +458,7 @@
         font-size: 1.08em !important;
         line-height: 1.32 !important;
         font-weight: 780;
-        max-width: 1250px;
+        max-width: 1400px;
       }
 
       .big {
@@ -537,8 +576,57 @@
       .med-strip strong {
         color: var(--green);
       }
+
+      /* D01 Demo 嵌入页：图形系统与帧缓存显微镜 */
+      .demo-card {
+        background: linear-gradient(180deg, #ffffff, #f6fbff);
+        border: 1px solid rgba(21, 125, 184, 0.18);
+        border-radius: 22px;
+        padding: 26px 30px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .demo-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55em;
+        margin-top: 0.65em;
+        padding: 0.52em 0.9em;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(21, 125, 184, 0.12), rgba(47, 100, 200, 0.08));
+        border: 1px solid rgba(21, 125, 184, 0.28);
+        color: var(--blue) !important;
+        font-weight: 800;
+        font-size: 0.58em;
+        letter-spacing: 0.02em;
+      }
+
+      .demo-link::after {
+        content: '↗';
+        font-weight: 900;
+      }
+
+      .demo-steps {
+        margin-left: 1.15em !important;
+        padding-left: 0.35em !important;
+      }
+
+      .demo-steps li {
+        padding-left: 0.15em;
+      }
+
+      .demo-question {
+        font-size: 0.76em !important;
+        line-height: 1.38 !important;
+        font-weight: 720;
+        color: #183456;
+      }
+
+      .demo-flow .node {
+        min-width: 190px;
+      }
     </style>
-    <link href="css/classroom-large.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../shared/classroom-large.css" />
   </head>
 
   <body>
@@ -560,7 +648,7 @@
           </div>
         </section>
         <section id="sec-2">
-          <section id="sec-2-1" class="compact">
+          <section class="compact" id="sec-2-1">
             <span class="slide-no">#sec-2-1</span>
             <div class="eyebrow">Bridge-in · 0–4 min</div>
             <h2>四种画面，同一个核心问题</h2>
@@ -569,60 +657,56 @@
                 <h3>电影特效</h3>
                 <div class="media-shell cover media-compact">
                   <video
-                    controls=""
+                    aria-label="电影特效视频预览图"
                     data-fallback="电影特效视频"
                     data-prompt="电影特效幕后制作，演员与数字场景合成，对比拍摄现场与最终CG镜头，16:9，专业纪录片风格，无文字"
-                    preload="metadata"
-                  >
-                    <source src="./images/videos/ch01-wetafx.mp4" type="video/mp4" />
-                  </video>
+                    poster="./images/videos/ch01-wetafx-poster.png"
+                    preload="none"
+                  ></video>
                 </div>
               </div>
               <div class="card media-card">
                 <h3>实时游戏</h3>
                 <div class="media-shell cover media-compact">
                   <video
-                    controls=""
+                    aria-label="实时游戏视频预览图"
                     data-fallback="实时游戏视频"
                     data-prompt="现代3A游戏实时渲染画面，城市夜景、材质、灯光与反射，16:9，无品牌文字"
-                    preload="metadata"
-                  >
-                    <source src="./images/videos/ch01-cyberpunk2077.mp4" type="video/mp4" />
-                  </video>
+                    poster="./images/videos/ch01-cyberpunk2077-poster.png"
+                    preload="none"
+                  ></video>
                 </div>
               </div>
               <div class="card media-card">
                 <h3>合成数据</h3>
                 <div class="media-shell cover media-compact">
                   <video
-                    controls=""
+                    aria-label="合成数据视频预览图"
                     data-fallback="合成数据视频"
                     data-prompt="自动驾驶或机器人仿真中生成大量合成训练数据，虚拟城市与传感器视图，16:9"
-                    preload="metadata"
-                  >
-                    <source src="./images/videos/ch01-nvidia_omni_sim.mp4" type="video/mp4" />
-                  </video>
+                    poster="./images/videos/ch01-nvidia_omni_sim-poster.png"
+                    preload="none"
+                  ></video>
                 </div>
               </div>
               <div class="card media-card">
                 <h3>科学可视化</h3>
                 <div class="media-shell cover media-compact">
                   <video
-                    controls=""
+                    aria-label="科学可视化视频预览图"
                     data-fallback="科学可视化视频"
                     data-prompt="黑洞、流体或医学体数据的科学可视化，真实感但教学化，16:9"
-                    preload="metadata"
-                  >
-                    <source src="./images/videos/ch01-intersteller.mp4" type="video/mp4" />
-                  </video>
+                    poster="./images/videos/ch01-intersteller-poster.png"
+                    preload="none"
+                  ></video>
                 </div>
               </div>
             </div>
             <div class="activity">
               <span class="tag">提问</span><span class="timer">1 min</span>
               <p>
-                这些画面背后的共同核心技术是什么？A 图像处理 B AI计算机视觉 D 计算机图形学 E
-                多种技术共同参与
+                这些画面背后的共同核心技术是什么？A 图像处理 B 计算机视觉 C 生成式 AI D 计算机图形学
+                E 多种技术共同参与
               </p>
             </div>
           </section>
@@ -868,6 +952,125 @@
               </div>
             </div>
           </section>
+          <section id="sec-4-d01-1">
+            <span class="slide-no">#sec-4-d01-1</span>
+            <div class="eyebrow">Interactive Demo · D01</div>
+            <h2>Demo：图形系统与帧缓存显微镜</h2>
+            <div class="grid2 image-text">
+              <div class="card fragment">
+                <h3>为什么放在这里？</h3>
+                <p>
+                  这一 Demo 用一个简化系统帮助学生把刚刚看到的<strong>图形系统链路</strong>具体化：
+                </p>
+                <div class="flow demo-flow" style="margin: 20px 0 24px">
+                  <div class="node primary" style="min-width: 110px; padding: 12px 14px">CPU</div>
+                  <div class="arrow">→</div>
+                  <div class="node primary" style="min-width: 110px; padding: 12px 14px">GPU</div>
+                  <div class="arrow">→</div>
+                  <div class="node" style="min-width: 110px; padding: 12px 14px">帧缓存</div>
+                  <div class="arrow">→</div>
+                  <div class="node" style="min-width: 110px; padding: 12px 14px">屏幕</div>
+                </div>
+                <a
+                  class="demo-btn"
+                  href="./Chap_demos/chap1/D01_图形系统与帧缓存显微镜.html"
+                  target="_blank"
+                  rel="noopener"
+                  style="height: 56px; font-size: 0.72em"
+                  >打开 D01 Demo：图形系统与帧缓存显微镜</a
+                >
+              </div>
+              <div class="card fragment">
+                <h3>课堂目标</h3>
+                <ul>
+                  <li>理解 CPU、GPU、帧缓存和屏幕在图形系统中的分工。</li>
+                  <li>观察分辨率、颜色深度与颜色缓冲容量之间的关系。</li>
+                  <li>通过“像素显微镜”建立<strong>图像是像素阵列</strong>的直观认识。</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-d01-2">
+            <span class="slide-no">#sec-4-d01-2</span>
+            <div class="eyebrow">Demo observation · System chain</div>
+            <h2>观察 1：点击图形系统的各个部件</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="demo-steps">
+                  <li>
+                    打开 D01 Demo，依次点击 <strong>CPU</strong>、<strong>GPU</strong>、<strong
+                      >帧缓存</strong
+                    >
+                    和 <strong>屏幕</strong>。
+                  </li>
+                  <li>阅读每个部件下方的说明，记录它主要负责什么。</li>
+                  <li>回到课件中的系统链路，判断每一步是否对应。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="demo-question">
+                  如果 CPU 可以运行程序，为什么还需要
+                  GPU？帧缓存存的是“模型数据”，还是“已经计算得到的像素颜色结果”？
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-d01-3">
+            <span class="slide-no">#sec-4-d01-3</span>
+            <div class="eyebrow">Demo observation · Framebuffer</div>
+            <h2>观察 2：分辨率、颜色深度与帧缓存容量</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="demo-steps">
+                  <li>将分辨率从 <strong>1280×720</strong> 切换到 <strong>3840×2160</strong>。</li>
+                  <li>
+                    保持分辨率不变，将颜色深度从 <strong>24 位</strong> 切换到
+                    <strong>32 位</strong>。
+                  </li>
+                  <li>勾选“双颜色缓冲”，观察理论容量如何变化。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="demo-question">
+                  分辨率“宽和高各翻倍”时，颜色缓冲容量是变为 2 倍还是 4 倍？同一分辨率下，24 位变 32
+                  位又意味着什么？
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-d01-4">
+            <span class="slide-no">#sec-4-d01-4</span>
+            <div class="eyebrow">Demo observation · Pixels</div>
+            <h2>观察 3：像素显微镜——图像不是连续平面</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="demo-steps">
+                  <li>在模拟屏幕中点击图像的一处边缘区域。</li>
+                  <li>观察右侧 12×8 像素显微镜中的颜色变化。</li>
+                  <li>切换 8 位、16 位、24 位颜色深度，比较颜色表达差异。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="demo-question">
+                  为什么屏幕上看起来平滑的图像，放大后会变成一个个离散的小格子？这与“图形
+                  Graphics”和“图像 Image”的区别有什么关系？
+                </p>
+              </div>
+            </div>
+            <div class="activity fragment">
+              <span class="tag">连接后续</span>
+              <p>
+                下一步学习绘制流水线时，要继续追问：这些像素颜色究竟是如何从三角形、相机、光照和片元处理一步步计算出来的。
+              </p>
+            </div>
+          </section>
+
           <section id="sec-4-2">
             <span class="slide-no">#sec-4-2</span>
             <div class="eyebrow">CPU vs GPU</div>
@@ -1250,7 +1453,7 @@
               图形学经常做的事情就是：<strong>把结构化的场景信息转化为二维像素图像。</strong>
             </p>
           </section>
-          <section id="sec-7-2" class="compact">
+          <section class="compact" id="sec-7-2">
             <span class="slide-no">#sec-7-2</span>
             <div class="eyebrow">Core concepts · Modern view</div>
             <h2>图形学、图像处理、计算机视觉与生成式 AI</h2>

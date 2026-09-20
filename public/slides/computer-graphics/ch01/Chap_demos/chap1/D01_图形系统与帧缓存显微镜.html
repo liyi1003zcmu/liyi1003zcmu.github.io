@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>D01｜图形系统与帧缓存显微镜</title>
+    <style>
+      :root {
+        --ink: #17324a;
+        --muted: #506779;
+        --blue: #16649e;
+        --cyan: #07859c;
+        --mint: #e8f6f1;
+        --paper: #f7fafc;
+        --line: #cbdce7;
+        --accent: #dc7a24;
+        --white: #fff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #edf4f8;
+        color: var(--ink);
+        font:
+          18px/1.55 system-ui,
+          -apple-system,
+          'Microsoft YaHei',
+          sans-serif;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      canvas:focus-visible {
+        outline: 3px solid #e38b21;
+        outline-offset: 3px;
+      }
+      .wrap {
+        max-width: 1440px;
+        margin: auto;
+        padding: 28px 32px 44px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin-bottom: 22px;
+      }
+      h1 {
+        font-size: clamp(30px, 3vw, 43px);
+        line-height: 1.2;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 26px;
+        line-height: 1.25;
+        margin: 0 0 14px;
+      }
+      h3 {
+        font-size: 21px;
+        margin: 0 0 8px;
+      }
+      .subtitle,
+      .minor {
+        color: var(--muted);
+      }
+      .subtitle {
+        font-size: 19px;
+        margin: 0;
+      }
+      .tag {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 99px;
+        background: #d7edf6;
+        color: #104d73;
+        font-weight: 750;
+        font-size: 15px;
+        white-space: nowrap;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(330px, 1fr);
+        gap: 20px;
+      }
+      .panel {
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 4px 15px #1647670b;
+        min-width: 0;
+      }
+      .wide {
+        grid-column: 1/-1;
+      }
+      .pipeline {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1.1fr auto 1fr;
+        gap: 8px;
+        align-items: center;
+        margin: 18px 0;
+      }
+      .node {
+        border: 2px solid #b1ccdc;
+        background: #f2f8fb;
+        color: var(--ink);
+        border-radius: 13px;
+        min-height: 98px;
+        padding: 14px 8px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+      }
+      .node .emoji {
+        font-size: 28px;
+      }
+      .node strong {
+        font-size: 21px;
+      }
+      .node small {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .node.active {
+        border-color: var(--blue);
+        background: #dff2fc;
+        box-shadow: 0 0 0 3px #16649e1a;
+      }
+      .arrow {
+        font-size: 28px;
+        color: var(--blue);
+        font-weight: 800;
+      }
+      .info {
+        background: #eff7fc;
+        border-left: 5px solid var(--blue);
+        border-radius: 9px;
+        padding: 14px 18px;
+        min-height: 110px;
+      }
+      .info strong {
+        font-size: 21px;
+      }
+      .info p {
+        margin: 4px 0 0;
+      }
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+      }
+      .control label {
+        display: block;
+        font-weight: 750;
+        margin-bottom: 6px;
+      }
+      .control select,
+      .control input[type='color'] {
+        width: 100%;
+        border: 1.5px solid #9cbbcf;
+        border-radius: 10px;
+        background: white;
+        padding: 10px;
+        min-height: 51px;
+        color: var(--ink);
+      }
+      .control input[type='color'] {
+        padding: 4px 8px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-top: 18px;
+        font-size: 17px;
+      }
+      .check input {
+        width: 22px;
+        height: 22px;
+        accent-color: var(--blue);
+      }
+      .formula {
+        background: #103c5b;
+        color: white;
+        padding: 17px;
+        border-radius: 12px;
+        margin-top: 18px;
+      }
+      .formula .sum {
+        font-size: clamp(24px, 2.7vw, 37px);
+        font-weight: 800;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+      .formula .detail {
+        color: #d9ecf6;
+        font-size: 16px;
+        margin-top: 5px;
+      }
+      .preview-area {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.85fr);
+        gap: 22px;
+        align-items: start;
+      }
+      .screen {
+        border: 9px solid #294359;
+        border-bottom-width: 18px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #c3d5e1;
+        position: relative;
+        cursor: crosshair;
+        line-height: 0;
+      }
+      .screen canvas {
+        width: 100%;
+        aspect-ratio: 16/9;
+        display: block;
+      }
+      .screen .screen-label {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        background: #ffffffdd;
+        border-radius: 6px;
+        font: 700 13px/1.3 system-ui;
+        padding: 5px 7px;
+        color: #14344c;
+      }
+      .screen::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        left: calc(var(--px, 52%) - 8px);
+        top: calc(var(--py, 50%) - 8px);
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px #125981;
+        pointer-events: none;
+      }
+      .grid-pixels {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        border: 2px solid #31546e;
+        aspect-ratio: 12/8;
+        max-width: 430px;
+        background: #eee;
+      }
+      .pixel {
+        min-width: 0;
+        min-height: 0;
+        border: 1px solid #ffffff75;
+        padding: 0;
+        position: relative;
+        border-radius: 0;
+      }
+      .pixel.selected {
+        outline: 3px solid #fefefe;
+        outline-offset: -3px;
+        z-index: 1;
+        box-shadow: inset 0 0 0 5px #1c436c;
+      }
+      .legend {
+        font-size: 15px;
+        color: var(--muted);
+        margin: 9px 0 0;
+      }
+      .readout {
+        background: #f0f7fc;
+        border-radius: 9px;
+        padding: 13px 16px;
+        margin-top: 14px;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+      }
+      .readout strong {
+        color: #0d598b;
+      }
+      .key {
+        display: inline-block;
+        padding: 2px 7px;
+        background: #e1eef7;
+        border-radius: 5px;
+        font-family: ui-monospace, monospace;
+      }
+      .note {
+        background: #fff8ec;
+        border: 1px solid #f1d6a7;
+        border-radius: 12px;
+        padding: 14px 17px;
+        margin-top: 20px;
+        color: #6b481a;
+        font-size: 16px;
+      }
+      .footer {
+        font-size: 15px;
+        color: var(--muted);
+        margin: 16px 2px 0;
+      }
+      .task {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .task button {
+        border: 1px solid #bad1df;
+        background: #f2f8fc;
+        border-radius: 9px;
+        padding: 8px 12px;
+        font-size: 15px;
+        color: #16486b;
+      }
+      .task button:hover {
+        background: #dceffb;
+      }
+      @media (max-width: 1000px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .preview-area {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 720px) {
+        .wrap {
+          padding: 16px;
+        }
+        .panel {
+          padding: 16px;
+        }
+        header {
+          display: block;
+        }
+        .pipeline {
+          grid-template-columns: 1fr;
+          gap: 5px;
+        }
+        .arrow {
+          transform: rotate(90deg);
+          text-align: center;
+          font-size: 18px;
+          line-height: 1;
+        }
+        .node {
+          min-height: 65px;
+        }
+        .preview-area,
+        .control-grid {
+          grid-template-columns: 1fr;
+        }
+        body {
+          font-size: 17px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .node {
+          transition:
+            background 0.18s,
+            border-color 0.18s,
+            box-shadow 0.18s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <div>
+          <span class="tag">计算机图形学 · 第一章 · D01</span>
+          <h1>图形系统与帧缓存显微镜</h1>
+          <p class="subtitle">
+            探索 CPU → GPU → 帧缓存 → 显示设备；把分辨率、颜色深度与存储量联系起来。
+          </p>
+        </div>
+        <span class="tag">交互式教学模拟 · 无需联网</span>
+      </header>
+      <div class="layout">
+        <section class="panel wide" aria-labelledby="flowtitle">
+          <h2 id="flowtitle">① 点击图形系统的一个部件</h2>
+          <div class="pipeline" id="pipeline">
+            <button class="node active" data-part="cpu" aria-pressed="true">
+              <span class="emoji" aria-hidden="true">▣</span><strong>CPU</strong
+              ><small>准备数据 / 发出绘制命令</small></button
+            ><span class="arrow" aria-hidden="true">→</span
+            ><button class="node" data-part="gpu" aria-pressed="false">
+              <span class="emoji" aria-hidden="true">⬡</span><strong>GPU</strong
+              ><small>处理图元 / 生成片元</small></button
+            ><span class="arrow" aria-hidden="true">→</span
+            ><button class="node" data-part="buffer" aria-pressed="false">
+              <span class="emoji" aria-hidden="true">▦</span><strong>帧缓存</strong
+              ><small>存储颜色结果</small></button
+            ><span class="arrow" aria-hidden="true">→</span
+            ><button class="node" data-part="monitor" aria-pressed="false">
+              <span class="emoji" aria-hidden="true">▤</span><strong>屏幕</strong
+              ><small>呈现像素图像</small>
+            </button>
+          </div>
+          <div class="info" aria-live="polite">
+            <strong id="part-title">CPU｜准备图形数据并发起绘制</strong>
+            <p id="part-info">
+              应用程序准备顶点、颜色、变换等数据，调用图形 API
+              提交绘制命令。这里画的是教学用简化数据流，并非所有系统的唯一硬件连接方式。
+            </p>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="settings">
+          <h2 id="settings">② 改变显示参数</h2>
+          <div class="control-grid">
+            <div class="control">
+              <label for="resolution">分辨率（宽 × 高）</label
+              ><select id="resolution">
+                <option value="640x360">640 × 360</option>
+                <option value="1280x720" selected>1280 × 720（HD）</option>
+                <option value="1920x1080">1920 × 1080（FHD）</option>
+                <option value="3840x2160">3840 × 2160（4K UHD）</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="depth">颜色深度（每像素）</label
+              ><select id="depth">
+                <option value="8">8 位 · 灰度示例</option>
+                <option value="16">16 位 · RGB565</option>
+                <option value="24" selected>24 位 · RGB888</option>
+                <option value="32">32 位 · RGBA8888</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="objectColor">修改场景中圆形的颜色</label
+              ><input
+                id="objectColor"
+                type="color"
+                value="#ef7548"
+                aria-label="修改场景中圆形的颜色"
+              />
+            </div>
+            <div class="control">
+              <label for="zoom">像素放大格数</label
+              ><select id="zoom">
+                <option value="1" selected>逐像素观察（×1 邻域）</option>
+                <option value="2">隔点采样（×2，仅作比较）</option>
+                <option value="4">隔点采样（×4，仅作比较）</option>
+              </select>
+            </div>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="double" /> 模拟双颜色缓冲（用于容量比较）</label
+          >
+          <div class="formula" aria-live="polite">
+            <div>仅计算颜色缓冲的理论存储量</div>
+            <div class="sum" id="memory">约 2.64 MiB</div>
+            <div class="detail" id="formula">1280 × 720 × 24 ÷ 8 × 1 = 2,764,800 字节</div>
+          </div>
+          <p class="legend" id="depth-hint">
+            24 位 RGB：红、绿、蓝各 8 位；此示例不包含透明度通道。
+          </p>
+          <div class="task">
+            <button id="compare-res">试一试：提升至 4K</button
+            ><button id="compare-depth">试一试：切至 8 位</button
+            ><button id="reset">恢复默认设置</button>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="previewtitle">
+          <h2 id="previewtitle">③ 在模拟屏幕中观察图像</h2>
+          <div class="preview-area">
+            <div>
+              <h3>整幅图像（示意预览）</h3>
+              <div class="screen" id="screen">
+                <canvas
+                  id="image"
+                  width="320"
+                  height="180"
+                  tabindex="0"
+                  role="img"
+                  aria-label="模拟彩色图像；点击选择观察位置，方向键可移动选点"
+                ></canvas
+                ><span class="screen-label" id="screen-label">1280 × 720</span>
+              </div>
+              <p class="legend">点击图像选取像素；预览始终缩放显示，并不以 1:1 展示真实分辨率。</p>
+              <div class="readout" id="readout" aria-live="polite">已选择：像素 (665, 360)</div>
+            </div>
+            <div>
+              <h3>像素显微镜（12 × 8 个采样点）</h3>
+              <div
+                id="pixels"
+                class="grid-pixels"
+                aria-label="像素邻域示意；可点击格子读取单个样本"
+              ></div>
+              <p class="legend" id="zoom-hint">
+                每格代表一个模拟像素；格线为教学辅助，屏幕真实像素通常没有这样的白色边框。
+              </p>
+            </div>
+          </div>
+          <div class="note">
+            <strong>教学边界：</strong>此 Demo 使用浏览器 Canvas 2D 在 CPU
+            侧计算并绘制“模拟结果”，不读取真实 GPU
+            的帧缓存。容量按未压缩、单层、单颜色附件估算，不计深度/模板缓冲、显存对齐、压缩、抗锯齿及系统开销；浏览器实际显示还涉及合成与显示链路。
+          </div>
+        </section>
+      </div>
+      <p class="footer">
+        课堂提问：分辨率翻倍是指宽和高各翻倍，还是总像素数翻倍？同一分辨率下，由 24 位改成 32
+        位，理论颜色缓冲容量如何改变？
+      </p>
+    </main>
+    <script>
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const parts = {
+        cpu: [
+          'CPU｜准备图形数据并发起绘制',
+          '应用程序准备顶点、颜色和变换等数据，调用图形 API 提交绘制命令。CPU 不必逐个计算屏幕上每个像素。',
+        ],
+        gpu: [
+          'GPU｜执行图形处理',
+          'GPU 根据绘制命令执行相关图形处理。可包含顶点处理、图元装配、光栅化和片元处理，最终形成写入缓冲的颜色结果。',
+        ],
+        buffer: [
+          '帧缓存｜保存待显示的像素颜色',
+          '这里将帧缓存简化为一个颜色缓冲：二维像素位置对应颜色值。实际图形系统还可能使用多个颜色附件、深度/模板缓冲与多重采样。',
+        ],
+        monitor: [
+          '屏幕｜读取并呈现图像',
+          '显示链路取得待显示图像并驱动显示设备。屏幕分辨率表示像素排列；缓冲区与物理显示面板并非在任何系统中都一一对应。',
+        ],
+      };
+      const depthHelp = {
+        8: '8 位模式仅演示 256 级灰度：实际 8 位图像也可以使用调色板，不代表所有图像都只能是灰色。',
+        16: '16 位 RGB565：R 用 5 位、G 用 6 位、B 用 5 位；不同通道可表示的等级不相同。',
+        24: '24 位 RGB888：R/G/B 各 8 位，不含 Alpha 通道。',
+        32: '32 位 RGBA8888：R/G/B/A 各 8 位；演示图像 Alpha 固定为不透明。32 位并不意味着颜色种类比 RGB888 多 256 倍。',
+      };
+      let state = {
+        w: 1280,
+        h: 720,
+        depth: 24,
+        step: 1,
+        x: 665,
+        y: 360,
+        color: '#ef7548',
+        buffers: 1,
+      };
+      function setPart(key) {
+        document.querySelectorAll('.node').forEach((b) => {
+          let yes = b.dataset.part === key;
+          b.classList.toggle('active', yes);
+          b.setAttribute('aria-pressed', String(yes));
+        });
+        $('part-title').textContent = parts[key][0];
+        $('part-info').textContent = parts[key][1];
+      }
+      document
+        .querySelectorAll('.node')
+        .forEach((b) => b.addEventListener('click', () => setPart(b.dataset.part)));
+      function rawAt(x, y) {
+        let u = x / state.w,
+          v = y / state.h;
+        let bg = [Math.round(203 + 27 * u), Math.round(230 - 33 * v), Math.round(245 - 27 * u)];
+        let cx = 0.55,
+          cy = 0.5,
+          r = 0.245;
+        let shape = (u - cx) ** 2 + (v - cy) ** 2 < r * r;
+        if (shape) {
+          const hex = state.color;
+          return [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
+        }
+        if (u > 0.12 && u < 0.4 && v > 0.2 && v < 0.8 && v > 0.85 - (u - 0.12) * 1.6)
+          return [42, 126, 184];
+        return bg;
+      }
+      function quantize(rgb) {
+        let [r, g, b] = rgb;
+        switch (state.depth) {
+          case 8: {
+            let y = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+            return [y, y, y];
+          }
+          case 16: {
+            let cv = (c, b) =>
+              Math.round((Math.round((c / 255) * ((1 << b) - 1)) * 255) / ((1 << b) - 1));
+            return [cv(r, 5), cv(g, 6), cv(b, 5)];
+          }
+          default:
+            return [r, g, b];
+        }
+      }
+      function rgbText(c) {
+        return `RGB(${c.join(', ')})`;
+      }
+      function drawPreview() {
+        let canvas = $('image'),
+          ctx = canvas.getContext('2d'),
+          image = ctx.createImageData(canvas.width, canvas.height);
+        for (let y = 0; y < canvas.height; y++)
+          for (let x = 0; x < canvas.width; x++) {
+            let raw = rawAt(
+              Math.min(state.w - 1, Math.floor(((x + 0.5) / canvas.width) * state.w)),
+              Math.min(state.h - 1, Math.floor(((y + 0.5) / canvas.height) * state.h)),
+            );
+            let c = quantize(raw),
+              i = (y * canvas.width + x) * 4;
+            image.data.set([...c, 255], i);
+          }
+        ctx.putImageData(image, 0, 0);
+        $('screen-label').textContent = `${state.w} × ${state.h} · ${state.depth} bit`;
+        $('screen').style.setProperty('--px', `${((state.x + 0.5) / state.w) * 100}%`);
+        $('screen').style.setProperty('--py', `${((state.y + 0.5) / state.h) * 100}%`);
+      }
+      function pixelCoordinates(dx, dy) {
+        return [
+          Math.min(state.w - 1, Math.max(0, state.x + dx * state.step)),
+          Math.min(state.h - 1, Math.max(0, state.y + dy * state.step)),
+        ];
+      }
+      function drawPixels() {
+        const grid = $('pixels');
+        grid.replaceChildren();
+        for (let gy = 0; gy < 8; gy++)
+          for (let gx = 0; gx < 12; gx++) {
+            let [px, py] = pixelCoordinates(gx - 5, gy - 3),
+              c = quantize(rawAt(px, py)),
+              cell = document.createElement('button');
+            cell.className = 'pixel' + (gx === 5 && gy === 3 ? ' selected' : '');
+            cell.style.backgroundColor = `rgb(${c.join(',')})`;
+            cell.title = `(${px}, ${py}) ${rgbText(c)}`;
+            cell.setAttribute('aria-label', cell.title);
+            cell.addEventListener('click', () => {
+              state.x = px;
+              state.y = py;
+              updateImage();
+            });
+            grid.append(cell);
+          }
+        $('zoom-hint').textContent =
+          state.step === 1
+            ? '每格代表一个相邻的模拟像素；白色格线仅为观察辅助。'
+            : `每格取间隔 ${state.step} 个像素的一个样本，用于对比颜色变化；这不是连续像素的真实放大图。`;
+      }
+      function updateImage() {
+        drawPreview();
+        drawPixels();
+        let c = quantize(rawAt(state.x, state.y)),
+          raw = rawAt(state.x, state.y);
+        $('readout').innerHTML =
+          `选中像素 <strong>(${state.x}, ${state.y})</strong><br>原始 RGB：${rgbText(raw)}<br>按 ${state.depth} 位模式编码后的显示 RGB：<strong>${rgbText(c)}</strong>${state.depth === 32 ? '，A = 255' : ''}`;
+      }
+      function update() {
+        let [w, h] = $('resolution').value.split('x').map(Number);
+        state.w = w;
+        state.h = h;
+        state.depth = Number($('depth').value);
+        state.step = Number($('zoom').value);
+        state.buffers = $('double').checked ? 2 : 1;
+        state.color = $('objectColor').value;
+        state.x = Math.min(w - 1, Math.max(0, state.x));
+        state.y = Math.min(h - 1, Math.max(0, state.y));
+        let bytes = ((w * h * state.depth) / 8) * state.buffers;
+        const mib = (bytes / 1048576).toFixed(2);
+        $('memory').textContent = `约 ${mib} MiB`;
+        $('formula').textContent =
+          `${w.toLocaleString()} × ${h.toLocaleString()} × ${state.depth} ÷ 8 × ${state.buffers} = ${bytes.toLocaleString()} 字节（${(bytes / 1e6).toFixed(2)} MB）`;
+        $('depth-hint').textContent = depthHelp[state.depth];
+        updateImage();
+      }
+      ['resolution', 'depth', 'zoom', 'objectColor', 'double'].forEach((id) =>
+        $(id).addEventListener('input', update),
+      );
+      $('image').addEventListener('click', (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        state.x = Math.min(
+          state.w - 1,
+          Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * state.w)),
+        );
+        state.y = Math.min(
+          state.h - 1,
+          Math.max(0, Math.floor(((event.clientY - rect.top) / rect.height) * state.h)),
+        );
+        updateImage();
+      });
+      $('image').addEventListener('keydown', (e) => {
+        let move = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[
+          e.key
+        ];
+        if (move) {
+          e.preventDefault();
+          state.x = Math.max(0, Math.min(state.w - 1, state.x + move[0]));
+          state.y = Math.max(0, Math.min(state.h - 1, state.y + move[1]));
+          updateImage();
+        }
+      });
+      $('compare-res').onclick = () => {
+        $('resolution').value = '3840x2160';
+        update();
+      };
+      $('compare-depth').onclick = () => {
+        $('depth').value = '8';
+        update();
+      };
+      $('reset').onclick = () => {
+        $('resolution').value = '1280x720';
+        $('depth').value = '24';
+        $('zoom').value = '1';
+        $('double').checked = false;
+        $('objectColor').value = '#ef7548';
+        state.x = 665;
+        state.y = 360;
+        setPart('cpu');
+        update();
+      };
+      update();
+    </script>
+  </body>
+</html>
