@@ -1,1261 +1,1388 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="zh-CN">
-
-<head>
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
-  <title>计算机图形学 第一章(3) 图形绘制系统概述</title>
-  <link href="dist/reset.css" rel="stylesheet" />
-  <link href="dist/reveal.css" rel="stylesheet" />
-  <link href="plugin/highlight/monokai.css" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #f7f9fc;
-      --panel: #ffffff;
-      --panel2: #f2f6fb;
-      --text: #203044;
-      --muted: #5f7186;
-      --cyan: #157db8;
-      --blue: #2f64c8;
-      --amber: #9a5d00;
-      --green: #1e8a64;
-      --red: #c74b5a;
-      --line: rgba(30, 56, 96, .12)
-    }
-
-    * {
-      box-sizing: border-box
-    }
-
-    body {
-      background: var(--bg)
-    }
-
-    .reveal {
-      font-family: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-      color: var(--text)
-    }
-
-    .reveal .slides {
-      text-align: left
-    }
-
-    .reveal h1,
-    .reveal h2,
-    .reveal h3 {
-      text-transform: none;
-      letter-spacing: -.025em;
-      color: var(--text);
-      font-weight: 750
-    }
-
-    .reveal h1 {
-      font-size: 2.2em;
-      line-height: 1.08;
-      margin: .12em 0 .25em
-    }
-
-    .reveal h2 {
-      font-size: 1.55em;
-      line-height: 1.15;
-      margin: .1em 0 .4em
-    }
-
-    .reveal h3 {
-      font-size: 1.08em;
-      color: var(--cyan);
-      margin: .2em 0 .45em
-    }
-
-    .reveal p,
-    .reveal li {
-      font-size: .72em;
-      line-height: 1.55
-    }
-
-    .reveal ul {
-      margin: .25em 0 .25em 1.05em
-    }
-
-    .reveal li {
-      margin: .22em 0
-    }
-
-    .reveal strong {
-      color: #14345e
-    }
-
-    .reveal a {
-      color: var(--blue);
-      text-decoration: none
-    }
-
-    .reveal pre {
-      width: 100%;
-      font-size: .46em;
-      border-radius: 16px;
-      box-shadow: none;
-      border: 1px solid var(--line)
-    }
-
-    .reveal code {
-      max-height: 520px
-    }
-
-    .reveal section img {
-      border: 0;
-      box-shadow: none;
-      max-height: 560px;
-      object-fit: contain
-    }
-
-    .reveal table {
-      font-size: .62em;
-      border-collapse: separate;
-      border-spacing: 0;
-      width: 100%
-    }
-
-    .reveal th {
-      background: #dfeaf5;
-      color: var(--text);
-      padding: .55em .7em;
-      border-bottom: 1px solid var(--line)
-    }
-
-    .reveal td {
-      padding: .55em .7em;
-      border-bottom: 1px solid var(--line);
-      color: var(--text)
-    }
-
-    .slide-no {
-      position: absolute;
-      right: 0;
-      top: -5px;
-      font-size: .28em;
-      color: #8a97aa;
-      letter-spacing: .12em
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: .45em;
-      font-size: .38em;
-      font-weight: 700;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      margin-bottom: .75em
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 28px;
-      height: 3px;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--cyan), var(--blue))
-    }
-
-    .lead {
-      font-size: .92em !important;
-      line-height: 1.45 !important;
-      color: var(--text);
-      max-width: 1400px
-    }
-
-    .muted {
-      color: var(--muted) !important
-    }
-
-    .accent {
-      color: var(--cyan)
-    }
-
-    .amber {
-      color: var(--amber)
-    }
-
-    .green {
-      color: var(--green)
-    }
-
-    .red {
-      color: var(--red)
-    }
-
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 26px;
-      align-items: stretch
-    }
-
-    .grid3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
-      align-items: stretch
-    }
-
-    .grid4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      align-items: stretch
-    }
-
-    .card {
-      background: linear-gradient(180deg, #ffffff, #f7fafe);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 26px 28px;
-      box-shadow: 0 12px 28px rgba(31, 56, 88, .08)
-    }
-
-    .card h3 {
-      margin-top: 0
-    }
-
-    .kpi {
-      font-size: 1.5em;
-      font-weight: 800;
-      color: #14345e;
-      line-height: 1
-    }
-
-    .kicker {
-      font-size: .42em;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .13em;
-      font-weight: 700
-    }
-
-    .pill {
-      display: inline-block;
-      padding: .28em .65em;
-      border-radius: 999px;
-      background: rgba(21, 125, 184, .08);
-      border: 1px solid rgba(21, 125, 184, .2);
-      font-size: .42em;
-      color: var(--cyan);
-      font-weight: 700
-    }
-
-    .activity {
-      margin-top: 28px;
-      background: linear-gradient(135deg, rgba(21, 125, 184, .08), rgba(47, 100, 200, .04));
-      border: 1px solid rgba(21, 125, 184, .22);
-      border-left: 7px solid var(--cyan);
-      border-radius: 18px;
-      padding: 20px 24px
-    }
-
-    .activity.ai {
-      background: linear-gradient(135deg, rgba(30, 138, 100, .08), rgba(21, 125, 184, .03));
-      border-color: rgba(30, 138, 100, .22);
-      border-left-color: var(--green)
-    }
-
-    .activity .tag {
-      font-size: .34em;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--cyan)
-    }
-
-    .activity.ai .tag {
-      color: var(--green)
-    }
-
-    .activity p {
-      margin: .25em 0 0;
-      font-size: .58em
-    }
-
-    .timer {
-      float: right;
-      font-size: .88em;
-      color: var(--amber);
-      font-weight: 800
-    }
-
-    .flow {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 22px 0
-    }
-
-    .node {
-      min-width: 180px;
-      padding: 18px 20px;
-      border-radius: 18px;
-      background: #ffffff;
-      border: 1px solid rgba(30, 56, 96, .14);
-      text-align: center;
-      font-size: .58em;
-      font-weight: 700;
-      color: var(--text);
-      box-shadow: 0 8px 18px rgba(31, 56, 88, .06)
-    }
-
-    .node.primary {
-      background: linear-gradient(180deg, #edf7fc, #e8f0ff);
-      border-color: rgba(21, 125, 184, .28)
-    }
-
-    .node.ai {
-      background: linear-gradient(180deg, #eefaf5, #eef8fb);
-      border-color: rgba(30, 138, 100, .24)
-    }
-
-    .arrow {
-      font-size: .85em;
-      color: var(--cyan);
-      font-weight: 800
-    }
-
-    .media-shell {
-      height: 470px;
-      border-radius: 22px;
-      overflow: hidden;
-      background: #ffffff;
-      border: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      box-shadow: 0 10px 24px rgba(31, 56, 88, .06)
-    }
-
-    .media-shell img,
-    .media-shell video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #ffffff
-    }
-
-    .media-shell.cover img,
-    .media-shell.cover video {
-      object-fit: cover
-    }
-
-    .media-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 42px;
-      background: radial-gradient(circle at 50% 10%, rgba(21, 125, 184, .08), transparent 45%), #f2f6fb;
-      color: var(--muted)
-    }
-
-    .media-placeholder .icon {
-      font-size: 2em;
-      margin-bottom: .2em
-    }
-
-    .media-placeholder strong {
-      font-size: .58em;
-      color: #14345e
-    }
-
-    .media-placeholder small {
-      display: block;
-      max-width: 800px;
-      margin-top: .8em;
-      font-size: .33em;
-      line-height: 1.5;
-      color: #7a8899
-    }
-
-    .quote {
-      font-size: 1.05em !important;
-      line-height: 1.48 !important;
-      padding: 24px 30px;
-      border-left: 6px solid var(--cyan);
-      background: rgba(21, 125, 184, .06);
-      border-radius: 0 16px 16px 0
-    }
-
-    .title-slide {
-      height: 760px;
-      display: flex !important;
-      flex-direction: column;
-      justify-content: center
-    }
-
-    .title-slide::after {
-      content: "";
-      position: absolute;
-      inset: -80px -160px;
-      background: radial-gradient(circle at 80% 30%, rgba(21, 125, 184, .08), transparent 33%), radial-gradient(circle at 15% 80%, rgba(47, 100, 200, .06), transparent 28%);
-      z-index: -1
-    }
-
-    .title-mark {
-      font-size: .38em;
-      color: var(--muted);
-      margin-top: 1.2em
-    }
-
-    .question {
-      font-size: 1.18em !important;
-      line-height: 1.18 !important;
-      font-weight: 780;
-      max-width: 1400px
-    }
-
-    .big {
-      font-size: 1.22em !important
-    }
-
-    .micro {
-      font-size: .38em !important;
-      color: var(--muted)
-    }
-
-    .compare {
-      display: grid;
-      grid-template-columns: 1fr 90px 1fr;
-      gap: 18px;
-      align-items: center
-    }
-
-    .vs {
-      text-align: center;
-      font-size: 1.1em;
-      font-weight: 900;
-      color: var(--amber)
-    }
-
-    .check {
-      color: var(--green)
-    }
-
-    .warn {
-      color: var(--amber)
-    }
-
-    .footer-src {
-      position: absolute;
-      bottom: -22px;
-      left: 0;
-      font-size: .22em !important;
-      color: #8d98a8 !important;
-      max-width: 1450px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis
-    }
-
-    .timeline {
-      display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: 12px 20px;
-      align-items: center
-    }
-
-    .time {
-      font-size: .52em;
-      font-weight: 800;
-      color: var(--amber);
-      text-align: right
-    }
-
-    .event {
-      padding: 15px 20px;
-      background: #ffffff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      font-size: .55em;
-      box-shadow: 0 8px 18px rgba(31, 56, 88, .05)
-    }
-
-    .dotline {
-      position: absolute;
-      left: 151px;
-      top: 172px;
-      bottom: 95px;
-      border-left: 2px dashed rgba(154, 93, 0, .18);
-      z-index: -1
-    }
-
-    .badge-new {
-      display: inline-block;
-      background: rgba(30, 138, 100, .08);
-      border: 1px solid rgba(30, 138, 100, .22);
-      color: var(--green);
-      font-size: .3em;
-      font-weight: 800;
-      padding: .35em .55em;
-      border-radius: 7px;
-      vertical-align: middle;
-      letter-spacing: .06em
-    }
-
-
-
-    /* 有序步骤列表：避免默认编号跑出卡片边界 */
-    .card ol,
-    .step-list {
-      list-style: none;
-      counter-reset: demo-step;
-      margin: .35em 0 0;
-      padding: 0;
-    }
-
-    .card ol li,
-    .step-list li {
-      counter-increment: demo-step;
-      position: relative;
-      padding-left: 2.15em;
-      margin: .42em 0;
-      line-height: 1.38;
-    }
-
-    .card ol li::before,
-    .step-list li::before {
-      content: counter(demo-step) ".";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 1.55em;
-      text-align: right;
-      font-weight: 800;
-      color: var(--cyan);
-    }
-  </style>
-  <link href="css/classroom-large.css" rel="stylesheet" />
-</head>
-
-<body>
-  <div class="reveal">
-    <div class="slides">
-      <section>
-        <div class="title-slide">
-          <div class="eyebrow">Computer Graphics · Chapter 1 · 03</div>
-          <h1>图形绘制系统概述</h1>
-          <p class="lead fragment">CPU、图形 API、GPU 与绘制流水线：从模型数据到屏幕像素</p>
-          <div class="flow title-flow" style="justify-content:flex-start;margin-top:44px">
-            <div class="node fragment">CPU / Application</div>
-            <div class="arrow fragment">→</div>
-            <div class="node primary fragment">Graphics API</div>
-            <div class="arrow fragment">→</div>
-            <div class="node primary fragment">GPU Pipeline</div>
-            <div class="arrow fragment">→</div>
-            <div class="node fragment">Framebuffer / Display</div>
-          </div>
-          <aside class="notes">40 min · Demo观察 + 概念拆解 + API连接</aside>
-        </div>
-      </section>
-      <section>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>计算机图形学 第一章(3) 图形绘制系统概述</title>
+    <link href="dist/reset.css" rel="stylesheet" />
+    <link href="dist/reveal.css" rel="stylesheet" />
+    <link href="plugin/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.72em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.46em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1400px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .accent {
+        color: var(--cyan);
+      }
+
+      .amber {
+        color: var(--amber);
+      }
+
+      .green {
+        color: var(--green);
+      }
+
+      .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.18em !important;
+        line-height: 1.18 !important;
+        font-weight: 780;
+        max-width: 1400px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 90px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 有序步骤列表：避免默认编号跑出卡片边界 */
+      .card ol,
+      .step-list {
+        list-style: none;
+        counter-reset: demo-step;
+        margin: 0.35em 0 0;
+        padding: 0;
+      }
+
+      .card ol li,
+      .step-list li {
+        counter-increment: demo-step;
+        position: relative;
+        padding-left: 2.15em;
+        margin: 0.42em 0;
+        line-height: 1.38;
+      }
+
+      .card ol li::before,
+      .step-list li::before {
+        content: counter(demo-step) '.';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1.55em;
+        text-align: right;
+        font-weight: 800;
+        color: var(--cyan);
+      }
+    </style>
+    <link href="css/classroom-large.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
         <section>
-          <div class="eyebrow">Bridge-in · 0–4 min</div>
-          <h2>CPU 和 GPU 为什么要分工？</h2>
-          <div class="grid2 image-text">
-            <div class="media-shell gpu-system-shell fragment"><img alt="CPU 与 GPU 图形系统"
-                data-fallback="CPU 与 GPU 图形系统示意图"
-                data-prompt="现代计算机图形系统教学图：CPU负责应用与场景组织，Graphics API连接CPU与GPU，GPU负责大规模并行图形处理并输出到帧缓冲与显示器，浅色背景、蓝灰配色、16:9"
-                src="images/chap01/ch01-gemini-gsys.png" /></div>
-            <div class="card fragment">
-              <h3>上一课停在这里</h3>
-              <p>我们已经知道一幅图像来自<strong>对象 + 相机 + 光 / 材质</strong>。</p>
-              <p class="question">现在的问题是：这些描述怎样真正变成<strong class="accent">屏幕像素</strong>？</p>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 1 · 03</div>
+            <h1>图形绘制系统概述</h1>
+            <p class="lead fragment">CPU、图形 API、GPU 与绘制流水线：从模型数据到屏幕像素</p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 44px">
+              <div class="node fragment">CPU / Application</div>
+              <div class="arrow fragment">→</div>
+              <div class="node primary fragment">Graphics API</div>
+              <div class="arrow fragment">→</div>
+              <div class="node primary fragment">GPU Pipeline</div>
+              <div class="arrow fragment">→</div>
+              <div class="node fragment">Framebuffer / Display</div>
             </div>
-          </div>
-          <aside class="notes">
-            【参考答案】
-            CPU 负责高层逻辑与场景组织（如对象状态更新、资源管理、绘制指令提交），并通过 Graphics API 传递给 GPU；GPU 拥有海量并行核心，负责将顶点数据经几何变换、图元装配、光栅化和片元着色等管线步骤，高效计算出海量屏幕像素的颜色值并写入帧缓冲。
-          </aside>
-        </section>
-        <section>
-          <div class="eyebrow">Learning goals</div>
-          <h2>今天要把“从模型到像素”的黑盒打开</h2>
-          <div class="grid3 summary-grid">
-            <div class="card fragment">
-              <div class="kicker">01</div>
-              <h3>系统分工</h3>
-              <p>解释 CPU、Graphics API 与 GPU 的角色。</p>
-            </div>
-            <div class="card fragment">
-              <div class="kicker">02</div>
-              <h3>绘制流水线</h3>
-              <p>描述顶点、图元、片元到像素的核心步骤。</p>
-            </div>
-            <div class="card fragment">
-              <div class="kicker">03</div>
-              <h3>Demo验证</h3>
-              <p>用同一个多模型场景观察每个阶段的输入与输出。</p>
-            </div>
+            <aside class="notes">40 min · Demo观察 + 概念拆解 + API连接</aside>
           </div>
         </section>
         <section>
-          <div class="eyebrow">互动提问 1 / 4 · Pre-assessment</div>
-          <h2>给 GPU 三个顶点，为什么最终会出现一个三角形？</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>几何数据</h3>
-              <pre><code class="language-javascript">const points = new Float32Array([
+          <section>
+            <div class="eyebrow">Bridge-in · 0–4 min</div>
+            <h2>CPU 和 GPU 为什么要分工？</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell gpu-system-shell fragment">
+                <img
+                  alt="CPU 与 GPU 图形系统"
+                  data-fallback="CPU 与 GPU 图形系统示意图"
+                  data-prompt="现代计算机图形系统教学图：CPU负责应用与场景组织，Graphics API连接CPU与GPU，GPU负责大规模并行图形处理并输出到帧缓冲与显示器，浅色背景、蓝灰配色、16:9"
+                  src="images/chap01/ch01-gemini-gsys.png"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>上一课停在这里</h3>
+                <p>我们已经知道一幅图像来自<strong>对象 + 相机 + 光 / 材质</strong>。</p>
+                <p class="question">
+                  现在的问题是：这些描述怎样真正变成<strong class="accent">屏幕像素</strong>？
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              【参考答案】 CPU
+              负责高层逻辑与场景组织（如对象状态更新、资源管理、绘制指令提交），并通过 Graphics API
+              传递给 GPU；GPU
+              拥有海量并行核心，负责将顶点数据经几何变换、图元装配、光栅化和片元着色等管线步骤，高效计算出海量屏幕像素的颜色值并写入帧缓冲。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Learning goals</div>
+            <h2>今天要把“从模型到像素”的黑盒打开</h2>
+            <div class="grid3 summary-grid">
+              <div class="card fragment">
+                <div class="kicker">01</div>
+                <h3>系统分工</h3>
+                <p>解释 CPU、Graphics API 与 GPU 的角色。</p>
+              </div>
+              <div class="card fragment">
+                <div class="kicker">02</div>
+                <h3>绘制流水线</h3>
+                <p>描述顶点、图元、片元到像素的核心步骤。</p>
+              </div>
+              <div class="card fragment">
+                <div class="kicker">03</div>
+                <h3>Demo验证</h3>
+                <p>用同一个多模型场景观察每个阶段的输入与输出。</p>
+              </div>
+            </div>
+          </section>
+          <section>
+            <div class="eyebrow">互动提问 1 / 4 · Pre-assessment</div>
+            <h2>给 GPU 三个顶点，为什么最终会出现一个三角形？</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>几何数据</h3>
+                <pre><code class="language-javascript">const points = new Float32Array([
  -0.5, -0.5, 0.0,
   0.5, -0.5, 0.0,
   0.0,  0.5, 0.0
 ]);</code></pre>
-              <p>三个顶点只描述<strong>几何位置</strong>。</p>
+                <p>三个顶点只描述<strong>几何位置</strong>。</p>
+              </div>
+              <div class="card fragment">
+                <h3>屏幕需要的却是</h3>
+                <p class="question">大量离散位置上的<strong class="accent">像素颜色</strong></p>
+                <ul>
+                  <li>顶点在哪里？</li>
+                  <li>这三个点组成什么图元？</li>
+                  <li>图元覆盖哪些屏幕采样位置？</li>
+                  <li>最终颜色是什么？</li>
+                </ul>
+              </div>
             </div>
-            <div class="card fragment">
-              <h3>屏幕需要的却是</h3>
-              <p class="question">大量离散位置上的<strong class="accent">像素颜色</strong></p>
-              <ul>
-                <li>顶点在哪里？</li>
-                <li>这三个点组成什么图元？</li>
-                <li>图元覆盖哪些屏幕采样位置？</li>
-                <li>最终颜色是什么？</li>
-              </ul>
+            <div class="activity fragment">
+              <span class="tag">想一想</span><span class="timer">1 min</span>
+              <p>从“顶点数组”到“屏幕像素”，你认为至少需要经过哪三步？先写关键词，不求准确。</p>
             </div>
-          </div>
-          <div class="activity fragment"><span class="tag">想一想</span><span class="timer">1 min</span>
-            <p>从“顶点数组”到“屏幕像素”，你认为至少需要经过哪三步？先写关键词，不求准确。</p>
-          </div>
-          <aside class="notes">
-            【互动提问 1/4 参考答案】
-            1. 顶点处理（Vertex Processing）：顶点着色器将 3D 顶点坐标从模型/对象空间变换至屏幕裁剪空间；
-            2. 图元装配与光栅化（Primitive Assembly & Rasterization）：将顶点组装为三角形图元，并计算覆盖的屏幕离散采样点，生成候选片元（Fragment）；
-            3. 片元处理与写入（Fragment Processing & Tests/Blend）：片元着色器计算各点颜色，经深度测试与混合判断后最终写入帧缓冲输出像素。
-          </aside>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">System architecture · 4–9 min</div>
-          <h2>图形绘制体系结构：三层协作</h2>
-          <div class="grid3">
-            <div class="card fragment">
-              <h3>Application / CPU</h3>
-              <ul>
-                <li>响应输入、更新场景状态</li>
-                <li>组织几何、纹理和材质资源</li>
-                <li>决定何时提交绘制工作</li>
-              </ul>
-            </div>
-            <div class="card fragment">
-              <h3>Graphics API / Driver</h3>
-              <ul>
-                <li>定义应用如何访问 GPU</li>
-                <li>管理资源、状态、管线与命令</li>
-                <li>为不同软硬件提供标准化接口</li>
-              </ul>
-            </div>
-            <div class="card fragment">
-              <h3>GPU</h3>
-              <ul>
-                <li>大规模并行处理顶点与片元</li>
-                <li>执行光栅化、测试与混合</li>
-                <li>把结果写入帧缓冲</li>
-              </ul>
-            </div>
-          </div>
+            <aside class="notes">
+              【互动提问 1/4 参考答案】 1. 顶点处理（Vertex Processing）：顶点着色器将 3D
+              顶点坐标从模型/对象空间变换至屏幕裁剪空间； 2. 图元装配与光栅化（Primitive Assembly &
+              Rasterization）：将顶点组装为三角形图元，并计算覆盖的屏幕离散采样点，生成候选片元（Fragment）；
+              3. 片元处理与写入（Fragment Processing &
+              Tests/Blend）：片元着色器计算各点颜色，经深度测试与混合判断后最终写入帧缓冲输出像素。
+            </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Data &amp; operations</div>
-          <h2>CPU 向 GPU 传递两类东西：数据 + 操作</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>Data · 要画什么</h3>
-              <ul>
-                <li>顶点位置</li>
-                <li>颜色 / 法向量</li>
-                <li>纹理坐标</li>
-                <li>索引、纹理、材质参数……</li>
-              </ul>
+          <section>
+            <div class="eyebrow">System architecture · 4–9 min</div>
+            <h2>图形绘制体系结构：三层协作</h2>
+            <div class="grid3">
+              <div class="card fragment">
+                <h3>Application / CPU</h3>
+                <ul>
+                  <li>响应输入、更新场景状态</li>
+                  <li>组织几何、纹理和材质资源</li>
+                  <li>决定何时提交绘制工作</li>
+                </ul>
+              </div>
+              <div class="card fragment">
+                <h3>Graphics API / Driver</h3>
+                <ul>
+                  <li>定义应用如何访问 GPU</li>
+                  <li>管理资源、状态、管线与命令</li>
+                  <li>为不同软硬件提供标准化接口</li>
+                </ul>
+              </div>
+              <div class="card fragment">
+                <h3>GPU</h3>
+                <ul>
+                  <li>大规模并行处理顶点与片元</li>
+                  <li>执行光栅化、测试与混合</li>
+                  <li>把结果写入帧缓冲</li>
+                </ul>
+              </div>
             </div>
-            <div class="card fragment">
-              <h3>Operations · 怎样处理</h3>
-              <ul>
-                <li>模型怎样放置</li>
-                <li>相机怎样观察</li>
-                <li>怎样投影、裁剪</li>
-                <li>怎样着色、测试、混合……</li>
-              </ul>
+          </section>
+          <section>
+            <div class="eyebrow">Data &amp; operations</div>
+            <h2>CPU 向 GPU 传递两类东西：数据 + 操作</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Data · 要画什么</h3>
+                <ul>
+                  <li>顶点位置</li>
+                  <li>颜色 / 法向量</li>
+                  <li>纹理坐标</li>
+                  <li>索引、纹理、材质参数……</li>
+                </ul>
+              </div>
+              <div class="card fragment">
+                <h3>Operations · 怎样处理</h3>
+                <ul>
+                  <li>模型怎样放置</li>
+                  <li>相机怎样观察</li>
+                  <li>怎样投影、裁剪</li>
+                  <li>怎样着色、测试、混合……</li>
+                </ul>
+              </div>
             </div>
-          </div>
-          <p class="lead fragment" style="margin-top:30px">
-            整个图形体系结构，就是为了高效地<strong>传递数据</strong>和<strong>定义对数据的操作</strong>。</p>
+            <p class="lead fragment" style="margin-top: 30px">
+              整个图形体系结构，就是为了高效地<strong>传递数据</strong>和<strong>定义对数据的操作</strong>。
+            </p>
+          </section>
+          <section>
+            <div class="eyebrow">Why GPU?</div>
+            <h2>为什么图形计算天然适合 GPU？</h2>
+            <div class="grid3">
+              <div class="card fragment">
+                <div class="kpi fragment">2.07 M</div>
+                <p>1920 × 1080 像素 / 帧</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">124 M</div>
+                <p>约 1.24 亿像素 / 秒 @ 60 FPS</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">× many ops</div>
+                <p>变换、插值、纹理、光照、深度、混合……</p>
+              </div>
+            </div>
+            <p class="question fragment" style="margin-top: 42px">
+              大量元素执行相似计算 → <span class="accent">高吞吐并行处理</span> → GPU
+            </p>
+            <aside class="notes">
+              【参考答案】 因为图形渲染涉及海量像素与顶点（如 1080P/60FPS 每秒需处理超 1.2
+              亿像素），且绝大多数数据处理的计算逻辑完全相同（如矩阵变换、插值、光照计算）。GPU
+              拥有成千上万个并行核心，专为高吞吐量的 SIMD/SIMT 并行计算设计。
+            </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Why GPU?</div>
-          <h2>为什么图形计算天然适合 GPU？</h2>
-          <div class="grid3">
-            <div class="card fragment">
-              <div class="kpi fragment">2.07 M</div>
-              <p>1920 × 1080 像素 / 帧</p>
+          <section>
+            <div class="eyebrow">Demo · 课堂观察工具</div>
+            <h2>Demo：多模型绘制流水线逐阶段可视化</h2>
+            <div class="demo-card fragment">
+              <div>
+                <h3>D02｜绘制流水线逐阶段可视化</h3>
+                <p>
+                  这个 Demo 用一个包含立方体、棱锥和三角面板的场景，连续观察每个阶段的输入与输出。
+                </p>
+                <ul>
+                  <li>可调整模型旋转、相机绕场景旋转</li>
+                  <li>可改变裁剪窗口位置与宽度</li>
+                  <li>可观察片元生成、遮挡关系与深度测试</li>
+                </ul>
+              </div>
+              <a
+                class="demo-btn fragment"
+                data-placeholder="请在此处替换为实际 Demo 链接"
+                href="./Chap_demos/chap1/D02_绘制流水线数据追踪器.html"
+                target="_blank"
+                >打开 Demo</a
+              >
             </div>
-            <div class="card fragment">
-              <div class="kpi fragment">124 M</div>
-              <p>约 1.24 亿像素 / 秒 @ 60 FPS</p>
+            <aside class="notes">
+              Demo 链接为占位符：请将按钮 href 替换为实际课堂 Demo 地址；课堂只保留四次互动式提问。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Demo route</div>
+            <h2>Demo观察路线：不要逐页机械点击，要围绕三个问题看</h2>
+            <div class="demo-route">
+              <div class="route-item fragment">
+                <span>①</span><strong>坐标如何变化</strong
+                ><small>CPU数据 → Model → View → Projection</small>
+              </div>
+              <div class="route-item fragment">
+                <span>②</span><strong>哪些几何被保留</strong
+                ><small>Primitive Assembly → Clipping → NDC → Viewport</small>
+              </div>
+              <div class="route-item fragment">
+                <span>③</span><strong>哪些片元最终可见</strong
+                ><small>Rasterize → Fragment → Depth → Framebuffer</small>
+              </div>
             </div>
-            <div class="card fragment">
-              <div class="kpi fragment">× many ops</div>
-              <p>变换、插值、纹理、光照、深度、混合……</p>
-            </div>
-          </div>
-          <p class="question fragment" style="margin-top:42px">大量元素执行相似计算 → <span class="accent">高吞吐并行处理</span> → GPU
-          </p>
-          <aside class="notes">
-            【参考答案】
-            因为图形渲染涉及海量像素与顶点（如 1080P/60FPS 每秒需处理超 1.2 亿像素），且绝大多数数据处理的计算逻辑完全相同（如矩阵变换、插值、光照计算）。GPU 拥有成千上万个并行核心，专为高吞吐量的 SIMD/SIMT 并行计算设计。
-          </aside>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">Demo · 课堂观察工具</div>
-          <h2>Demo：多模型绘制流水线逐阶段可视化</h2>
-          <div class="demo-card fragment">
-            <div>
-              <h3>D02｜绘制流水线逐阶段可视化</h3>
-              <p>这个 Demo 用一个包含立方体、棱锥和三角面板的场景，连续观察每个阶段的输入与输出。</p>
-              <ul>
-                <li>可调整模型旋转、相机绕场景旋转</li>
-                <li>可改变裁剪窗口位置与宽度</li>
-                <li>可观察片元生成、遮挡关系与深度测试</li>
-              </ul>
-            </div>
-            <a class="demo-btn fragment" data-placeholder="请在此处替换为实际 Demo 链接" href="./Chap_demos/chap1/D02_绘制流水线数据追踪器.html"
-              target="_blank">打开 Demo</a>
-          </div>
-          <aside class="notes">Demo 链接为占位符：请将按钮 href 替换为实际课堂 Demo 地址；课堂只保留四次互动式提问。</aside>
-        </section>
-        <section>
-          <div class="eyebrow">Demo route</div>
-          <h2>Demo观察路线：不要逐页机械点击，要围绕三个问题看</h2>
-          <div class="demo-route">
-            <div class="route-item fragment"><span>①</span><strong>坐标如何变化</strong><small>CPU数据 → Model → View →
-                Projection</small></div>
-            <div class="route-item fragment"><span>②</span><strong>哪些几何被保留</strong><small>Primitive Assembly → Clipping → NDC →
-                Viewport</small></div>
-            <div class="route-item fragment"><span>③</span><strong>哪些片元最终可见</strong><small>Rasterize → Fragment → Depth →
-                Framebuffer</small></div>
-          </div>
-          <p class="lead fragment">下面的概念讲解与 Demo 观察一一对应：先看结果，再解释为什么。</p>
-          <aside class="notes">
-            【Demo思考路线参考答案】
-            ① 坐标变换：Model 矩阵将顶点变换到世界空间；View 矩阵变换到观察者空间；Projection 矩阵变换到裁剪空间。
-            ② 几何保留：Assembly 组装图元，Clipping 剔除视锥体外几何并在边界重新生成新顶点，透视除法得 NDC 坐标，Viewport 映射至屏幕空间。
-            ③ 片元可见：光栅化生成片元，Fragment Shader 计算着色，深度测试（Depth Test）剔除被遮挡的片元，保留者写入帧缓冲。
-          </aside>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">Pipeline overview · 9–15 min</div>
-          <h2>GPU 内部不是一个步骤，而是一条绘制流水线</h2>
-          <div class="media-shell pipeline-shell fragment"><img alt="图形绘制流水线" data-fallback="图形绘制流水线示意图"
-              data-prompt="现代GPU图形绘制流水线教学图：Vertex Input、Vertex Shader、Primitive Assembly、Clipping、Rasterization、Fragment Shader、Depth/Blend、Framebuffer，浅色背景、蓝灰色流程箭头、16:9"
-              src="images/chap01/ch01-graphics-pipeline.png" /></div>
-          <p class="lead fragment">同一种处理要作用于海量顶点和片元，因此<strong>流水线 + 并行</strong>能够提高吞吐量。</p>
+            <p class="lead fragment">
+              下面的概念讲解与 Demo 观察一一对应：先看结果，再解释为什么。
+            </p>
+            <aside class="notes">
+              【Demo思考路线参考答案】 ① 坐标变换：Model 矩阵将顶点变换到世界空间；View
+              矩阵变换到观察者空间；Projection 矩阵变换到裁剪空间。 ② 几何保留：Assembly
+              组装图元，Clipping 剔除视锥体外几何并在边界重新生成新顶点，透视除法得 NDC
+              坐标，Viewport 映射至屏幕空间。 ③ 片元可见：光栅化生成片元，Fragment Shader
+              计算着色，深度测试（Depth Test）剔除被遮挡的片元，保留者写入帧缓冲。
+            </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Pipeline map</div>
-          <h2>先记住“对象经历了什么”，暂时不追公式</h2>
-          <div class="pipeline-road">
-            <div class="pipe-stage programmable fragment"><span>01</span><strong>Vertex
-                Input</strong><small>顶点与属性进入GPU</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage programmable fragment"><span>02</span><strong>Vertex
-                Shader</strong><small>处理每个顶点</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage fragment"><span>03</span><strong>Assembly / Clip</strong><small>组成图元、保留可见部分</small>
+          <section>
+            <div class="eyebrow">Pipeline overview · 9–15 min</div>
+            <h2>GPU 内部不是一个步骤，而是一条绘制流水线</h2>
+            <div class="media-shell pipeline-shell fragment">
+              <img
+                alt="图形绘制流水线"
+                data-fallback="图形绘制流水线示意图"
+                data-prompt="现代GPU图形绘制流水线教学图：Vertex Input、Vertex Shader、Primitive Assembly、Clipping、Rasterization、Fragment Shader、Depth/Blend、Framebuffer，浅色背景、蓝灰色流程箭头、16:9"
+                src="images/chap01/ch01-graphics-pipeline.png"
+              />
             </div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage fragment"><span>04</span><strong>Rasterization</strong><small>图元 → 片元</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage programmable fragment"><span>05</span><strong>Fragment
-                Shader</strong><small>计算片元输出</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage fragment"><span>06</span><strong>Tests / Blend</strong><small>决定是否写入缓冲</small></div>
-          </div>
-          <div class="grid2" style="margin-top:24px">
-            <div class="card fragment">
-              <h3>可编程</h3>
-              <p>Vertex Shader、Fragment Shader 是本课程最直接控制的核心阶段。</p>
+            <p class="lead fragment">
+              同一种处理要作用于海量顶点和片元，因此<strong>流水线 + 并行</strong>能够提高吞吐量。
+            </p>
+          </section>
+          <section>
+            <div class="eyebrow">Pipeline map</div>
+            <h2>先记住“对象经历了什么”，暂时不追公式</h2>
+            <div class="pipeline-road">
+              <div class="pipe-stage programmable fragment">
+                <span>01</span><strong>Vertex Input</strong><small>顶点与属性进入GPU</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage programmable fragment">
+                <span>02</span><strong>Vertex Shader</strong><small>处理每个顶点</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage fragment">
+                <span>03</span><strong>Assembly / Clip</strong><small>组成图元、保留可见部分</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage fragment">
+                <span>04</span><strong>Rasterization</strong><small>图元 → 片元</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage programmable fragment">
+                <span>05</span><strong>Fragment Shader</strong><small>计算片元输出</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage fragment">
+                <span>06</span><strong>Tests / Blend</strong><small>决定是否写入缓冲</small>
+              </div>
             </div>
-            <div class="card fragment">
-              <h3>固定 / 配置</h3>
-              <p>组装、光栅化、深度测试、混合等主要由硬件与管线状态高效执行。</p>
+            <div class="grid2" style="margin-top: 24px">
+              <div class="card fragment">
+                <h3>可编程</h3>
+                <p>Vertex Shader、Fragment Shader 是本课程最直接控制的核心阶段。</p>
+              </div>
+              <div class="card fragment">
+                <h3>固定 / 配置</h3>
+                <p>组装、光栅化、深度测试、混合等主要由硬件与管线状态高效执行。</p>
+              </div>
             </div>
-          </div>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">互动提问 2 / 4 · Demo观察</div>
-          <h2>坐标变换：相机转动时，世界坐标改变了吗？</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>Demo操作</h3>
-              <ol class="step-list">
-                <li>打开 Demo，选择阶段 <strong>模型变换 Model</strong>。</li>
-                <li>调整“所选模型额外旋转”，观察世界坐标。</li>
-                <li>切换到 <strong>观察变换 View</strong>，调整“相机绕场景旋转”。</li>
-              </ol>
-            </div>
-            <div class="card fragment">
-              <h3>课堂提问</h3>
-              <p class="question">旋转相机后，模型的<strong>世界坐标</strong>是否改变？如果没有，为什么画面看起来发生了变化？</p>
-            </div>
-          </div>
-          <div class="activity fragment"><span class="tag">观察目标</span><span class="timer">2 min</span>
-            <p>区分 Model 矩阵改变的是对象姿态，View 矩阵改变的是观察方式。</p>
-          </div>
-          <aside class="notes">
-            【互动提问 2/4 参考答案】
-            1. 世界坐标未改变：Model 矩阵未改变，模型在世界空间中的绝对位置和姿态保持不变。
-            2. 画面变化原因：旋转相机改变了观察变换（View 矩阵），即改变了观察者坐标系。从相机视角来看，物体的相对坐标发生变化，导致投影到屏幕上的像素位置随之改变。
-          </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Vertex processing · 15–22 min</div>
-          <h2>顶点处理：同一个点，要经历多个坐标系统</h2>
-          <div class="grid2 image-text">
-            <div class="media-shell vertex-shell fragment"><img alt="顶点处理过程" data-fallback="顶点处理与坐标变换图"
-                data-prompt="计算机图形学顶点处理流程教学图：Object coordinates → World coordinates → Camera/View coordinates → Clip/Projection coordinates → Screen coordinates，配矩阵变换箭头，浅色背景、16:9"
-                src="images/chap01/ch01-vertex-processing.png" /></div>
-            <div class="card fragment">
-              <h3>核心任务</h3>
-              <ul>
-                <li>对象坐标 → 世界坐标</li>
-                <li>世界坐标 → 相机坐标</li>
-                <li>相机坐标 → 投影 / 裁剪空间</li>
-                <li>传递颜色、法向量、纹理坐标等属性</li>
-              </ul>
-              <p>每个坐标变换都可以表示成矩阵运算。</p>
+          <section>
+            <div class="eyebrow">互动提问 2 / 4 · Demo观察</div>
+            <h2>坐标变换：相机转动时，世界坐标改变了吗？</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="step-list">
+                  <li>打开 Demo，选择阶段 <strong>模型变换 Model</strong>。</li>
+                  <li>调整“所选模型额外旋转”，观察世界坐标。</li>
+                  <li>切换到 <strong>观察变换 View</strong>，调整“相机绕场景旋转”。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="question">
+                  旋转相机后，模型的<strong>世界坐标</strong>是否改变？如果没有，为什么画面看起来发生了变化？
+                </p>
+              </div>
             </div>
-          </div>
-          <div class="activity demo-think fragment"><span class="tag">Demo思考问题</span>
-            <p>在 Demo 的 Model / View / Projection 阶段中，同一个顶点的数值在哪一步开始因为“相机”而改变？这个改变说明了什么？</p>
-          </div>
-          <aside class="notes">
-            【Demo思考题参考答案】
-            1. 数值在 View（观察变换）阶段开始因相机改变；
-            2. 说明 Model 变换仅定义物体本身的定位与姿态（与观察者无关），而 View 变换建立以相机为参照系的相对坐标系。
-          </aside>
-        </section>
-        <section>
-          <div class="eyebrow">Programmable stage</div>
-          <h2>Vertex Shader：每个顶点独立执行一段小程序</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>输入</h3>
-              <p>顶点位置以及随顶点携带的属性。</p>
-              <p class="micro">例如：颜色、法向量、纹理坐标。</p>
+            <div class="activity fragment">
+              <span class="tag">观察目标</span><span class="timer">2 min</span>
+              <p>区分 Model 矩阵改变的是对象姿态，View 矩阵改变的是观察方式。</p>
             </div>
-            <div class="card fragment">
-              <h3>典型输出</h3>
-              <pre><code class="language-glsl">gl_Position = projection
+            <aside class="notes">
+              【互动提问 2/4 参考答案】 1. 世界坐标未改变：Model
+              矩阵未改变，模型在世界空间中的绝对位置和姿态保持不变。 2.
+              画面变化原因：旋转相机改变了观察变换（View
+              矩阵），即改变了观察者坐标系。从相机视角来看，物体的相对坐标发生变化，导致投影到屏幕上的像素位置随之改变。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Vertex processing · 15–22 min</div>
+            <h2>顶点处理：同一个点，要经历多个坐标系统</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell vertex-shell fragment">
+                <img
+                  alt="顶点处理过程"
+                  data-fallback="顶点处理与坐标变换图"
+                  data-prompt="计算机图形学顶点处理流程教学图：Object coordinates → World coordinates → Camera/View coordinates → Clip/Projection coordinates → Screen coordinates，配矩阵变换箭头，浅色背景、16:9"
+                  src="images/chap01/ch01-vertex-processing.png"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>核心任务</h3>
+                <ul>
+                  <li>对象坐标 → 世界坐标</li>
+                  <li>世界坐标 → 相机坐标</li>
+                  <li>相机坐标 → 投影 / 裁剪空间</li>
+                  <li>传递颜色、法向量、纹理坐标等属性</li>
+                </ul>
+                <p>每个坐标变换都可以表示成矩阵运算。</p>
+              </div>
+            </div>
+            <div class="activity demo-think fragment">
+              <span class="tag">Demo思考问题</span>
+              <p>
+                在 Demo 的 Model / View / Projection
+                阶段中，同一个顶点的数值在哪一步开始因为“相机”而改变？这个改变说明了什么？
+              </p>
+            </div>
+            <aside class="notes">
+              【Demo思考题参考答案】 1. 数值在 View（观察变换）阶段开始因相机改变； 2. 说明 Model
+              变换仅定义物体本身的定位与姿态（与观察者无关），而 View
+              变换建立以相机为参照系的相对坐标系。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Programmable stage</div>
+            <h2>Vertex Shader：每个顶点独立执行一段小程序</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>输入</h3>
+                <p>顶点位置以及随顶点携带的属性。</p>
+                <p class="micro">例如：颜色、法向量、纹理坐标。</p>
+              </div>
+              <div class="card fragment">
+                <h3>典型输出</h3>
+                <pre><code class="language-glsl">gl_Position = projection
             * view
             * model
             * position;</code></pre>
-              <p>最终必须产生用于后续裁剪和光栅化的位置。</p>
+                <p>最终必须产生用于后续裁剪和光栅化的位置。</p>
+              </div>
             </div>
-          </div>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">互动提问 3 / 4 · Demo观察</div>
-          <h2>裁剪：哪些几何被保留，哪些被舍弃？</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>Demo操作</h3>
-              <ol class="step-list">
-                <li>切换到 <strong>图元装配</strong>，观察三角形由哪些顶点组成。</li>
-                <li>切换到 <strong>裁剪 Clipping</strong>。</li>
-                <li>调整“裁剪窗口中心”和“裁剪窗口宽度”，必要时勾选“将面板推向裁剪边界”。</li>
-              </ol>
-            </div>
-            <div class="card fragment">
-              <h3>课堂提问</h3>
-              <p class="question">一个三角形跨越窗口边界时，是整个三角形被删除，还是只保留可见部分？这一步为什么不能等到最后像素阶段再做？</p>
-            </div>
-          </div>
-          <div class="activity fragment"><span class="tag">观察目标</span><span class="timer">2 min</span>
-            <p>理解图元装配、裁剪、透视除法、视口变换共同完成“可见范围到屏幕范围”的转换。</p>
-          </div>
-          <div class="activity demo-think fragment"><span class="tag">Demo思考问题</span>
-            <p>调窄裁剪窗口时，跨越边界的三角形是整体消失，还是被截出新的可见部分？这一步的输出仍然是三角形吗？</p>
-          </div>
-          <aside class="notes">
-            【互动提问 3/4 参考答案】
-            1. 只保留可见部分：跨越视锥体边界的图元在裁剪（Clipping）阶段被切割，边界处产生新顶点并重构为新的可见图元。
-            2. 提前裁剪的原因：几何阶段裁剪能及时剔除完全在视野外的图元，避免后续光栅化和片元着色器执行无意义的海量计算，极大节省 GPU 算力。
-          </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Primitive assembly</div>
-          <h2>三个顶点只是三个点：还必须说明它们怎样组成图元</h2>
-          <div class="grid3">
-            <div class="card fragment">
-              <div class="kpi fragment">POINTS</div>
-              <p>三个顶点 → 三个点</p>
+          <section>
+            <div class="eyebrow">互动提问 3 / 4 · Demo观察</div>
+            <h2>裁剪：哪些几何被保留，哪些被舍弃？</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="step-list">
+                  <li>切换到 <strong>图元装配</strong>，观察三角形由哪些顶点组成。</li>
+                  <li>切换到 <strong>裁剪 Clipping</strong>。</li>
+                  <li>调整“裁剪窗口中心”和“裁剪窗口宽度”，必要时勾选“将面板推向裁剪边界”。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="question">
+                  一个三角形跨越窗口边界时，是整个三角形被删除，还是只保留可见部分？这一步为什么不能等到最后像素阶段再做？
+                </p>
+              </div>
             </div>
-            <div class="card fragment">
-              <div class="kpi fragment">LINES</div>
-              <p>顶点按规则组成线段</p>
+            <div class="activity fragment">
+              <span class="tag">观察目标</span><span class="timer">2 min</span>
+              <p>理解图元装配、裁剪、透视除法、视口变换共同完成“可见范围到屏幕范围”的转换。</p>
             </div>
-            <div class="card fragment">
-              <div class="kpi fragment">TRIANGLES</div>
-              <p>三个顶点 → 一个三角形</p>
+            <div class="activity demo-think fragment">
+              <span class="tag">Demo思考问题</span>
+              <p>
+                调窄裁剪窗口时，跨越边界的三角形是整体消失，还是被截出新的可见部分？这一步的输出仍然是三角形吗？
+              </p>
             </div>
-          </div>
-          <p class="question fragment" style="margin-top:40px">同一组顶点数据，可以因为<strong
-              class="accent">图元类型</strong>不同而产生不同几何。</p>
+            <aside class="notes">
+              【互动提问 3/4 参考答案】 1.
+              只保留可见部分：跨越视锥体边界的图元在裁剪（Clipping）阶段被切割，边界处产生新顶点并重构为新的可见图元。
+              2.
+              提前裁剪的原因：几何阶段裁剪能及时剔除完全在视野外的图元，避免后续光栅化和片元着色器执行无意义的海量计算，极大节省
+              GPU 算力。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Primitive assembly</div>
+            <h2>三个顶点只是三个点：还必须说明它们怎样组成图元</h2>
+            <div class="grid3">
+              <div class="card fragment">
+                <div class="kpi fragment">POINTS</div>
+                <p>三个顶点 → 三个点</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">LINES</div>
+                <p>顶点按规则组成线段</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">TRIANGLES</div>
+                <p>三个顶点 → 一个三角形</p>
+              </div>
+            </div>
+            <p class="question fragment" style="margin-top: 40px">
+              同一组顶点数据，可以因为<strong class="accent">图元类型</strong>不同而产生不同几何。
+            </p>
+          </section>
+          <section>
+            <div class="eyebrow">Clipping · NDC · Viewport</div>
+            <h2>从“可见空间”到“屏幕窗口”</h2>
+            <div class="course-map imaging-map">
+              <div class="course-block fragment">
+                <span>01</span><strong>Clipping</strong><small>在裁剪空间中保留可见部分</small>
+              </div>
+              <div class="course-arrow fragment">→</div>
+              <div class="course-block fragment">
+                <span>02</span><strong>Perspective Divide</strong
+                ><small>x/w, y/w, z/w 得到 NDC</small>
+              </div>
+              <div class="course-arrow fragment">→</div>
+              <div class="course-block fragment">
+                <span>03</span><strong>Viewport</strong><small>NDC 映射到屏幕窗口坐标</small>
+              </div>
+              <div class="course-arrow fragment">→</div>
+              <div class="course-block fragment">
+                <span>04</span><strong>Rasterize</strong><small>准备转换为离散片元</small>
+              </div>
+            </div>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Clipping · NDC · Viewport</div>
-          <h2>从“可见空间”到“屏幕窗口”</h2>
-          <div class="course-map imaging-map">
-            <div class="course-block fragment"><span>01</span><strong>Clipping</strong><small>在裁剪空间中保留可见部分</small></div>
-            <div class="course-arrow fragment">→</div>
-            <div class="course-block fragment"><span>02</span><strong>Perspective Divide</strong><small>x/w, y/w, z/w 得到
-                NDC</small></div>
-            <div class="course-arrow fragment">→</div>
-            <div class="course-block fragment"><span>03</span><strong>Viewport</strong><small>NDC 映射到屏幕窗口坐标</small></div>
-            <div class="course-arrow fragment">→</div>
-            <div class="course-block fragment"><span>04</span><strong>Rasterize</strong><small>准备转换为离散片元</small></div>
-          </div>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">互动提问 4 / 4 · Demo观察</div>
-          <h2>片元、深度与帧缓存：Fragment 一定会显示吗？</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>Demo操作</h3>
-              <ol class="step-list">
-                <li>切换到 <strong>光栅化 Rasterize</strong>，观察候选片元。</li>
-                <li>切换到 <strong>片元着色 Fragment</strong>，观察片元颜色。</li>
-                <li>切换到 <strong>深度测试 Depth</strong>，降低“模拟绘制前已有深度”。</li>
-              </ol>
+          <section>
+            <div class="eyebrow">互动提问 4 / 4 · Demo观察</div>
+            <h2>片元、深度与帧缓存：Fragment 一定会显示吗？</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>Demo操作</h3>
+                <ol class="step-list">
+                  <li>切换到 <strong>光栅化 Rasterize</strong>，观察候选片元。</li>
+                  <li>切换到 <strong>片元着色 Fragment</strong>，观察片元颜色。</li>
+                  <li>切换到 <strong>深度测试 Depth</strong>，降低“模拟绘制前已有深度”。</li>
+                </ol>
+              </div>
+              <div class="card fragment">
+                <h3>课堂提问</h3>
+                <p class="question">
+                  片元着色器算出的颜色是否一定进入屏幕？如果两个模型投影到同一个位置，最终由什么决定谁可见？
+                </p>
+              </div>
             </div>
-            <div class="card fragment">
-              <h3>课堂提问</h3>
-              <p class="question">片元着色器算出的颜色是否一定进入屏幕？如果两个模型投影到同一个位置，最终由什么决定谁可见？</p>
+            <div class="activity fragment">
+              <span class="tag">观察目标</span><span class="timer">2 min</span>
+              <p>
+                建立关键区分：<strong>Fragment 是候选结果，Pixel 是最终写入帧缓存的结果。</strong>
+              </p>
             </div>
-          </div>
-          <div class="activity fragment"><span class="tag">观察目标</span><span class="timer">2 min</span>
-            <p>建立关键区分：<strong>Fragment 是候选结果，Pixel 是最终写入帧缓存的结果。</strong></p>
-          </div>
-          <div class="activity demo-think fragment"><span class="tag">Demo思考问题</span>
-            <p>切换到深度测试阶段并降低已有深度值：片元着色器已经算出的颜色为什么可能没有写入帧缓冲？</p>
-          </div>
-          <aside class="notes">
-            【互动提问 4/4 参考答案】
-            1. 不一定：片元（Fragment）仅是候选像素，必须通过深度测试、模板测试和混合等处理阶段后才能写入帧缓冲。
-            2. 可见性决定因素：由深度测试（Z-Buffer）决定。离相机更近（深度值更小）的片元通过测试覆盖已有像素；若深度值大于深度缓冲现有值，则该片元会被直接剔除（Discard），所算颜色不会写入帧缓冲。
-          </aside>
-        </section>
-        <section>
-          <div class="eyebrow">Rasterization</div>
-          <h2>光栅化：把连续几何覆盖转换成离散片元</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>输入</h3>
-              <p class="big">几何图元</p>
-              <p>例如屏幕空间中的一个三角形。</p>
+            <div class="activity demo-think fragment">
+              <span class="tag">Demo思考问题</span>
+              <p>
+                切换到深度测试阶段并降低已有深度值：片元着色器已经算出的颜色为什么可能没有写入帧缓冲？
+              </p>
             </div>
-            <div class="card fragment">
-              <h3>输出</h3>
-              <p class="big">Fragments</p>
-              <p>哪些采样位置被图元覆盖？各属性在这些位置是多少？</p>
+            <aside class="notes">
+              【互动提问 4/4 参考答案】 1.
+              不一定：片元（Fragment）仅是候选像素，必须通过深度测试、模板测试和混合等处理阶段后才能写入帧缓冲。
+              2.
+              可见性决定因素：由深度测试（Z-Buffer）决定。离相机更近（深度值更小）的片元通过测试覆盖已有像素；若深度值大于深度缓冲现有值，则该片元会被直接剔除（Discard），所算颜色不会写入帧缓冲。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Rasterization</div>
+            <h2>光栅化：把连续几何覆盖转换成离散片元</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>输入</h3>
+                <p class="big">几何图元</p>
+                <p>例如屏幕空间中的一个三角形。</p>
+              </div>
+              <div class="card fragment">
+                <h3>输出</h3>
+                <p class="big">Fragments</p>
+                <p>哪些采样位置被图元覆盖？各属性在这些位置是多少？</p>
+              </div>
             </div>
-          </div>
-          <div class="flow hero-flow">
-            <div class="node fragment">Triangle</div>
-            <div class="arrow fragment">→</div>
-            <div class="node primary fragment">Rasterizer</div>
-            <div class="arrow fragment">→</div>
-            <div class="node fragment">Many fragments</div>
-          </div>
-        </section>
-        <section>
-          <div class="eyebrow">Interpolation</div>
-          <h2>片元为什么能得到颜色、深度、纹理坐标？</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>顶点只给出端点属性</h3>
-              <p>A 红色、B 绿色、C 蓝色；或者三个顶点各自具有纹理坐标、深度等。</p>
+            <div class="flow hero-flow">
+              <div class="node fragment">Triangle</div>
+              <div class="arrow fragment">→</div>
+              <div class="node primary fragment">Rasterizer</div>
+              <div class="arrow fragment">→</div>
+              <div class="node fragment">Many fragments</div>
             </div>
-            <div class="card fragment">
-              <h3>光栅化阶段进行插值</h3>
-              <p>三角形内部每个片元获得连续变化的属性值，交给片元着色器继续处理。</p>
+          </section>
+          <section>
+            <div class="eyebrow">Interpolation</div>
+            <h2>片元为什么能得到颜色、深度、纹理坐标？</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>顶点只给出端点属性</h3>
+                <p>A 红色、B 绿色、C 蓝色；或者三个顶点各自具有纹理坐标、深度等。</p>
+              </div>
+              <div class="card fragment">
+                <h3>光栅化阶段进行插值</h3>
+                <p>三角形内部每个片元获得连续变化的属性值，交给片元着色器继续处理。</p>
+              </div>
             </div>
-          </div>
-          <aside class="notes">
-            【参考答案】
-            依靠光栅化过程中的线性/透视校正插值算法（如重心坐标插值）。顶点着色器输出各顶点属性，光栅化器计算片元在图元内部的相对位置后，对顶点属性进行内插，计算出内部各片元的专属属性。
-          </aside>
-        </section>
-        <section>
-          <div class="eyebrow">Fragment processing</div>
-          <h2>Fragment Shader：决定“这个片元输出什么”</h2>
-          <div class="grid2">
-            <div class="card fragment">
-              <h3>输入可能包括</h3>
-              <ul>
-                <li>插值颜色 / 法向量</li>
-                <li>纹理坐标</li>
-                <li>材质与光源参数</li>
-                <li>其他自定义数据</li>
-              </ul>
-            </div>
-            <div class="card fragment">
-              <h3>典型输出</h3>
-              <pre><code class="language-glsl">outColor = texture(tex, uv)
+            <aside class="notes">
+              【参考答案】
+              依靠光栅化过程中的线性/透视校正插值算法（如重心坐标插值）。顶点着色器输出各顶点属性，光栅化器计算片元在图元内部的相对位置后，对顶点属性进行内插，计算出内部各片元的专属属性。
+            </aside>
+          </section>
+          <section>
+            <div class="eyebrow">Fragment processing</div>
+            <h2>Fragment Shader：决定“这个片元输出什么”</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>输入可能包括</h3>
+                <ul>
+                  <li>插值颜色 / 法向量</li>
+                  <li>纹理坐标</li>
+                  <li>材质与光源参数</li>
+                  <li>其他自定义数据</li>
+                </ul>
+              </div>
+              <div class="card fragment">
+                <h3>典型输出</h3>
+                <pre><code class="language-glsl">outColor = texture(tex, uv)
          * lighting;</code></pre>
-              <p>最常见的输出是颜色，但现代 API 可以写入多个渲染目标。</p>
+                <p>最常见的输出是颜色，但现代 API 可以写入多个渲染目标。</p>
+              </div>
             </div>
-          </div>
+          </section>
+          <section>
+            <div class="eyebrow">Tests · Blend · Framebuffer</div>
+            <h2>Fragment ≠ Pixel：它还必须通过最后一组“筛选”</h2>
+            <div class="pipeline-final-flow">
+              <div class="pipe-stage fragment">
+                <strong>Fragment</strong><small>候选结果</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage fragment">
+                <strong>Depth / Stencil</strong><small>是否被遮挡？是否允许写入？</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage fragment">
+                <strong>Blend</strong><small>与已有颜色怎样组合？</small>
+              </div>
+              <div class="pipe-arrow fragment">→</div>
+              <div class="pipe-stage programmable fragment">
+                <strong>Framebuffer</strong><small>最终像素及深度等缓冲</small>
+              </div>
+            </div>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Tests · Blend · Framebuffer</div>
-          <h2>Fragment ≠ Pixel：它还必须通过最后一组“筛选”</h2>
-          <div class="pipeline-final-flow">
-            <div class="pipe-stage fragment"><strong>Fragment</strong><small>候选结果</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage fragment"><strong>Depth / Stencil</strong><small>是否被遮挡？是否允许写入？</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage fragment"><strong>Blend</strong><small>与已有颜色怎样组合？</small></div>
-            <div class="pipe-arrow fragment">→</div>
-            <div class="pipe-stage programmable fragment"><strong>Framebuffer</strong><small>最终像素及深度等缓冲</small></div>
-          </div>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">Graphics API · 31–35 min</div>
-          <h2>从程序员角度看，图形系统首先表现为一个 API</h2>
-          <div class="grid2 image-text">
-            <div class="media-shell api-shell fragment"><img alt="图形 API 与系统关系" data-fallback="图形 API 体系结构示意图"
-                data-prompt="应用程序、图形API、驱动、GPU之间关系的教学架构图，突出API屏蔽底层实现并把对象、相机、光源、材质等描述提交给图形系统，浅色背景、蓝灰配色、16:9"
-                src="images/chap01/ch01-gsysapi.png" /></div>
-            <div class="card fragment">
-              <h3>API 把高层概念映射到系统能力</h3>
-              <ul>
-                <li>对象 / 几何</li>
-                <li>观察者 / 相机</li>
-                <li>光源与材质</li>
-                <li>纹理、缓冲、着色器</li>
-                <li>绘制命令与系统状态</li>
-              </ul>
+          <section>
+            <div class="eyebrow">Graphics API · 31–35 min</div>
+            <h2>从程序员角度看，图形系统首先表现为一个 API</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell api-shell fragment">
+                <img
+                  alt="图形 API 与系统关系"
+                  data-fallback="图形 API 体系结构示意图"
+                  data-prompt="应用程序、图形API、驱动、GPU之间关系的教学架构图，突出API屏蔽底层实现并把对象、相机、光源、材质等描述提交给图形系统，浅色背景、蓝灰配色、16:9"
+                  src="images/chap01/ch01-gsysapi.png"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>API 把高层概念映射到系统能力</h3>
+                <ul>
+                  <li>对象 / 几何</li>
+                  <li>观察者 / 相机</li>
+                  <li>光源与材质</li>
+                  <li>纹理、缓冲、着色器</li>
+                  <li>绘制命令与系统状态</li>
+                </ul>
+              </div>
             </div>
-          </div>
-        </section>
-        <section>
-          <div class="eyebrow">Object description</div>
-          <h2>对象怎样进入 API？——最终仍要落到可处理的图元</h2>
-          <div class="grid4">
-            <div class="card fragment">
-              <div class="kpi fragment">0D</div>
-              <h3>Point</h3>
-              <p>点</p>
+          </section>
+          <section>
+            <div class="eyebrow">Object description</div>
+            <h2>对象怎样进入 API？——最终仍要落到可处理的图元</h2>
+            <div class="grid4">
+              <div class="card fragment">
+                <div class="kpi fragment">0D</div>
+                <h3>Point</h3>
+                <p>点</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">1D</div>
+                <h3>Line</h3>
+                <p>线段</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">2D</div>
+                <h3>Triangle</h3>
+                <p>多边形基础</p>
+              </div>
+              <div class="card fragment">
+                <div class="kpi fragment">Higher</div>
+                <h3>Curve / Surface</h3>
+                <p>最终常被离散为简单图元处理</p>
+              </div>
             </div>
-            <div class="card fragment">
-              <div class="kpi fragment">1D</div>
-              <h3>Line</h3>
-              <p>线段</p>
-            </div>
-            <div class="card fragment">
-              <div class="kpi fragment">2D</div>
-              <h3>Triangle</h3>
-              <p>多边形基础</p>
-            </div>
-            <div class="card fragment">
-              <div class="kpi fragment">Higher</div>
-              <h3>Curve / Surface</h3>
-              <p>最终常被离散为简单图元处理</p>
-            </div>
-          </div>
-          <p class="lead fragment" style="margin-top:28px">GPU 最喜欢规则、简单、数量巨大的数据；三角形因此成为实时图形最重要的基本图元。</p>
-        </section>
-        <section class="compact">
-          <div class="eyebrow">From old OpenGL to WebGL</div>
-          <h2>对象描述方式的演进：从“立即给顶点”到“把数组交给 GPU”</h2>
-          <div class="code-compare">
-            <div class="card fragment">
-              <h3>早期 OpenGL · Immediate Mode</h3>
-              <pre><code class="language-c">glBegin(GL_TRIANGLES);
+            <p class="lead fragment" style="margin-top: 28px">
+              GPU 最喜欢规则、简单、数量巨大的数据；三角形因此成为实时图形最重要的基本图元。
+            </p>
+          </section>
+          <section class="compact">
+            <div class="eyebrow">From old OpenGL to WebGL</div>
+            <h2>对象描述方式的演进：从“立即给顶点”到“把数组交给 GPU”</h2>
+            <div class="code-compare">
+              <div class="card fragment">
+                <h3>早期 OpenGL · Immediate Mode</h3>
+                <pre><code class="language-c">glBegin(GL_TRIANGLES);
 glVertex3f(0.0f, 0.0f, 0.0f);
 glVertex3f(0.0f, 1.0f, 0.0f);
 glVertex3f(0.0f, 0.0f, 1.0f);
 glEnd();</code></pre>
-              <p class="micro">概念直观，但已不是现代 OpenGL / WebGL 的主流组织方式。</p>
-            </div>
-            <div class="card fragment">
-              <h3>现代 GPU 数据方式</h3>
-              <pre><code class="language-javascript">const points = new Float32Array([
+                <p class="micro">概念直观，但已不是现代 OpenGL / WebGL 的主流组织方式。</p>
+              </div>
+              <div class="card fragment">
+                <h3>现代 GPU 数据方式</h3>
+                <pre><code class="language-javascript">const points = new Float32Array([
   0.0, 0.0, 0.0,
   0.0, 1.0, 0.0,
   0.0, 0.0, 1.0
 ]);
 // 上传到 GPU buffer</code></pre>
-              <p class="micro">批量存储数据，再用 draw call 告诉 GPU 如何解释与绘制。</p>
+                <p class="micro">批量存储数据，再用 draw call 告诉 GPU 如何解释与绘制。</p>
+              </div>
             </div>
-          </div>
+          </section>
+          <section>
+            <div class="eyebrow">Camera description</div>
+            <h2>相机怎样进入 API？——把上一课的概念变成参数</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell camera-api-shell fragment">
+                <img
+                  alt="相机参数"
+                  data-fallback="虚拟相机参数示意图"
+                  data-prompt="计算机图形学虚拟相机参数示意图：camera position、view direction、up vector、field of view、aspect ratio、near/far planes，浅色背景、蓝灰线条、16:9"
+                  src="images/chap01/ch01-camspec.png"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>典型需要指定</h3>
+                <ul>
+                  <li>位置与方向</li>
+                  <li>上方向 / 相机姿态</li>
+                  <li>FOV 或投影参数</li>
+                  <li>宽高比</li>
+                  <li>Near / Far 裁剪范围</li>
+                </ul>
+                <p>于是“相机”最终也变成 GPU 可执行的<strong>矩阵与参数</strong>。</p>
+              </div>
+            </div>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Camera description</div>
-          <h2>相机怎样进入 API？——把上一课的概念变成参数</h2>
-          <div class="grid2 image-text">
-            <div class="media-shell camera-api-shell fragment"><img alt="相机参数" data-fallback="虚拟相机参数示意图"
-                data-prompt="计算机图形学虚拟相机参数示意图：camera position、view direction、up vector、field of view、aspect ratio、near/far planes，浅色背景、蓝灰线条、16:9"
-                src="images/chap01/ch01-camspec.png" /></div>
-            <div class="card fragment">
-              <h3>典型需要指定</h3>
-              <ul>
-                <li>位置与方向</li>
-                <li>上方向 / 相机姿态</li>
-                <li>FOV 或投影参数</li>
-                <li>宽高比</li>
-                <li>Near / Far 裁剪范围</li>
-              </ul>
-              <p>于是“相机”最终也变成 GPU 可执行的<strong>矩阵与参数</strong>。</p>
+          <section>
+            <div class="eyebrow">API evolution · 35–37 min</div>
+            <h2>
+              WebGL 仍是学习主线，WebGPU 是必须认识的新方向 <span class="badge-new">2026</span>
+            </h2>
+            <div class="compare">
+              <div class="card fragment">
+                <h3>WebGL 2</h3>
+                <ul>
+                  <li>教材 8E 的主要实验环境</li>
+                  <li>适合学习经典可编程图形流水线</li>
+                  <li>浏览器中广泛可用</li>
+                </ul>
+              </div>
+              <div class="vs fragment">→</div>
+              <div class="card fragment">
+                <h3>WebGPU</h3>
+                <ul>
+                  <li>面向现代 GPU 架构的 Web API</li>
+                  <li>同时支持 Render + Compute</li>
+                  <li>资源、管线和命令组织更显式</li>
+                </ul>
+              </div>
             </div>
-          </div>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">API evolution · 35–37 min</div>
-          <h2>WebGL 仍是学习主线，WebGPU 是必须认识的新方向 <span class="badge-new">2026</span></h2>
-          <div class="compare">
-            <div class="card fragment">
-              <h3>WebGL 2</h3>
-              <ul>
-                <li>教材 8E 的主要实验环境</li>
-                <li>适合学习经典可编程图形流水线</li>
-                <li>浏览器中广泛可用</li>
-              </ul>
+            <p class="micro fragment">
+              WebGPU 当前由 W3C 推进；本课程仍以 WebGL 2 作为掌握经典图形学原理的主要实验工具。
+            </p>
+          </section>
+          <section>
+            <div class="eyebrow">What stays stable?</div>
+            <h2>API 会变，但哪些知识不会轻易过时？</h2>
+            <div class="grid4 summary-grid">
+              <div class="card fragment">
+                <h3>数据</h3>
+                <p>顶点、纹理、缓冲</p>
+              </div>
+              <div class="card fragment">
+                <h3>坐标</h3>
+                <p>变换、观察、投影</p>
+              </div>
+              <div class="card fragment">
+                <h3>流水线</h3>
+                <p>顶点 → 图元 → 片元</p>
+              </div>
+              <div class="card fragment">
+                <h3>并行思维</h3>
+                <p>大量元素执行相似计算</p>
+              </div>
             </div>
-            <div class="vs fragment">→</div>
-            <div class="card fragment">
-              <h3>WebGPU</h3>
-              <ul>
-                <li>面向现代 GPU 架构的 Web API</li>
-                <li>同时支持 Render + Compute</li>
-                <li>资源、管线和命令组织更显式</li>
-              </ul>
-            </div>
-          </div>
-          <p class="micro fragment">WebGPU 当前由 W3C 推进；本课程仍以 WebGL 2 作为掌握经典图形学原理的主要实验工具。</p>
-        </section>
-        <section>
-          <div class="eyebrow">What stays stable?</div>
-          <h2>API 会变，但哪些知识不会轻易过时？</h2>
-          <div class="grid4 summary-grid">
-            <div class="card fragment">
-              <h3>数据</h3>
-              <p>顶点、纹理、缓冲</p>
-            </div>
-            <div class="card fragment">
-              <h3>坐标</h3>
-              <p>变换、观察、投影</p>
-            </div>
-            <div class="card fragment">
-              <h3>流水线</h3>
-              <p>顶点 → 图元 → 片元</p>
-            </div>
-            <div class="card fragment">
-              <h3>并行思维</h3>
-              <p>大量元素执行相似计算</p>
-            </div>
-          </div>
-          <aside class="notes">
-            【参考答案】
-            图形学底层通用核心概念不会过时：1. 几何与顶点数据表示；2. 3D 空间变换与坐标系（MV Matrix）；3. 绘制管线核心流程（Vertex → Assembly → Rasterize → Fragment → Tests）；4. GPU 海量并行与数据批处理计算思维。
-          </aside>
-        </section>
-      </section>
-      <section>
-        <section>
-          <div class="eyebrow">Summary · 37–40 min</div>
-          <h2>本课内容总结：从应用程序到屏幕像素</h2>
-          <div class="grid4 summary-grid">
-            <div class="card fragment">
-              <div class="kicker">01</div>
-              <h3>系统分工</h3>
-              <p>CPU 组织任务，API 提供接口，GPU 高并行执行。</p>
-            </div>
-            <div class="card fragment">
-              <div class="kicker">02</div>
-              <h3>几何阶段</h3>
-              <p>顶点变换、投影、图元组装与裁剪。</p>
-            </div>
-            <div class="card fragment">
-              <div class="kicker">03</div>
-              <h3>像素阶段</h3>
-              <p>光栅化产生片元，着色、测试后写入帧缓冲。</p>
-            </div>
-            <div class="card fragment">
-              <div class="kicker">04</div>
-              <h3>Demo验证</h3>
-              <p>用同一场景观察每个阶段的输入与输出。</p>
-            </div>
-          </div>
+            <aside class="notes">
+              【参考答案】 图形学底层通用核心概念不会过时：1. 几何与顶点数据表示；2. 3D
+              空间变换与坐标系（MV Matrix）；3. 绘制管线核心流程（Vertex → Assembly → Rasterize →
+              Fragment → Tests）；4. GPU 海量并行与数据批处理计算思维。
+            </aside>
+          </section>
         </section>
         <section>
-          <div class="eyebrow">Chapter 1 map</div>
-          <h2>第一章最终地图：三节课连成一条完整链</h2>
-          <div class="flow chapter-map-flow">
-            <div class="node fragment">Scene / Model</div>
-            <div class="arrow fragment">→</div>
-            <div class="node fragment">Camera + Light / Material</div>
-            <div class="arrow fragment">→</div>
-            <div class="node fragment">Application / API</div>
-            <div class="arrow fragment">→</div>
-            <div class="node primary fragment">GPU Pipeline</div>
-            <div class="arrow fragment">→</div>
-            <div class="node fragment">Framebuffer</div>
-            <div class="arrow fragment">→</div>
-            <div class="node primary fragment">Image</div>
-          </div>
-          <p class="question fragment" style="margin-top:42px">从下一章开始：<span class="accent">真正让第一个三角形出现在浏览器里。</span></p>
+          <section>
+            <div class="eyebrow">Summary · 37–40 min</div>
+            <h2>本课内容总结：从应用程序到屏幕像素</h2>
+            <div class="grid4 summary-grid">
+              <div class="card fragment">
+                <div class="kicker">01</div>
+                <h3>系统分工</h3>
+                <p>CPU 组织任务，API 提供接口，GPU 高并行执行。</p>
+              </div>
+              <div class="card fragment">
+                <div class="kicker">02</div>
+                <h3>几何阶段</h3>
+                <p>顶点变换、投影、图元组装与裁剪。</p>
+              </div>
+              <div class="card fragment">
+                <div class="kicker">03</div>
+                <h3>像素阶段</h3>
+                <p>光栅化产生片元，着色、测试后写入帧缓冲。</p>
+              </div>
+              <div class="card fragment">
+                <div class="kicker">04</div>
+                <h3>Demo验证</h3>
+                <p>用同一场景观察每个阶段的输入与输出。</p>
+              </div>
+            </div>
+          </section>
+          <section>
+            <div class="eyebrow">Chapter 1 map</div>
+            <h2>第一章最终地图：三节课连成一条完整链</h2>
+            <div class="flow chapter-map-flow">
+              <div class="node fragment">Scene / Model</div>
+              <div class="arrow fragment">→</div>
+              <div class="node fragment">Camera + Light / Material</div>
+              <div class="arrow fragment">→</div>
+              <div class="node fragment">Application / API</div>
+              <div class="arrow fragment">→</div>
+              <div class="node primary fragment">GPU Pipeline</div>
+              <div class="arrow fragment">→</div>
+              <div class="node fragment">Framebuffer</div>
+              <div class="arrow fragment">→</div>
+              <div class="node primary fragment">Image</div>
+            </div>
+            <p class="question fragment" style="margin-top: 42px">
+              从下一章开始：<span class="accent">真正让第一个三角形出现在浏览器里。</span>
+            </p>
+          </section>
         </section>
-      </section>
+      </div>
     </div>
-  </div>
-  <script src="dist/reveal.js"></script>
-  <script src="plugin/zoom/zoom.js"></script>
-  <script src="plugin/notes/notes.js"></script>
-  <script src="plugin/search/search.js"></script>
-  <script src="plugin/highlight/highlight.js"></script>
-  <script>
-    function fallbackMedia(el) {
-      const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
-      const title = el.dataset.fallback || '素材占位';
-      const shell = el.closest('.media-shell') || el.parentElement;
-      shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
-    }
-    document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach(el => { el.addEventListener('error', () => fallbackMedia(el), { once: true }); });
-    Reveal.initialize({
-      width: 1600, height: 900, margin: 0.055, minScale: 0.2, maxScale: 1.5,
-      controls: true, progress: true, slideNumber: 'c/t', history: false, center: true, touch: true,
-      transition: 'fade', backgroundTransition: 'fade', hash: false,
-      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight]
-    });
-  </script>
-</body>
-
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/search/search.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        history: false,
+        center: true,
+        touch: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight],
+      });
+    </script>
+  </body>
 </html>
