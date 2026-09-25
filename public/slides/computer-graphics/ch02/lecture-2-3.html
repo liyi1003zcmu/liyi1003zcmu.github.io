@@ -1,0 +1,1841 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>计算机图形学 第二章(3) 完整WebGL程序</title>
+    <link rel="stylesheet" href="/vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.72em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.46em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1400px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .accent {
+        color: var(--cyan);
+      }
+
+      .amber {
+        color: var(--amber);
+      }
+
+      .green {
+        color: var(--green);
+      }
+
+      .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-3-1 Code Puzzle 美化样式 */
+      .code-puzzle {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin: 24px 0 20px;
+      }
+
+      .puzzle-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #ffffff 0%, #f6fafe 100%);
+        border: 1.5px solid rgba(21, 125, 184, 0.2);
+        border-radius: 18px;
+        box-shadow: 0 8px 20px rgba(31, 56, 88, 0.06);
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .puzzle-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 5px;
+        background: linear-gradient(180deg, var(--cyan), var(--blue));
+        border-radius: 4px 0 0 4px;
+      }
+
+      .puzzle-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--cyan), #1462a5);
+        color: #ffffff;
+        font-size: 0.88em;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(21, 125, 184, 0.3);
+        flex-shrink: 0;
+        font-family: inherit;
+      }
+
+      .puzzle-content {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        text-align: left;
+      }
+
+      .puzzle-title {
+        font-size: 0.62em;
+        font-weight: 700;
+        color: #14345e;
+        line-height: 1.35;
+      }
+
+      .puzzle-title code {
+        font-size: 0.95em;
+        color: var(--cyan);
+        background: rgba(21, 125, 184, 0.08);
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+
+      .puzzle-sub {
+        font-size: 0.44em;
+        color: var(--muted);
+        line-height: 1.25;
+        font-weight: 500;
+      }
+
+      .puzzle-answer {
+        margin-top: 14px;
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1.5px solid rgba(30, 138, 100, 0.28);
+        border-left: 6px solid var(--green);
+        border-radius: 16px;
+        padding: 12px 20px;
+        box-shadow: 0 6px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .answer-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
+
+      .answer-header .pill {
+        background: rgba(30, 138, 100, 0.12);
+        border-color: rgba(30, 138, 100, 0.28);
+        color: var(--green);
+        font-size: 0.42em;
+        font-weight: 800;
+      }
+
+      .answer-chain {
+        font-size: 0.58em;
+        color: #14345e;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+
+      .answer-note {
+        margin: 0;
+        font-size: 0.48em;
+        line-height: 1.4;
+        color: #334e68;
+      }
+
+      .answer-note strong {
+        color: #14345e;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 90px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      .reveal :not(pre) > code {
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        padding: 0.15em 0.4em;
+        border-radius: 6px;
+        font-family: Consolas, Monaco, 'Courier New', monospace;
+        font-size: 0.88em;
+      }
+    </style>
+    <link rel="stylesheet" href="../shared/classroom-large.css" />
+    <style>
+      /* =========================================================
+       大屏教学代码块与行号专属增强（字号加大、暗色背景高对比度）
+       ========================================================= */
+      .reveal pre {
+        width: 100% !important;
+        font-size: 0.68em !important;
+        line-height: 1.45 !important;
+        margin: 0.4em 0 !important;
+        border-radius: 14px !important;
+        background: #181d28 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28) !important;
+        overflow-x: auto !important;
+      }
+
+      .reveal .compact pre {
+        font-size: 0.64em !important;
+        line-height: 1.4 !important;
+      }
+
+      .reveal pre code {
+        display: block !important;
+        padding: 16px 20px !important;
+        font-family: Consolas, Monaco, 'Courier New', monospace !important;
+        tab-size: 2 !important;
+        background: #181d28 !important;
+        color: #f1f5f9 !important;
+        font-size: 1em !important;
+        line-height: inherit !important;
+        max-height: none !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+      }
+
+      /* 阻断 .reveal table 造成的字号二次缩小，固定列宽以支持自动换行 */
+      .reveal table.hljs-ln,
+      .reveal pre table,
+      .reveal .hljs-ln {
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        font-size: 1em !important;
+        background: transparent !important;
+      }
+
+      .reveal .hljs-ln tr {
+        border: none !important;
+        background: transparent !important;
+      }
+
+      .reveal .hljs-ln td {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        vertical-align: top !important;
+        font-size: 1em !important;
+        line-height: inherit !important;
+        color: #f1f5f9 !important;
+      }
+
+      /* 行号列：行号后加 ". " 区分代码，等宽右对齐，禁止行号自身折行 */
+      .reveal .hljs-ln-numbers {
+        width: 3.2em !important;
+        min-width: 3.2em !important;
+        max-width: 3.8em !important;
+        text-align: right !important;
+        padding-right: 0.7em !important;
+        color: #64748b !important;
+        user-select: none !important;
+        font-variant-numeric: tabular-nums !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        font-family: Consolas, Monaco, 'Courier New', monospace !important;
+        opacity: 0.85 !important;
+        white-space: nowrap !important;
+        vertical-align: top !important;
+      }
+
+      .reveal .hljs-ln-n:before,
+      .reveal .hljs-ln-n::before {
+        content: attr(data-line-number) '. ' !important;
+      }
+
+      /* 代码正文列：高对比度、空间溢出时自动换行并对齐 */
+      .reveal .hljs-ln-code {
+        padding-left: 0.85em !important;
+        padding-right: 0.5em !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        text-align: left !important;
+        color: #f1f5f9 !important;
+        font-family: Consolas, Monaco, 'Courier New', monospace !important;
+        vertical-align: top !important;
+      }
+
+      /* -------------------------------------------------------------
+       语法高亮色彩明度强化（彻底解决黑色背景下文字/数字/标点看不清）
+       ------------------------------------------------------------- */
+      /* 关键字（var, function, if, else, return, new 等） */
+      .reveal pre code .hljs-keyword,
+      .reveal pre code .hljs-selector-tag {
+        color: #ff7b72 !important;
+        font-weight: 700 !important;
+      }
+
+      /* 字面常量、布尔值（true, false, null 等） */
+      .reveal pre code .hljs-literal {
+        color: #ff7b72 !important;
+        font-weight: 700 !important;
+      }
+
+      /* 数字（0.5, -0.5, 1.0, 0, 4 等）：极其重要，补充原主题缺失的高亮规则 */
+      .reveal pre code .hljs-number {
+        color: #d2a8ff !important;
+        font-weight: 600 !important;
+      }
+
+      /* 字符串 */
+      .reveal pre code .hljs-string,
+      .reveal pre code .hljs-template-variable {
+        color: #7ee787 !important;
+      }
+
+      /* 内置对象与系统函数（document, getElementById, Float32Array 等） */
+      .reveal pre code .hljs-built_in,
+      .reveal pre code .hljs-builtin-name {
+        color: #79c0ff !important;
+      }
+
+      /* 函数声明与自定义调用名（init, render, divideTriangle 等） */
+      .reveal pre code .hljs-title,
+      .reveal pre code .hljs-title.function_,
+      .reveal pre code .hljs-function {
+        color: #66d9ef !important;
+        font-weight: 600 !important;
+      }
+
+      /* 类型名称（GLSL: vec2, vec4, void, float, in, out 等） */
+      .reveal pre code .hljs-type {
+        color: #56b6c2 !important;
+        font-weight: 600 !important;
+      }
+
+      /* 预编译指令与宏（#version 300 es, "use strict"）：高亮暖金色 */
+      .reveal pre code .hljs-meta {
+        color: #ffa657 !important;
+        font-weight: 700 !important;
+      }
+
+      /* 注释（// midpoints 等）：使用易读的浅蓝灰色，不再发暗发黑 */
+      .reveal pre code .hljs-comment,
+      .reveal pre code .hljs-quote {
+        color: #94a3b8 !important;
+        font-style: italic !important;
+      }
+
+      /* HTML 标签名 */
+      .reveal pre code .hljs-tag,
+      .reveal pre code .hljs-name {
+        color: #ff7b72 !important;
+      }
+
+      /* HTML 属性名 */
+      .reveal pre code .hljs-attr,
+      .reveal pre code .hljs-attribute {
+        color: #e5c07b !important;
+      }
+
+      /* 变量与属性访问 */
+      .reveal pre code .hljs-variable,
+      .reveal pre code .hljs-property {
+        color: #f1f5f9 !important;
+      }
+
+      /* 实验问答交互卡片：问题先行呈现，答案附带专属标签与强调框后出 */
+      .reveal .answer-box {
+        margin-top: 18px;
+        padding: 16px 22px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.25);
+        border-left: 6px solid var(--green);
+        box-shadow: 0 6px 16px rgba(30, 138, 100, 0.06);
+      }
+
+      .reveal .answer-box .ans-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.46em;
+        font-weight: 800;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      }
+
+      .reveal .answer-box p {
+        margin: 0;
+        font-size: 0.74em;
+        line-height: 1.46;
+        color: var(--text);
+      }
+
+      /* sec-11-2 七个核心词概念卡片排版（禁止词内折行、字号与间距优化） */
+      .reveal .concept-tokens {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        align-items: center;
+        margin: 32px 0 28px;
+      }
+
+      .reveal .token-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      .reveal .concept-chip {
+        padding: 14px 30px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff, #f4f8fc);
+        border: 1.5px solid rgba(21, 125, 184, 0.22);
+        box-shadow: 0 8px 22px rgba(31, 56, 88, 0.08);
+        color: #14345e;
+        font-size: 0.9em;
+        font-weight: 800;
+        white-space: nowrap !important; /* 彻底杜绝 Vertex Shader 等词内拆分 */
+        letter-spacing: -0.01em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .reveal .concept-chip.programmable {
+        background: linear-gradient(180deg, #eef7fc, #eaf3ff);
+        border-color: rgba(21, 125, 184, 0.38);
+        color: var(--cyan);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 2 · 03</div>
+            <h1>一个完整的 WebGL 程序怎样运行起来？</h1>
+            <p class="lead fragment fade-up">
+              Canvas · Context · Shader · Buffer · Attribute · Draw Call
+            </p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 42px">
+              <div class="node fragment fade-up">HTML / Canvas</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">JavaScript</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">WebGL / GPU</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Pixels</div>
+            </div>
+            <aside class="notes">
+              <p class="title-mark fragment fade-up">
+                40 min · 代码拼图 + 现场修改 + Bug Hunt + AI协作调试
+              </p>
+            </aside>
+          </div>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" class="">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · 0–4 min</div>
+            <h2>目标只有一个：让浏览器画出一个正方形</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell square-shell fragment fade-up">
+                <img
+                  alt="WebGL正方形示例"
+                  data-fallback="WebGL正方形示例"
+                  data-prompt="浏览器Canvas中一个简单彩色正方形，浅色背景，16:9"
+                  src="images/chap01/ch01-demo2.png"
+                />
+              </div>
+              <div class="card fragment fade-up">
+                <h3>请先别看代码</h3>
+                <p class="question">要让这个图形出现，你认为至少需要哪些“角色”和“工具”？</p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">快速列举</span><span class="timer">90 s</span>
+              <p>HTML、Canvas、JavaScript、顶点数据、Shader……还能想到什么？</p>
+            </div>
+          </section>
+          <section id="sec-2-2" class="">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Program anatomy</div>
+            <h2>完整程序的六个角色</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>HTML / Canvas</h3>
+                <p>提供页面与绘图表面</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>JavaScript</h3>
+                <p>组织程序、资源与调用</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Vertex Data</h3>
+                <p>顶点位置/颜色等</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Shader</h3>
+                <p>GPU执行的程序</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Buffer / Attribute</h3>
+                <p>上传并解释数据</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Draw Call</h3>
+                <p>触发绘制</p>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" class="">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Pre-assessment · 4–9 min</div>
+            <h2>代码拼图：把六块代码排成合理顺序</h2>
+            <div class="code-puzzle">
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">A</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">获取 Canvas / WebGL2 context</div>
+                  <div class="puzzle-sub">初始化渲染上下文环境</div>
+                </div>
+              </div>
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">B</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">定义 <code>vertices</code> 顶点数据</div>
+                  <div class="puzzle-sub">构建 CPU 端几何位置数组</div>
+                </div>
+              </div>
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">C</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">编译并链接 Shader</div>
+                  <div class="puzzle-sub">生成 GPU 可执行着色器程序</div>
+                </div>
+              </div>
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">D</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">创建 Buffer / 上传数据</div>
+                  <div class="puzzle-sub">将顶点数据送入显存缓冲区</div>
+                </div>
+              </div>
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">E</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">Buffer ↔ Shader input 关联</div>
+                  <div class="puzzle-sub">配置顶点属性指针与启用属性</div>
+                </div>
+              </div>
+              <div class="puzzle-card fragment fade-up">
+                <div class="puzzle-badge">F</div>
+                <div class="puzzle-content">
+                  <div class="puzzle-title">调用 <code>drawArrays()</code></div>
+                  <div class="puzzle-sub">发出 Draw Call 触发 GPU 绘制</div>
+                </div>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" style="margin-top: 16px; padding: 14px 22px">
+              <span class="tag">小组活动</span><span class="timer">3 min</span>
+              <p style="margin: 2px 0 0; font-size: 0.56em">
+                先给出六步顺序，并思考每一步“依赖什么、产生什么”。
+              </p>
+            </div>
+            <div class="puzzle-answer fragment fade-up">
+              <div class="answer-header">
+                <span class="pill">参考逻辑顺序</span>
+                <strong class="answer-chain"
+                  >A (Context) → B (顶点) → C (Shader) → D (Buffer) → E (关联) → F (Draw)</strong
+                >
+              </div>
+              <p class="answer-note">
+                <strong>核心依赖规律</strong>：B 与 C 彼此独立可交换；但 E 强依赖 C 与 D，F
+                必须在所有资源配置就绪后最后调用。
+              </p>
+            </div>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" class="">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">HTML · 9–14 min</div>
+            <h2>HTML负责“环境”，不是负责几何计算</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="html" data-trim="" data-line-numbers="">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;script id="vertex-shader" type="x-shader/x-vertex"&gt;...&lt;/script&gt;
+  &lt;script id="fragment-shader" type="x-shader/x-fragment"&gt;...&lt;/script&gt;
+  &lt;script src="square.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="square-canvas" width="500" height="500"&gt;&lt;/canvas&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>三个角色</h3>
+                <ul>
+                  <li><code>&lt;canvas&gt;</code>：绘图目标</li>
+                  <li>Shader源码：GPU程序文本</li>
+                  <li><code>square.js</code>：应用逻辑</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-2" class="">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Canvas &amp; context</div>
+            <h2>JavaScript获取GPU入口</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">var canvas = document.getElementById("square-canvas");
+var gl = canvas.getContext("webgl2");
+if(!gl){ alert("WebGL 2.0 unavailable"); }</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Context 是什么？</h3>
+                <p>
+                  它是当前 Canvas 与 WebGL API 的调用入口；之后所有
+                  <code>gl.*</code> 调用都通过它发出。
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-3" class="compact">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">HTML source · Extension</div>
+            <h2>完整HTML结构：不要逐行背，先看“角色分区”</h2>
+            <div class="code-full fragment fade-up">
+              <pre><code class="html" data-trim="" data-line-numbers="">&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;script id="vertex-shader" type="x-shader/x-vertex"&gt;...vertex shader...&lt;/script&gt;
+  &lt;script id="fragment-shader" type="x-shader/x-fragment"&gt;...fragment shader...&lt;/script&gt;
+  &lt;script src="../js/common/webgl-utils.js"&gt;&lt;/script&gt;
+  &lt;script src="../js/common/initShaders.js"&gt;&lt;/script&gt;
+  &lt;script src="../js/ch01/square.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;canvas id="square-canvas" width="500" height="500"&gt;&lt;/canvas&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </div>
+            <p class="micro fragment fade-up">
+              原课件中的Shader可内嵌在HTML，也可根据项目结构拆为外部文件。
+            </p>
+          </section>
+          <section id="sec-4-4" class="">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">Utility files · Extension</div>
+            <h2>辅助文件分别解决什么问题？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>webgl-utils.js</h3>
+                <p>对浏览器/WebGL环境相关的常用操作进行封装。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>initShaders.js</h3>
+                <p>读取、编译、链接Shader并创建Program。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>矩阵/向量库</h3>
+                <p>提供几何计算工具；教材不同版本可能使用MV.js或其它库。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>square.js</h3>
+                <p>真正的应用程序逻辑。</p>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" class="">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Shader program · 14–18 min</div>
+            <h2>两段Shader都是完整GPU程序</h2>
+            <div class="code-compare fragment fade-up">
+              <div class="card fragment fade-up">
+                <h3>Vertex Shader</h3>
+                <pre><code class="glsl" data-trim="" data-line-numbers="">#version 300 es
+in vec4 aPosition;
+void main(){
+  gl_Position = aPosition;
+}</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Fragment Shader</h3>
+                <pre><code class="glsl" data-trim="" data-line-numbers="">#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main(){
+  fColor = vec4(1.0, 1.0, 0.0, 1.0);
+}</code></pre>
+              </div>
+            </div>
+          </section>
+          <section id="sec-5-2" class="">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Compile &amp; link</div>
+            <h2>源码不能直接执行：先编译，再链接成 Program</h2>
+            <div class="flow hero-flow">
+              <div class="node fragment fade-up">Shader Source</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Compile</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Shader Objects</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Link</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Program</div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="javascript" data-trim="" data-line-numbers="">var program = initShaders(gl, "vertex-shader", "fragment-shader");
+gl.useProgram(program);</code></pre>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" class="">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Data · 18–23 min</div>
+            <h2>正方形其实只是四个位置数据</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">var points = new Float32Array([
+  -0.5, -0.5,
+   0.5, -0.5,
+   0.5,  0.5,
+  -0.5,  0.5
+]);</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>注意</h3>
+                <p>这里只有<strong>8个浮点数</strong>。它们还没有告诉GPU“这是一块正方形”。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-6-2" class="">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Buffer</div>
+            <h2>把CPU数据上传到GPU</h2>
+            <div class="flow hero-flow">
+              <div class="node fragment fade-up">points</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">createBuffer</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">bindBuffer</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">bufferData</div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="javascript" data-trim="" data-line-numbers="">var buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);</code></pre>
+          </section>
+          <section id="sec-6-3" class="">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Attribute description</div>
+            <h2>Buffer只是一串字节：GPU还需要知道“怎么读”</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">var loc = gl.getAttribLocation(program, "aPosition");
+gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(loc);</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>一句话解释</h3>
+                <p>
+                  “从当前 Buffer 中，每次读取 <strong>2 个 float</strong>，送给 Shader 的
+                  <code>aPosition</code>。”
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              <div class="activity fragment fade-up">
+                <span class="tag">口头翻译</span><span class="timer">1 min</span>
+                <p>让学生不用API术语，把 <code>vertexAttribPointer</code> 翻译成人话。</p>
+              </div>
+            </aside>
+          </section>
+          <section id="sec-6-4" class="compact">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">JavaScript source · Part 1</div>
+            <h2>完整程序前半：环境 + 数据 + 视口</h2>
+            <div class="code-full fragment fade-up">
+              <pre><code class="javascript" data-trim="" data-line-numbers="">"use strict";
+var gl;
+window.onload = function init(){
+  var canvas = document.getElementById("square-canvas");
+  gl = canvas.getContext("webgl2");
+  var points = new Float32Array([
+    -0.5, -0.5,   0.5, -0.5,
+     0.5,  0.5,  -0.5,  0.5
+  ]);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(1.0, 0.0, 0.0, 1.0);</code></pre>
+            </div>
+            <p class="micro fragment fade-up">阅读方式：先找“资源角色”，再看API细节。</p>
+          </section>
+          <section id="sec-6-5" class="compact">
+            <span class="slide-no">#sec-6-5</span>
+            <div class="eyebrow">JavaScript source · Part 2</div>
+            <h2>完整程序后半：Program + Buffer + Attribute + Draw</h2>
+            <div class="code-full fragment fade-up">
+              <pre><code class="javascript" data-trim="" data-line-numbers="">  var program = initShaders(gl, "vertex-shader", "fragment-shader");
+  gl.useProgram(program);
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
+  var aPosition = gl.getAttribLocation(program, "aPosition");
+  gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(aPosition);
+  render();
+};
+function render(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+}</code></pre>
+            </div>
+          </section>
+          <section id="sec-6-6" class="">
+            <span class="slide-no">#sec-6-6</span>
+            <div class="eyebrow">Read code by responsibility</div>
+            <h2>不要按行号背代码：按职责块阅读</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>职责块</th>
+                  <th>代表调用</th>
+                  <th>你应该问的问题</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="fragment fade-up">
+                  <td>环境</td>
+                  <td>getContext / viewport</td>
+                  <td>画在哪里？</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>GPU程序</td>
+                  <td>initShaders / useProgram</td>
+                  <td>GPU执行什么？</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>数据资源</td>
+                  <td>create/bind/bufferData</td>
+                  <td>数据在哪里？</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>接口描述</td>
+                  <td>vertexAttribPointer</td>
+                  <td>这些字节怎么解释？</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>绘制</td>
+                  <td>drawArrays</td>
+                  <td>用什么图元、多少顶点？</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" class="">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">Viewport &amp; clear · 23–26 min</div>
+            <h2>绘制前还需要确定“画在哪”和“背景是什么”</h2>
+            <div class="code-compare fragment fade-up">
+              <div class="card fragment fade-up">
+                <h3>Viewport</h3>
+                <pre><code class="javascript" data-trim="" data-line-numbers="">gl.viewport(0, 0, canvas.width, canvas.height);</code></pre>
+                <p>Canvas中用于显示图像的像素矩形。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Clear Color</h3>
+                <pre><code class="javascript" data-trim="" data-line-numbers="">gl.clearColor(1.0, 0.0, 0.0, 1.0);</code></pre>
+                <p>清空颜色缓存时使用的背景颜色。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-7-2" class="">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Draw call</div>
+            <h2>最后一行才真正触发绘制</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">function render() {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+}</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>drawArrays 三个问题</h3>
+                <p>① 怎样解释顶点？<br />② 从哪个顶点开始？<br />③ 使用多少顶点？</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-7-3" class="">
+            <span class="slide-no">#sec-7-3</span>
+            <div class="eyebrow">Event-driven model · Extension</div>
+            <h2>Web图形程序为什么不是“main执行完就退出”？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>Initialization</h3>
+                <p><code>window.onload = init</code>：页面加载后完成资源初始化。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Interaction / Animation</h3>
+                <p>鼠标、键盘、定时器、requestAnimationFrame 等事件触发状态变化和重绘。</p>
+              </div>
+            </div>
+            <p class="lead fragment fade-up">
+              交互式图形程序本质上是<strong>事件驱动的长期运行程序</strong>。
+            </p>
+          </section>
+          <section id="sec-7-4" class="compact">
+            <span class="slide-no">#sec-7-4</span>
+            <div class="eyebrow">Aspect ratio · Extension</div>
+            <h2>Canvas、Viewport 与宽高比</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>Clip / View region</h3>
+                <p>图形空间中的可见范围。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Viewport</h3>
+                <p>Canvas中的像素矩形。</p>
+              </div>
+            </div>
+            <p class="lead fragment fade-up">两者宽高比不一致时，图像会产生拉伸或压缩。</p>
+          </section>
+        </section>
+        <section id="sec-8">
+          <section id="sec-8-1" class="">
+            <span class="slide-no">#sec-8-1</span>
+            <div class="eyebrow">Prediction → Run · 26–34 min</div>
+            <h2>现场实验：每次只改一行</h2>
+            <div class="grid4">
+              <div class="card fragment fade-up">
+                <h3>A · viewport</h3>
+                <p><code>width/2</code><br /><code>height/2</code></p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>B · clearColor</h3>
+                <p>红 → 蓝</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>C · MODE</h3>
+                <p>POINTS / LINE_STRIP / TRIANGLE_FAN</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>D · Shader</h3>
+                <p>修改 <code>fColor</code></p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">预测—运行—解释</span><span class="timer">8 min</span>
+              <p>每次修改前先投票预测结果；运行后必须解释“是哪一层发生了变化”。</p>
+            </div>
+          </section>
+          <section id="sec-8-2" class="">
+            <span class="slide-no">#sec-8-2</span>
+            <div class="eyebrow">Experiment A · Viewport</div>
+            <h2>实验A：为什么图只出现在 Canvas 的左下角？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">gl.viewport(0, 0, canvas.width / 2, canvas.height / 2);</code></pre>
+                <div class="activity" style="margin-top: 14px; padding: 12px 16px">
+                  <span class="tag">层级归属</span>
+                  <p style="margin: 4px 0 0; font-size: 0.64em">
+                    <strong>视口变换层</strong>：规范化坐标到屏幕物理像素的映射范围
+                  </p>
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <p class="question">顶点数据没有变，为什么图像大小和位置变了？</p>
+                <div class="answer-box fragment fade-up">
+                  <span class="ans-tag">💡 原理解析</span>
+                  <p>
+                    因为裁剪坐标最终要映射到指定的
+                    <strong>Viewport 像素矩形</strong
+                    >。视口宽高减半，渲染出的正方形也随之缩小到左下角四分之一区域。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="sec-8-3" class="">
+            <span class="slide-no">#sec-8-3</span>
+            <div class="eyebrow">Experiment B · Clear Color</div>
+            <h2>实验B：背景从红变蓝，为什么正方形颜色没变？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">// 原代码: gl.clearColor(1.0, 0.0, 0.0, 1.0); (红底)
+gl.clearColor(0.0, 0.0, 1.0, 1.0); // 蓝色背景
+gl.clear(gl.COLOR_BUFFER_BIT);</code></pre>
+                <div class="activity" style="margin-top: 14px; padding: 12px 16px">
+                  <span class="tag">层级归属</span>
+                  <p style="margin: 4px 0 0; font-size: 0.64em">
+                    <strong>帧缓冲清空层</strong>：仅刷新颜色缓冲区底色，与后续图元绘制解耦
+                  </p>
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <p class="question">“背景”是谁画出来的？修改它会影响几何图形吗？</p>
+                <div class="answer-box fragment fade-up">
+                  <span class="ans-tag">💡 原理解析</span>
+                  <p>
+                    不会。<code>clearColor</code> 仅设置清空<strong>颜色缓存（Color Buffer）</strong
+                    >时填充的底色；正方形由随后的着色器和绘制调用覆盖写入，处于管线不同阶段。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="sec-8-4" class="">
+            <span class="slide-no">#sec-8-4</span>
+            <div class="eyebrow">Experiment C · Primitive Mode</div>
+            <h2>实验C：同一组4个顶点，换MODE会发生什么？</h2>
+            <div class="grid2" style="margin-bottom: 16px">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">// 替换原 gl.TRIANGLE_FAN
+gl.drawArrays(gl.LINE_LOOP, 0, 4);</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <p class="question" style="font-size: 1.05em !important">
+                  显存中的顶点数据改动了吗？换 MODE 真正改变的是什么？
+                </p>
+                <div class="answer-box fragment fade-up">
+                  <span class="ans-tag">💡 原理解析</span>
+                  <p>
+                    显存顶点数据完全没有变。改变的是<strong>图元装配层</strong>对顶点序列的拓扑连接与填充解释方式。
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>POINTS</h3>
+                <p>4 个独立点<br /><small class="muted">仅在顶点位置绘制孤立像素点</small></p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>LINE_LOOP</h3>
+                <p>正方形闭合线框<br /><small class="muted">首尾相连封闭折线轮廓</small></p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>TRIANGLE_FAN</h3>
+                <p>实心正方形<br /><small class="muted">扇形三角面片拼合填充</small></p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-8-5" class="">
+            <span class="slide-no">#sec-8-5</span>
+            <div class="eyebrow">Experiment D · Fragment Shader</div>
+            <h2>实验D：怎样改变图形本身的颜色？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="glsl" data-trim="" data-line-numbers="">#version 300 es
+precision mediump float;
+out vec4 fColor;
+void main(){
+  // 原黄色 vec4(1.0, 1.0, 0.0, 1.0) -> 改为纯绿
+  fColor = vec4(0.0, 1.0, 0.0, 1.0);
+}</code></pre>
+                <div class="activity" style="margin-top: 14px; padding: 12px 16px">
+                  <span class="tag">层级归属</span>
+                  <p style="margin: 4px 0 0; font-size: 0.64em">
+                    <strong>片元着色层</strong>：GPU 可编程管线中决定最终像素输出的阶段
+                  </p>
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <p class="question">只在 JS 脚本中改一个变量，能改变正方形颜色吗？</p>
+                <div class="answer-box fragment fade-up">
+                  <span class="ans-tag">💡 原理解析</span>
+                  <p>
+                    不能（若颜色未关联
+                    attribute/uniform）。在现代可编程管线中，<strong>图元内部片元的颜色完全由片元着色器计算输出</strong>。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-9">
+          <section id="sec-9-1" class="">
+            <span class="slide-no">#sec-9-1</span>
+            <div class="eyebrow">Bug Hunt · 34–37 min</div>
+            <h2>为什么“什么都没画出来”？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>可能原因</h3>
+                <ul>
+                  <li>Shader 编译失败</li>
+                  <li>Buffer 没有上传/绑定</li>
+                  <li>Attribute 没有 enable</li>
+                  <li>draw count / mode 错误</li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>调试证据</h3>
+                <ul>
+                  <li>Console error</li>
+                  <li>Shader compile log</li>
+                  <li>检查数据长度</li>
+                  <li>逐步缩小问题范围</li>
+                </ul>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">现场故障</span><span class="timer">2 min</span>
+              <p>教师故意删掉一行或改错变量名，学生先判断最可能的层级。</p>
+            </div>
+          </section>
+          <section id="sec-9-2" class="">
+            <span class="slide-no">#sec-9-2</span>
+            <div class="eyebrow">AI collaborative debugging</div>
+            <h2>让AI提出假设，不让AI直接接管程序</h2>
+            <div class="card fragment fade-up">
+              <p class="quote">
+                “下面是错误信息和相关代码。请不要重写整个程序，只列出最可能的3个错误位置，并给出每一项的验证方法。”
+              </p>
+            </div>
+            <div class="activity ai fragment fade-up">
+              <span class="tag">AI协作调试</span><span class="timer">2 min</span>
+              <p>AI提出假设 → 浏览器Console/代码验证 → 只修改有证据支持的问题。</p>
+            </div>
+          </section>
+        </section>
+        <section id="sec-10">
+          <section id="sec-10-1" class="">
+            <span class="slide-no">#sec-10-1</span>
+            <div class="eyebrow">Generalization · 37–39 min</div>
+            <h2>Square → Sierpinski：什么不变？什么改变？</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>不变</h3>
+                <ul>
+                  <li>Canvas / Context</li>
+                  <li>Shader编译链接</li>
+                  <li>Buffer机制</li>
+                  <li>Attribute绑定</li>
+                  <li>Draw Call</li>
+                </ul>
+              </div>
+              <div class="vs fragment fade-up">↔</div>
+              <div class="card fragment fade-up">
+                <h3>改变</h3>
+                <ul>
+                  <li>顶点生成算法</li>
+                  <li>顶点数量</li>
+                  <li>Primitive mode</li>
+                  <li>可能增加颜色/深度数据</li>
+                </ul>
+              </div>
+            </div>
+            <p class="lead fragment fade-up">
+              你学的不是一个“正方形程序”，而是<strong>图形程序的一般结构</strong>。
+            </p>
+          </section>
+          <section id="sec-10-2" class="compact">
+            <span class="slide-no">#sec-10-2</span>
+            <div class="eyebrow">Extension · Recursion</div>
+            <h2>用递归三角形生成 Sierpinski</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <pre><code class="javascript" data-trim="" data-line-numbers="">function divideTriangle(a, b, c, count) {
+  if (count == 0) triangle(a, b, c);
+  else {
+    // midpoints
+    divideTriangle(..., count - 1);
+    divideTriangle(..., count - 1);
+    divideTriangle(..., count - 1);
+  }
+}</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>变化</h3>
+                <p>数据生成算法从“随机点”换成“递归细分”。</p>
+                <p><strong>GPU编程结构基本不变。</strong></p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-10-3" class="compact">
+            <span class="slide-no">#sec-10-3</span>
+            <div class="eyebrow">Extension · 3D</div>
+            <h2>二维 → 三维：新增的真正问题是什么？</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>vec2 → vec3</h3>
+                <p>数据增加 z 坐标。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Color / Face</h3>
+                <p>三维结构需要更多视觉线索。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Depth Test</h3>
+                <p>解决前后遮挡：<code>gl.enable(gl.DEPTH_TEST)</code></p>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-11">
+          <section id="sec-11-1" class="">
+            <span class="slide-no">#sec-11-1</span>
+            <div class="eyebrow">Chapter 2 map</div>
+            <h2>三节课合起来：现代图形程序的完整心智模型</h2>
+            <div class="pipeline-final-flow ch2-final">
+              <div class="pipe-stage fragment fade-up">
+                <span>CPU</span><strong>Generate Data</strong><small>顶点/属性</small>
+              </div>
+              <div class="pipe-arrow fragment fade-up">→</div>
+              <div class="pipe-stage fragment fade-up">
+                <span>RESOURCE</span><strong>Buffer</strong><small>上传数据</small>
+              </div>
+              <div class="pipe-arrow fragment fade-up">→</div>
+              <div class="pipe-stage programmable fragment fade-up">
+                <span>PROGRAM</span><strong>Shader</strong><small>GPU程序</small>
+              </div>
+              <div class="pipe-arrow fragment fade-up">→</div>
+              <div class="pipe-stage fragment fade-up">
+                <span>COMMAND</span><strong>Draw Call</strong><small>图元模式/数量</small>
+              </div>
+            </div>
+            <div class="flow">
+              <div class="node fragment fade-up">Canvas</div>
+              <div class="arrow fragment fade-up">←</div>
+              <div class="node primary fragment fade-up">Framebuffer / Pixels</div>
+            </div>
+          </section>
+          <section id="sec-11-2" class="">
+            <span class="slide-no">#sec-11-2</span>
+            <div class="eyebrow">Exit ticket · 39–40 min</div>
+            <h2>用箭头连接七个词</h2>
+            <div class="concept-tokens fragment fade-up">
+              <div class="token-row">
+                <span class="concept-chip">Canvas</span>
+                <span class="concept-chip">Data</span>
+                <span class="concept-chip">Buffer</span>
+                <span class="concept-chip">Attribute</span>
+              </div>
+              <div class="token-row">
+                <span class="concept-chip programmable">Vertex Shader</span>
+                <span class="concept-chip programmable">Fragment Shader</span>
+                <span class="concept-chip">Draw Call</span>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">提交</span><span class="timer">1 min</span>
+              <p>画出你自己的“最小WebGL程序运行图”，不要求和教师图完全一样，但必须解释每条箭头。</p>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="../shared/classroom-fragments.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document
+        .querySelectorAll('img[data-fallback],video[data-fallback]')
+        .forEach((el) => el.addEventListener('error', () => fallbackMedia(el), { once: true }));
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        history: false,
+        center: true,
+        touch: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: true,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>

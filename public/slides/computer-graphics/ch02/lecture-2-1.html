@@ -1,0 +1,1324 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>计算机图形学 第二章(1) 现代图形编程思想</title>
+    <link rel="stylesheet" href="/vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.72em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.46em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1400px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .accent {
+        color: var(--cyan);
+      }
+
+      .amber {
+        color: var(--amber);
+      }
+
+      .green {
+        color: var(--green);
+      }
+
+      .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 90px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+    </style>
+    <link rel="stylesheet" href="../shared/classroom-large.css" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 2 · 01</div>
+            <h1>从固定功能到可编程 GPU</h1>
+            <p class="lead fragment fade-up">为什么现代图形程序要用“数据 + 程序”与 GPU 对话？</p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 46px">
+              <div class="node fragment fade-up">Data</div>
+              <div class="arrow fragment fade-up">+</div>
+              <div class="node primary fragment fade-up">Shader Program</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">GPU</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Image</div>
+            </div>
+            <aside class="notes">
+              <p class="title-mark fragment fade-up">
+                40 min · API设计活动 + 历史脉络 + AI类比纠错
+              </p>
+            </aside>
+          </div>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" class="">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · 0–4 min</div>
+            <h2>三十年视觉革命：变的不只是“更快”</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>1996 · Quake</h3>
+                <div class="media-shell media-compact">
+                  <img
+                    alt="Quake画面"
+                    data-fallback="Quake画面"
+                    data-prompt="1990年代早期3D游戏画面，低多边形、简单纹理、教材对比图，16:9"
+                    src="./images/chap02/ch02-quake-1999.jpg"
+                  />
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>现代实时渲染</h3>
+                <div class="media-shell media-compact">
+                  <img
+                    alt="现代实时游戏画面"
+                    data-fallback="现代实时游戏画面"
+                    data-prompt="现代城市实时渲染，复杂材质、灯光与反射，16:9"
+                    src="./images/chap02/ch02-cyberpunk2077-ss.png"
+                  />
+                </div>
+              </div>
+            </div>
+            <p class="lead fragment fade-up" style="margin-top: 20px">
+              关键变化之一：GPU
+              从<strong>固定功能设备</strong>逐步演化为<strong>可编程并行计算设备</strong>。
+            </p>
+          </section>
+          <section id="sec-2-2" class="">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Chapter case</div>
+            <h2>第二章贯穿问题：5000 个位置数据，怎样变成 Sierpinski 镂垫？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>CPU / JavaScript</h3>
+                <div class="flow vertical-flow">
+                  <div class="node">生成 5000 个位置</div>
+                  <div class="arrow">↓</div>
+                  <div class="node">整理成 GPU 可接收的数据</div>
+                </div>
+                <div style="margin-top: 24px; display: flex; justify-content: center">
+                  <a
+                    class="demo-btn fragment fade-up"
+                    data-placeholder="请在此处替换为实际 Demo 链接"
+                    href="./code-demos/chap2-demo-2.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="height: 56px; padding: 0 36px; font-size: 0.72em; border-radius: 16px"
+                  >
+                    打开本章 Demo：Sierpinski 镂垫
+                  </a>
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>GPU / WebGL</h3>
+                <div class="flow vertical-flow">
+                  <div class="node primary">接收数据</div>
+                  <div class="arrow">↓</div>
+                  <div class="node primary">执行 Shader</div>
+                  <div class="arrow">↓</div>
+                  <div class="node">绘制到 Canvas</div>
+                </div>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">预测</span><span class="timer">90 s</span>
+              <p>CPU 与 GPU 之间至少需要约定哪些东西？先写三个关键词。</p>
+            </div>
+          </section>
+          <section id="sec-2-3" class="">
+            <span class="slide-no">#sec-2-3</span>
+            <div class="eyebrow">Learning goals</div>
+            <h2>本课只解决三个问题</h2>
+            <div class="grid3 summary-grid">
+              <div class="card fragment fade-up">
+                <div class="kicker">01</div>
+                <h3>为什么API会演化？</h3>
+                <p>从“机器替你决定”到“开发者控制”。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">02</div>
+                <h3>现代编程模型是什么？</h3>
+                <p><strong>Data + Program</strong> 是核心。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">03</div>
+                <h3>WebGL在哪里？</h3>
+                <p>浏览器中的现代GPU图形接口。</p>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" class="">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Pre-assessment · 8–14 min</div>
+            <h2>如果让你设计一个“绘图 API”</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>方案 A · 保姆式</h3>
+                <pre><code class="javascript" data-trim="">drawSphere({
+  position:[0,0,0],
+  radius:1.0,
+  color:[1,0,0],
+  lighting:true
+});</code></pre>
+                <p><strong class="green">简单</strong>，但功能由API预先决定。</p>
+              </div>
+              <div class="vs fragment fade-up">VS</div>
+              <div class="card fragment fade-up">
+                <h3>方案 B · DIY式</h3>
+                <pre><code class="javascript" data-trim="">buffer = createBuffer(data);
+shader = createShader(code);
+setBuffer(buffer);
+setShader(shader);
+draw();</code></pre>
+                <p><strong class="green">灵活</strong>，但需要理解数据与GPU程序。</p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">小组讨论</span><span class="timer">3 min</span>
+              <p>从“易学、灵活、可扩展、性能、开发者控制力”五个维度比较 A/B。</p>
+            </div>
+          </section>
+          <section id="sec-3-2" class="">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Key question</div>
+            <h2>如果GPU厂商没有预先想到你要实现的效果呢？</h2>
+            <p class="question fragment fade-up">
+              答案不是继续增加更多“固定按钮”，而是：<span class="accent"
+                >让核心处理过程可编程。</span
+              >
+            </p>
+            <div class="flow hero-flow">
+              <div class="node fragment fade-up">Configure Machine</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Program the Machine</div>
+            </div>
+            <p class="lead fragment fade-up">
+              现代GPU的关键思想：开发者提供<strong>数据</strong>，也提供处理数据的<strong>程序</strong>。
+            </p>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" class="">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Evolution · 14–20 min</div>
+            <h2>固定功能流水线：告诉GPU“做什么”</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell diagram-shell fragment fade-up">
+                <img
+                  alt="固定功能流水线"
+                  data-fallback="固定功能流水线"
+                  data-prompt="传统OpenGL固定功能流水线示意图，变换、光照、纹理等阶段固化，浅色教学风，16:9"
+                  src="./images/chap02/ch02-fixedopenglpipeline.jpg"
+                />
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Fixed Function</h3>
+                <ul>
+                  <li>大量处理规则由 API / 硬件预先规定</li>
+                  <li>程序主要“打开、关闭、配置”现成功能</li>
+                  <li>容易使用，但难以突破预设模型</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-2" class="">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Programmable pipeline</div>
+            <h2>可编程流水线：告诉GPU“如何算”</h2>
+            <div class="grid2 image-text">
+              <div class="media-shell diagram-shell fragment fade-up">
+                <img
+                  alt="可编程图形流水线"
+                  data-fallback="可编程图形流水线"
+                  data-prompt="现代GPU可编程流水线，突出Vertex Shader与Fragment Shader，浅色背景，16:9"
+                  src="./images/chap02/ch02-programmpipeline.jpg"
+                />
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Programmable</h3>
+                <ul>
+                  <li>应用程序负责准备数据</li>
+                  <li>Shader 决定顶点和片元怎样处理</li>
+                  <li>同一硬件可实现卡通、体积、材质等大量效果</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-3" class="">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Visual effects</div>
+            <h2>为什么“可编程”带来了创造力？</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>Toon · 卡通渲染</h3>
+                <div class="media-shell media-compact" style="height: 190px">
+                  <img
+                    alt="卡通渲染"
+                    data-fallback="卡通渲染"
+                    data-prompt="卡通渲染效果示例，浅色PPT背景"
+                    src="./images/chap02/ch02-render-toon.jpg"
+                  />
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Volumetric · 体积光</h3>
+                <div class="media-shell media-compact" style="height: 190px">
+                  <img
+                    alt="体积光"
+                    data-fallback="体积光"
+                    data-prompt="体积光渲染示例"
+                    src="./images/chap02/ch02-render-vollight.jpg"
+                  />
+                </div>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>NPR · 非真实感</h3>
+                <div class="media-shell media-compact" style="height: 190px">
+                  <img
+                    alt="非真实感渲染"
+                    data-fallback="非真实感渲染"
+                    data-prompt="非真实感渲染示例"
+                    src="./images/chap02/ch02-render-npr.jpg"
+                  />
+                </div>
+              </div>
+            </div>
+            <p class="lead fragment fade-up" style="margin-top: 18px">
+              共同点：它们不再受限于单一固定的“标准外观”。
+            </p>
+          </section>
+          <section id="sec-4-4" class="">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">History · Extension</div>
+            <h2>从专用硬件到可编程GPU：只看关键节点</h2>
+            <table class="ch2-history-table">
+              <thead>
+                <tr>
+                  <th>阶段</th>
+                  <th>关键变化</th>
+                  <th>对编程的意义</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="fragment fade-up">
+                  <td>早期</td>
+                  <td>CPU承担大量绘制计算</td>
+                  <td>图形能力受通用处理器限制</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>专用图形硬件</td>
+                  <td>逐步把光栅化、几何处理移到专用硬件</td>
+                  <td>形成图形流水线</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>可编程Shader</td>
+                  <td>顶点/片元阶段开放给开发者编程</td>
+                  <td>固定功能 → 可编程</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>统一Shader与GPGPU</td>
+                  <td>大量通用并行核心</td>
+                  <td>图形与通用GPU计算逐渐融合</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>实时光追/AI加速</td>
+                  <td>增加专用求交、矩阵/AI能力</td>
+                  <td>现代渲染呈现混合架构</td>
+                </tr>
+              </tbody>
+            </table>
+            <aside class="notes micro fragment fade-up">
+              课堂重点是“编程模型怎样变化”，不要求记硬件型号时间线。
+            </aside>
+          </section>
+          <section id="sec-4-5" class="">
+            <span class="slide-no">#sec-4-5</span>
+            <div class="eyebrow">Rendering mode · Extension</div>
+            <h2>即时模式与保有模式：为什么要减少 CPU↔GPU 往返？</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>Immediate Mode</h3>
+                <p>每次绘制都从应用程序逐项提交顶点/状态。</p>
+                <p class="red">CPU调用和数据传输开销大</p>
+              </div>
+              <div class="vs fragment fade-up">VS</div>
+              <div class="card fragment fade-up">
+                <h3>Retained / Buffer-based</h3>
+                <p>把顶点数组批量上传并保存在GPU资源中，重复绘制时直接复用。</p>
+                <p class="green">更适合现代GPU高吞吐</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-6" class="">
+            <span class="slide-no">#sec-4-6</span>
+            <div class="eyebrow">OpenGL evolution · Extension</div>
+            <h2>版本变迁</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>OpenGL 2.x</h3>
+                <p>引入GLSL，可编程Shader成为标准能力。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>OpenGL 3.x</h3>
+                <p>逐步弱化/移除旧立即模式与大量固定功能接口。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>OpenGL ES / WebGL</h3>
+                <p>围绕可编程流水线构建更精简的接口。</p>
+              </div>
+            </div>
+            <p class="lead fragment fade-up" style="margin-top: 24px">
+              历史的主线不是版本号，而是：<strong
+                >把更多算法从API固定功能移到开发者Shader中。</strong
+              >
+            </p>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" class="">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Core model · 20–24 min</div>
+            <h2>现代图形编程的两个核心元素</h2>
+            <div class="course-map ch2-core-map">
+              <div class="course-block fragment fade-up">
+                <span>DATA</span><strong>Buffer / Resource</strong
+                ><small>顶点位置、颜色、纹理、矩阵、时间……</small>
+              </div>
+              <div class="course-arrow fragment fade-up">+</div>
+              <div class="course-block fragment fade-up">
+                <span>PROGRAM</span><strong>Shader</strong
+                ><small>告诉GPU怎样处理顶点和片元。</small>
+              </div>
+              <div class="course-arrow fragment fade-up">→</div>
+              <div class="course-block fragment fade-up">
+                <span>GPU</span><strong>Parallel Execution</strong
+                ><small>对大量顶点/片元并行执行。</small>
+              </div>
+              <div class="course-arrow fragment fade-up">→</div>
+              <div class="course-block fragment fade-up">
+                <span>OUTPUT</span><strong>Framebuffer</strong><small>生成最终图像。</small>
+              </div>
+            </div>
+          </section>
+          <section id="sec-5-2" class="">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Participatory classification</div>
+            <h2>Data / Program / State</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>几何与属性</h3>
+                <p>顶点坐标<br />颜色<br />纹理坐标</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>GPU程序</h3>
+                <p>Vertex Shader<br />Fragment Shader<br />自定义光照算法</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>运行时数据/状态</h3>
+                <p>变换矩阵<br />时间<br />Viewport / Depth Test</p>
+              </div>
+            </div>
+            <aside class="notes">
+              <div class="activity fragment fade-up">
+                <span class="tag">分类活动</span><span class="timer">2 min</span>
+                <p>教师随机展示卡片，学生举手判断属于 Data、Program 还是 GPU State。</p>
+              </div>
+            </aside>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" class="">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">API family · 24–29 min</div>
+            <h2>API 演进家族：OpenGL → OpenGL ES → WebGL</h2>
+            <div class="grid3 summary-grid" style="margin-top: 28px">
+              <div class="card fragment fade-up">
+                <div class="kicker">01 · Desktop</div>
+                <h3 style="color: var(--cyan); margin-top: 6px">OpenGL</h3>
+                <p>面向桌面端图形应用的标准 API，功能全面庞大，建立了现代可编程图形管线的基石。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">02 · Embedded / Mobile</div>
+                <h3 style="color: var(--cyan); margin-top: 6px">OpenGL ES</h3>
+                <p>
+                  针对移动端与嵌入式设备裁剪精简的规范，剥离冗余固定功能，全面转向纯 Shader
+                  可编程处理。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                style="
+                  border: 1px solid rgba(30, 138, 100, 0.3);
+                  background: linear-gradient(180deg, #ffffff, #eefaf5);
+                "
+              >
+                <div class="kicker" style="color: var(--green)">03 · Browser / Web</div>
+                <h3 style="color: var(--green); margin-top: 6px">WebGL / WebGL 2</h3>
+                <p>
+                  基于 OpenGL ES 引入 HTML5 Canvas，使 JavaScript 能够直接调用 GPU
+                  进行无插件硬件加速渲染。
+                </p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" style="margin-top: 20px">
+              <span class="tag">核心理解</span>
+              <p>
+                这一家族演进的主线：并非简单的平台迁移，而是<strong
+                  >将算法与控制权从硬件固定功能彻底交还给开发者 Shader</strong
+                >。
+              </p>
+            </div>
+          </section>
+          <section id="sec-6-2" class="">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">WebGL vs OpenGL</div>
+            <h2>核心思想相同，运行环境不同</h2>
+            <table class="concept-table">
+              <thead>
+                <tr>
+                  <th>维度</th>
+                  <th>WebGL</th>
+                  <th>原生 OpenGL</th>
+                  <th>共同核心</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="fragment fade-up">
+                  <td>语言</td>
+                  <td>JavaScript + GLSL ES</td>
+                  <td>C/C++ + GLSL</td>
+                  <td rowspan="4">
+                    <strong>可编程流水线<br />Buffer<br />Shader<br />Draw Call</strong>
+                  </td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>平台</td>
+                  <td>浏览器</td>
+                  <td>原生应用</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>窗口/输入</td>
+                  <td>HTML / Browser</td>
+                  <td>平台窗口库</td>
+                </tr>
+                <tr class="fragment fade-up">
+                  <td>部署</td>
+                  <td>URL即可运行</td>
+                  <td>通常需要本地构建</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" class="">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">API landscape · 29–33 min</div>
+            <h2>现代API继续把更多控制权交给开发者</h2>
+            <div class="grid4">
+              <div class="card fragment fade-up">
+                <h3>OpenGL</h3>
+                <p>高层状态式API</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Vulkan</h3>
+                <p>显式资源与命令管理</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Metal / D3D12</h3>
+                <p>现代低开销GPU API</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>WebGPU</h3>
+                <p>Web上的现代GPU编程模型</p>
+              </div>
+            </div>
+            <p class="lead fragment fade-up" style="margin-top: 34px">
+              API组织会变化，但本课程首先学习的核心不会变：<strong
+                >数据、Shader、GPU资源和绘制流水线。</strong
+              >
+            </p>
+          </section>
+          <section id="sec-7-2" class="">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Course position</div>
+            <h2>为什么本课程仍从 WebGL 2 开始？</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>适合教学</h3>
+                <ul>
+                  <li>可以直接观察经典GPU流水线</li>
+                  <li>概念与教材、实验资源一致</li>
+                  <li>浏览器部署简单</li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>可迁移</h3>
+                <ul>
+                  <li>Buffer / Shader / Pipeline 概念可迁移到 WebGPU</li>
+                  <li>后续理解 Vulkan / Metal 也有基础</li>
+                  <li>重点是原理，不是背 API</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-8">
+          <section id="sec-8-1" class="">
+            <span class="slide-no">#sec-8-1</span>
+            <div class="eyebrow">AI learning · 33–37 min</div>
+            <h2>让 AI 用生活类比解释 Fixed vs Programmable</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>Prompt</h3>
+                <p class="quote">“请用一个生活中的例子解释固定功能流水线与可编程流水线。”</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>你的任务</h3>
+                <ul>
+                  <li>指出类比<strong>成立的两点</strong></li>
+                  <li>指出类比<strong>失效的一点</strong></li>
+                  <li>补充专业表述</li>
+                </ul>
+              </div>
+            </div>
+            <div class="activity ai fragment fade-up">
+              <span class="tag">AI类比纠错</span><span class="timer">3 min</span>
+              <p>例如AI可能说“微波炉 vs 自己做饭”。问：GPU是否真的完全没有固定功能硬件？</p>
+            </div>
+          </section>
+        </section>
+        <section id="sec-9">
+          <section id="sec-9-1" class="">
+            <span class="slide-no">#sec-9-1</span>
+            <div class="eyebrow">Post-assessment · 37–39 min</div>
+            <h2>两道判断，检查核心思想</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>Q1</h3>
+                <p>现代图形API最重要的变化，是“GPU变快了”。</p>
+                <p class="muted">判断并说明：性能提升与编程模型变化是不是同一件事？</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Q2</h3>
+                <p>WebGL 与 OpenGL 的核心图形编程思想完全无关。</p>
+                <p class="muted">用 Data / Shader / Buffer 三个词说明。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-9-2" class="">
+            <span class="slide-no">#sec-9-2</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课总结：从“按钮”到“程序”</h2>
+            <div class="grid4 summary-grid">
+              <div class="card fragment fade-up">
+                <div class="kicker">01</div>
+                <h3>API取舍</h3>
+                <p>简单封装与灵活控制之间存在权衡。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">02</div>
+                <h3>核心变革</h3>
+                <p>固定功能 → 可编程流水线。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">03</div>
+                <h3>核心模型</h3>
+                <p><strong>Data + Program</strong></p>
+              </div>
+              <div class="card fragment fade-up">
+                <div class="kicker">04</div>
+                <h3>课程载体</h3>
+                <p>WebGL 2 用来学习现代图形学原理。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-9-3" class="">
+            <span class="slide-no">#sec-9-3</span>
+            <div class="eyebrow">Exit ticket · 39–40 min</div>
+            <h2>填三个空格</h2>
+            <p class="question fragment fade-up">
+              Data → ________　　Program → ________　　GPU执行 → ________
+            </p>
+            <aside class="notes">
+              <p>Data->Buffer(缓冲); Program->Shader(着色器); GPU执行->Draw Call(并行执行绘制);</p>
+            </aside>
+            <div class="activity fragment fade-up">
+              <span class="tag">提交</span><span class="timer">1 min</span>
+              <p>再写一句：为什么现代API看起来比固定功能API更复杂，却更有价值？</p>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="../shared/classroom-fragments.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document
+        .querySelectorAll('img[data-fallback],video[data-fallback]')
+        .forEach((el) => el.addEventListener('error', () => fallbackMedia(el), { once: true }));
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        history: false,
+        center: true,
+        touch: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: true,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>

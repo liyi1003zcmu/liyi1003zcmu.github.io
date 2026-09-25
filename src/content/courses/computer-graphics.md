@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-09-19
+updatedDate: 2026-09-25
 ---
 
 ## 课程简介
@@ -68,6 +68,9 @@ updatedDate: 2026-09-19
    - [第二讲：图形成像系统概述](/slides/computer-graphics/ch01/lecture-1-2.html)
    - [第三讲：图形绘制系统概述](/slides/computer-graphics/ch01/lecture-1-3.html)
 2. **图形学编程**：Sierpinski 镂垫、WebGL API、着色器程序与图元属性
+   - [第一讲：从固定功能到可编程 GPU](/slides/computer-graphics/ch02/lecture-2-1.html)
+   - [第二讲：数据如何进入 GPU，Shader 如何处理它](/slides/computer-graphics/ch02/lecture-2-2.html)
+   - [第三讲：一个完整的 WebGL 程序如何运行](/slides/computer-graphics/ch02/lecture-2-3.html)
 3. **交互和动画**：事件驱动输入、动画渲染循环与对象拾取
 4. **几何对象和变换**：坐标系、仿射变换、齐次坐标、变换级联与四元数
 5. **观察**：相机定位、观察矩阵、平行与透视投影、规范化视见体
@@ -79,7 +82,7 @@ updatedDate: 2026-09-19
 
 ## 课件资源
 
-第〇章课程概述和第一章三份课件均已发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
+第〇章课程概述、第一章和第二章课件均已发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
 
 ## 实验任务
 
@@ -103,6 +106,7 @@ updatedDate: 2026-09-19
 
 ## 更新记录
 
+- 2026-09-25：发布第二章三份在线课件及配套 WebGL 示例。
 - 2026-09-19：发布实验提交规范和课程设计指南，完善课程主页相关说明。
 - 2026-09-19：同步 2026 秋季课程结构，发布第〇章课程概述和第一章三份在线课件。
 - 2026-03-05：建立课程条目。
