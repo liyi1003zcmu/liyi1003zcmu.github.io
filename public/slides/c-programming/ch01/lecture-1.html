@@ -1,0 +1,1905 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>程序设计基础：第1章 引言</title>
+    <meta name="description" content="第1章 引言：生成式AI时代的程序设计入门" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <link rel="stylesheet" href="/vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="/vendor/reveal/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css" id="highlight" />
+
+    <style>
+      :root {
+        --blue: #2056a8;
+        --blue2: #2c7be5;
+        --cyan: #eaf4ff;
+        --ink: #1f2937;
+        --muted: #5b6573;
+        --green: #1d7a46;
+        --orange: #a65b00;
+        --red: #b42318;
+        --purple: #6d28d9;
+        --line: #d8e1ec;
+        --soft: #f7f9fc;
+      }
+      /* 1600 × 900 设计画布：适配 1920 × 1080 全屏播放。 */
+      .reveal {
+        color: var(--ink);
+        font-size: 25px;
+      }
+      .reveal .slides section {
+        box-sizing: border-box;
+        text-align: left;
+        padding: 22px 30px;
+      }
+      .reveal .slides section.stack {
+        padding: 0;
+      }
+      .reveal .slides section > h1,
+      .reveal .slides section > h2 {
+        text-align: left;
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: #163f78;
+        text-transform: none;
+      }
+      .reveal h1 {
+        font-size: 72px;
+        line-height: 1.12;
+        margin: 0.12em 0 0.28em;
+      }
+      .reveal h2 {
+        font-size: 46px;
+        line-height: 1.18;
+        margin: 0 0 28px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #dbe7f6;
+      }
+      .reveal h3 {
+        font-size: 29px;
+        line-height: 1.25;
+        margin: 0 0 16px;
+      }
+      .reveal p {
+        font-size: 25px;
+        line-height: 1.48;
+        margin: 14px 0;
+      }
+      .reveal ul,
+      .reveal ol {
+        margin: 0.25em 0 0.25em 1.15em;
+      }
+      .reveal li {
+        font-size: 23px;
+        line-height: 1.45;
+        margin: 9px 0;
+      }
+      .reveal code {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+      }
+      .reveal :not(pre) > code {
+        font-size: 21px;
+      }
+      .reveal pre {
+        width: 92%;
+        box-shadow: none;
+        font-size: 22px;
+        line-height: 1.38;
+        margin: 24px auto;
+      }
+      .reveal pre code {
+        max-height: 545px;
+        font-size: 1em;
+        line-height: 1.38;
+        padding: 22px 26px;
+        border-radius: 12px;
+      }
+      .reveal .grid2 pre,
+      .reveal .grid3 pre {
+        width: 100%;
+      }
+      .small {
+        font-size: 20px !important;
+        line-height: 1.45 !important;
+      }
+      .tiny {
+        font-size: 18px !important;
+        line-height: 1.42 !important;
+      }
+      .large {
+        font-size: 28px !important;
+        line-height: 1.42 !important;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .accent {
+        color: var(--blue);
+        font-weight: 700;
+      }
+      .danger {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .good {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .orange {
+        color: var(--orange);
+        font-weight: 700;
+      }
+      .purple {
+        color: var(--purple);
+        font-weight: 700;
+      }
+      .center {
+        text-align: center !important;
+      }
+      .left {
+        text-align: left !important;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+        align-items: stretch;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        align-items: stretch;
+      }
+      .card {
+        box-sizing: border-box;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 22px 25px;
+        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+      }
+      .card h3 {
+        margin-top: 0;
+      }
+      .soft {
+        background: var(--soft);
+      }
+      .bluebox {
+        background: var(--cyan);
+        border-left: 6px solid var(--blue2);
+        padding: 18px 22px;
+        border-radius: 12px;
+        font-size: 23px;
+        line-height: 1.52;
+      }
+      .quote {
+        font-size: 29px;
+        line-height: 1.52;
+        padding: 30px 38px;
+        border-left: 7px solid var(--blue2);
+        background: var(--soft);
+        text-align: left;
+        border-radius: 0 14px 14px 0;
+      }
+      .pill {
+        display: inline-block;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #e8eef7;
+        color: #24405f;
+        font-size: 19px;
+        margin: 5px;
+      }
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .step {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 17px 10px;
+        border: 1px solid #c6d5e8;
+        border-radius: 13px;
+        background: #fff;
+        font-size: 28px;
+        line-height: 1.25;
+        text-align: center;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
+      }
+      .arrow {
+        flex: 0 0 auto;
+        font-size: 34px;
+        color: #6683a6;
+      }
+      table.compare {
+        width: 100%;
+        margin: auto;
+        border-collapse: collapse;
+        font-size: 28px;
+      }
+      table.compare th,
+      table.compare td {
+        border: 1px solid #d7dee8;
+        padding: 13px 15px;
+      }
+      table.compare th {
+        background: #edf4fb;
+        color: #173d70;
+      }
+      .sectiontag {
+        color: #46709f;
+        font-size: 32px !important;
+        letter-spacing: 0.09em;
+      }
+      .title-meta {
+        font-size: 32px !important;
+        margin-top: 38px !important;
+      }
+      .bigq {
+        font-size: 38px !important;
+        color: #143b70;
+        font-weight: 700;
+        line-height: 1.32 !important;
+      }
+      .rule {
+        font-size: 28px !important;
+        font-weight: 700;
+        color: #163f78;
+        letter-spacing: 0.03em;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 12px 24px;
+        font-size: 23px;
+        line-height: 1.42;
+        text-align: left;
+      }
+      .timeline .t {
+        color: #184d8c;
+        font-weight: 700;
+      }
+      .tag-ai {
+        color: #6d28d9;
+        font-weight: 700;
+      }
+      .tag-human {
+        color: #0f766e;
+        font-weight: 700;
+      }
+      .miniimg {
+        max-width: 100%;
+        border: 1px solid #d7dee8;
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+      }
+      .reveal section > img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .imgcap {
+        font-size: 16px !important;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 7px !important;
+      }
+      .modulecover {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 720px;
+        padding: 55px 70px;
+        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #ffffff 100%);
+        border: 1px solid #dbe7f6;
+        border-radius: 22px;
+        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
+      }
+      .modulecover .cover-kicker {
+        font-size: 24px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #5c7da5;
+        margin-bottom: 18px;
+      }
+      .modulecover .cover-title {
+        font-size: 58px;
+        line-height: 1.2;
+        color: #163f78;
+        font-weight: 800;
+        margin: 0 0 20px 0;
+      }
+      .modulecover .cover-subtitle {
+        font-size: 28px;
+        color: #48627f;
+        line-height: 1.52;
+        max-width: 1080px;
+      }
+      .modulecover .cover-tags {
+        margin-top: 20px;
+      }
+      .modulecover .cover-tags .pill {
+        font-size: 24px;
+        background: #ddeafb;
+        color: #214c84;
+      }
+      .compact-demo pre {
+        margin: 12px auto;
+      }
+      .compact-demo .bluebox {
+        padding: 12px 17px;
+      }
+      .optional {
+        border: 1px dashed #d69e2e;
+        background: #fffaf0;
+      }
+      .optional h3 {
+        color: #a65b00;
+      }
+      .instruction-grid,
+      .term-grid,
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 42px;
+        row-gap: 4px;
+        margin-left: 1.1em !important;
+      }
+      .instruction-grid li,
+      .term-grid li,
+      .summary-grid li {
+        break-inside: avoid;
+      }
+      .reveal .fragment.fade-up {
+        transform: translateY(18px);
+        transition:
+          opacity 0.38s ease,
+          transform 0.38s ease;
+        will-change: opacity, transform;
+      }
+      .reveal .fragment.fade-up.visible {
+        transform: translateY(0);
+      }
+      @media (max-aspect-ratio: 4/3) {
+        .grid4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .flow {
+          flex-wrap: wrap;
+        }
+        .instruction-grid,
+        .term-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- 开篇与目录 -->
+        <section id="module-opening">
+          <section id="titlepage">
+            <p class="center sectiontag">程序设计基础 · 第1章</p>
+            <h1 style="text-align: center">引言：生成式AI时代<br />怎样学程序设计？</h1>
+            <!-- <h3>从程序、语言、编译与问题求解开始</h3> -->
+            <p class="center title-meta">中医药人工智能学院 · 浙江中医药大学</p>
+            <p id="date" class="center small"></p>
+            <script>
+              const now = new Date();
+              document.getElementById('date').innerHTML =
+                `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+            </script>
+          </section>
+
+          <section id="ch1-position">
+            <h2>第0章之后，第1章还要解决什么？</h2>
+            <div class="grid3">
+              <div class="card fragment">
+                <h3>①</h3>
+                <p class="center large">
+                  AI时代<br /><span class="accent large">怎样学习程序设计？</span>
+                </p>
+              </div>
+              <div class="card fragment">
+                <h3>②</h3>
+                <p class="center large">
+                  程序和程序语言<br /><span class="accent large">到底是什么？</span>
+                </p>
+              </div>
+              <div class="card fragment">
+                <h3>③</h3>
+                <p class="center large">
+                  一个C程序<br /><span class="accent large">怎样产生并运行？</span>
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              第0章已讲课程信息、资源、考核和“为什么学C”；本章不再重复展开这些内容。
+            </aside>
+          </section>
+
+          <section id="ch1-toc">
+            <h2>第1章内容组织</h2>
+            <table class="compare">
+              <tr>
+                <th>模块</th>
+                <th>内容</th>
+                <th>作用</th>
+              </tr>
+              <tr>
+                <td>1.1</td>
+                <td>AI时代的程序设计学习观</td>
+                <td>建立学习方式</td>
+              </tr>
+              <tr>
+                <td>1.2</td>
+                <td>程序、指令与虚拟计算机</td>
+                <td>认识程序本质</td>
+              </tr>
+              <tr>
+                <td>1.3</td>
+                <td>语言功能、语法、控制结构</td>
+                <td>建立语言整体框架</td>
+              </tr>
+              <tr>
+                <td>1.4</td>
+                <td>第一个C程序、阶乘程序、Python/C比较</td>
+                <td>进入C程序阅读</td>
+              </tr>
+              <tr>
+                <td>1.5</td>
+                <td>编译运行、错误、AI Debug</td>
+                <td>衔接上机实验</td>
+              </tr>
+              <tr>
+                <td>1.6</td>
+                <td>问题求解、算法描述、偶数求和</td>
+                <td>形成问题求解闭环</td>
+              </tr>
+              <tr>
+                <td>1.7</td>
+                <td>AI协作规则、实验衔接、任务0</td>
+                <td>形成第一次课闭环</td>
+              </tr>
+            </table>
+          </section>
+
+          <!-- <section id="implementation-note">
+        <h2>实施建议：保留完整材料，课堂灵活取舍</h2>
+        <div class="bluebox left small">
+            如果第0章已经占用1课时，本章可压缩为2课时实施；但本文件仍保留较完整内容，便于教师最后决定取舍。<br><br>
+            <strong>2课时压缩建议：</strong><br>
+            第1课时：AI导入 → 程序与指令 → 语言功能与控制结构<br>
+            第2课时：第一个C程序 → Python/C比较 → 编译调试 → 问题求解 → AI协作与实验衔接
+        </div>
+        <p class="center fragment orange">C语言历史、课程资源、考核等与第0章重复内容已去除。</p>
+    </section> -->
+        </section>
+
+        <!-- 1.1 AI时代的学习观 -->
+        <section id="module-ai-learning">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.1 / AI时代的程序设计学习观</div>
+              <div class="cover-title">AI会写代码，<br />我们怎样真正学会程序设计？</div>
+              <!-- <div class="cover-subtitle">保留AI导入、代码生成演示、继续追问和人机分工，用来承接第0章并引出程序设计本质。</div> -->
+              <div class="cover-tags">
+                <span class="pill">学习观</span><span class="pill">AI协作</span
+                ><span class="pill">问题求解</span><span class="pill">判断与验证</span>
+              </div>
+              <aside class="notes">
+                保留AI导入、代码生成演示、继续追问和人机分工，用来承接第0章并引出程序设计本质。
+              </aside>
+            </div>
+          </section>
+
+          <section id="ai-question">
+            <h2>开场问题</h2>
+            <p class="bigq center fragment">
+              如果期末给你一个题目，<br />你把它完整交给AI生成代码——<br /><span class="danger"
+                >这算不算“会程序设计”？</span
+              >
+            </p>
+            <p class="center fragment">
+              <span class="pill">A 算</span><span class="pill">B 不算</span
+              ><span class="pill">C 要看情况</span>
+            </p>
+          </section>
+
+          <section id="ai-demo-code" class="compact-demo">
+            <h2>演示：让AI“秒写”一个C程序</h2>
+            <div class="bluebox left small" data-static>
+              <strong>任务：</strong>输入3名学生的成绩，输出平均成绩和最高成绩。
+            </div>
+            <pre class="fragment fade-up"><code class="c" data-trim data-line-numbers="1-14">
+#include &lt;stdio.h&gt;
+int main(void) {
+    double a, b, c;
+    scanf("%lf%lf%lf", &amp;a, &amp;b, &amp;c);
+    double avg = (a + b + c) / 3.0;
+    double max = a;
+    if (b &gt; max) max = b;
+    if (c &gt; max) max = c;
+    printf("Average: %.2f\n", avg);
+    printf("Max: %.2f\n", max);
+    return 0;
+}
+        </code></pre>
+            <p class="center fragment orange">AI可以很快生成代码，任务结束了吗？</p>
+            <aside class="notes">
+              课堂切换——实际操作提示：切换到AI工具现场演示，输入同样任务，观察AI生成代码；不急着讲细节，追问“这个程序可靠吗？”
+            </aside>
+          </section>
+
+          <section id="ai-followup">
+            <h2>代码生成 ≠ 问题解决</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>继续追问</h3>
+                <ul>
+                  <li class="fragment">输入负数怎么办？</li>
+                  <li class="fragment">如果输入字符怎么办？</li>
+                  <li class="fragment">如果有100名学生呢？</li>
+                  <li class="fragment">为什么选 <code>double</code>？</li>
+                  <li class="fragment">有没有其他写法？</li>
+                  <li class="fragment">你怎么证明结果正确？</li>
+                </ul>
+              </div>
+              <div class="card soft fragment">
+                <h3>人必须负责</h3>
+                <p class="fragment"><span class="tag-human">理解目标</span></p>
+                <p class="fragment"><span class="tag-human">明确约束</span></p>
+                <p class="fragment"><span class="tag-human">判断方案</span></p>
+                <p class="fragment"><span class="tag-human">验证结果</span></p>
+                <p class="fragment"><span class="tag-human">承担责任</span></p>
+              </div>
+            </div>
+          </section>
+
+          <section id="what-is-programming">
+            <h2>程序设计真正学什么？</h2>
+            <div class="flow">
+              <div class="step fragment">现实问题</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">理解问题</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">确定输入/输出/约束</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">设计方法</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">表达成程序</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">运行测试</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">判断修改</div>
+            </div>
+            <br />
+            <p class="center fragment">
+              <span class="tag-ai">AI特别擅长：</span>解释、生成、补全、修改、提示
+            </p>
+            <p class="center fragment">
+              <span class="tag-human">人必须负责：</span>目标、判断、验证、选择、责任
+            </p>
+            <aside class="notes">
+              视觉补充——图示建议：可插入“现实问题→理解问题→输入/输出/约束→设计方法→表达程序→运行测试→判断修改”的横向流程图，下方标注AI与人的分工。
+            </aside>
+          </section>
+
+          <section id="principle-1">
+            <div class="quote">
+              <strong>本课程第一条原则：</strong><br /><br />
+              程序设计的核心不是“记住多少语法”，而是<strong>分析问题、设计方法、表达算法、编写程序、测试和修改程序</strong>。
+            </div>
+          </section>
+        </section>
+
+        <!-- 1.2 程序、指令与语言 -->
+        <section id="module-program-language">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.2 / 程序、指令与程序设计语言</div>
+              <div class="cover-title">程序不是一段神秘代码，<br />而是一组可执行的步骤</div>
+              <!-- <div class="cover-subtitle">保留教材中的“程序与指令”“虚拟计算机指令系统”内容，帮助学生理解程序的本质。</div> -->
+              <div class="cover-tags">
+                <span class="pill">程序</span><span class="pill">指令</span
+                ><span class="pill">语言</span><span class="pill">步骤</span>
+              </div>
+              <aside class="notes">
+                保留教材中的“程序与指令”“虚拟计算机指令系统”内容，帮助学生理解程序的本质。
+              </aside>
+            </div>
+          </section>
+
+          <section id="program-definition">
+            <h2>程序与程序设计语言</h2>
+            <div class="grid2">
+              <div class="card fragment soft">
+                <h3>程序</h3>
+                <p class="left fragment small">
+                  人们为解决某种问题，用计算机可以识别的代码，编排的一系列加工步骤。
+                </p>
+                <p class="left fragment small">
+                  程序执行过程，本质上是对程序所表达的数据进行处理的过程。
+                </p>
+              </div>
+              <div class="card fragment soft">
+                <h3>程序设计语言</h3>
+                <p class="left fragment small">
+                  提供一种表达数据与处理数据的功能，要求程序员按照语言规范编程。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="instruction-definition">
+            <h2>程序与指令</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>指令</h3>
+                <p class="left small">
+                  计算机最基本的功能，例如实现一次加法运算，或实现一次大小判别。
+                </p>
+                <h3>指令系统</h3>
+                <p class="left small">计算机所能实现的指令的集合。</p>
+              </div>
+              <div class="card soft">
+                <h3>程序</h3>
+                <p class="left small">为完成某个任务而编写的一系列计算机指令的有序组合。</p>
+                <div class="bluebox small">类比：菜谱也是一组有序步骤。</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="recipe-analogy">
+            <h2>用“菜谱”理解程序</h2>
+            <div class="card soft">
+              <p class="left"><strong>程序名：</strong>番茄炒蛋</p>
+              <p class="left fragment"><strong>指令1：</strong>拿出两个鸡蛋</p>
+              <p class="left fragment"><strong>指令2：</strong>将鸡蛋打入碗中并搅拌</p>
+              <p class="left fragment"><strong>指令3：</strong>切番茄</p>
+              <p class="left fragment"><strong>指令4：</strong>加热、翻炒、调味</p>
+            </div>
+            <p class="center fragment orange">计算机程序比菜谱更严格：每一步都必须精确。</p>
+          </section>
+
+          <section id="virtual-machine-instructions">
+            <h2>虚拟计算机指令系统</h2>
+            <p class="small left">
+              例：编写程序，分别求和与乘积。约定字母表示内存单元，<code>0</code>、<code>1</code>
+              等数字表示常量；虚拟计算机定义7条指令：
+            </p>
+            <ul class="instruction-grid">
+              <li class="fragment"><strong>Input X：</strong>将当前输入数据存储到内存 X 单元</li>
+              <li class="fragment"><strong>Output X：</strong>将内存 X 单元的数据输出</li>
+              <li class="fragment">
+                <strong>Add X Y Z：</strong>将操作数 X 与 Y 的值相加，结果存储到内存 Z
+              </li>
+              <li class="fragment">
+                <strong>Sub X Y Z：</strong>将操作数 X 与 Y 的值相减，结果存储到内存 Z
+              </li>
+              <li class="fragment">
+                <strong>BranchEq X Y P：</strong>若操作数 X 与 Y 的值相等，跳转到 P 处执行
+              </li>
+              <li class="fragment"><strong>Jump Q：</strong>程序跳转到 Q 处执行</li>
+              <li class="fragment"><strong>Set X Y：</strong>将操作数 X 的值存储到内存 Y</li>
+            </ul>
+          </section>
+
+          <section id="virtual-add">
+            <h2>虚拟程序：输入A、B、C，求A+B+C</h2>
+            <pre><code class="text" data-trim data-line-numbers>
+Input A;     输入第1个数据到A
+Input B;     输入第2个数据到B
+Input C;     输入第3个数据到C
+Add A B D;   D = A + B
+Add C D D;   D = C + D
+Output D;    输出D
+        </code></pre>
+            <p class="center fragment danger">思考：如何求 A + B - C？</p>
+          </section>
+
+          <section id="virtual-add-three">
+            <h2>虚拟程序：输入A，求A+A+A</h2>
+            <div class="grid2">
+              <div>
+                <h3>虚拟程序1</h3>
+                <pre><code class="text" data-trim>
+Input A;
+Add A A D;
+Add A D D;
+Output D;
+                </code></pre>
+              </div>
+              <div>
+                <h3>虚拟程序2</h3>
+                <pre><code class="text" data-trim>
+Input A;
+Set 0 Z;
+Add Z A Z;
+Add Z A Z;
+Add Z A Z;
+Output Z;
+                </code></pre>
+              </div>
+            </div>
+            <p class="center fragment">同一个问题可以有不同程序，但都要表达清楚步骤。</p>
+          </section>
+
+          <section id="virtual-multiply-question">
+            <h2>虚拟程序：输入A和B，求A*B</h2>
+            <p class="left small">
+              先限定 <code>B</code> 为非负整数。此时 A*B = A + A + ... + A，相当于 B 个 A 相加。
+            </p>
+            <pre><code class="text" data-trim>
+Input A;
+Input B;
+Set 0 Z;
+Add Z A Z;
+Add Z A Z;
+...
+Add Z A Z;
+Output Z;
+        </code></pre>
+            <p class="center fragment danger">这样的思路可行吗？关键问题在哪里？</p>
+          </section>
+
+          <section id="virtual-multiply-loop">
+            <h2>引出循环：用重复加法求A*B</h2>
+            <div class="grid2">
+              <div class="card">
+                <ul>
+                  <li class="fragment">分别输入 A、B</li>
+                  <li class="fragment">设 X = 0，Z = 0</li>
+                  <li class="fragment">当 X 不等于 B 时重复：<br />Z = Z + A；X = X + 1</li>
+                  <li class="fragment">输出 Z</li>
+                </ul>
+              </div>
+              <div>
+                <pre><code class="text" data-trim data-line-numbers="1-2|3-4|5|9|6-7|8">
+Input A;
+Input B;
+Set 0 X;
+Set 0 Z;
+BranchEq X B 9;
+Add Z A Z;
+Add 1 X X;
+Jump 5;
+Output Z;
+                </code></pre>
+              </div>
+            </div>
+            <p class="center fragment small muted">
+              适用条件：<code>B</code> 为非负整数；若允许负数，还需要增加符号处理。
+            </p>
+            <p class="center fragment danger">思考：如何求 (A+B)*C？</p>
+          </section>
+        </section>
+
+        <!-- 1.3 语言功能与语法 -->
+        <section id="module-language-elements">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.3 / 程序设计语言的功能与语法</div>
+              <div class="cover-title">程序设计语言提供什么？<br />语法又约束什么？</div>
+              <!-- <div class="cover-subtitle">保留教材中语言功能、数据表达、流程控制、语法单位和三种基本控制结构的内容，但以“整体认识”为主。</div> -->
+              <div class="cover-tags">
+                <span class="pill">数据表达</span><span class="pill">流程控制</span
+                ><span class="pill">输入输出</span><span class="pill">模块化</span>
+              </div>
+              <aside class="notes">
+                保留教材中语言功能、数据表达、流程控制、语法单位和三种基本控制结构的内容，但以“整体认识”为主。
+              </aside>
+            </div>
+          </section>
+
+          <section id="language-functions">
+            <h2>程序设计语言的功能</h2>
+            <div class="grid4">
+              <div class="card fragment">
+                <h3>数据表达</h3>
+                <p class="center small">表达要处理的数据类型</p>
+              </div>
+              <div class="card fragment">
+                <h3>流程控制</h3>
+                <p class="center small">表达数据处理流程</p>
+              </div>
+              <div class="card fragment">
+                <h3>输入输出</h3>
+                <p class="center small">表达数据进入和结果输出</p>
+              </div>
+              <div class="card fragment">
+                <h3>模块化</h3>
+                <p class="center small">把代码组织为独立模块</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="data-expression">
+            <h2>数据表达</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>数据类型</h3>
+                <p class="left small">对某些具有共同特征的数据集合的总称。</p>
+                <p class="left small">例如整数集合：{..., -2, -1, 0, 1, 2, ...}</p>
+              </div>
+              <div class="card soft">
+                <h3>数据上的操作</h3>
+                <p class="left small">不同数据类型可以进行不同运算，如：</p>
+                <p class="center">
+                  <code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>%</code>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="c-data-types-preview">
+            <h2>C语言中的数据类型</h2>
+            <ul>
+              <li class="fragment"><strong>基本数据类型：</strong>整型、实型/浮点型、字符型等</li>
+              <li class="fragment"><strong>构造类型：</strong>数组、结构体、联合体等</li>
+              <li class="fragment"><strong>其他类型：</strong>指针类型、枚举类型、空类型等</li>
+              <li class="fragment"><strong>常量：</strong>程序运行过程中值不变的数据</li>
+              <li class="fragment">
+                <strong>变量：</strong>程序运行过程中可保存和改变数据的存储单元
+              </li>
+            </ul>
+            <aside class="notes">第一次课只建立整体认识，具体内容后续章节逐步展开。</aside>
+          </section>
+
+          <section id="flow-control-method">
+            <h2>结构化程序设计方法</h2>
+            <div class="grid2">
+              <div class="card">
+                <ul>
+                  <li class="fragment">将复杂程序划分为若干相对独立的模块</li>
+                  <li class="fragment">模块可以是一条语句、一段程序或一个函数</li>
+                  <li class="fragment">强调单入口、单出口</li>
+                  <li class="fragment">程序结构清晰，便于阅读、修改和调试</li>
+                </ul>
+              </div>
+              <div>
+                <img src="images/chap01/flowctrl.svg" alt="结构化程序设计" class="miniimg" />
+              </div>
+            </div>
+          </section>
+
+          <section id="three-control-structures">
+            <h2>三种基本控制结构</h2>
+            <p class="center fragment small">任何程序都可以将模块通过三种基本控制结构组合实现。</p>
+            <div class="grid3">
+              <div class="card fragment">
+                <h3>顺序结构</h3>
+                <img
+                  src="images/chap01/seq.svg"
+                  alt="顺序结构"
+                  class="miniimg"
+                  style="max-height: 220px"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>分支结构</h3>
+                <img
+                  src="images/chap01/sel.svg"
+                  alt="分支结构"
+                  class="miniimg"
+                  style="max-height: 220px"
+                />
+              </div>
+              <div class="card fragment">
+                <h3>循环结构</h3>
+                <img
+                  src="images/chap01/iter.svg"
+                  alt="循环结构"
+                  class="miniimg"
+                  style="max-height: 220px"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section id="syntax-overview">
+            <h2>程序设计语言的语法</h2>
+            <p class="left fragment small">程序必须符合语法规则，规定代码该怎么写。</p>
+            <div class="flow">
+              <div class="step fragment">字符</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">单词</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">表达式</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">语句</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">函数</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">程序</div>
+            </div>
+          </section>
+
+          <section id="c-words">
+            <h2>C语言的主要“单词”</h2>
+            <ul class="term-grid">
+              <li class="fragment">
+                <strong>标识符：</strong
+                >变量名、函数名等，由字母、数字、下划线组成，且第一个字符不能是数字
+              </li>
+              <li class="fragment">
+                <strong>保留字/关键字：</strong>C语言规定的特殊单词，如
+                <code>int</code>、<code>for</code>、<code>return</code>
+              </li>
+              <li class="fragment">
+                <strong>常量：</strong>如 <code>123</code>、<code>12.34</code>
+              </li>
+              <li class="fragment">
+                <strong>运算符：</strong>如
+                <code>+</code
+                >、<code>-</code>、<code>*</code>、<code>/</code>、<code>%</code>、<code>&gt;</code>
+              </li>
+              <li class="fragment">
+                <strong>分隔符：</strong>如 <code>{ }</code>、<code>( )</code>、<code>;</code>
+              </li>
+              <li class="fragment"><strong>注释：</strong>用于解释程序，编译器会忽略</li>
+            </ul>
+          </section>
+
+          <section id="syntax-units">
+            <h2>C语言的主要语法单位</h2>
+            <ul>
+              <li class="fragment">
+                <strong>表达式：</strong>运算符与运算对象组合形成表达式，如 <code>2+3*4</code>
+              </li>
+              <li class="fragment">
+                <strong>变量定义：</strong>定义变量时需要说明类型，如 <code>int n;</code>
+              </li>
+              <li class="fragment"><strong>语句：</strong>程序最基本的执行单位</li>
+              <li class="fragment"><strong>函数的定义与调用：</strong>把程序组织成模块</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- 1.4 第一个C程序与Python比较 -->
+        <section id="module-first-c">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.4 / 从第一个C程序开始</div>
+              <div class="cover-title">从 Hello C 到教材例题，<br />先学会阅读程序</div>
+              <!-- <div class="cover-subtitle">保留原版本中的第一个C程序、教材阶乘示例，以及非常有价值的 Python/C 对照。</div> -->
+              <div class="cover-tags">
+                <span class="pill">Hello C</span><span class="pill">main函数</span
+                ><span class="pill">printf</span><span class="pill">Python/C比较</span>
+              </div>
+              <aside class="notes">
+                保留原版本中的第一个C程序、教材阶乘示例，以及非常有价值的 Python/C 对照。
+              </aside>
+            </div>
+          </section>
+
+          <section id="hello-c">
+            <h2>从第一个C程序开始</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|3|5|6|7">
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    printf("Hello, C!\n");
+    return 0;
+}
+        </code></pre>
+            <aside class="notes">
+              今天先只看懂“程序长什么样”和“它怎样运行”，不追求一次学完全部语法。
+            </aside>
+            <aside class="notes">
+              课堂切换——实际操作提示：切换到编程环境，新建
+              <code>hello.c</code>，手动输入或粘贴本页代码，展示保存、编译和运行。
+            </aside>
+          </section>
+
+          <section id="hello-questions">
+            <h2>先问6个问题</h2>
+            <div class="grid2 small">
+              <div class="card fragment">程序从哪里开始执行？</div>
+              <div class="card fragment"><code>main</code> 是什么？</div>
+              <div class="card fragment"><code>printf</code> 做什么？</div>
+              <div class="card fragment">为什么需要 <code>stdio.h</code>？</div>
+              <div class="card fragment"><code>return 0;</code> 是什么意思？</div>
+              <div class="card fragment">如果让AI解释，它会怎么说？</div>
+            </div>
+          </section>
+
+          <section id="ai-explain-hello">
+            <h2>AI也可以是“随时可问的助教”</h2>
+            <div class="bluebox left small">
+              <strong>推荐问法：</strong><br />
+              “请向一个第一次学习C语言、但有Python基础/没有编程语言基础的大学一年级学生解释这段程序。不要使用复杂术语；逐行解释；最后给我3个检查理解的问题。”
+            </div>
+            <p class="center fragment danger" style="margin-top: 26px">但：AI的解释也需要判断。</p>
+            <p class="center fragment">例如：“C程序从第一行开始执行”——对吗？</p>
+          </section>
+
+          <section id="c-framework">
+            <h2>C程序的基本框架</h2>
+            <pre><code class="c" data-trim data-line-numbers>
+#include &lt;stdio.h&gt;     // 预处理命令
+
+int main(void)          // 主函数：程序入口
+{
+    // 函数体：写具体要执行的语句
+    return 0;           // 程序正常结束
+}
+        </code></pre>
+            <p class="center fragment small">
+              C程序由一个或多个函数组成，<code>main</code> 是主函数，有且只有一个。
+            </p>
+          </section>
+
+          <section id="factorial-example">
+            <h2>例1-1：求阶乘问题</h2>
+            <p class="left small">
+              输入一个正整数 <code>n</code>，输出 <code>n!</code>。例如输入 <code>4</code>，输出
+              <code>24</code>。
+            </p>
+            <pre><code class="c" data-trim data-line-numbers="1|2|3|5-12|14-21">
+#include &lt;stdio.h&gt;
+int factorial(int n);
+
+int main(void)
+{
+    int n, result;
+    scanf("%d", &amp;n);
+    result = factorial(n);
+    printf("%d\n", result);
+    return 0;
+}
+
+int factorial(int n)
+{
+    int i, fact = 1;
+    for(i = 1; i &lt;= n; i++)
+    {
+        fact = fact * i;
+    }
+    return fact;
+}
+        </code></pre>
+          </section>
+
+          <section id="factorial-reading">
+            <h2>阶乘程序：先读懂，不急着写</h2>
+            <ul>
+              <li class="fragment">
+                <strong>函数：</strong>C程序由函数组成，<code>main</code> 是入口，<code
+                  >factorial</code
+                >
+                是自定义函数
+              </li>
+              <li class="fragment">
+                <strong>变量：</strong><code>int n, result;</code> 在内存中准备空间保存整数
+              </li>
+              <li class="fragment">
+                <strong>函数声明：</strong>提前告诉 <code>main</code> 后面有一个
+                <code>factorial</code> 函数
+              </li>
+              <li class="fragment">
+                <strong>输入：</strong><code>scanf("%d", &amp;n)</code> 从键盘读取整数
+              </li>
+              <li class="fragment">
+                <strong>循环：</strong><code>for</code> 反复执行乘法，实现 <code>n!</code>
+              </li>
+            </ul>
+            <aside class="notes">本页可作为“阅读示例”，不必在第一次课完全讲透。</aside>
+          </section>
+
+          <section id="python-c-variable">
+            <h2>Python 与 C：我们已经会什么，还缺什么？</h2>
+            <div class="grid2">
+              <div>
+                <h3>Python</h3>
+                <pre><code class="python" data-trim>
+a = 10
+print(a)
+                </code></pre>
+              </div>
+              <div>
+                <h3>C</h3>
+                <pre><code class="c" data-trim>
+int a = 10;
+printf("%d\n", a);
+                </code></pre>
+              </div>
+            </div>
+            <p class="center fragment">Python常常替你隐藏很多细节；C会逼着你理解这些细节。</p>
+          </section>
+
+          <section id="python-c-sum">
+            <h2>Python → C：输入两个整数并求和</h2>
+            <div class="grid2">
+              <div>
+                <h3>Python</h3>
+                <pre><code class="python" data-trim>
+a = int(input())
+b = int(input())
+print(a + b)
+                </code></pre>
+              </div>
+              <div>
+                <h3>C</h3>
+                <pre><code class="c" data-trim>
+#include &lt;stdio.h&gt;
+int main(void) {
+    int a, b;
+    scanf("%d%d", &amp;a, &amp;b);
+    printf("%d\n", a + b);
+    return 0;
+}
+                </code></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="python-c-compare">
+            <h2>从比较中认识C语言</h2>
+            <table class="compare">
+              <tr>
+                <th>观察点</th>
+                <th>Python</th>
+                <th>C</th>
+              </tr>
+              <tr>
+                <td>变量类型</td>
+                <td>通常不需显式声明</td>
+                <td>需要明确声明 <code>int</code> 等类型</td>
+              </tr>
+              <tr>
+                <td>语法</td>
+                <td>较简洁</td>
+                <td>分号、花括号等规则更严格</td>
+              </tr>
+              <tr>
+                <td>输入输出</td>
+                <td><code>input / print</code></td>
+                <td><code>scanf / printf</code></td>
+              </tr>
+              <tr>
+                <td>程序结构</td>
+                <td>脚本式更常见</td>
+                <td>通常从 <code>main</code> 函数开始</td>
+              </tr>
+              <tr>
+                <td>底层细节</td>
+                <td>隐藏较多</td>
+                <td>暴露更多</td>
+              </tr>
+            </table>
+          </section>
+        </section>
+
+        <!-- 1.5 编译运行与调试 -->
+        <section id="module-compile-debug">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.5 / 编译运行与调试</div>
+              <div class="cover-title">一个 C 程序，<br />怎样变成可以运行的结果？</div>
+              <!-- <div class="cover-subtitle">保留原课件中的编译流程图、程序编译链接运行调试示意，并加入错误演示与AI Debug。</div> -->
+              <div class="cover-tags">
+                <span class="pill">源程序</span><span class="pill">编译</span
+                ><span class="pill">链接</span><span class="pill">调试</span>
+              </div>
+              <aside class="notes">
+                保留原课件中的编译流程图、程序编译连接运行调试示意，并加入错误演示与AI Debug。
+              </aside>
+            </div>
+          </section>
+
+          <section id="compile-overview">
+            <h2>程序的编译与编程环境</h2>
+            <ul>
+              <li class="fragment">
+                <strong>程序的编译：</strong>编译器分析源代码并将其翻译为汇编代码或目标代码
+              </li>
+              <li class="fragment">
+                <strong>链接：</strong>链接器把目标文件与所需库代码组合起来，生成可执行程序
+              </li>
+              <li class="fragment">
+                <strong>错误诊断：</strong>编译器能够发现并报告许多词法、语法和部分语义错误
+              </li>
+              <li class="fragment">
+                <strong>编程环境：</strong>包括编辑程序、编译、调试等工具和过程
+              </li>
+            </ul>
+          </section>
+
+          <section id="compile-process">
+            <h2>C语言编译过程</h2>
+            <div class="grid2">
+              <div>
+                <img src="images/chap01/c-flowchart.svg" alt="C语言编译流程图" class="miniimg" />
+              </div>
+              <div class="card">
+                <ul>
+                  <li class="fragment"><strong>预处理：</strong>处理头文件、宏、条件编译</li>
+                  <li class="fragment"><strong>编译：</strong>语法检查，生成汇编代码</li>
+                  <li class="fragment"><strong>汇编：</strong>生成目标文件</li>
+                  <li class="fragment">
+                    <strong>链接：</strong>组合目标文件与所需库代码，生成可执行文件
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="gcc-commands">
+            <h2>编译命令：先了解即可</h2>
+            <pre><code class="bash" data-trim>
+gcc -c test.c
+gcc test.o -o test
+gcc -o test test.c
+gcc -Wall -save-temps test.c -o test
+        </code></pre>
+            <p class="center fragment small muted">
+              如果使用IDE，“运行”按钮背后也包含编辑、编译、链接和执行的过程。
+            </p>
+          </section>
+
+          <section id="source-to-result">
+            <h2>从源代码到运行结果</h2>
+            <div class="flow">
+              <div class="step fragment">hello.c<br /><span class="muted">源程序</span></div>
+              <div class="arrow">→</div>
+              <div class="step fragment">预处理 / 编译</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">汇编 / 链接</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">可执行程序</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">运行结果</div>
+            </div>
+            <aside class="notes">
+              课堂切换——实际操作提示：切换到终端或IDE，演示最短流程：编辑 <code>hello.c</code> →
+              编译 → 运行。若用 gcc，可演示 <code>gcc hello.c -o hello</code> 与
+              <code>./hello</code>。
+            </aside>
+          </section>
+
+          <section id="make-errors">
+            <h2>故意让程序出错</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3>错误1</h3>
+                <pre><code class="c" data-trim>
+printf("Hello C!")
+                </code></pre>
+                <p class="fragment">少了什么？</p>
+              </div>
+              <div class="card">
+                <h3>错误2</h3>
+                <pre><code class="c" data-trim>
+pritnf("Hello C!");
+                </code></pre>
+                <p class="fragment">发生了什么？</p>
+              </div>
+              <div class="card">
+                <h3>错误3</h3>
+                <pre><code class="c" data-trim>
+printf("Hello C!\n";
+                </code></pre>
+                <p class="fragment">编译器会怎么提示？</p>
+              </div>
+            </div>
+            <p class="center fragment orange">错误信息不是失败，而是程序给你的反馈。</p>
+          </section>
+
+          <section id="syntax-logic-errors">
+            <h2>语法错误与逻辑错误</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>语法错误</h3>
+                <p class="left fragment small">程序不符合语言规则，通常由编译器发现。</p>
+                <p class="left fragment small">例如：少分号、括号不匹配、函数名拼错。</p>
+              </div>
+              <div class="card soft">
+                <h3>逻辑错误</h3>
+                <p class="left fragment small">程序能运行，但结果不是想要的结果。</p>
+                <p class="left fragment small">需要通过测试、观察和分析来发现。</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="debug-process-image">
+            <h2>C语言程序编译、链接、运行与调试</h2>
+            <div class="flow">
+              <div class="step fragment">编辑<br /><code>test.c</code></div>
+              <div class="arrow">→</div>
+              <div class="step fragment">编译</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">链接</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">运行与测试</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">检查结果</div>
+            </div>
+            <div class="bluebox left small" style="margin-top: 30px">
+              编译或链接失败：根据错误信息返回编辑；程序可以运行但结果不正确：分析原因、调试修改，然后重新编译和测试。
+            </div>
+          </section>
+
+          <section id="ai-debug">
+            <h2>第一次AI Debug</h2>
+            <div class="grid2">
+              <div class="card fragment soft">
+                <h3 class="danger">不推荐</h3>
+                <p class="center fragment small">“把正确代码给我。”</p>
+              </div>
+              <div class="card fragment soft">
+                <h3 class="good">更推荐</h3>
+                <p class="left fragment small">
+                  “这段C程序编译失败。请先指出错误原因，并提示我应该检查哪里；<strong>先不要直接给完整正确程序</strong>。”
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              课堂切换——实际操作提示：把一段带错误的C代码发给AI，要求AI先分析错误原因，不要直接给完整答案；随后切回课件总结“向AI求助的方式很重要”。
+            </aside>
+          </section>
+
+          <section id="principle-2">
+            <div class="quote">
+              <strong>本课程第二条原则：</strong><br /><br />
+              程序不是“写出来就结束”，而是经过<strong
+                >运行 → 发现问题 → 判断原因 → 修改 → 再验证</strong
+              >逐步形成的。
+            </div>
+          </section>
+        </section>
+
+        <!-- 1.6 问题求解 -->
+        <section id="module-problem-solving">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.6 / 如何实现问题求解</div>
+              <div class="cover-title">从问题到算法，<br />再从算法到程序</div>
+              <!-- <div class="cover-subtitle">保留教材中的“求1-100之间所有偶数之和”示例、算法描述、流程图和代码，用于展示问题求解全过程。</div> -->
+              <div class="cover-tags">
+                <span class="pill">问题分析</span><span class="pill">算法</span
+                ><span class="pill">流程图</span><span class="pill">代码实现</span>
+              </div>
+              <aside class="notes">
+                保留教材中的“求1-100之间所有偶数之和”示例、算法描述、流程图和代码，用于展示问题求解全过程。
+              </aside>
+            </div>
+          </section>
+
+          <section id="even-sum-problem">
+            <h2>问题求解示例</h2>
+            <p class="bigq center fragment">问题：求 1–100 之间所有偶数的和</p>
+            <p class="center fragment small muted">先不要急着写代码，先分析问题。</p>
+          </section>
+
+          <section id="algorithm-concept">
+            <h2>问题分析与算法分析</h2>
+            <ul>
+              <li class="fragment">
+                <strong>思路 → 算法：</strong>先有解决问题的思路，再形成明确步骤
+              </li>
+              <li class="fragment">
+                <strong>算法：</strong>一组明确的解决问题的步骤，它产生结果，并能在有限时间内终止
+              </li>
+              <li class="fragment"><strong>算法描述：</strong>自然语言、伪代码、流程图</li>
+            </ul>
+          </section>
+
+          <section id="even-sum-analysis">
+            <h2>思路和算法</h2>
+            <ul>
+              <li class="fragment">
+                <strong>明确问题：</strong>在范围 1–100 内，找到满足条件“偶数”的整数，并求累加和
+              </li>
+              <li class="fragment">
+                <strong>设置变量：</strong>用 <code>sum</code> 保存累加结果，初始值为 0
+              </li>
+              <li class="fragment"><strong>重复检查：</strong>依次查看每个整数 <code>i</code></li>
+              <li class="fragment">
+                <strong>条件判断：</strong>如果 <code>i</code> 是偶数，就执行
+                <code>sum = sum + i;</code>
+              </li>
+            </ul>
+          </section>
+
+          <section id="even-sum-flowchart">
+            <h2>算法描述：流程图</h2>
+            <img
+              src="images/chap01/flowct.svg"
+              alt="偶数求和流程图"
+              class="miniimg"
+              style="max-height: 470px"
+            />
+          </section>
+
+          <section id="even-sum-code">
+            <h2>从算法到程序：先看整体</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|2|4|6|8|10|14">
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    int i, sum = 0;
+
+    for(i = 1; i &lt;= 100; i++)
+    {
+        if(i % 2 == 0)
+        {
+            sum = sum + i;
+        }
+    }
+
+    printf("%d\n", sum);
+    return 0;
+}
+        </code></pre>
+            <p class="center fragment small muted">
+              第一次课只看清楚“输入/处理/输出”和“顺序/分支/循环”如何配合。
+            </p>
+          </section>
+
+          <section id="problem-extension">
+            <h2>问题延伸：同一个结构可以解决更多问题</h2>
+            <div class="grid2">
+              <div class="card fragment">
+                <h3>从固定范围到输入范围</h3>
+                <p class="left small">
+                  把 1–100 改为 1–n，需要增加输入，并用 <code>n</code> 控制循环终点。
+                </p>
+              </div>
+              <div class="card fragment soft">
+                <h3>从偶数和到奇数和</h3>
+                <p class="left small">
+                  把条件 <code>i % 2 == 0</code> 改为 <code>i % 2 != 0</code>。
+                </p>
+              </div>
+            </div>
+            <p class="center fragment danger">思考：如何计算从 1 到 n 之间的奇数之和？</p>
+          </section>
+
+          <section id="problem-extension-ai">
+            <h2>问题延伸：让AI帮助，但不替代思考</h2>
+            <div class="bluebox left small">
+              推荐问法：<br />
+              “我已经知道如何求1到100之间偶数的和。现在想改成求1到n之间奇数的和。请不要直接给完整代码，先提示我需要修改哪些地方，并帮我设计3组测试数据。”
+            </div>
+            <p class="center fragment">这比直接问“给我答案”更能帮助学习。</p>
+          </section>
+        </section>
+
+        <!-- 1.7 AI协作与实验衔接 -->
+        <section id="module-ai-lab">
+          <section class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">1.7 / AI协作与实验衔接</div>
+              <div class="cover-title">把课堂方法带到实验课：<br />先想、再问、运行、验证</div>
+              <!-- <div class="cover-subtitle">保留AI协作六步法、AI使用边界、课堂任务、任务0，以及第一次实验衔接说明。</div> -->
+              <div class="cover-tags">
+                <span class="pill">AI协作六步法</span><span class="pill">使用边界</span
+                ><span class="pill">Pintia</span><span class="pill">任务0</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="three-ai-students">
+            <h2>三种使用AI的学生</h2>
+            <div class="grid3">
+              <div class="card fragment">
+                <h3>A：直接复制</h3>
+                <p>“给我答案。”</p>
+                <p>复制 → 提交</p>
+              </div>
+              <div class="card fragment">
+                <h3>B：用AI纠错</h3>
+                <p>先自己写</p>
+                <p>发现错误 → 问AI原因 → 修改</p>
+              </div>
+              <div class="card fragment">
+                <h3>C：用AI协作</h3>
+                <p>先分析 → 再编码</p>
+                <p>让AI检查边界 → 自己测试与判断</p>
+              </div>
+            </div>
+            <p class="bigq center fragment">谁真正学到了东西？</p>
+          </section>
+
+          <section id="ai-six-steps">
+            <h2>AI协作编程六步法</h2>
+            <div class="flow">
+              <div class="step fragment">① 先想</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">② 再问</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">③ 看懂</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">④ 运行</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">⑤ 验证</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">⑥ 修改</div>
+            </div>
+            <aside class="notes">
+              视觉补充——图示建议：可插入六步环形流程图：先想、再问、看懂、运行、验证、修改；配大脑、对话框、放大镜、终端、清单、扳手图标。
+            </aside>
+          </section>
+
+          <section id="ai-boundary">
+            <h2>本课程允许AI，但有边界</h2>
+            <table class="compare">
+              <tr>
+                <th>使用方式</th>
+                <th>态度</th>
+              </tr>
+              <tr>
+                <td>让AI解释概念、编译错误</td>
+                <td class="good">鼓励</td>
+              </tr>
+              <tr>
+                <td>让AI给提示、检查自己的代码</td>
+                <td class="good">强烈鼓励</td>
+              </tr>
+              <tr>
+                <td>让AI生成测试数据、比较方案</td>
+                <td class="good">鼓励</td>
+              </tr>
+              <tr>
+                <td>AI生成代码后，自己分析、修改、验证</td>
+                <td class="accent">可以</td>
+              </tr>
+              <tr>
+                <td>复制自己无法解释的AI代码</td>
+                <td class="danger">不接受</td>
+              </tr>
+              <tr>
+                <td>把整个作业交给AI，自己不参与</td>
+                <td class="danger">不接受</td>
+              </tr>
+              <tr>
+                <td>不测试、不核验就提交AI结果</td>
+                <td class="danger">不接受</td>
+              </tr>
+            </table>
+          </section>
+
+          <section id="human-ai-division">
+            <h2>人与AI怎样分工？</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3 class="tag-human">人负责</h3>
+                <ul>
+                  <li class="fragment">理解问题和目标</li>
+                  <li class="fragment">决定采用什么方案</li>
+                  <li class="fragment">判断结果是否可信</li>
+                  <li class="fragment">设计测试并核验</li>
+                  <li class="fragment">解释最终程序</li>
+                  <li class="fragment">对提交结果负责</li>
+                </ul>
+              </div>
+              <div class="card soft">
+                <h3 class="tag-ai">AI负责辅助</h3>
+                <ul>
+                  <li class="fragment">解释知识</li>
+                  <li class="fragment">给出思路和示例</li>
+                  <li class="fragment">生成或补全代码</li>
+                  <li class="fragment">提示错误原因</li>
+                  <li class="fragment">提出测试建议</li>
+                  <li class="fragment">比较不同实现方式</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="class-task">
+            <h2>课堂任务：同一道题，做两次</h2>
+            <p class="center bigq">输入长方形的长和宽，计算面积和周长。</p>
+            <div class="grid2 small">
+              <div class="card fragment">
+                <h3>第一轮：不用AI · 3分钟</h3>
+                <p>只写三行：</p>
+                <p><strong>输入：</strong>……</p>
+                <p><strong>处理：</strong>……</p>
+                <p><strong>输出：</strong>……</p>
+              </div>
+              <div class="card fragment">
+                <h3>第二轮：允许AI</h3>
+                <p>把自己的思路告诉AI，让AI辅助完成程序。</p>
+                <p class="danger">前提：你必须看懂并能解释。</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="prompt-template">
+            <h2>推荐提示词模板</h2>
+            <div class="bluebox left small">
+              我正在第一次学习C语言。请根据下面的算法帮助我编写C程序。<br /><br />
+              1. 不要使用我还没有学习过的高级语法；<br />
+              2. 程序只需要包含输入、计算和输出；<br />
+              3. 请先解释你的实现思路，再给出代码；<br />
+              4. 最后给出3组用于检查程序是否正确的测试数据。<br /><br />
+              <strong>我的算法：</strong>……
+            </div>
+          </section>
+
+          <section id="first-lab-bridge">
+            <h2>第一次实验衔接：五题开放，自主推进</h2>
+            <div class="flow">
+              <div class="step fragment">环境检查</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">五题开放</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">按序完成</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">固定检查点</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">课后继续</div>
+            </div>
+            <p class="center fragment small">
+              允许教材、课件和手机AI助手；要求自己能看懂、能运行、能验证。
+            </p>
+          </section>
+
+          <section id="task-zero">
+            <h2>任务0：我的第一次AI协作编程</h2>
+            <div class="timeline">
+              <div class="t">① 问题</div>
+              <div>例如：输入摄氏温度，转换为华氏温度。</div>
+              <div class="t">② 我的思路</div>
+              <div>不超过100字，说明输入、处理和输出。</div>
+              <div class="t">③ 给AI的问题</div>
+              <div>保留提示词。</div>
+              <div class="t">④ AI给出的代码</div>
+              <div>保留初始版本。</div>
+              <div class="t">⑤ 我的修改</div>
+              <div>说明改了什么、为什么改。</div>
+              <div class="t">⑥ 测试</div>
+              <div>至少3组测试数据。</div>
+              <div class="t">⑦ 一句话反思</div>
+              <div>AI帮助了我什么？哪一步仍必须由我完成？</div>
+            </div>
+          </section>
+        </section>
+
+        <!-- 本章总结与取舍建议 -->
+        <section id="module-summary">
+          <!-- <section class="module-cover-slide">
+        <div class="modulecover">
+            <div class="cover-kicker">1.8 / 本章总结</div>
+            <div class="cover-title">保留完整材料，<br>课堂按时间弹性取舍</div>
+            <div class="cover-subtitle">本章现在包含教材第一章主要内容与AI协作设计；若实际只剩两个课时，可优先保留主线，部分例题作为自学或课后阅读。</div>
+            <div class="cover-tags"><span class="pill">总结</span><span class="pill">取舍建议</span><span class="pill">自学</span><span class="pill">实验衔接</span></div>
+        </div>
+    </section> -->
+
+          <section id="chapter-summary">
+            <h2>本章要点总结</h2>
+            <ul class="summary-grid">
+              <li class="fragment"><strong>程序：</strong>为解决问题而设计的一系列指令或步骤。</li>
+              <li class="fragment">
+                <strong>程序设计语言：</strong>用于表达数据、处理过程、输入输出和模块化组织。
+              </li>
+              <li class="fragment">
+                <strong>C程序框架：</strong>由一个或多个函数组成，必须有 <code>main</code> 主函数。
+              </li>
+              <li class="fragment">
+                <strong>结构化控制：</strong>顺序、分支、循环是程序组织的基本方式。
+              </li>
+              <li class="fragment">
+                <strong>编译运行：</strong>源程序需要经过编译、链接，才能形成可执行程序。
+              </li>
+              <li class="fragment">
+                <strong>问题求解：</strong>核心是先分析问题和设计算法，再编写、运行和验证程序。
+              </li>
+              <li class="fragment">
+                <strong>AI协作：</strong>AI可以辅助，但不能替代理解、判断、测试和责任。
+              </li>
+            </ul>
+          </section>
+
+          <!-- <section id="two-period-priority">
+        <h2>如果只剩2课时，建议这样取舍</h2>
+        <table class="compare">
+            <tr><th>内容</th><th>建议</th><th>说明</th></tr>
+            <tr><td>AI导入与人机分工</td><td class="good">保留</td><td>与课程改革和实验课直接衔接</td></tr>
+            <tr><td>程序、指令、语言功能</td><td class="good">保留压缩</td><td>支撑教材第一章概念</td></tr>
+            <tr><td>虚拟指令系统完整推演</td><td class="orange">可选</td><td>时间不足时保留A+B+C与A*B，引申题略讲</td></tr>
+            <tr><td>三种控制结构图</td><td class="good">保留</td><td>后续章节的基础框架</td></tr>
+            <tr><td>阶乘程序</td><td class="orange">作为阅读示例</td><td>不要求第一次课讲透函数和循环细节</td></tr>
+            <tr><td>Python/C比较</td><td class="good">保留</td><td>有助于已有Python基础学生迁移</td></tr>
+            <tr><td>偶数求和完整代码</td><td class="orange">可快速讲</td><td>重点讲问题分析，不必讲透每个语句</td></tr>
+        </table>
+    </section>
+
+    -->
+
+          <section id="after-class">
+            <h2>课后任务建议</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>教材阅读</h3>
+                <ul>
+                  <li>复习第1章程序、指令和语言功能</li>
+                  <li>阅读C程序基本结构</li>
+                  <li>理解编译、运行、调试基本流程</li>
+                </ul>
+              </div>
+              <div class="card soft">
+                <h3>上机准备</h3>
+                <ul>
+                  <li>完成Pintia第一次实验五道入门题</li>
+                  <li>保留一次AI协作记录</li>
+                  <li>记录一个自己遇到并解决的错误</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="closing">
+            <div class="quote">
+              <strong>本章结束语：</strong><br /><br />
+              AI可以帮你写代码，<br />
+              但不能替你<strong>理解问题、判断结果、解释程序并为最终结果负责</strong>。
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+      document.querySelectorAll('.slides section').forEach((slide) => {
+        if (slide.querySelector(':scope > section')) return;
+
+        const candidates = slide.querySelectorAll(
+          [
+            ':scope#titlepage > *:not(script)',
+            ':scope > .grid2 > .card',
+            ':scope > .grid3 > .card',
+            ':scope > .grid4 > .card',
+            ':scope > .grid2 > div:not(.card)',
+            ':scope > .grid3 > div:not(.card)',
+            ':scope > .bluebox',
+            ':scope > .quote',
+            ':scope > .bigq',
+            ':scope > .rule',
+            ':scope > ul > li',
+            ':scope > table.compare tr:not(:first-child)',
+            ':scope > .timeline > *',
+            ':scope > .modulecover > *:not(aside.notes)',
+            ':scope > img',
+          ].join(','),
+        );
+
+        candidates.forEach((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          if (
+            !el.hasAttribute('data-static') &&
+            !parentFragment &&
+            !el.querySelector('.fragment')
+          ) {
+            el.classList.add('fragment', 'fade-up');
+          }
+        });
+        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
+
+        /* 流程图的箭头与它右侧的步骤同步出现。 */
+        slide.querySelectorAll('.flow').forEach((flow) => {
+          flow.querySelectorAll('.step').forEach((step) => {
+            step.classList.add('fragment', 'fade-up');
+            const arrow = step.previousElementSibling;
+            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+          });
+        });
+
+        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          return !parentFragment || !slide.contains(parentFragment);
+        });
+        const handled = new Set();
+        let order = 0;
+        topLevelFragments.forEach((el) => {
+          if (handled.has(el)) return;
+          const parent = el.parentElement;
+          const isFlow = parent && parent.classList.contains('flow');
+          const isTimeline = parent && parent.classList.contains('timeline');
+
+          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+            el.setAttribute('data-fragment-index', order);
+            el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else if (isTimeline && el.nextElementSibling) {
+            el.setAttribute('data-fragment-index', order);
+            el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else {
+            el.setAttribute('data-fragment-index', order);
+          }
+          order += 1;
+        });
+      });
+
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.035,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        defaultTiming: 120,
+        slideNumber: true,
+        history: false,
+        keyboard: true,
+        overview: true,
+        center: true,
+        touch: true,
+        loop: false,
+        rtl: false,
+        shuffle: false,
+        fragment: true,
+        embedded: false,
+        help: true,
+        showNotes: false,
+        autoPlayMedia: null,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        autoSlideMethod: Reveal.navigateNext,
+        mouseWheel: false,
+        hideAddressBar: true,
+        previewLinks: false,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        viewDistance: 3,
+        display: 'block',
+        pdfMaxPagesPerSlide: 1,
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+        plugins: [
+          RevealZoom,
+          RevealNotes,
+          RevealSearch,
+          RevealMarkdown,
+          RevealHighlight,
+          RevealMath,
+        ],
+      });
+    </script>
+  </body>
+</html>

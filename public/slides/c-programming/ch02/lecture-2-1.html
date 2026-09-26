@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>程序设计基础：第二章 C语言综述（一）</title>
+    <meta name="description" content="第2次课第1课时：数据与运算" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <link rel="stylesheet" href="/vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="/vendor/reveal/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css" id="highlight" />
+
+    <style>
+      :root {
+        --blue: #2056a8;
+        --blue2: #2c7be5;
+        --cyan: #eaf4ff;
+        --ink: #1f2937;
+        --muted: #5b6573;
+        --green: #1d7a46;
+        --orange: #a65b00;
+        --red: #b42318;
+        --purple: #6d28d9;
+        --line: #d8e1ec;
+        --soft: #f7f9fc;
+      }
+      /* 1600 × 900 设计画布：适配 1920 × 1080 全屏播放。 */
+      .reveal {
+        color: var(--ink);
+        font-size: 28px;
+      }
+      .reveal .slides section {
+        box-sizing: border-box;
+        text-align: left;
+        padding: 20px 28px;
+      }
+      .reveal .slides section.stack {
+        padding: 0;
+      }
+      .reveal .slides section > h1,
+      .reveal .slides section > h2 {
+        text-align: left;
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: #163f78;
+        text-transform: none;
+      }
+      .reveal h1 {
+        font-size: 76px;
+        line-height: 1.1;
+        margin: 0.1em 0 0.24em;
+      }
+      .reveal h2 {
+        font-size: 50px;
+        line-height: 1.16;
+        margin: 0 0 24px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dbe7f6;
+      }
+      .reveal h3 {
+        font-size: 32px;
+        line-height: 1.22;
+        margin: 0 0 14px;
+      }
+      .reveal p {
+        font-size: 28px;
+        line-height: 1.42;
+        margin: 12px 0;
+      }
+      .reveal ul,
+      .reveal ol {
+        margin: 0.25em 0 0.25em 1.15em;
+      }
+      .reveal li {
+        font-size: 26px;
+        line-height: 1.4;
+        margin: 8px 0;
+      }
+      .reveal code,
+      .reveal pre code,
+      code,
+      .mono {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'liga' 0,
+          'calt' 0,
+          'dlig' 0 !important;
+      }
+      .reveal :not(pre) > code {
+        font-size: 24px;
+      }
+      .reveal pre {
+        width: 94%;
+        box-shadow: none;
+        font-size: 24px;
+        line-height: 1.32;
+        margin: 18px auto;
+      }
+      .reveal pre code {
+        max-height: 540px;
+        font-size: 1em;
+        line-height: 1.32;
+        padding: 18px 22px;
+        border-radius: 12px;
+      }
+      .reveal .grid2 pre,
+      .reveal .grid3 pre {
+        width: 100%;
+      }
+      .small {
+        font-size: 23px !important;
+        line-height: 1.38 !important;
+      }
+      .tiny {
+        font-size: 20px !important;
+        line-height: 1.36 !important;
+      }
+      .large {
+        font-size: 31px !important;
+        line-height: 1.36 !important;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .accent {
+        color: var(--blue);
+        font-weight: 700;
+      }
+      .danger {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .good {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .orange {
+        color: var(--orange);
+        font-weight: 700;
+      }
+      .purple {
+        color: var(--purple);
+        font-weight: 700;
+      }
+      .center {
+        text-align: center !important;
+      }
+      .left {
+        text-align: left !important;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+        align-items: stretch;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        align-items: stretch;
+      }
+      .card {
+        box-sizing: border-box;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px 23px;
+        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+      }
+      .card h3 {
+        margin-top: 0;
+      }
+      .soft {
+        background: var(--soft);
+      }
+      .bluebox {
+        background: var(--cyan);
+        border-left: 6px solid var(--blue2);
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-size: 26px;
+        line-height: 1.42;
+      }
+      .quote {
+        font-size: 29px;
+        line-height: 1.52;
+        padding: 30px 38px;
+        border-left: 7px solid var(--blue2);
+        background: var(--soft);
+        text-align: left;
+        border-radius: 0 14px 14px 0;
+      }
+      .pill {
+        display: inline-block;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #e8eef7;
+        color: #24405f;
+        font-size: 22px;
+        margin: 5px;
+      }
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .step {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 16px 9px;
+        border: 1px solid #c6d5e8;
+        border-radius: 13px;
+        background: #fff;
+        font-size: 30px;
+        line-height: 1.2;
+        text-align: center;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
+      }
+      .arrow {
+        flex: 0 0 auto;
+        font-size: 36px;
+        color: #6683a6;
+      }
+      table.compare {
+        width: 100%;
+        margin: auto;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: 1px solid #d7dee8 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        font-size: 30px;
+      }
+      table.compare th,
+      table.compare td {
+        border-right: 1px solid #d7dee8 !important;
+        border-bottom: 1px solid #d7dee8 !important;
+        border-top: none !important;
+        border-left: none !important;
+        padding: 13px 15px;
+      }
+      table.compare th:last-child,
+      table.compare td:last-child {
+        border-right: none !important;
+      }
+      table.compare tr:last-child td {
+        border-bottom: none !important;
+      }
+      table.compare th {
+        background: #edf4fb;
+        color: #173d70;
+      }
+      .sectiontag {
+        color: #46709f;
+        font-size: 34px !important;
+        letter-spacing: 0.09em;
+      }
+      .title-meta {
+        font-size: 34px !important;
+        margin-top: 34px !important;
+      }
+      .bigq {
+        font-size: 42px !important;
+        color: #143b70;
+        font-weight: 700;
+        line-height: 1.26 !important;
+      }
+      .rule {
+        font-size: 31px !important;
+        font-weight: 700;
+        color: #163f78;
+        letter-spacing: 0.03em;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: 165px 1fr;
+        gap: 10px 22px;
+        font-size: 25px;
+        line-height: 1.35;
+        text-align: left;
+      }
+      .timeline .t {
+        color: #184d8c;
+        font-weight: 700;
+      }
+      .tag-ai {
+        color: #6d28d9;
+        font-weight: 700;
+      }
+      .tag-human {
+        color: #0f766e;
+        font-weight: 700;
+      }
+      .miniimg {
+        max-width: 100%;
+        border: 1px solid #d7dee8;
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+      }
+      .reveal section > img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .imgcap {
+        font-size: 18px !important;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 7px !important;
+      }
+      .modulecover {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 720px;
+        padding: 55px 70px;
+        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #ffffff 100%);
+        border: 1px solid #dbe7f6;
+        border-radius: 22px;
+        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
+      }
+      .modulecover .cover-kicker {
+        font-size: 27px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #5c7da5;
+        margin-bottom: 16px;
+      }
+      .modulecover .cover-title {
+        font-size: 62px;
+        line-height: 1.16;
+        color: #163f78;
+        font-weight: 800;
+        margin: 0 0 18px 0;
+      }
+      .modulecover .cover-subtitle {
+        font-size: 31px;
+        color: #48627f;
+        line-height: 1.4;
+        max-width: 1120px;
+      }
+      .modulecover .cover-tags {
+        margin-top: 20px;
+      }
+      .modulecover .cover-tags .pill {
+        font-size: 27px;
+        background: #ddeafb;
+        color: #214c84;
+      }
+      .compact-demo pre {
+        margin: 12px auto;
+      }
+      .compact-demo .bluebox {
+        padding: 12px 17px;
+      }
+      .optional {
+        border: 1px dashed #d69e2e;
+        background: #fffaf0;
+      }
+      .optional h3 {
+        color: #a65b00;
+      }
+      .instruction-grid,
+      .term-grid,
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 42px;
+        row-gap: 4px;
+        margin-left: 1.1em !important;
+      }
+      .instruction-grid li,
+      .term-grid li,
+      .summary-grid li {
+        break-inside: avoid;
+      }
+      .reveal .fragment.fade-up {
+        transform: translateY(18px);
+        transition:
+          opacity 0.38s ease,
+          transform 0.38s ease;
+        will-change: opacity, transform;
+      }
+      .reveal .fragment.fade-up.visible {
+        transform: translateY(0);
+      }
+      @media (max-aspect-ratio: 4/3) {
+        .grid4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .flow {
+          flex-wrap: wrap;
+        }
+        .instruction-grid,
+        .term-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .mono {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+      }
+      .scoreline {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin: 22px 0;
+        flex-wrap: wrap;
+      }
+      .scoreline .score {
+        display: inline-block;
+        min-width: 72px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid #cbd8e6;
+        background: #fff;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .rangebar {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr;
+        gap: 0;
+        border: 1px solid #cbd8e6;
+        border-radius: 14px;
+        overflow: hidden;
+        margin: 28px auto;
+        max-width: 1180px;
+      }
+      .rangebar div {
+        padding: 16px 12px;
+        text-align: center;
+        font-size: 24px;
+        border-right: 1px solid #cbd8e6;
+        background: #fff;
+      }
+      .rangebar div:last-child {
+        border-right: none;
+      }
+      .rangebar .bad {
+        background: #fff5f5;
+        color: #b42318;
+        font-weight: 700;
+      }
+      .rangebar .ok {
+        background: #f2fbf7;
+        color: #1d7a46;
+        font-weight: 700;
+      }
+      .rangebar .goodr {
+        background: #eef6ff;
+        color: #2056a8;
+        font-weight: 700;
+      }
+      .rangebar .excellent {
+        background: #f5f0ff;
+        color: #6d28d9;
+        font-weight: 700;
+      }
+      .placeholder {
+        border: 2px dashed #9ab4cc;
+        border-radius: 16px;
+        padding: 22px;
+        background: #f8fbff;
+        color: #39566f;
+        text-align: left;
+      }
+      .placeholder .title {
+        font-weight: 700;
+        color: #2056a8;
+        margin-bottom: 8px;
+        font-size: 25px;
+      }
+      .prompt {
+        background: #f7f7fb;
+        border-left: 6px solid #6d28d9;
+        padding: 18px 22px;
+        border-radius: 10px;
+        font-size: 22px;
+        line-height: 1.55;
+        text-align: left;
+      }
+      .code-small pre code {
+        max-height: 500px;
+        font-size: 19px;
+        line-height: 1.28;
+      }
+
+      /* 2026-09-25 修正：教室投影版字号、白底代码块与页面标签 */
+      .reveal {
+        color: var(--ink);
+        font-size: 32px !important;
+      }
+      .reveal .slides section {
+        padding: 30px 42px !important;
+      }
+      .reveal .slides section.stack {
+        padding: 0 !important;
+      }
+      .reveal h1 {
+        font-size: 82px !important;
+        line-height: 1.08 !important;
+      }
+      .reveal h2 {
+        font-size: 56px !important;
+        line-height: 1.15 !important;
+        margin: 0 0 24px !important;
+        padding-bottom: 12px !important;
+      }
+      .reveal h3 {
+        font-size: 36px !important;
+        line-height: 1.22 !important;
+        margin: 0 0 14px !important;
+      }
+      .reveal p {
+        font-size: 32px !important;
+        line-height: 1.42 !important;
+      }
+      .reveal li {
+        font-size: 30px !important;
+        line-height: 1.38 !important;
+        margin: 8px 0 !important;
+      }
+      .reveal :not(pre) > code {
+        font-size: 28px !important;
+      }
+      .small {
+        font-size: 26px !important;
+        line-height: 1.42 !important;
+      }
+      .tiny {
+        font-size: 23px !important;
+        line-height: 1.38 !important;
+      }
+      .large {
+        font-size: 38px !important;
+        line-height: 1.28 !important;
+      }
+      .bigq {
+        font-size: 46px !important;
+        line-height: 1.28 !important;
+      }
+      .sectiontag {
+        font-size: 38px !important;
+      }
+      .title-meta {
+        font-size: 36px !important;
+      }
+      .card {
+        padding: 24px 28px !important;
+      }
+      .bluebox {
+        font-size: 30px !important;
+        line-height: 1.46 !important;
+        padding: 20px 25px !important;
+      }
+      .quote {
+        font-size: 34px !important;
+        line-height: 1.44 !important;
+      }
+      .pill {
+        font-size: 25px !important;
+        padding: 8px 16px !important;
+      }
+      .step {
+        font-size: 31px !important;
+        line-height: 1.2 !important;
+        padding: 18px 12px !important;
+      }
+      .arrow {
+        font-size: 38px !important;
+      }
+      table.compare {
+        font-size: 30px !important;
+      }
+      table.compare th,
+      table.compare td {
+        padding: 13px 15px !important;
+      }
+      .timeline {
+        font-size: 28px !important;
+        line-height: 1.36 !important;
+        grid-template-columns: 180px 1fr !important;
+      }
+      .modulecover {
+        min-height: 710px !important;
+        padding: 60px 76px !important;
+      }
+      .modulecover .cover-kicker {
+        font-size: 30px !important;
+      }
+      .modulecover .cover-title {
+        font-size: 68px !important;
+        line-height: 1.16 !important;
+      }
+      .modulecover .cover-subtitle {
+        font-size: 34px !important;
+      }
+      .modulecover .cover-tags .pill {
+        font-size: 28px !important;
+      }
+      .reveal pre {
+        width: 96% !important;
+        font-size: 28px !important;
+        line-height: 1.32 !important;
+        margin: 18px auto !important;
+        box-shadow: none !important;
+      }
+      .reveal code,
+      .reveal pre code,
+      .reveal pre code.hljs,
+      .reveal pre .hljs,
+      .mono {
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'liga' 0,
+          'calt' 0,
+          'dlig' 0 !important;
+      }
+      .reveal pre code,
+      .reveal pre code.hljs,
+      .reveal pre .hljs {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        border: 1px solid #d8e1ec !important;
+        border-radius: 14px !important;
+        box-shadow: 0 7px 18px rgba(31, 41, 55, 0.08) !important;
+        max-height: 565px !important;
+        font-size: 1em !important;
+        line-height: 1.32 !important;
+        padding: 22px 28px !important;
+        text-shadow: none !important;
+      }
+      .hljs-keyword,
+      .hljs-built_in,
+      .hljs-type {
+        color: #174ea6 !important;
+        font-weight: 700 !important;
+      }
+      .hljs-string,
+      .hljs-char,
+      .hljs-regexp {
+        color: #0f7b3f !important;
+      }
+      .hljs-number,
+      .hljs-literal {
+        color: #a65b00 !important;
+      }
+      .hljs-comment {
+        color: #6b7280 !important;
+        font-style: italic !important;
+      }
+      .hljs-title,
+      .hljs-function .hljs-title {
+        color: #6d28d9 !important;
+        font-weight: 700 !important;
+      }
+      .hljs-meta,
+      .hljs-preprocessor {
+        color: #b42318 !important;
+        font-weight: 700 !important;
+      }
+      .slide-label {
+        position: absolute;
+        top: 9px;
+        right: 24px;
+        z-index: 50;
+        max-width: 46%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 5px 10px;
+        border: 1px solid #cbd9ec;
+        border-radius: 999px;
+        background: #f4f8ff;
+        color: #375a82;
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-size: 16px !important;
+        line-height: 1.15;
+        opacity: 0.92;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1-0">
+          <section id="sec-1-1">
+            <p class="center sectiontag">程序设计基础 · 第2次课 · 第1课时</p>
+            <h1 style="text-align: center">C语言综述（一）<br />数据如何进入程序并参与计算？</h1>
+            <p class="center title-meta">从成绩分析问题理解变量、类型、输入输出与浮点运算</p>
+          </section>
+
+          <section id="sec-1-2">
+            <h2>本次课的整体任务</h2>
+            <p class="bigq center fragment">
+              设计一个<span class="accent">班级成绩分析程序</span>，并在三课时中逐步扩展。
+            </p>
+            <div class="flow">
+              <div class="step fragment">输入成绩</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">计算平均分</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">判断区间</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">统计一组成绩</div>
+              <div class="arrow">→</div>
+              <div class="step fragment">提取函数</div>
+            </div>
+            <aside class="notes">
+              本页用于说明三课时之间的连续关系。强调不是重新做一个孤立例题，而是把教材中“显示信息、数据处理、分支、循环、函数”的几个问题统一到一个成绩分析问题中。
+            </aside>
+          </section>
+
+          <section id="sec-1-3">
+            <h2>为什么选“成绩分析”作为贯穿问题？</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3>变量简单</h3>
+                <p>
+                  主要变量为
+                  <code>a</code
+                  >、<code>b</code>、<code>s</code>、<code>sum</code>、<code>avg</code>，减少英文词汇负担。
+                </p>
+              </div>
+              <div class="card">
+                <h3>类型典型</h3>
+                <p>
+                  原始成绩常用整数，平均分常用浮点数，适合解释 <code>int</code> 与
+                  <code>double</code>。
+                </p>
+              </div>
+              <div class="card">
+                <h3>分支典型</h3>
+                <p>成绩有合法范围和等级区间，适合解释合理区间设计与边界测试。</p>
+              </div>
+            </div>
+            <aside class="notes">
+              这里回应“变量定义不要太复杂”的要求。成绩问题贴近学生经验，但仍保留数据类型、浮点运算和条件分支的典型性。
+            </aside>
+          </section>
+
+          <section id="sec-1-4">
+            <h2>第1课时学习目标</h2>
+            <div class="grid2">
+              <div class="card soft">
+                <h3>知识目标</h3>
+                <ul>
+                  <li>识别C程序基本结构</li>
+                  <li>理解变量定义与数据类型</li>
+                  <li>理解 <code>scanf</code> / <code>printf</code> 的基本用法</li>
+                  <li>区分整数运算与浮点运算</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>能力目标</h3>
+                <ul>
+                  <li>能从“输入—处理—输出”分析一个简单问题</li>
+                  <li>能预测表达式结果并用运行结果验证</li>
+                  <li>能借助AI解释运算过程，但不盲信结论</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-2-0">
+          <section id="sec-2-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.1 / 从一个输出程序开始</div>
+              <div class="cover-title">程序先要“站起来”：<br />结构、入口与输出</div>
+              <div class="cover-tags">
+                <span class="pill">#include</span><span class="pill">main</span
+                ><span class="pill">printf</span><span class="pill">return</span>
+              </div>
+              <aside class="notes">
+                本部分对应原课件“Hello World”和教材“simple C
+                program”。只讲必要结构，不展开所有语法细节。
+              </aside>
+            </div>
+          </section>
+
+          <section id="sec-2-2">
+            <h2>V0：让程序输出一句提示</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|2|3-6|4|5">
+#include &lt;stdio.h&gt;
+int main(void)
+{
+    printf("Enter two scores: ");
+    return 0;
+}
+        </code></pre>
+            <div class="grid3">
+              <div class="card">
+                <h3><code>#include</code></h3>
+                <p>引入标准输入输出相关信息。</p>
+              </div>
+              <div class="card">
+                <h3><code>main()</code></h3>
+                <p>C程序开始执行的位置。</p>
+              </div>
+              <div class="card">
+                <h3><code>printf()</code></h3>
+                <p>把文字显示到屏幕上。</p>
+              </div>
+            </div>
+            <aside class="notes">
+              可现场运行。提问：如果删掉分号会怎样？如果把printf拼错会怎样？此处为后续调试留伏笔。
+            </aside>
+          </section>
+
+          <section id="sec-2-3">
+            <h2>一个C程序由哪些部分组成？</h2>
+            <div style="text-align: center; margin-top: 8px">
+              <img
+                src="images/chap02/chap02-01.svg"
+                alt="C语言程序结构解剖图"
+                style="
+                  width: 98%;
+                  height: auto;
+                  max-height: 720px;
+                  object-fit: contain;
+                  border-radius: 16px;
+                  border: 1px solid #d8e1ec;
+                  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+                "
+              />
+            </div>
+            <aside class="notes">
+              强调函数是C程序的基本模块，main是入口。不要把“程序从第一行执行”说成绝对结论。
+            </aside>
+          </section>
+        </section>
+
+        <section id="sec-3-0">
+          <section id="sec-3-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.2 / 从常量到变量，再到交互</div>
+              <div class="cover-title">程序要处理数据：<br />从固定数值到动态输入</div>
+              <div class="cover-tags">
+                <span class="pill">常量</span><span class="pill">变量与赋值</span
+                ><span class="pill">int / double</span><span class="pill">scanf / printf</span>
+              </div>
+              <aside class="notes">
+                本模块从固定数值直接输出开始，逐步递进到变量定义、双变量计算，再引出数据类型区分，最后过渡到键盘交互输入。
+              </aside>
+            </div>
+          </section>
+
+          <section id="sec-3-2">
+            <h2>从固定值到变量：给数据一个“容器”</h2>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>① 直接输出固定数值</h3>
+                <pre><code class="c" data-trim>
+printf("score = 59\n");
+                </code></pre>
+                <p class="small muted">数据直接硬编码在程序中，数值固定无法重复修改使用。</p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3>② 用变量保存数据</h3>
+                <pre><code class="c" data-trim>
+int a = 59;
+printf("score = %d\n", a);
+                </code></pre>
+                <p class="small muted">开辟一块内存空间命名为 <code>a</code>，把数据存入其中。</p>
+              </div>
+            </div>
+            <div class="bluebox fragment" data-fragment-index="3">
+              <strong>核心概念：</strong
+              ><strong>变量</strong
+              >是内存中一块有名字、有类型的存储单元；<strong>赋值</strong>（<code>=</code>）是把右侧的数据放入左侧的变量中。
+            </div>
+            <aside class="notes">按左侧(1) -> 右侧(2) -> 底部蓝框(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-3-3">
+            <h2>两个变量与计算：表达式类型的演化</h2>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>尝试 ①：直觉写法（整数除法）</h3>
+                <pre><code class="c" data-trim>
+int a = 59, b = 60;
+int avg = (a + b) / 2;
+printf("avg = %d\n", avg);
+                </code></pre>
+                <p class="small danger fragment" data-fragment-index="2">
+                  思考与讨论：<code>119 / 2</code> 的输出是多少？小数部分
+                  <code>.5</code> 被直接丢弃（整数截断）。
+                </p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="3">
+                <h3>过渡 ②：引入浮点数（浮点运算）</h3>
+                <pre><code class="c" data-trim>
+int a = 59, b = 60;
+double avg = (a + b) / 2.0;
+printf("avg = %.1f\n", avg);
+                </code></pre>
+                <p class="small good fragment" data-fragment-index="4">
+                  解决方案：使用 <code>2.0</code> 提升表达式类型为浮点数，正确输出
+                  <code>59.5</code>。
+                </p>
+              </div>
+            </div>
+            <div class="bluebox fragment" data-fragment-index="5">
+              <strong>规律引出（表达式类型）：</strong>C语言中“整数 ÷
+              整数”结果仍为整数；只要除数变为浮点数（<code>2.0</code>），整个表达式就会按浮点运算保留小数。
+            </div>
+            <aside class="notes">
+              按顺序依次展示：左侧卡片(1) → 左侧分析(2) → 右侧卡片(3) → 右侧分析(4) →
+              底部总结框(5)。隐藏代码注释中的输出结果供课堂互动问答。
+            </aside>
+          </section>
+
+          <section id="sec-3-4">
+            <h2>类型辨析：为什么要区分 <code>int</code> 与 <code>double</code>？</h2>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3><code>int</code> 整数类型</h3>
+                <pre><code class="c" data-trim>int a = 59;</code></pre>
+                <ul>
+                  <li>只保存整数（没有小数部分）</li>
+                  <li>场景：成绩、人数、计数、页码</li>
+                  <li>内存开销小，运算速度极快</li>
+                </ul>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3><code>double</code> 双精度浮点型</h3>
+                <pre><code class="c" data-trim>double avg = 59.5;</code></pre>
+                <ul>
+                  <li>保存带小数连续变化的数据</li>
+                  <li>场景：平均分、身高、比率、测量值</li>
+                  <li>格式化输出：<code>printf("%.1f", avg);</code></li>
+                </ul>
+              </div>
+            </div>
+            <p class="center fragment bigq" data-fragment-index="3">
+              变量定义 = 告知编译器内存大小 + 赋予名字 + 制定解释规则
+            </p>
+            <aside class="notes">按左侧(1) -> 右侧(2) -> 底部总结(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-3-5">
+            <h2>从固定赋值到动态输入：使用 <code>scanf()</code></h2>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>固定赋值（硬编码）</h3>
+                <pre><code class="c" data-trim>
+int a = 59, b = 60;
+                </code></pre>
+                <p class="small muted">每次换成绩都要修改代码重新编译，缺乏通用性。</p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3>动态从键盘输入</h3>
+                <pre><code class="c" data-trim>
+int a, b;
+scanf("%d%d", &amp;a, &amp;b);
+                </code></pre>
+                <p class="small muted">程序运行时等待用户输入数据，通用性强！</p>
+              </div>
+            </div>
+            <div class="bluebox fragment" data-fragment-index="3">
+              <strong>对比辨析：</strong><br />
+              <code>printf("...", a);</code> 把变量
+              <code>a</code> 的<strong>值</strong>拿出来显示。<br />
+              <code>scanf("...", &amp;a);</code> 找到变量
+              <code>a</code>
+              的<strong>地址</strong>（<code>&amp;a</code>），把键盘读入的数据放进去。
+            </div>
+            <aside class="notes">按左侧(1) -> 右侧(2) -> 底部对比蓝框(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-3-6">
+            <h2>第一个完整版本：交互式成绩平均分计算</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|5|6|7|8|9|10">
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    int a, b;            // 1. 定义变量存储整数成绩
+    double avg;          // 2. 定义变量存储浮点平均分
+    scanf("%d%d", &amp;a, &amp;b); // 3. 读入用户输入的成绩
+    avg = (a + b) / 2.0; // 4. 计算平均分（浮点运算）
+    printf("average = %.1f\n", avg); // 5. 格式化输出结果
+    return 0;
+}
+        </code></pre>
+            <p class="center fragment orange">
+              看懂这段程序：从“固定数据”到“输入-处理-输出”完整数据流！
+            </p>
+            <aside class="notes">
+              引导学生按“输入—处理—输出”三段式走查代码，确认每一个步骤的作用。
+            </aside>
+          </section>
+        </section>
+
+        <section id="sec-4-0">
+          <section id="sec-4-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.3 / 深入原理与思维建立</div>
+              <div class="cover-title">现象背后的 C 语言原理：<br />类型、运算与思维碰撞</div>
+              <div class="cover-tags">
+                <span class="pill">右值先求值</span><span class="pill">类型自动提升</span
+                ><span class="pill">隐式/显式转换</span><span class="pill">程序设计思维</span>
+              </div>
+              <aside class="notes">
+                本模块从上一模块观察到的计算现象切入，深入剖析 C
+                语言底层表达式求值与类型提升原理，帮助学生建立严谨的程序设计思维。
+              </aside>
+            </div>
+          </section>
+
+          <section id="sec-4-2">
+            <h2>原理剖析①：为什么 `double avg` 依然输出 `59.0`？</h2>
+            <p class="left">
+              认知陷阱：以为把变量定义为 <code>double avg</code>，计算就会自动按小数算。
+            </p>
+            <pre><code class="c" data-trim data-line-numbers="1|2|3">
+double avg;
+avg = (a + b) / 2;     // 结果是 59.0，而不是 59.5！
+        </code></pre>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>第一步：右侧表达式先求值</h3>
+                <p><code>(59 + 60) / 2</code> → <code>119 / 2</code></p>
+                <p class="small danger">
+                  两个 <code>int</code> 相除，在赋值前就已经被截断为整数 <code>59</code>！
+                </p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3>第二步：结果再赋值给左值</h3>
+                <p><code>avg = 59</code> → 转换为 <code>double</code></p>
+                <p class="small good">
+                  将已截断的整数 <code>59</code> 存入 <code>double</code> 变量，变为
+                  <code>59.0</code>。
+                </p>
+              </div>
+            </div>
+            <div class="bluebox fragment" data-fragment-index="3">
+              <strong>核心原理：</strong
+              ><strong>表达式求值先于赋值！</strong
+              >左侧变量类型无法倒回去改变右侧表达式已完成的计算法则。
+            </div>
+            <aside class="notes">按左侧(1) -> 右侧(2) -> 底部核心原理蓝框(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-4-3">
+            <h2>原理剖析②：C 语言类型提升与转换法则</h2>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>规则一：同种类型相算</h3>
+                <pre><code class="c" data-trim>(59 + 60) / 2</code></pre>
+                <p class="small"><code>int ÷ int → int</code></p>
+                <p class="small muted">直接丢弃小数部分（截断）。</p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3>规则二：混合类型自动提升</h3>
+                <pre><code class="c" data-trim>(59 + 60) / 2.0</code></pre>
+                <p class="small"><code>int ÷ double → double ÷ double → double</code></p>
+                <p class="small good">
+                  低精度自动提升为高精度，保留小数。看常量 <code>2.0</code>！
+                </p>
+              </div>
+            </div>
+            <p class="center fragment bigq" data-fragment-index="3">
+              决定计算精度的三要素：变量类型、常量形式、表达式整体类型
+            </p>
+            <aside class="notes">按左侧(1) -> 右侧(2) -> 底部总结(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-4-4">
+            <h2>思维建立：程序设计的 3 大重点提示</h2>
+            <div class="grid3">
+              <div class="card fragment" data-fragment-index="1">
+                <h3>提示 ①：看表达式，不看左值</h3>
+                <p class="small">
+                  计算精度由<strong>表达式内部的数据类型</strong>决定，而不是由接收结果的变量决定。
+                </p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="2">
+                <h3>提示 ②：警惕整数除法截断</h3>
+                <p class="small">
+                  只要涉及平均值、比例、百分比等场景，运算符两侧必须<strong>至少有一个浮点数</strong>。
+                </p>
+              </div>
+              <div class="card fragment" data-fragment-index="3">
+                <h3>提示 ③：用边界数据测试</h3>
+                <p class="small">
+                  不要凭直觉想象代码运行！必须用类似
+                  <code>59, 60</code> 这种能触发奇数除法的边界数据真实验证。
+                </p>
+              </div>
+            </div>
+            <table class="compare fragment" data-fragment-index="4" style="margin-top: 16px">
+              <tr>
+                <th>写法</th>
+                <th>原理特征</th>
+                <th>建议等级</th>
+              </tr>
+              <tr>
+                <td><code>avg = (a + b) / 2;</code></td>
+                <td>整数截断，丢小数</td>
+                <td class="danger">避坑：不推荐</td>
+              </tr>
+              <tr>
+                <td><code>avg = (a + b) / 2.0;</code></td>
+                <td>常量触发自动提升</td>
+                <td class="good">推荐：直观清晰</td>
+              </tr>
+              <tr>
+                <td><code>avg = (double)(a + b) / 2;</code></td>
+                <td>强制类型转换</td>
+                <td class="accent">进阶：显式转换</td>
+              </tr>
+            </table>
+            <aside class="notes">
+              按提示1(1) -> 提示2(2) -> 提示3(3) -> 底部表格(4)顺序依次出现。
+            </aside>
+          </section>
+
+          <section id="sec-4-5">
+            <h2>AI 协作学原理：让 AI 拆解运算过程</h2>
+            <div class="prompt fragment" data-fragment-index="1">
+              我正在学习 C 语言。请分析下面两条语句在 <code>a=59, b=60</code> 时的计算过程：<br />
+              <code>avg = (a + b) / 2;</code> 和 <code>avg = (a + b) / 2.0;</code><br />
+              请逐步说明每一步参与运算的数据类型、中间结果与类型转换。不要直接给整段代码。
+            </div>
+            <div class="grid2">
+              <div class="card fragment" data-fragment-index="2">
+                <h3>先依据原理预测</h3>
+                <p class="small">在纸上画出“右值计算 → 类型提升 → 左值赋值”的三个步骤。</p>
+              </div>
+              <div class="card soft fragment" data-fragment-index="3">
+                <h3>再让 AI 拆解验证</h3>
+                <p class="small">核对 AI 的拆解是否符合“右值先算”原理，防范 AI 产生生成幻觉。</p>
+              </div>
+            </div>
+            <aside class="notes">按上方提示词(1) -> 左侧卡片(2) -> 右侧卡片(3)顺序依次出现。</aside>
+          </section>
+
+          <section id="sec-4-6">
+            <h2>第1课时小结与知识图谱</h2>
+            <ul class="summary-grid">
+              <li><strong>结构：</strong>C程序从 <code>main</code> 组织执行。</li>
+              <li><strong>变量：</strong>变量定义绑定了名字、内存大小与解释规则。</li>
+              <li>
+                <strong>输入输出：</strong><code>scanf</code> 取地址存入，<code>printf</code>
+                格式化输出。
+              </li>
+              <li><strong>运算原理：</strong>表达式求值先于赋值；低精度向高精度自动提升。</li>
+              <li><strong>思维习惯：</strong>警惕整数截断，用临界数据验证，善用 AI 拆解。</li>
+            </ul>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+      /* 为每个实际展示页加上可定位标签。 */
+      document.querySelectorAll('.slides section').forEach((slide, idx) => {
+        if (slide.querySelector(':scope > section')) return;
+        if (!slide.id) slide.id = `slide-${idx + 1}`;
+        if (!slide.querySelector(':scope > .slide-label')) {
+          const label = document.createElement('div');
+          label.className = 'slide-label';
+          label.setAttribute('data-static', '');
+          label.textContent = `§ ${slide.id}`;
+          slide.prepend(label);
+        }
+      });
+
+      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+      document.querySelectorAll('.slides section').forEach((slide) => {
+        if (slide.querySelector(':scope > section')) return;
+
+        const candidates = slide.querySelectorAll(
+          [
+            ':scope#sec-1-1 > *:not(script)',
+            ':scope > .grid2 > .card',
+            ':scope > .grid3 > .card',
+            ':scope > .grid4 > .card',
+            ':scope > .grid2 > div:not(.card)',
+            ':scope > .grid3 > div:not(.card)',
+            ':scope > .bluebox',
+            ':scope > .quote',
+            ':scope > .bigq',
+            ':scope > .rule',
+            ':scope > ul > li',
+            ':scope > table.compare tr:not(:first-child)',
+            ':scope > .timeline > *',
+            ':scope > .modulecover > *:not(aside.notes)',
+            ':scope > img',
+          ].join(','),
+        );
+
+        candidates.forEach((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          if (
+            !el.hasAttribute('data-static') &&
+            !parentFragment &&
+            !el.querySelector('.fragment')
+          ) {
+            el.classList.add('fragment', 'fade-up');
+          }
+        });
+        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
+
+        /* 流程图的箭头与它右侧的步骤同步出现。 */
+        slide.querySelectorAll('.flow').forEach((flow) => {
+          flow.querySelectorAll('.step').forEach((step) => {
+            step.classList.add('fragment', 'fade-up');
+            const arrow = step.previousElementSibling;
+            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+          });
+        });
+
+        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          return !parentFragment || !slide.contains(parentFragment);
+        });
+        const handled = new Set();
+        let order = 0;
+        topLevelFragments.forEach((el) => {
+          if (handled.has(el)) return;
+          const parent = el.parentElement;
+          const isFlow = parent && parent.classList.contains('flow');
+          const isTimeline = parent && parent.classList.contains('timeline');
+
+          if (el.hasAttribute('data-fragment-index')) {
+            return;
+          }
+          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else if (isTimeline && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+          }
+          order += 1;
+        });
+      });
+
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.035,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        defaultTiming: 120,
+        slideNumber: true,
+        history: false,
+        keyboard: true,
+        overview: true,
+        center: true,
+        touch: true,
+        loop: false,
+        rtl: false,
+        shuffle: false,
+        fragment: true,
+        embedded: false,
+        help: true,
+        showNotes: false,
+        autoPlayMedia: null,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        autoSlideMethod: Reveal.navigateNext,
+        mouseWheel: false,
+        hideAddressBar: true,
+        previewLinks: false,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        viewDistance: 3,
+        display: 'block',
+        pdfMaxPagesPerSlide: 1,
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+        plugins: [
+          RevealZoom,
+          RevealNotes,
+          RevealSearch,
+          RevealMarkdown,
+          RevealHighlight,
+          RevealMath,
+        ],
+      });
+    </script>
+  </body>
+</html>

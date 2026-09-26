@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>程序设计基础：第二章 C语言综述（三）</title>
+    <meta name="description" content="第2次课第3课时：指定次数循环与函数分解" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <link rel="stylesheet" href="/vendor/reveal/reset.css" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css" />
+    <link rel="stylesheet" href="/vendor/reveal/theme/white.css" id="theme" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css" id="highlight" />
+
+    <style>
+      :root {
+        --blue: #2056a8;
+        --blue2: #2c7be5;
+        --cyan: #eaf4ff;
+        --ink: #1f2937;
+        --muted: #5b6573;
+        --green: #1d7a46;
+        --orange: #a65b00;
+        --red: #b42318;
+        --purple: #6d28d9;
+        --line: #d8e1ec;
+        --soft: #f7f9fc;
+      }
+      /* 1600 × 900 设计画布：适配 1920 × 1080 全屏播放。 */
+      .reveal {
+        color: var(--ink);
+        font-size: 28px;
+      }
+      .reveal .slides section {
+        box-sizing: border-box;
+        text-align: left;
+        padding: 20px 28px;
+      }
+      .reveal .slides section.stack {
+        padding: 0;
+      }
+      .reveal .slides section > h1,
+      .reveal .slides section > h2 {
+        text-align: left;
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: #163f78;
+        text-transform: none;
+      }
+      .reveal h1 {
+        font-size: 76px;
+        line-height: 1.1;
+        margin: 0.1em 0 0.24em;
+      }
+      .reveal h2 {
+        font-size: 50px;
+        line-height: 1.16;
+        margin: 0 0 24px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dbe7f6;
+      }
+      .reveal h3 {
+        font-size: 32px;
+        line-height: 1.22;
+        margin: 0 0 14px;
+      }
+      .reveal p {
+        font-size: 28px;
+        line-height: 1.42;
+        margin: 12px 0;
+      }
+      .reveal ul,
+      .reveal ol {
+        margin: 0.25em 0 0.25em 1.15em;
+      }
+      .reveal li {
+        font-size: 26px;
+        line-height: 1.4;
+        margin: 8px 0;
+      }
+      .reveal code,
+      .reveal pre code,
+      code,
+      .mono {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'liga' 0,
+          'calt' 0,
+          'dlig' 0 !important;
+      }
+      .reveal :not(pre) > code {
+        font-size: 24px;
+      }
+      .reveal pre {
+        width: 94%;
+        box-shadow: none;
+        font-size: 24px;
+        line-height: 1.32;
+        margin: 18px auto;
+      }
+      .reveal pre code {
+        max-height: 540px;
+        font-size: 1em;
+        line-height: 1.32;
+        padding: 18px 22px;
+        border-radius: 12px;
+      }
+      .reveal .grid2 pre,
+      .reveal .grid3 pre {
+        width: 100%;
+      }
+      .small {
+        font-size: 23px !important;
+        line-height: 1.38 !important;
+      }
+      .tiny {
+        font-size: 20px !important;
+        line-height: 1.36 !important;
+      }
+      .large {
+        font-size: 31px !important;
+        line-height: 1.36 !important;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .accent {
+        color: var(--blue);
+        font-weight: 700;
+      }
+      .danger {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .good {
+        color: var(--green);
+        font-weight: 700;
+      }
+      .orange {
+        color: var(--orange);
+        font-weight: 700;
+      }
+      .purple {
+        color: var(--purple);
+        font-weight: 700;
+      }
+      .center {
+        text-align: center !important;
+      }
+      .left {
+        text-align: left !important;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+        align-items: stretch;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        align-items: stretch;
+      }
+      .card {
+        box-sizing: border-box;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px 23px;
+        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+      }
+      .card h3 {
+        margin-top: 0;
+      }
+      .soft {
+        background: var(--soft);
+      }
+      .bluebox {
+        background: var(--cyan);
+        border-left: 6px solid var(--blue2);
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-size: 26px;
+        line-height: 1.42;
+      }
+      .quote {
+        font-size: 29px;
+        line-height: 1.52;
+        padding: 30px 38px;
+        border-left: 7px solid var(--blue2);
+        background: var(--soft);
+        text-align: left;
+        border-radius: 0 14px 14px 0;
+      }
+      .pill {
+        display: inline-block;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #e8eef7;
+        color: #24405f;
+        font-size: 22px;
+        margin: 5px;
+      }
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .step {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 16px 9px;
+        border: 1px solid #c6d5e8;
+        border-radius: 13px;
+        background: #fff;
+        font-size: 30px;
+        line-height: 1.2;
+        text-align: center;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
+      }
+      .arrow {
+        flex: 0 0 auto;
+        font-size: 36px;
+        color: #6683a6;
+      }
+      table.compare {
+        width: 100%;
+        margin: auto;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: 1px solid #d7dee8 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        font-size: 30px;
+      }
+      table.compare th,
+      table.compare td {
+        border-right: 1px solid #d7dee8 !important;
+        border-bottom: 1px solid #d7dee8 !important;
+        border-top: none !important;
+        border-left: none !important;
+        padding: 13px 15px;
+      }
+      table.compare th:last-child,
+      table.compare td:last-child {
+        border-right: none !important;
+      }
+      table.compare tr:last-child td {
+        border-bottom: none !important;
+      }
+      table.compare th {
+        background: #edf4fb;
+        color: #173d70;
+      }
+      .sectiontag {
+        color: #46709f;
+        font-size: 34px !important;
+        letter-spacing: 0.09em;
+      }
+      .title-meta {
+        font-size: 34px !important;
+        margin-top: 34px !important;
+      }
+      .bigq {
+        font-size: 42px !important;
+        color: #143b70;
+        font-weight: 700;
+        line-height: 1.26 !important;
+      }
+      .rule {
+        font-size: 31px !important;
+        font-weight: 700;
+        color: #163f78;
+        letter-spacing: 0.03em;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: 165px 1fr;
+        gap: 10px 22px;
+        font-size: 25px;
+        line-height: 1.35;
+        text-align: left;
+      }
+      .timeline .t {
+        color: #184d8c;
+        font-weight: 700;
+      }
+      .tag-ai {
+        color: #6d28d9;
+        font-weight: 700;
+      }
+      .tag-human {
+        color: #0f766e;
+        font-weight: 700;
+      }
+      .miniimg {
+        max-width: 100%;
+        border: 1px solid #d7dee8;
+        border-radius: 10px;
+        background: #fff;
+        padding: 8px;
+      }
+      .reveal section > img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .imgcap {
+        font-size: 18px !important;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 7px !important;
+      }
+      .modulecover {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 720px;
+        padding: 55px 70px;
+        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #ffffff 100%);
+        border: 1px solid #dbe7f6;
+        border-radius: 22px;
+        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
+      }
+      .modulecover .cover-kicker {
+        font-size: 27px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #5c7da5;
+        margin-bottom: 16px;
+      }
+      .modulecover .cover-title {
+        font-size: 62px;
+        line-height: 1.16;
+        color: #163f78;
+        font-weight: 800;
+        margin: 0 0 18px 0;
+      }
+      .modulecover .cover-subtitle {
+        font-size: 31px;
+        color: #48627f;
+        line-height: 1.4;
+        max-width: 1120px;
+      }
+      .modulecover .cover-tags {
+        margin-top: 20px;
+      }
+      .modulecover .cover-tags .pill {
+        font-size: 27px;
+        background: #ddeafb;
+        color: #214c84;
+      }
+      .compact-demo pre {
+        margin: 12px auto;
+      }
+      .compact-demo .bluebox {
+        padding: 12px 17px;
+      }
+      .optional {
+        border: 1px dashed #d69e2e;
+        background: #fffaf0;
+      }
+      .optional h3 {
+        color: #a65b00;
+      }
+      .instruction-grid,
+      .term-grid,
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 42px;
+        row-gap: 4px;
+        margin-left: 1.1em !important;
+      }
+      .instruction-grid li,
+      .term-grid li,
+      .summary-grid li {
+        break-inside: avoid;
+      }
+      .reveal .fragment.fade-up {
+        transform: translateY(18px);
+        transition:
+          opacity 0.38s ease,
+          transform 0.38s ease;
+        will-change: opacity, transform;
+      }
+      .reveal .fragment.fade-up.visible {
+        transform: translateY(0);
+      }
+      @media (max-aspect-ratio: 4/3) {
+        .grid4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .flow {
+          flex-wrap: wrap;
+        }
+        .instruction-grid,
+        .term-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .mono {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+      }
+      .scoreline {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin: 22px 0;
+        flex-wrap: wrap;
+      }
+      .scoreline .score {
+        display: inline-block;
+        min-width: 72px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid #cbd8e6;
+        background: #fff;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .rangebar {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr;
+        gap: 0;
+        border: 1px solid #cbd8e6;
+        border-radius: 14px;
+        overflow: hidden;
+        margin: 28px auto;
+        max-width: 1180px;
+      }
+      .rangebar div {
+        padding: 16px 12px;
+        text-align: center;
+        font-size: 24px;
+        border-right: 1px solid #cbd8e6;
+        background: #fff;
+      }
+      .rangebar div:last-child {
+        border-right: none;
+      }
+      .rangebar .bad {
+        background: #fff5f5;
+        color: #b42318;
+        font-weight: 700;
+      }
+      .rangebar .ok {
+        background: #f2fbf7;
+        color: #1d7a46;
+        font-weight: 700;
+      }
+      .rangebar .goodr {
+        background: #eef6ff;
+        color: #2056a8;
+        font-weight: 700;
+      }
+      .rangebar .excellent {
+        background: #f5f0ff;
+        color: #6d28d9;
+        font-weight: 700;
+      }
+      .placeholder {
+        border: 2px dashed #9ab4cc;
+        border-radius: 16px;
+        padding: 22px;
+        background: #f8fbff;
+        color: #39566f;
+        text-align: left;
+      }
+      .placeholder .title {
+        font-weight: 700;
+        color: #2056a8;
+        margin-bottom: 8px;
+        font-size: 25px;
+      }
+      .prompt {
+        background: #f7f7fb;
+        border-left: 6px solid #6d28d9;
+        padding: 18px 22px;
+        border-radius: 10px;
+        font-size: 22px;
+        line-height: 1.55;
+        text-align: left;
+      }
+      .code-small pre code {
+        max-height: 500px;
+        font-size: 19px;
+        line-height: 1.28;
+      }
+
+      /* 2026-09-25 修正：教室投影版字号、白底代码块与页面标签 */
+      .reveal {
+        color: var(--ink);
+        font-size: 32px !important;
+      }
+      .reveal .slides section {
+        padding: 30px 42px !important;
+      }
+      .reveal .slides section.stack {
+        padding: 0 !important;
+      }
+      .reveal h1 {
+        font-size: 82px !important;
+        line-height: 1.08 !important;
+      }
+      .reveal h2 {
+        font-size: 56px !important;
+        line-height: 1.15 !important;
+        margin: 0 0 24px !important;
+        padding-bottom: 12px !important;
+      }
+      .reveal h3 {
+        font-size: 36px !important;
+        line-height: 1.22 !important;
+        margin: 0 0 14px !important;
+      }
+      .reveal p {
+        font-size: 32px !important;
+        line-height: 1.42 !important;
+      }
+      .reveal li {
+        font-size: 30px !important;
+        line-height: 1.38 !important;
+        margin: 8px 0 !important;
+      }
+      .reveal :not(pre) > code {
+        font-size: 28px !important;
+      }
+      .small {
+        font-size: 26px !important;
+        line-height: 1.42 !important;
+      }
+      .tiny {
+        font-size: 23px !important;
+        line-height: 1.38 !important;
+      }
+      .large {
+        font-size: 38px !important;
+        line-height: 1.28 !important;
+      }
+      .bigq {
+        font-size: 46px !important;
+        line-height: 1.28 !important;
+      }
+      .sectiontag {
+        font-size: 38px !important;
+      }
+      .title-meta {
+        font-size: 36px !important;
+      }
+      .card {
+        padding: 24px 28px !important;
+      }
+      .bluebox {
+        font-size: 30px !important;
+        line-height: 1.46 !important;
+        padding: 20px 25px !important;
+      }
+      .quote {
+        font-size: 34px !important;
+        line-height: 1.44 !important;
+      }
+      .pill {
+        font-size: 25px !important;
+        padding: 8px 16px !important;
+      }
+      .step {
+        font-size: 31px !important;
+        line-height: 1.2 !important;
+        padding: 18px 12px !important;
+      }
+      .arrow {
+        font-size: 38px !important;
+      }
+      table.compare {
+        font-size: 30px !important;
+      }
+      table.compare th,
+      table.compare td {
+        padding: 13px 15px !important;
+      }
+      .timeline {
+        font-size: 28px !important;
+        line-height: 1.36 !important;
+        grid-template-columns: 180px 1fr !important;
+      }
+      .modulecover {
+        min-height: 710px !important;
+        padding: 60px 76px !important;
+      }
+      .modulecover .cover-kicker {
+        font-size: 30px !important;
+      }
+      .modulecover .cover-title {
+        font-size: 68px !important;
+        line-height: 1.16 !important;
+      }
+      .modulecover .cover-subtitle {
+        font-size: 34px !important;
+      }
+      .modulecover .cover-tags .pill {
+        font-size: 28px !important;
+      }
+      .reveal pre {
+        width: 96% !important;
+        font-size: 28px !important;
+        line-height: 1.32 !important;
+        margin: 18px auto !important;
+        box-shadow: none !important;
+      }
+      .reveal code,
+      .reveal pre code,
+      .reveal pre code.hljs,
+      .reveal pre .hljs,
+      .mono {
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'liga' 0,
+          'calt' 0,
+          'dlig' 0 !important;
+      }
+      .reveal pre code,
+      .reveal pre code.hljs,
+      .reveal pre .hljs {
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        border: 1px solid #d8e1ec !important;
+        border-radius: 14px !important;
+        box-shadow: 0 7px 18px rgba(31, 41, 55, 0.08) !important;
+        max-height: 565px !important;
+        font-size: 1em !important;
+        line-height: 1.32 !important;
+        padding: 22px 28px !important;
+        text-shadow: none !important;
+      }
+      .hljs-keyword,
+      .hljs-built_in,
+      .hljs-type {
+        color: #174ea6 !important;
+        font-weight: 700 !important;
+      }
+      .hljs-string,
+      .hljs-char,
+      .hljs-regexp {
+        color: #0f7b3f !important;
+      }
+      .hljs-number,
+      .hljs-literal {
+        color: #a65b00 !important;
+      }
+      .hljs-comment {
+        color: #6b7280 !important;
+        font-style: italic !important;
+      }
+      .hljs-title,
+      .hljs-function .hljs-title {
+        color: #6d28d9 !important;
+        font-weight: 700 !important;
+      }
+      .hljs-meta,
+      .hljs-preprocessor {
+        color: #b42318 !important;
+        font-weight: 700 !important;
+      }
+      .slide-label {
+        position: absolute;
+        top: 9px;
+        right: 24px;
+        z-index: 50;
+        max-width: 46%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 5px 10px;
+        border: 1px solid #cbd9ec;
+        border-radius: 999px;
+        background: #f4f8ff;
+        color: #375a82;
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-size: 16px !important;
+        line-height: 1.15;
+        opacity: 0.92;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1-0">
+          <section id="sec-1-1">
+            <p class="center sectiontag">程序设计基础 · 第2次课 · 第3课时</p>
+            <h1 style="text-align: center">C语言综述（三）<br />如何组织重复操作与程序流程？</h1>
+            <p class="center title-meta">从指定次数循环到函数分解，建立面向过程思维</p>
+          </section>
+
+          <section id="sec-1-2">
+            <h2>综合任务：班级成绩分析</h2>
+            <p class="bigq center">输入一组成绩，统计合法成绩数量、平均分，并输出成绩等级。</p>
+            <div class="grid3">
+              <div class="card">
+                <h3>输入</h3>
+                <p><code>n</code> 和每个学生的成绩</p>
+              </div>
+              <div class="card">
+                <h3>处理</h3>
+                <p>合法性检查、累计求和、等级判断</p>
+              </div>
+              <div class="card">
+                <h3>输出</h3>
+                <p>每个成绩的等级与总体平均分</p>
+              </div>
+            </div>
+            <aside class="notes">
+              说明：本课时把前两节课的变量、输入输出、浮点运算和分支结构组合起来，引出指定次数循环和函数。
+            </aside>
+          </section>
+
+          <section id="sec-1-3">
+            <h2>第3课时学习目标</h2>
+            <div class="grid2">
+              <div class="card soft">
+                <h3>知识目标</h3>
+                <ul>
+                  <li>理解 <code>for</code> 循环的初始化、条件、更新和循环体</li>
+                  <li>理解累计统计的基本模式</li>
+                  <li>理解函数声明、定义、调用、参数和返回值</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>能力目标</h3>
+                <ul>
+                  <li>能把“一次处理”推广为“指定次数的组处理”</li>
+                  <li>能跟踪循环中变量状态变化</li>
+                  <li>能将独立任务提取为函数</li>
+                  <li>能用AI检查程序结构和测试方案</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-2-0">
+          <section id="sec-2-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.7 / 循环结构</div>
+              <div class="cover-title">当同一操作反复出现，<br />就需要指定次数循环</div>
+              <div class="cover-tags">
+                <span class="pill">for</span><span class="pill">i</span><span class="pill">sum</span
+                ><span class="pill">cnt</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-2-2">
+            <h2>为什么需要循环？</h2>
+            <p class="left">如果有30个成绩，哪些操作会重复？</p>
+            <div class="flow">
+              <div class="step">读入成绩 <code>s</code></div>
+              <div class="arrow">→</div>
+              <div class="step">判断合法</div>
+              <div class="arrow">→</div>
+              <div class="step">累计 <code>sum</code></div>
+              <div class="arrow">→</div>
+              <div class="step">统计 <code>cnt</code></div>
+            </div>
+            <div class="bluebox">
+              <strong>循环的作用：</strong>把同一组操作按照指定次数重复执行。
+            </div>
+            <aside class="notes">
+              让学生区分一次性操作与重复操作：输入n、初始化sum和cnt只做一次；读入成绩和处理成绩重复n次。
+            </aside>
+          </section>
+
+          <section id="sec-2-3">
+            <h2><code>for</code> 循环：指定次数的重复</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|2-5|1">
+for (i = 1; i &lt;= n; i++) {
+    scanf("%lf", &amp;s);
+    sum = sum + s;
+    cnt = cnt + 1;
+}
+        </code></pre>
+            <div class="grid3">
+              <div class="card">
+                <h3>初始化</h3>
+                <p><code>i = 1</code><br />从第1个成绩开始</p>
+              </div>
+              <div class="card">
+                <h3>条件判断</h3>
+                <p><code>i &lt;= n</code><br />还没超过人数就继续</p>
+              </div>
+              <div class="card">
+                <h3>变量更新</h3>
+                <p><code>i++</code><br />处理下一个成绩</p>
+              </div>
+            </div>
+            <aside class="notes">
+              强调执行顺序：初始化只执行一次；之后反复判断、执行循环体、更新。
+            </aside>
+          </section>
+
+          <section id="sec-2-4">
+            <h2>跟踪循环：程序状态如何变化？</h2>
+            <p class="center large">输入：<code>3</code> 个成绩 <code>80 70 90</code></p>
+            <table class="compare">
+              <tr>
+                <th>循环次数</th>
+                <th><code>i</code></th>
+                <th><code>s</code></th>
+                <th><code>sum</code></th>
+                <th><code>cnt</code></th>
+              </tr>
+              <tr>
+                <td>初始状态</td>
+                <td>-</td>
+                <td>-</td>
+                <td>0</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td>第1次循环</td>
+                <td>1</td>
+                <td>80.0</td>
+                <td>80.0</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td>第2次循环</td>
+                <td>2</td>
+                <td>70.0</td>
+                <td>150.0</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>第3次循环</td>
+                <td>3</td>
+                <td>90.0</td>
+                <td>240.0</td>
+                <td>3</td>
+              </tr>
+            </table>
+            <p class="center orange">循环结束后：<code>avg = sum / cnt;</code></p>
+            <aside class="notes">
+              对应程序状态跟踪。引导学生填写表格掌握循环中变量的变化规律。
+            </aside>
+          </section>
+
+          <section id="sec-2-5">
+            <h2>把合法性检查加入循环</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|2|3|4-7|8-10">
+sum = 0;
+cnt = 0;
+for (i = 1; i &lt;= n; i++) {
+    scanf("%lf", &amp;s);
+    if (s &gt;= 0 &amp;&amp; s &lt;= 100) {
+        sum = sum + s;
+        cnt = cnt + 1;
+    } else {
+        printf("Invalid score\n");
+    }
+}
+        </code></pre>
+            <aside class="notes">强调：只有合法成绩才进入sum和cnt。引出分支与循环的嵌套。</aside>
+          </section>
+
+          <section id="sec-2-6">
+            <h2>循环结构的执行路径</h2>
+            <div class="grid2" style="align-items: center">
+              <div style="text-align: center">
+                <img
+                  src="images/chap02/forloop.png"
+                  alt="for循环流程图"
+                  style="
+                    max-height: 480px;
+                    width: auto;
+                    border-radius: 12px;
+                    border: 1px solid #d8e1ec;
+                  "
+                />
+              </div>
+              <div class="card soft">
+                <h3>流程特点解析</h3>
+                <ul>
+                  <li>① <strong>变量初始化</strong>：<code>i = 1</code>（仅在入口执行一次）</li>
+                  <li>② <strong>条件判断</strong>：检查 <code>i &lt;= n</code> 是否成立</li>
+                  <li>③ <strong>执行循环体</strong>：读取数据、判断合法性与累加</li>
+                  <li>
+                    ④ <strong>变量更新</strong>：执行 <code>i++</code> 递增，自动回到第②步判断
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-3-0">
+          <section id="sec-3-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.8 / 从片段到完整程序</div>
+              <div class="cover-title">完整程序不是语句堆叠，<br />而是过程组织</div>
+              <div class="cover-tags">
+                <span class="pill">输入</span><span class="pill">校验</span
+                ><span class="pill">统计</span><span class="pill">输出</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-3-2" class="code-small">
+            <h2>完整程序：先放在 <code>main</code> 中</h2>
+            <pre><code class="c" data-trim data-line-numbers="1|4-5|7-8|10-20|22-26">
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    int i, n, cnt = 0;
+    double s, sum = 0.0, avg;
+
+    scanf("%d", &amp;n);
+
+    for (i = 1; i &lt;= n; i++) {
+        scanf("%lf", &amp;s);
+        if (s &gt;= 0 &amp;&amp; s &lt;= 100) {
+            sum = sum + s;
+            cnt = cnt + 1;
+        } else {
+            printf("Invalid score\n");
+        }
+    }
+
+    if (cnt &gt; 0) {
+        avg = sum / cnt;
+        printf("average = %.1f\n", avg);
+    }
+    return 0;
+}
+        </code></pre>
+            <aside class="notes">提醒学生：完整程序应从可运行的小版本逐步扩展。</aside>
+          </section>
+
+          <section id="sec-3-3">
+            <h2>如果所有代码都写在 <code>main</code> 中，会怎样？</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3>代码变长</h3>
+                <p>输入、校验、统计、等级判断都混在一起。</p>
+              </div>
+              <div class="card">
+                <h3>重复出现</h3>
+                <p>成绩等级判断可能在多个位置重复使用。</p>
+              </div>
+              <div class="card">
+                <h3>难以修改</h3>
+                <p>等级规则变化时，需要到处查找修改。</p>
+              </div>
+            </div>
+            <p class="center bigq">这时就需要 <span class="accent">自定义函数</span> 分解任务！</p>
+            <aside class="notes">从实际需要引出函数。函数用于把相对独立的任务封装起来。</aside>
+          </section>
+        </section>
+
+        <section id="sec-4-0">
+          <section id="sec-4-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.9 / 函数与面向过程</div>
+              <div class="cover-title">把独立任务交给函数，<br />让主函数组织流程</div>
+              <div class="cover-tags">
+                <span class="pill">函数声明</span><span class="pill">函数调用</span
+                ><span class="pill">参数</span><span class="pill">返回值</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-4-2">
+            <h2>哪些任务适合提取为函数？</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3><code>valid()</code></h3>
+                <p>判断成绩是否合法。</p>
+                <pre><code class="c" data-trim>int valid(double s);</code></pre>
+              </div>
+              <div class="card soft">
+                <h3><code>mean()</code></h3>
+                <p>根据总分和人数计算平均分。</p>
+                <pre><code class="c" data-trim>double mean(double sum, int cnt);</code></pre>
+              </div>
+              <div class="card">
+                <h3><code>show_grade()</code></h3>
+                <p>根据成绩输出等级。</p>
+                <pre><code class="c" data-trim>void show_grade(double s);</code></pre>
+              </div>
+            </div>
+            <aside class="notes">
+              解释：valid有返回值（1/0）；mean返回平均分；show_grade主要完成输出。
+            </aside>
+          </section>
+
+          <section id="sec-4-3">
+            <h2>主函数如何组织这些函数？</h2>
+            <div class="flow">
+              <div class="step"><code>main</code><br />读入成绩</div>
+              <div class="arrow">→</div>
+              <div class="step"><code>valid</code><br />判断合法</div>
+              <div class="arrow">→</div>
+              <div class="step"><code>show_grade</code><br />输出等级</div>
+              <div class="arrow">→</div>
+              <div class="step"><code>mean</code><br />计算平均分</div>
+            </div>
+            <div class="bluebox">
+              <strong>模块化解耦：</strong
+              ><code>main</code> 只负责流程调度，具体业务交由各独立函数完成。
+            </div>
+          </section>
+
+          <section id="sec-4-4" class="code-small">
+            <h2>自定义函数定义示例</h2>
+            <pre><code class="c" data-trim data-line-numbers="1-3|5-7|9-14">
+int valid(double s)
+{
+    return s &gt;= 0 &amp;&amp; s &lt;= 100;
+}
+
+double mean(double sum, int cnt)
+{
+    return sum / cnt;
+}
+
+void show_grade(double s)
+{
+    if (s &lt; 60) printf("Fail\n");
+    else printf("Pass\n");
+}
+        </code></pre>
+            <aside class="notes">本页只讲函数输入什么、做什么、返回什么。</aside>
+          </section>
+
+          <section id="sec-4-5" class="code-small">
+            <h2>主函数：负责组织流程</h2>
+            <pre><code class="c" data-trim data-line-numbers="1-3|7-10|12-20|22-25">
+int valid(double s);
+double mean(double sum, int cnt);
+void show_grade(double s);
+
+int main(void)
+{
+    int i, n, cnt = 0;
+    double s, sum = 0.0;
+    scanf("%d", &amp;n);
+
+    for (i = 1; i &lt;= n; i++) {
+        scanf("%lf", &amp;s);
+        if (valid(s)) {
+            sum += s;
+            cnt++;
+            show_grade(s);
+        } else {
+            printf("Invalid score\n");
+        }
+    }
+
+    if (cnt &gt; 0)
+        printf("average = %.1f\n", mean(sum, cnt));
+    return 0;
+}
+        </code></pre>
+            <aside class="notes">
+              强调：main不需要知道show_grade内部如何划分，只需调用它。面向过程设计的核心思想。
+            </aside>
+          </section>
+        </section>
+
+        <section id="sec-5-0">
+          <section id="sec-5-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.10 / 启发式 AI 协作综合演练</div>
+              <div class="cover-title">阶乘表生成程序：<br />问题定义与启发式 AI 协作</div>
+              <div class="cover-tags">
+                <span class="pill">问题定义</span><span class="pill">1.框架定义</span
+                ><span class="pill">2.类型溢出</span><span class="pill">3.循环控制</span
+                ><span class="pill">4.函数提取</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-5-2">
+            <h2>综合演练任务：定义阶乘表问题</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <h3>问题描述</h3>
+                <p>
+                  从键盘输入一个正整数 $n$（$0 \le n \le 16$），在屏幕上格式化生成并输出一张从 $0!$
+                  到 $n!$ 的阶乘表。
+                </p>
+                <p><strong>样例输出（n = 5）：</strong></p>
+                <pre><code class="c" data-trim>
+ 0! = 1
+ 1! = 1
+ 2! = 2
+ 3! = 6
+ 4! = 24
+ 5! = 120
+                </code></pre>
+              </div>
+              <div class="card soft fragment fade-up" data-fragment-index="2">
+                <h3>教学演练目标</h3>
+                <ul>
+                  <li>贯通表达（数据类型）、控制（`for` 循环与分支）和分解（函数）概念。</li>
+                  <li>
+                    通过<strong>启发式 AI 提示词（Socratic Prompts）</strong>进行四步逻辑推演。
+                  </li>
+                  <li>培养“不直接要代码、提问引导思考”的综合计算思维。</li>
+                </ul>
+              </div>
+            </div>
+            <aside class="notes">
+              先明确问题输入、输出与目标，为后面的四步启发式 AI 协作建构奠定基础。
+            </aside>
+          </section>
+
+          <section id="sec-5-3">
+            <h2>第一步：定义程序框架（输入·输出·处理）</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <h3>启发式 AI 提示词 ①（程序框架）</h3>
+                <div class="prompt">
+                  我正在用 C 语言设计一个生成阶乘表（0! 到 n!，n&lt;=16）的程序。<br />
+                  请不要直接给代码。请引导我分析：这个程序整体应该分为哪几个处理步骤？输入、输出和中间处理过程分别是什么？
+                </div>
+              </div>
+              <div class="card soft fragment fade-up" data-fragment-index="2">
+                <h3>思考解析与讨论答案</h3>
+                <ul style="font-size: 26px !important; line-height: 1.45 !important">
+                  <li><strong>输入：</strong>键盘读取上限整数 $n$（范围 $0 \le n \le 16$）。</li>
+                  <li><strong>处理：</strong>检验 $n$ 合法性，依次计算 $0!$ 到 $n!$ 阶乘。</li>
+                  <li><strong>输出：</strong>格式化逐行打印阶乘表结果。</li>
+                </ul>
+              </div>
+            </div>
+            <aside class="notes">
+              点击第1下出提示词，学生讨论输入/输出/处理划分；点击第2下揭示分析答案。
+            </aside>
+          </section>
+
+          <section id="sec-5-4">
+            <h2>第二步：定义数据变量与类型选择</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <h3>启发式 AI 提示词 ②（变量与溢出）</h3>
+                <div class="prompt">
+                  已知输入上限 n 最大为 16。<br />
+                  请引导我思考：程序中需要定义哪些变量？存储阶乘结果的变量应该选用 int 还是 double
+                  类型？为什么？
+                </div>
+              </div>
+              <div class="card soft fragment fade-up" data-fragment-index="2">
+                <h3>思考解析与讨论答案</h3>
+                <ul style="font-size: 26px !important; line-height: 1.45 !important">
+                  <li><strong>变量：</strong>循环变量 $i$ 与上限 $n$ 选用 <code>int</code>。</li>
+                  <li>
+                    <strong>溢出：</strong>$16! \approx 2.09 \times 10^{13}$，超越 32 位
+                    <code>int</code> 上限（约 $2.14 \times 10^9$，只能存到 $12!$）。
+                  </li>
+                  <li>
+                    <strong>选择：</strong>结果须选 <code>double</code>（或
+                    <code>long long</code>）防溢出。
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <aside class="notes">引导学生建立对数据存储极限与数据溢出的敏感度。</aside>
+          </section>
+
+          <section id="sec-5-5">
+            <h2>第三步：确定核心控制结构（循环）</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <h3>启发式 AI 提示词 ③（循环结构）</h3>
+                <div class="prompt">
+                  我已经选定了变量类型。现在需要打印从 0! 到 n! 的每一项。<br />
+                  请引导我思考：这里应该采用什么循环结构？循环的初始值、终止条件和更新表达式分别是什么？
+                </div>
+              </div>
+              <div class="card soft fragment fade-up" data-fragment-index="2">
+                <h3>思考解析与讨论答案</h3>
+                <ul style="font-size: 26px !important; line-height: 1.45 !important">
+                  <li>
+                    <strong>结构：</strong>重复 $n+1$ 次，选用指定次数 <code>for</code> 循环。
+                  </li>
+                  <li><strong>要素：</strong><code>for (i = 0; i &lt;= n; i++)</code>。</li>
+                  <li>
+                    <strong>循环体：</strong>计算当前 $i!$ 并用
+                    <code>printf("%2d! = %.0f\n", i, ...);</code> 打印。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-5-6">
+            <h2>第四步：提取阶乘过程为自定义函数</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <h3>启发式 AI 提示词 ④（函数提取与解耦）</h3>
+                <div class="prompt">
+                  我希望将计算单个数阶乘的过程提取为一个独立函数，让 main 函数更加简洁。<br />
+                  请引导我设计：这个函数的名称、参数、返回值类型应该是什么？函数内部如何累乘？
+                </div>
+              </div>
+              <div class="card soft fragment fade-up" data-fragment-index="2">
+                <h3>思考解析与讨论答案</h3>
+                <ul style="font-size: 26px !important; line-height: 1.45 !important">
+                  <li>
+                    <strong>原型：</strong><code>double fact(int k)</code>，接收 $k$，返回
+                    <code>double</code> 结果。
+                  </li>
+                  <li>
+                    <strong>逻辑：</strong><code>double result = 1.0;</code> 用
+                    <code>for</code> 循环进行累乘。
+                  </li>
+                  <li>
+                    <strong>解耦：</strong><code>main</code> 只需调用
+                    <code>fact(i)</code>，流程清晰简洁。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-5-7" class="code-small">
+            <h2>综合实现：阶乘表完整程序</h2>
+            <pre
+              class="fragment fade-up"
+              data-fragment-index="1"
+            ><code class="c" data-trim data-line-numbers="1-2|4-12|14-29">
+#include &lt;stdio.h&gt;
+
+/* 自定义阶乘计算函数 */
+double fact(int k)
+{
+    int i;
+    double result = 1.0;
+    for (i = 1; i &lt;= k; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+int main(void)
+{
+    int n, i;
+    printf("请输入 n (0 &lt;= n &lt;= 16): ");
+    scanf("%d", &amp;n);
+
+    if (n &lt; 0 || n &gt; 16) {
+        printf("输入超出范围(0~16)！\n");
+        return 1;
+    }
+
+    printf("--- 0! 到 %d! 阶乘表 ---\n", n);
+    for (i = 0; i &lt;= n; i++) {
+        printf("%2d! = %.0f\n", i, fact(i));
+    }
+    return 0;
+}
+        </code></pre>
+            <div class="quote fragment fade-up" data-fragment-index="2">
+              <strong>四步演练综合小结：</strong>通过程序框架定义 $\to$ 类型与溢出分析 $\to$
+              循环核心确定 $\to$ 函数解耦提取，完成面向过程思维建构！
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-6-0">
+          <section id="sec-6-1" class="module-cover-slide">
+            <div class="modulecover">
+              <div class="cover-kicker">2.11 / 第3课时总结与回顾</div>
+              <div class="cover-title">面向过程程序设计：<br />全课时核心知识小结</div>
+              <div class="cover-tags">
+                <span class="pill">for 循环</span><span class="pill">自定义函数</span
+                ><span class="pill">数据类型与溢出</span><span class="pill">面向过程思维</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-6-2">
+            <h2>第3课时核心知识复盘</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>① 指定次数循环 (for)</h3>
+                <ul>
+                  <li><strong>语法要素：</strong>初始值、条件表达式、变量更新。</li>
+                  <li><strong>使用场景：</strong>处理重复次数已知或可计算的重复操作。</li>
+                  <li><strong>经典范式：</strong>累计求和与阶乘累乘。</li>
+                </ul>
+              </div>
+              <div class="card soft">
+                <h3>② 自定义函数 (Function)</h3>
+                <ul>
+                  <li><strong>语法要素：</strong>函数原型声明、参数传递与返回值。</li>
+                  <li>
+                    <strong>模块解耦：</strong>把独立子任务提取为函数，保持 <code>main</code> 清爽。
+                  </li>
+                  <li><strong>代码复用：</strong>避免相同逻辑在程序中多处重复书写。</li>
+                </ul>
+              </div>
+            </div>
+            <aside class="notes">复盘第3课时的两大核心工具：for循环与自定义函数。</aside>
+          </section>
+
+          <section id="sec-6-3">
+            <h2>第二章 C语言综述整体知识图谱</h2>
+            <table class="compare">
+              <tr>
+                <th>课时</th>
+                <th>核心主题</th>
+                <th>重点语法与结构</th>
+                <th>计算思维培养</th>
+              </tr>
+              <tr>
+                <td><strong>第1课时 (2-1)</strong></td>
+                <td>数据与基本运算</td>
+                <td>
+                  <code>int</code> / <code>double</code>、<code>scanf</code> /
+                  <code>printf</code>、除法精度
+                </td>
+                <td>顺序结构思维与类型概念</td>
+              </tr>
+              <tr>
+                <td><strong>第2课时 (2-2)</strong></td>
+                <td>条件与单分支</td>
+                <td>关系运算符、单 <code>if-else</code> 分支、<code>&lt;math.h&gt;</code> 库</td>
+                <td>分支互斥逻辑与边界测试 (54,55,56)</td>
+              </tr>
+              <tr>
+                <td><strong>第3课时 (2-3)</strong></td>
+                <td>循环与函数分解</td>
+                <td>指定次数 <code>for</code> 循环、自定义函数、数据溢出防范</td>
+                <td>模块化解耦与启发式 AI 协作建构</td>
+              </tr>
+            </table>
+          </section>
+
+          <section id="sec-6-4">
+            <h2>第3课时全课小结</h2>
+            <ul class="summary-grid">
+              <li>
+                <strong>循环结构：</strong>掌握指定次数
+                <code>for (i = 1; i &lt;= n; i++)</code> 的循环控制逻辑。
+              </li>
+              <li>
+                <strong>函数分解：</strong>掌握自定义函数（如
+                <code>double fact(int k)</code>）的声明、定义与调用。
+              </li>
+              <li>
+                <strong>类型溢出：</strong>理解阶乘快速增长与存储极限，合理选择
+                <code>double</code> 防范溢出。
+              </li>
+              <li>
+                <strong>面向过程：</strong>围绕“输入 $\to$ 处理 $\to$
+                输出”，将复杂任务分解为函数调度。
+              </li>
+              <li>
+                <strong>AI 协作：</strong>学会使用四步启发式提示词（Prompts），将 AI
+                作为“导学教练”建构程序。
+              </li>
+            </ul>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+      /* 为每个实际展示页加上可定位标签。 */
+      document.querySelectorAll('.slides section').forEach((slide, idx) => {
+        if (slide.querySelector(':scope > section')) return;
+        if (!slide.id) slide.id = `slide-${idx + 1}`;
+        if (!slide.querySelector(':scope > .slide-label')) {
+          const label = document.createElement('div');
+          label.className = 'slide-label';
+          label.setAttribute('data-static', '');
+          label.textContent = `§ ${slide.id}`;
+          slide.prepend(label);
+        }
+      });
+
+      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+      document.querySelectorAll('.slides section').forEach((slide) => {
+        if (slide.querySelector(':scope > section')) return;
+
+        const candidates = slide.querySelectorAll(
+          [
+            ':scope#sec-1-1 > *:not(script)',
+            ':scope > .grid2 > .card',
+            ':scope > .grid3 > .card',
+            ':scope > .grid4 > .card',
+            ':scope > .grid2 > div:not(.card)',
+            ':scope > .grid3 > div:not(.card)',
+            ':scope > .bluebox',
+            ':scope > .quote',
+            ':scope > .bigq',
+            ':scope > .rule',
+            ':scope > ul > li',
+            ':scope > table.compare tr:not(:first-child)',
+            ':scope > .timeline > *',
+            ':scope > .modulecover > *:not(aside.notes)',
+            ':scope > img',
+          ].join(','),
+        );
+
+        candidates.forEach((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          if (
+            !el.hasAttribute('data-static') &&
+            !parentFragment &&
+            !el.querySelector('.fragment')
+          ) {
+            el.classList.add('fragment', 'fade-up');
+          }
+        });
+        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
+
+        /* 流程图的箭头与它右侧的步骤同步出现。 */
+        slide.querySelectorAll('.flow').forEach((flow) => {
+          flow.querySelectorAll('.step').forEach((step) => {
+            step.classList.add('fragment', 'fade-up');
+            const arrow = step.previousElementSibling;
+            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+          });
+        });
+
+        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          return !parentFragment || !slide.contains(parentFragment);
+        });
+        const handled = new Set();
+        let order = 0;
+        topLevelFragments.forEach((el) => {
+          if (handled.has(el)) return;
+          const parent = el.parentElement;
+          const isFlow = parent && parent.classList.contains('flow');
+          const isTimeline = parent && parent.classList.contains('timeline');
+
+          if (el.hasAttribute('data-fragment-index')) {
+            return;
+          }
+          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else if (isTimeline && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+          }
+          order += 1;
+        });
+      });
+
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.035,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        defaultTiming: 120,
+        slideNumber: true,
+        history: false,
+        keyboard: true,
+        overview: true,
+        center: true,
+        touch: true,
+        loop: false,
+        rtl: false,
+        shuffle: false,
+        fragment: true,
+        embedded: false,
+        help: true,
+        showNotes: false,
+        autoPlayMedia: null,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        autoSlideMethod: Reveal.navigateNext,
+        mouseWheel: false,
+        hideAddressBar: true,
+        previewLinks: false,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        viewDistance: 3,
+        display: 'block',
+        pdfMaxPagesPerSlide: 1,
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+        plugins: [
+          RevealZoom,
+          RevealNotes,
+          RevealSearch,
+          RevealMarkdown,
+          RevealHighlight,
+          RevealMath,
+        ],
+      });
+    </script>
+  </body>
+</html>
