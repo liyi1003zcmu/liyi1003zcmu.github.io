@@ -30,7 +30,7 @@ objectives:
   ]
 prerequisites: [无]
 teachers: [lameduck]
-updatedDate: 2026-09-26
+updatedDate: 2026-10-03
 ---
 
 ## 课程简介
@@ -68,7 +68,15 @@ updatedDate: 2026-09-26
    - [第二讲：如何让程序作出判断](/slides/c-programming/ch02/lecture-2-2.html)
    - [第三讲：如何组织重复操作与程序流程](/slides/c-programming/ch02/lecture-2-3.html)
 3. **分支结构（4 学时）**：`if-else`、`switch`、多分支结构与综合应用
-4. **循环结构（5 学时）**：`while`、`do-while`、`for`、嵌套循环与综合应用
+   - [第一讲：多种情况，程序怎样作出选择？](/slides/c-programming/ch03/lecture-3-1.html)
+   - [第二讲：固定选项很多时，怎样写得更清楚？](/slides/c-programming/ch03/lecture-3-2.html)
+4. **循环结构（5 学时）**：`while`、`do-while`、循环控制、嵌套循环与综合应用
+   - [第一讲：while——条件控制的重复](/slides/c-programming/ch04/lecture-4-1.html)
+   - [第二讲：do-while——至少执行一次](/slides/c-programming/ch04/lecture-4-2.html)
+   - [第三讲：break 与 continue](/slides/c-programming/ch04/lecture-4-3.html)
+   - [第四讲：多重循环——循环中的循环](/slides/c-programming/ch04/lecture-4-4.html)
+   - [第五讲：综合循环Ⅰ——状态迭代与筛选](/slides/c-programming/ch04/lecture-4-5.html)
+   - [第六讲：综合循环Ⅱ——枚举、搜索与优化](/slides/c-programming/ch04/lecture-4-6.html)
 5. **函数（4 学时）**：函数定义与调用、结构化程序设计、局部变量与全局变量
 6. **数据类型和表达式（2 学时）**：基本数据类型、输入输出、类型转换与表达式
 7. **数组（5 学时）**：一维数组、二维数组与数组算法
@@ -80,7 +88,7 @@ updatedDate: 2026-09-26
 
 ## 课件资源
 
-第〇章、第一章和第二章三讲在线课件已经发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“程序设计基础”筛选。课件统一复用网站的 Reveal.js 运行库，并保留本课程针对 1600×900 教学投影设计的样式和交互。
+第〇章至第四章在线课件已经发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“程序设计基础”筛选。课件统一复用网站的 Reveal.js 运行库，并保留本课程针对 1600×900 教学投影设计的样式和交互；第四章课件还提供循环精度、逐位处理、循环控制、嵌套循环和枚举搜索等交互演示。
 
 ## 实验任务
 
@@ -98,5 +106,6 @@ updatedDate: 2026-09-26
 
 ## 更新记录
 
+- 2026-10-03：发布第三章两讲和第四章六讲在线课件，并配套发布五个循环结构交互演示。
 - 2026-09-26：依据《程序设计基础》教学大纲补全课程定位、目标、教学安排、章节学时、考核与参考资料；发布第〇章、第一章及第二章三份在线课件。
 - 2026-03-01：创建课程条目。

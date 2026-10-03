@@ -1,0 +1,1956 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>break 与 continue 路径模拟器 - C语言程序设计基础</title>
+    <style>
+      /* ==========================================================================
+           1. 教学课件统一设计系统 (针对 1600x900 / 16:9 投影教室优化)
+           ========================================================================== */
+      :root {
+        --bg-canvas: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-card-soft: #f7fbff;
+        --bg-active: #e8f2ff;
+        --border-color: #cbd8e6;
+        --border-focus: #2c7be5;
+
+        --title-blue: #163f78;
+        --primary-blue: #2056a8;
+        --accent-blue: #2c7be5;
+        --text-dark: #1f2937;
+        --text-secondary: #5b6573;
+        --highlight-orange: #a65b00;
+        --alert-red: #b42318;
+        --success-blue: #0f52ba;
+
+        --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
+        --radius-card: 10px;
+        --radius-sm: 6px;
+
+        --font-ui:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', sans-serif;
+        --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background-color: #0f172a; /* 教室深色投影衬底 */
+        font-family: var(--font-ui);
+        color: var(--text-dark);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* 1600x900 教学等比主画布 */
+      #stage-scaler {
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        min-width: 1600px;
+        min-height: 900px;
+        max-width: 1600px;
+        max-height: 900px;
+        background-color: var(--bg-canvas);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        padding: 12px 20px 10px 20px;
+        transform-origin: center center;
+        user-select: none;
+        overflow: hidden;
+      }
+
+      /* ==========================================================================
+           2. 顶部标题栏
+           ========================================================================== */
+      header.top-bar {
+        height: 52px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+
+      .title-group h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--title-blue);
+        line-height: 1.15;
+        letter-spacing: -0.2px;
+      }
+
+      .title-group .sub-title {
+        font-size: 13.5px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 1px;
+      }
+
+      .header-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .academic-badge {
+        background-color: #eef5ff;
+        color: var(--primary-blue);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 16px;
+        border: 1px solid #bfdbfe;
+      }
+
+      .inquiry-prompt {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--highlight-orange);
+        background: #fff8ee;
+        padding: 3px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px dashed #fbd38d;
+      }
+
+      /* ==========================================================================
+           3. 工作区网格 (左侧 60% 约 930px + 右侧 40% 1fr)
+           ========================================================================== */
+      .workspace-grid {
+        display: grid;
+        grid-template-columns: 940px 1fr;
+        gap: 12px;
+        height: 624px;
+        max-height: 624px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+        align-items: stretch;
+        overflow: hidden;
+      }
+
+      .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+      }
+
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 8px 12px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 按钮系统 */
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13.5px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-family: var(--font-ui);
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-blue);
+        color: #ffffff;
+        border-color: var(--primary-blue);
+      }
+      .btn-primary:hover:not(:disabled) {
+        background-color: #174284;
+      }
+      .btn-primary:disabled {
+        background-color: #94a3b8;
+        border-color: #94a3b8;
+        cursor: not-allowed;
+      }
+
+      .btn-outline {
+        background-color: #ffffff;
+        color: var(--primary-blue);
+        border-color: var(--border-color);
+      }
+      .btn-outline:hover:not(:disabled) {
+        background-color: var(--bg-card-soft);
+        border-color: var(--accent-blue);
+      }
+      .btn-outline:disabled {
+        color: #94a3b8;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+      }
+
+      /* 控制栏 */
+      .toolbar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 6px 10px;
+        flex-shrink: 0;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 6px;
+      }
+
+      /* ==========================================================================
+           4. 队列数据卡片区
+           ========================================================================== */
+      .queue-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: var(--bg-card-soft);
+        border: 1px dashed #bfdbfe;
+        border-radius: var(--radius-sm);
+        position: relative;
+      }
+
+      .queue-item-box {
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+
+      .data-card {
+        width: 82px;
+        height: 68px;
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(22, 63, 120, 0.05);
+        transition: all 0.25s ease;
+        position: relative;
+      }
+
+      .data-card .val {
+        font-size: 20px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+      }
+
+      .data-card .tag {
+        font-size: 10.5px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-top: 1px;
+      }
+
+      .data-card .status-badge {
+        position: absolute;
+        top: -9px;
+        right: -6px;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 10px;
+        display: none;
+      }
+
+      /* 状态变体 */
+      .data-card.state-ready-next {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.25);
+      }
+      .data-card.state-current {
+        border-color: var(--accent-blue);
+        background: #e8f2ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(44, 123, 229, 0.25);
+      }
+      .data-card.state-current .status-badge {
+        display: block;
+        background: var(--accent-blue);
+        color: #ffffff;
+      }
+
+      .data-card.state-processed {
+        background: #f0fdf4;
+        border-color: #86efac;
+      }
+      .data-card.state-processed .status-badge {
+        display: block;
+        background: #16a34a;
+        color: #ffffff;
+      }
+
+      .data-card.state-continue {
+        background: #fffbeb;
+        border-color: #fde68a;
+      }
+      .data-card.state-continue .status-badge {
+        display: block;
+        background: var(--highlight-orange);
+        color: #ffffff;
+      }
+
+      .data-card.state-break {
+        background: #fef2f2;
+        border-color: #fca5a5;
+      }
+      .data-card.state-break .status-badge {
+        display: block;
+        background: var(--alert-red);
+        color: #ffffff;
+      }
+
+      .data-card.state-skipped {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        opacity: 0.45;
+      }
+      .data-card.state-skipped .status-badge {
+        display: block;
+        background: #94a3b8;
+        color: #ffffff;
+      }
+
+      .queue-arrow {
+        color: #94a3b8;
+        font-size: 16px;
+        margin: 0 5px;
+        font-weight: bold;
+      }
+
+      /* ==========================================================================
+           5. 流程图展示区 (SVG 路径连线 + 节点)
+           ========================================================================== */
+      .flowchart-container {
+        flex: 1;
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        position: relative;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .flowchart-canvas {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .flow-node {
+        position: absolute;
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-card);
+        padding: 4px 8px;
+        text-align: center;
+        transition: all 0.25s ease;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+      }
+
+      .flow-node.active-node {
+        border-color: var(--accent-blue);
+        background: var(--bg-active);
+        box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.25);
+        font-weight: bold;
+      }
+
+      .flow-node.active-continue {
+        border-color: var(--highlight-orange);
+        background: #fff8ee;
+        box-shadow: 0 0 0 3px rgba(166, 91, 0, 0.25);
+        font-weight: bold;
+      }
+
+      .flow-node.active-break {
+        border-color: var(--alert-red);
+        background: #fff1f0;
+        box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.25);
+        font-weight: bold;
+      }
+
+      .flow-node-title {
+        font-weight: 700;
+        color: var(--title-blue);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .flow-node-sub {
+        font-size: 10.5px;
+        color: var(--text-secondary);
+        font-family: var(--font-mono);
+        margin-top: 1px;
+        white-space: nowrap;
+      }
+
+      .svg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .flow-path {
+        stroke: #cbd8e6;
+        stroke-width: 1.8;
+        fill: none;
+        transition:
+          stroke 0.25s,
+          stroke-width 0.25s;
+      }
+
+      .flow-path.active-path {
+        stroke: var(--accent-blue);
+        stroke-width: 2.6;
+      }
+
+      .flow-path.active-path-continue {
+        stroke: var(--highlight-orange);
+        stroke-width: 2.6;
+        stroke-dasharray: 6 3;
+        animation: dash 1s linear infinite;
+      }
+
+      .flow-path.active-path-break {
+        stroke: var(--alert-red);
+        stroke-width: 2.6;
+      }
+
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -18;
+        }
+      }
+
+      .path-label {
+        font-size: 11px;
+        font-weight: 700;
+        fill: var(--text-secondary);
+      }
+
+      /* 紧凑历史记录卡片 */
+      .history-card {
+        height: 160px;
+        flex-shrink: 0;
+        padding: 6px 10px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .history-table-wrapper {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+      }
+
+      .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        text-align: left;
+      }
+
+      .history-table th {
+        position: sticky;
+        top: 0;
+        background: #edf4fe;
+        color: var(--title-blue);
+        padding: 3px 6px;
+        font-weight: 600;
+        border-bottom: 1.5px solid #cbd8e6;
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      .history-table td {
+        padding: 2.5px 6px;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--text-dark);
+        white-space: nowrap;
+      }
+
+      .history-table tr.latest-row {
+        background-color: #eef6ff;
+        font-weight: 600;
+      }
+      .history-table tr.latest-row td {
+        color: var(--primary-blue);
+      }
+
+      /* ==========================================================================
+           6. 右侧：代码高亮区 + 当前动作状态卡片
+           ========================================================================== */
+      .code-card {
+        height: 295px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 8px 12px;
+      }
+
+      .code-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eef2f6;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+      }
+
+      .code-box {
+        background: #ffffff;
+        border: 1.5px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 6px 0;
+        font-family: var(--font-mono);
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--text-dark);
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .code-line {
+        padding: 1px 10px;
+        display: flex;
+        align-items: center;
+        transition: all 0.15s ease;
+        position: relative;
+      }
+
+      .line-num {
+        width: 24px;
+        color: #94a3b8;
+        font-size: 11px;
+        user-select: none;
+      }
+
+      .code-line.active {
+        background-color: #e8f2ff;
+        border-left: 3.5px solid var(--accent-blue);
+        font-weight: 700;
+        color: var(--title-blue);
+      }
+
+      .code-line.active-continue {
+        background-color: #fff8ee;
+        border-left: 3.5px solid var(--highlight-orange);
+        font-weight: 700;
+        color: var(--highlight-orange);
+      }
+
+      .code-line.active-break {
+        background-color: #fff1f0;
+        border-left: 3.5px solid var(--alert-red);
+        font-weight: 700;
+        color: var(--alert-red);
+      }
+
+      .c-kw {
+        color: #0f52ba;
+        font-weight: 600;
+      }
+      .c-brk {
+        color: var(--alert-red);
+        font-weight: 700;
+      }
+      .c-cnt {
+        color: var(--highlight-orange);
+        font-weight: 700;
+      }
+
+      /* 当前动作说明卡片 */
+      .action-card {
+        flex: 1;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: #ffffff;
+        border-color: var(--border-color);
+      }
+
+      .action-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eef2f6;
+        padding-bottom: 4px;
+      }
+
+      .action-badge {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #eef5ff;
+        color: var(--primary-blue);
+      }
+
+      .action-body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 4px 0;
+      }
+
+      .action-item-row {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .action-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        width: 72px;
+      }
+
+      .action-val {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+      }
+
+      .action-explanation {
+        font-size: 12.5px;
+        color: var(--text-dark);
+        line-height: 1.35;
+        background: var(--bg-card-soft);
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 6px 8px;
+      }
+
+      /* 模态/并列路径对比卡片 */
+      .path-contrast-panel {
+        background: #fbfcfe;
+        border: 1px dashed #cbd8e6;
+        border-radius: var(--radius-sm);
+        padding: 6px 8px;
+        display: none;
+        gap: 6px;
+        font-size: 11.5px;
+      }
+      .path-contrast-panel.show {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* ==========================================================================
+           7. 底部变量状态显微镜 + 影响对比 (约 86px)
+           ========================================================================== */
+      .bottom-section {
+        height: 88px;
+        display: grid;
+        grid-template-columns: 940px 1fr;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        height: 100%;
+      }
+
+      .metric-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 5px 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: var(--shadow-card);
+        transition: all 0.2s;
+      }
+
+      .metric-card.highlight {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
+        background: #f7fbff;
+      }
+
+      .metric-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        white-space: nowrap;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .metric-value {
+        font-size: 19px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* 本轮变量影响卡片 */
+      .impact-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 4px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: var(--shadow-card);
+      }
+
+      .impact-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .impact-badges-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .impact-pill {
+        padding: 3px 4px;
+        border-radius: 4px;
+        background: var(--bg-card-soft);
+        border: 1px solid #d9e5f3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1.2;
+      }
+
+      .impact-pill .lbl {
+        color: var(--text-secondary);
+        font-size: 9.5px;
+      }
+      .impact-pill .val {
+        font-weight: 700;
+        font-size: 11.5px;
+        margin-top: 1px;
+      }
+
+      /* ==========================================================================
+           8. 总结条
+           ========================================================================== */
+      .bottom-aphorism {
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        background: #f0f7ff;
+        border: 1px dashed #bfdbfe;
+        border-radius: var(--radius-sm);
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 4px;
+      }
+
+      .code-inline {
+        font-family: var(--font-mono);
+        background: #f1f5f9;
+        padding: 1px 4px;
+        border-radius: 3px;
+        color: #1e293b;
+      }
+
+      /* 细滚动条 */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage-scaler">
+      <!-- 顶部标题栏 -->
+      <header class="top-bar">
+        <div class="title-group">
+          <h1>break 与 continue 路径模拟器</h1>
+          <div class="sub-title">跳过本次，还是结束整个循环？观察控制流与变量状态的分野</div>
+        </div>
+        <div class="header-meta">
+          <span class="academic-badge">D04-02 · 循环流程控制</span>
+          <div class="inquiry-prompt">
+            “遇到异常数据时，程序应该跳过这一条，还是停止处理后面的所有数据？”
+          </div>
+        </div>
+      </header>
+
+      <!-- 工作区主体网格 -->
+      <main class="workspace-grid">
+        <!-- 左侧列 (约 60%)：队列卡片 + 大型流程图 + 历史记录 -->
+        <div class="left-column">
+          <!-- 工具栏与队列展示区 -->
+          <div class="card" style="padding: 8px 10px; gap: 8px; flex-shrink: 0">
+            <div class="toolbar-row">
+              <div
+                style="
+                  font-size: 13.5px;
+                  font-weight: 700;
+                  color: var(--title-blue);
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
+                <span>待处理数据队列 (固定测试集):</span>
+                <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
+                  >(0与999: 无效; STOP: 结束标记)</span
+                >
+              </div>
+
+              <div class="btn-group">
+                <button class="btn btn-primary" id="btn-step">下一步</button>
+                <button class="btn btn-outline" id="btn-auto">自动运行</button>
+                <button class="btn btn-outline" id="btn-pause" disabled>暂停</button>
+                <button class="btn btn-outline" id="btn-reset">重置</button>
+                <button
+                  class="btn btn-outline"
+                  id="btn-toggle-contrast"
+                  style="font-size: 12px; padding: 0 8px"
+                >
+                  路径对比
+                </button>
+              </div>
+            </div>
+
+            <!-- 数据队列卡片 -->
+            <div class="queue-container" id="queue-container-box">
+              <!-- 由 JS 渲染 72, 0, 75, 999, 70, STOP, 68 -->
+            </div>
+          </div>
+
+          <!-- 流程图路径可视化卡片 -->
+          <section class="card flowchart-container" aria-label="循环控制流流程图">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2px;
+              "
+            >
+              <span style="font-size: 13.5px; font-weight: 700; color: var(--title-blue)"
+                >控制流执行路径微观图</span
+              >
+              <span
+                id="path-indicator-tag"
+                class="academic-badge"
+                style="font-size: 11px; padding: 1px 8px"
+                >等待启动</span
+              >
+            </div>
+
+            <div class="flowchart-canvas" id="canvas-area">
+              <!-- SVG 动态路径图层 -->
+              <svg class="svg-overlay" id="flow-svg" viewBox="0 0 916 280">
+                <defs>
+                  <!-- 紧凑精致的小箭头，采用 userSpaceOnUse 避免随线宽放大膨胀 -->
+                  <marker
+                    id="arrow-def"
+                    viewBox="0 0 10 10"
+                    refX="7.5"
+                    refY="5"
+                    markerWidth="6.5"
+                    markerHeight="6.5"
+                    orient="auto"
+                    markerUnits="userSpaceOnUse"
+                  >
+                    <path d="M 1.5 2 L 7.5 5 L 1.5 8 Z" fill="#94a3b8" />
+                  </marker>
+                  <marker
+                    id="arrow-active"
+                    viewBox="0 0 10 10"
+                    refX="7.5"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto"
+                    markerUnits="userSpaceOnUse"
+                  >
+                    <path d="M 1.5 2 L 7.5 5 L 1.5 8 Z" fill="#2c7be5" />
+                  </marker>
+                  <marker
+                    id="arrow-cnt"
+                    viewBox="0 0 10 10"
+                    refX="7.5"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto"
+                    markerUnits="userSpaceOnUse"
+                  >
+                    <path d="M 1.5 2 L 7.5 5 L 1.5 8 Z" fill="#a65b00" />
+                  </marker>
+                  <marker
+                    id="arrow-brk"
+                    viewBox="0 0 10 10"
+                    refX="7.5"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto"
+                    markerUnits="userSpaceOnUse"
+                  >
+                    <path d="M 1.5 2 L 7.5 5 L 1.5 8 Z" fill="#b42318" />
+                  </marker>
+                </defs>
+
+                <!-- 主干路径 1 -> 2 -->
+                <path
+                  id="p-1-2"
+                  class="flow-path"
+                  d="M 120 75 L 178 75"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点2 -> 节点3 (No: 不是STOP) -->
+                <path
+                  id="p-2-3"
+                  class="flow-path"
+                  d="M 330 75 L 388 75"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点2 -> break -> 退出 (Yes: 是STOP) -->
+                <path
+                  id="p-2-break"
+                  class="flow-path"
+                  d="M 255 102 L 255 153"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点3 -> 节点4 (Yes: 数据有效) -->
+                <path
+                  id="p-3-4"
+                  class="flow-path"
+                  d="M 540 75 L 598 75"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点3 -> continue (No: 数据无效，跳到下一项) -->
+                <path
+                  id="p-3-continue"
+                  class="flow-path"
+                  d="M 465 102 L 465 170 Q 465 210 300 210 Q 50 210 50 115 L 50 75 L 18 75"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点4 -> 节点5 (正常累加完毕) -->
+                <path
+                  id="p-4-5"
+                  class="flow-path"
+                  d="M 750 75 L 798 75"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 节点5 回环 -> 循环入口 -->
+                <path
+                  id="p-5-loop"
+                  class="flow-path"
+                  d="M 855 102 L 855 245 Q 855 260 450 260 Q 30 260 30 115 L 30 104"
+                  marker-end="url(#arrow-def)"
+                />
+
+                <!-- 路径文本标签 -->
+                <text x="340" y="66" class="path-label">No (正常)</text>
+                <text x="262" y="132" class="path-label" style="fill: var(--alert-red)">
+                  Yes (break)
+                </text>
+                <text x="550" y="66" class="path-label">Yes (有效)</text>
+                <text x="472" y="145" class="path-label" style="fill: var(--highlight-orange)">
+                  No (continue)
+                </text>
+              </svg>
+
+              <!-- HTML 节点 1: 读取数据 -->
+              <div
+                class="flow-node"
+                id="fn-1"
+                style="top: 48px; left: 15px; width: 105px; height: 54px"
+              >
+                <span class="flow-node-title">① 读取数据</span>
+                <span class="flow-node-sub">read(pulse)</span>
+              </div>
+
+              <!-- HTML 节点 2: 判断 STOP -->
+              <div
+                class="flow-node"
+                id="fn-2"
+                style="top: 48px; left: 180px; width: 150px; height: 54px"
+              >
+                <span class="flow-node-title">② 是否为 STOP？</span>
+                <span class="flow-node-sub">pulse == STOP</span>
+              </div>
+
+              <!-- HTML 节点 3: 检查有效性 -->
+              <div
+                class="flow-node"
+                id="fn-3"
+                style="top: 48px; left: 390px; width: 150px; height: 54px"
+              >
+                <span class="flow-node-title">③ 数据是否有效？</span>
+                <span class="flow-node-sub">0 || 999 判定</span>
+              </div>
+
+              <!-- HTML 节点 4: 正常累计 -->
+              <div
+                class="flow-node"
+                id="fn-4"
+                style="top: 48px; left: 600px; width: 150px; height: 54px"
+              >
+                <span class="flow-node-title">④ 正常处理</span>
+                <span class="flow-node-sub">sum += p; cnt++;</span>
+              </div>
+
+              <!-- HTML 节点 5: 准备下轮 -->
+              <div
+                class="flow-node"
+                id="fn-5"
+                style="top: 48px; left: 800px; width: 105px; height: 54px"
+              >
+                <span class="flow-node-title">⑤ 本轮结束</span>
+                <span class="flow-node-sub">下一项待读</span>
+              </div>
+
+              <!-- 节点: continue 旁路说明卡 -->
+              <div
+                class="flow-node"
+                id="fn-cnt"
+                style="top: 155px; left: 375px; width: 180px; height: 46px; border-style: dashed"
+              >
+                <span class="flow-node-title" style="color: var(--highlight-orange)"
+                  >continue 旁路回环</span
+                >
+                <span class="flow-node-sub">跳过累加，直接进入下一轮</span>
+              </div>
+
+              <!-- 节点: break 退出终点 -->
+              <div
+                class="flow-node"
+                id="fn-brk"
+                style="top: 155px; left: 175px; width: 160px; height: 46px; border-color: #fca5a5"
+              >
+                <span class="flow-node-title" style="color: var(--alert-red)">break 彻底退出</span>
+                <span class="flow-node-sub">终止循环，不再读取数据</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 紧凑历史跟踪表格 -->
+          <div class="card history-card">
+            <div
+              style="
+                font-size: 12.5px;
+                font-weight: 700;
+                color: var(--title-blue);
+                margin-bottom: 4px;
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>数据处理历史演进表</span>
+              <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal"
+                >记录每条数据经过的判断、触发动作与变量累计</span
+              >
+            </div>
+            <div class="history-table-wrapper" id="history-scroll-box">
+              <table class="history-table" id="history-table-main">
+                <thead>
+                  <tr>
+                    <th style="width: 50px">轮次</th>
+                    <th style="width: 80px">输入 pulse</th>
+                    <th style="width: 140px">判断结果</th>
+                    <th>触发控制动作</th>
+                    <th>累计 sum</th>
+                    <th>有效数 count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 动态行 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧列 (约 40%)：伪代码联动 + 当前动作显微镜 -->
+        <div class="right-column">
+          <!-- C 语言/伪代码卡片 -->
+          <div class="card code-card">
+            <div class="code-card-header">
+              <span style="font-size: 13.5px; font-weight: 700; color: var(--title-blue)"
+                >C 语言循环流程控制源码</span
+              >
+              <span style="font-size: 11px; color: var(--text-secondary)">单步同步高亮</span>
+            </div>
+
+            <div class="code-box" id="code-content-box">
+              <div class="code-line" id="line-1">
+                <span class="line-num">1</span><span><span class="c-kw">while</span> (1) {</span>
+              </div>
+              <div class="code-line" id="line-2">
+                <span class="line-num">2</span><span>&nbsp;&nbsp;&nbsp;&nbsp;read(pulse);</span>
+              </div>
+              <div class="code-line" id="line-3">
+                <span class="line-num">3</span
+                ><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">if</span> (pulse == STOP)</span>
+              </div>
+              <div class="code-line" id="line-4">
+                <span class="line-num">4</span
+                ><span
+                  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-brk">break;</span>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #94a3b8"
+                    >// 遇到终止标记，立即结束整个循环</span
+                  ></span
+                >
+              </div>
+              <div class="code-line" id="line-5">
+                <span class="line-num">5</span
+                ><span
+                  >&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">if</span> (pulse == 0 || pulse ==
+                  999)</span
+                >
+              </div>
+              <div class="code-line" id="line-6">
+                <span class="line-num">6</span
+                ><span
+                  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-cnt"
+                    >continue;</span
+                  >
+                  &nbsp;&nbsp;&nbsp;<span style="color: #94a3b8"
+                    >// 异常无效值，跳过本轮后续语句</span
+                  ></span
+                >
+              </div>
+              <div class="code-line" id="line-7">
+                <span class="line-num">7</span><span>&nbsp;&nbsp;&nbsp;&nbsp;sum += pulse;</span>
+              </div>
+              <div class="code-line" id="line-8">
+                <span class="line-num">8</span><span>&nbsp;&nbsp;&nbsp;&nbsp;count++;</span>
+              </div>
+              <div class="code-line" id="line-9"><span class="line-num">9</span><span>}</span></div>
+              <div class="code-line" id="line-10">
+                <span class="line-num">10</span
+                ><span><span style="color: #94a3b8">// 循环已退出，执行后续语句</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 当前状态显微镜卡片 -->
+          <div class="card action-card">
+            <div class="action-header">
+              <span style="font-size: 13.5px; font-weight: 700; color: var(--title-blue)"
+                >当前动作与控制状态</span
+              >
+              <span class="action-badge" id="act-badge">尚未开始</span>
+            </div>
+
+            <div class="action-body">
+              <div class="action-item-row">
+                <span class="action-label">当前数据:</span>
+                <span class="action-val" id="act-pulse-val" style="font-size: 16px">-</span>
+              </div>
+
+              <div class="action-item-row">
+                <span class="action-label">本轮判断:</span>
+                <span
+                  class="action-val"
+                  id="act-judgement"
+                  style="font-size: 13px; font-weight: 600; color: var(--text-dark)"
+                  >-</span
+                >
+              </div>
+
+              <div class="action-item-row">
+                <span class="action-label">本轮动作:</span>
+                <span
+                  class="action-val"
+                  id="act-action-name"
+                  style="font-size: 17px; color: var(--primary-blue)"
+                  >-</span
+                >
+              </div>
+
+              <div class="action-explanation" id="act-explanation">
+                点击“下一步”或“自动运行”，程序将从队列中读入第 1 个数据 72。
+              </div>
+            </div>
+
+            <!-- 可选并列对比面板 -->
+            <div class="path-contrast-panel" id="path-contrast-box">
+              <div
+                style="
+                  background: #fff8ee;
+                  border: 1px solid #fed7aa;
+                  border-radius: 4px;
+                  padding: 4px 6px;
+                "
+              >
+                <strong style="color: var(--highlight-orange)">continue:</strong>
+                <div style="margin-top: 2px">结束<strong>当前这一轮</strong></div>
+                <div style="color: var(--text-secondary); margin-top: 1px">
+                  跳过本轮后续代码，直接读取下一项。循环<strong>继续</strong>。
+                </div>
+              </div>
+              <div
+                style="
+                  background: #fff1f0;
+                  border: 1px solid #fecaca;
+                  border-radius: 4px;
+                  padding: 4px 6px;
+                "
+              >
+                <strong style="color: var(--alert-red)">break:</strong>
+                <div style="margin-top: 2px">结束<strong>整个 while 循环</strong></div>
+                <div style="color: var(--text-secondary); margin-top: 1px">
+                  彻底跨出循环体，后续所有数据均<strong>不再读取</strong>。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 底部状态统计区 -->
+      <div class="bottom-section">
+        <!-- 5 个大号指标卡 -->
+        <div class="metrics-grid">
+          <div class="metric-card" id="mcard-index">
+            <div class="metric-label"><span>数据索引 index</span><span>队列游标</span></div>
+            <div class="metric-value" id="val-index">-</div>
+          </div>
+
+          <div class="metric-card" id="mcard-pulse">
+            <div class="metric-label"><span>当前读入 pulse</span><span>输入值</span></div>
+            <div class="metric-value" id="val-pulse">-</div>
+          </div>
+
+          <div class="metric-card" id="mcard-sum">
+            <div class="metric-label"><span>累加和 sum</span><span>实际有效和</span></div>
+            <div class="metric-value" id="val-sum">0</div>
+          </div>
+
+          <div class="metric-card" id="mcard-count">
+            <div class="metric-label"><span>有效计数 count</span><span>处理个数</span></div>
+            <div class="metric-value" id="val-count">0</div>
+          </div>
+
+          <div class="metric-card" id="mcard-status">
+            <div class="metric-label"><span>循环状态</span><span>生命周期</span></div>
+            <div class="metric-value" id="val-loop-status" style="font-size: 15px">等待开始</div>
+          </div>
+        </div>
+
+        <!-- 本轮变量影响分析小卡片 -->
+        <div class="impact-card">
+          <div class="impact-title">
+            <span>本轮操作对变量状态的影响</span>
+            <span
+              id="impact-tag"
+              style="font-size: 11px; font-weight: normal; color: var(--text-secondary)"
+              >尚未执行</span
+            >
+          </div>
+
+          <div class="impact-badges-row">
+            <div class="impact-pill">
+              <span class="lbl">sum 变化</span>
+              <span class="val" id="imp-sum" style="color: var(--text-secondary)">-</span>
+            </div>
+            <div class="impact-pill">
+              <span class="lbl">count 变化</span>
+              <span class="val" id="imp-count" style="color: var(--text-secondary)">-</span>
+            </div>
+            <div class="impact-pill">
+              <span class="lbl">循环流向</span>
+              <span class="val" id="imp-loop" style="color: var(--text-secondary)">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部教学箴言条 -->
+      <div class="bottom-aphorism">
+        教学箴言：continue 管“这一轮”（跳过后续、继续下一轮），break
+        管“整个循环”（立即终止、不再读取）！
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+     JavaScript 核心业务交互引擎 (纯原生零依赖)
+     ========================================================================== -->
+    <script>
+      /* --------------------------------------------------------------------------
+       * 0. 课堂投影自适应缩放引擎 (等比 1600x900 缩放，保持界面全屏无滚动条展示)
+       * -------------------------------------------------------------------------- */
+      function applyStageScale() {
+        const stage = document.getElementById('stage-scaler');
+        const targetWidth = 1600;
+        const targetHeight = 900;
+
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        const scaleX = winWidth / targetWidth;
+        const scaleY = winHeight / targetHeight;
+        const scale = Math.min(scaleX, scaleY);
+
+        stage.style.transform = `scale(${scale})`;
+      }
+
+      window.addEventListener('resize', applyStageScale);
+      window.addEventListener('DOMContentLoaded', () => {
+        applyStageScale();
+        initBreakContinueApp();
+      });
+
+      /* --------------------------------------------------------------------------
+       * 1. 核心应用状态机与控制流
+       * -------------------------------------------------------------------------- */
+      function initBreakContinueApp() {
+        // 数据队列定义
+        const rawDataList = [
+          { val: 72, type: 'normal', desc: '正常脉搏' },
+          { val: 0, type: 'invalid', desc: '传感器脱落(无效)' },
+          { val: 75, type: 'normal', desc: '正常脉搏' },
+          { val: 999, type: 'invalid', desc: '极端噪点(无效)' },
+          { val: 70, type: 'normal', desc: '正常脉搏' },
+          { val: 'STOP', type: 'stop', desc: '结束标记' },
+          { val: 68, type: 'unreachable', desc: '终止后残留' },
+        ];
+
+        // DOM 引用
+        const queueContainerBox = document.getElementById('queue-container-box');
+        const btnStep = document.getElementById('btn-step');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnPause = document.getElementById('btn-pause');
+        const btnReset = document.getElementById('btn-reset');
+        const btnToggleContrast = document.getElementById('btn-toggle-contrast');
+        const pathContrastBox = document.getElementById('path-contrast-box');
+
+        // 状态卡片 DOM
+        const actBadge = document.getElementById('act-badge');
+        const actPulseVal = document.getElementById('act-pulse-val');
+        const actJudgement = document.getElementById('act-judgement');
+        const actActionName = document.getElementById('act-action-name');
+        const actExplanation = document.getElementById('act-explanation');
+        const pathIndicatorTag = document.getElementById('path-indicator-tag');
+
+        const valIndex = document.getElementById('val-index');
+        const valPulse = document.getElementById('val-pulse');
+        const valSum = document.getElementById('val-sum');
+        const valCount = document.getElementById('val-count');
+        const valLoopStatus = document.getElementById('val-loop-status');
+
+        const mcardIndex = document.getElementById('mcard-index');
+        const mcardPulse = document.getElementById('mcard-pulse');
+        const mcardSum = document.getElementById('mcard-sum');
+        const mcardCount = document.getElementById('mcard-count');
+        const mcardStatus = document.getElementById('mcard-status');
+
+        const impactTag = document.getElementById('impact-tag');
+        const impSum = document.getElementById('imp-sum');
+        const impCount = document.getElementById('imp-count');
+        const impLoop = document.getElementById('imp-loop');
+
+        const historyTbody = document.querySelector('#history-table-main tbody');
+        const historyScrollBox = document.getElementById('history-scroll-box');
+
+        // 流程节点 DOM
+        const flowNodes = {
+          1: document.getElementById('fn-1'),
+          2: document.getElementById('fn-2'),
+          3: document.getElementById('fn-3'),
+          4: document.getElementById('fn-4'),
+          5: document.getElementById('fn-5'),
+          cnt: document.getElementById('fn-cnt'),
+          brk: document.getElementById('fn-brk'),
+        };
+
+        // 连线 DOM
+        const paths = {
+          '1-2': document.getElementById('p-1-2'),
+          '2-3': document.getElementById('p-2-3'),
+          '2-break': document.getElementById('p-2-break'),
+          '3-4': document.getElementById('p-3-4'),
+          '3-continue': document.getElementById('p-3-continue'),
+          '4-5': document.getElementById('p-4-5'),
+          '5-loop': document.getElementById('p-5-loop'),
+        };
+
+        // 状态变量
+        let currentIndex = 0;
+        let sum = 0;
+        let count = 0;
+        let isTerminated = false;
+        let isRunningAuto = false;
+        let autoTimer = null;
+        let roundCounter = 0;
+
+        // 渲染队列数据卡片
+        function renderQueue() {
+          queueContainerBox.innerHTML = '';
+          rawDataList.forEach((item, idx) => {
+            const itemBox = document.createElement('div');
+            itemBox.className = 'queue-item-box';
+
+            const card = document.createElement('div');
+            card.className = 'data-card';
+            card.id = `data-card-${idx}`;
+
+            if (idx === 0) {
+              card.classList.add('state-ready-next');
+            }
+
+            const badge = document.createElement('span');
+            badge.className = 'status-badge';
+            badge.id = `badge-card-${idx}`;
+            badge.textContent = '当前';
+
+            const valSpan = document.createElement('span');
+            valSpan.className = 'val';
+            valSpan.textContent = item.val;
+
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'tag';
+            tagSpan.textContent = item.desc;
+
+            card.appendChild(badge);
+            card.appendChild(valSpan);
+            card.appendChild(tagSpan);
+            itemBox.appendChild(card);
+
+            if (idx < rawDataList.length - 1) {
+              const arrow = document.createElement('span');
+              arrow.className = 'queue-arrow';
+              arrow.textContent = '→';
+              itemBox.appendChild(arrow);
+            }
+
+            queueContainerBox.appendChild(itemBox);
+          });
+        }
+
+        // 清理代码高亮
+        function clearCodeHighlight() {
+          document.querySelectorAll('.code-line').forEach((l) => {
+            l.classList.remove('active', 'active-continue', 'active-break');
+          });
+        }
+
+        // 高亮指定代码行
+        function highlightCodeLine(lineNum, variant = 'active') {
+          clearCodeHighlight();
+          const line = document.getElementById(`line-${lineNum}`);
+          if (line) {
+            line.classList.add(variant);
+          }
+        }
+
+        // 清除流程节点与连线高亮
+        function clearFlowchart() {
+          Object.values(flowNodes).forEach((node) => {
+            node.classList.remove('active-node', 'active-continue', 'active-break');
+          });
+          Object.values(paths).forEach((p) => {
+            p.classList.remove('active-path', 'active-path-continue', 'active-path-break');
+            p.setAttribute('marker-end', 'url(#arrow-def)');
+          });
+        }
+
+        function highlightFlowNode(nodeKey, variant = 'active-node') {
+          if (flowNodes[nodeKey]) {
+            flowNodes[nodeKey].classList.add(variant);
+          }
+        }
+
+        function highlightPath(pathKey, variant = 'active-path') {
+          if (paths[pathKey]) {
+            paths[pathKey].classList.add(variant);
+            if (variant === 'active-path-continue') {
+              paths[pathKey].setAttribute('marker-end', 'url(#arrow-cnt)');
+            } else if (variant === 'active-path-break') {
+              paths[pathKey].setAttribute('marker-end', 'url(#arrow-brk)');
+            } else {
+              paths[pathKey].setAttribute('marker-end', 'url(#arrow-active)');
+            }
+          }
+        }
+
+        function clearMetricHighlights() {
+          [mcardIndex, mcardPulse, mcardSum, mcardCount, mcardStatus].forEach((c) =>
+            c.classList.remove('highlight'),
+          );
+        }
+
+        // 写入表格历史
+        function appendHistoryRow(round, dataVal, judgeStr, actionStr, curSum, curCnt, actType) {
+          const oldRows = historyTbody.querySelectorAll('.latest-row');
+          oldRows.forEach((r) => r.classList.remove('latest-row'));
+
+          const tr = document.createElement('tr');
+          tr.className = 'latest-row';
+
+          let actionStyled = actionStr;
+          if (actType === 'continue') {
+            actionStyled = `<span style="color:var(--highlight-orange); font-weight:bold;">${actionStr}</span>`;
+          } else if (actType === 'break') {
+            actionStyled = `<span style="color:var(--alert-red); font-weight:bold;">${actionStr}</span>`;
+          } else {
+            actionStyled = `<span style="color:var(--primary-blue); font-weight:bold;">${actionStr}</span>`;
+          }
+
+          tr.innerHTML = `
+                <td>#${round}</td>
+                <td style="font-weight:bold;">${dataVal}</td>
+                <td>${judgeStr}</td>
+                <td>${actionStyled}</td>
+                <td style="font-weight:bold; color:var(--title-blue);">${curSum}</td>
+                <td style="font-weight:bold; color:var(--title-blue);">${curCnt}</td>
+            `;
+
+          historyTbody.appendChild(tr);
+          historyScrollBox.scrollTop = historyScrollBox.scrollHeight;
+        }
+
+        // 单步/单轮执行逻辑
+        function executeOneItem(callback) {
+          if (isTerminated || currentIndex >= rawDataList.length) return;
+
+          const item = rawDataList[currentIndex];
+          const itemIdx = currentIndex;
+
+          // 如果当前读到了 68 但已经 break
+          if (item.val === 68 && isTerminated) return;
+
+          btnStep.disabled = true;
+          roundCounter++;
+
+          // 队列卡片状态演进
+          const currentCard = document.getElementById(`data-card-${itemIdx}`);
+          const currentBadge = document.getElementById(`badge-card-${itemIdx}`);
+
+          // 移除旧 ready 标识
+          document
+            .querySelectorAll('.data-card')
+            .forEach((c) => c.classList.remove('state-ready-next'));
+          currentCard.className = 'data-card state-current';
+          currentBadge.textContent = '处理中';
+
+          // 更新仪表盘指标
+          valIndex.textContent = itemIdx;
+          valPulse.textContent = item.val;
+          actPulseVal.textContent = item.val;
+
+          // ================= 阶段 1: 读入数据 =================
+          clearFlowchart();
+          highlightFlowNode(1);
+          highlightCodeLine(2);
+          clearMetricHighlights();
+          mcardIndex.classList.add('highlight');
+          mcardPulse.classList.add('highlight');
+
+          actBadge.textContent = `第 ${roundCounter} 轮 · 读取`;
+          actBadge.style.background = '#eef5ff';
+          actBadge.style.color = 'var(--primary-blue)';
+          actJudgement.textContent = `成功从队列读入数据: ${item.val}`;
+          actActionName.textContent = 'read(pulse)';
+          actExplanation.textContent = `读取队列第 ${itemIdx} 项数据 pulse = ${item.val}，即将进入条件分支判断。`;
+          pathIndicatorTag.textContent = '① 读入数据';
+
+          // ================= 阶段 2: 判定 STOP =================
+          setTimeout(() => {
+            highlightPath('1-2');
+            highlightFlowNode(2);
+            highlightCodeLine(3);
+
+            if (item.val === 'STOP') {
+              // 触发 BREAK 路径
+              actBadge.textContent = '触发 break';
+              actBadge.style.background = '#fee2e2';
+              actBadge.style.color = 'var(--alert-red)';
+              actJudgement.textContent = 'pulse == STOP 为真 (true)';
+              actActionName.textContent = 'break; (退出循环)';
+              actExplanation.textContent =
+                '发现终止标志 STOP！执行 break 语句，直接跳出 while 循环，后续数据不再读取。';
+              pathIndicatorTag.textContent = '② 是STOP ➔ break 离开循环';
+
+              setTimeout(() => {
+                highlightPath('2-break', 'active-path-break');
+                highlightFlowNode('brk', 'active-break');
+                highlightCodeLine(4, 'active-break');
+
+                currentCard.className = 'data-card state-break';
+                currentBadge.textContent = '终止';
+
+                // 灰化后面的 68
+                const nextCard = document.getElementById('data-card-6');
+                const nextBadge = document.getElementById('badge-card-6');
+                if (nextCard) {
+                  nextCard.className = 'data-card state-skipped';
+                  nextBadge.textContent = '未执行';
+                }
+
+                // 状态终结
+                isTerminated = true;
+                valLoopStatus.innerHTML =
+                  '<span style="color:var(--alert-red);font-weight:bold;">已终止 (break)</span>';
+                mcardStatus.classList.add('highlight');
+
+                // 影响面板
+                impactTag.textContent = '本轮触发 break';
+                impSum.textContent = '不变';
+                impCount.textContent = '不变';
+                impLoop.textContent = '彻底终止';
+                impLoop.style.color = 'var(--alert-red)';
+
+                // 记录历史
+                appendHistoryRow(
+                  roundCounter,
+                  'STOP',
+                  'pulse == STOP',
+                  'break (结束循环)',
+                  sum,
+                  count,
+                  'break',
+                );
+
+                setTimeout(() => {
+                  clearFlowchart();
+                  highlightCodeLine(10);
+                  actBadge.textContent = '循环已结束';
+                  actExplanation.textContent =
+                    'while (1) 循环已经由 break 语句强制终止！STOP 后面的 68 未被读取。最终统计: sum = 217, count = 3。';
+                  stopAutoRun();
+                  btnStep.disabled = true;
+                  if (callback) callback(false);
+                }, 500);
+              }, 400);
+
+              return;
+            }
+
+            // 不是 STOP，继续判定有效性
+            actJudgement.textContent = `${item.val} != STOP 为真 (不是终止标记)`;
+
+            setTimeout(() => {
+              highlightPath('2-3');
+              highlightFlowNode(3);
+              highlightCodeLine(5);
+
+              // ================= 阶段 3: 判定是否为无效数据 0 / 999 =================
+              if (item.val === 0 || item.val === 999) {
+                // 触发 CONTINUE 路径
+                actBadge.textContent = '触发 continue';
+                actBadge.style.background = '#fef3c7';
+                actBadge.style.color = 'var(--highlight-orange)';
+                actJudgement.textContent = `pulse == ${item.val} 为无效异常值`;
+                actActionName.textContent = 'continue; (跳过本轮)';
+                actExplanation.textContent = `检测到无效数据 ${item.val}！执行 continue，跳过本轮后续的累加与计数语句，回环继续读取下一条数据。`;
+                pathIndicatorTag.textContent = '③ 无效数据 ➔ continue 跳过本轮';
+
+                setTimeout(() => {
+                  highlightPath('3-continue', 'active-path-continue');
+                  highlightFlowNode('cnt', 'active-continue');
+                  highlightCodeLine(6, 'active-continue');
+
+                  currentCard.className = 'data-card state-continue';
+                  currentBadge.textContent = '跳过';
+
+                  // 变量影响
+                  impactTag.textContent = '本轮触发 continue';
+                  impSum.textContent = '不变';
+                  impCount.textContent = '不变';
+                  impLoop.textContent = '继续下一轮';
+                  impLoop.style.color = 'var(--highlight-orange)';
+
+                  valLoopStatus.innerHTML =
+                    '<span style="color:var(--highlight-orange);font-weight:bold;">continue 中</span>';
+
+                  // 写入记录
+                  appendHistoryRow(
+                    roundCounter,
+                    item.val,
+                    '无效值 (0/999)',
+                    'continue (跳过本轮)',
+                    sum,
+                    count,
+                    'continue',
+                  );
+
+                  currentIndex++;
+                  // 提示下一项
+                  if (currentIndex < rawDataList.length) {
+                    const nextC = document.getElementById(`data-card-${currentIndex}`);
+                    if (nextC) nextC.classList.add('state-ready-next');
+                  }
+
+                  setTimeout(() => {
+                    if (!isRunningAuto) btnStep.disabled = false;
+                    if (callback) callback(true);
+                  }, 400);
+                }, 400);
+              } else {
+                // 正常数据路径
+                actBadge.textContent = '数据有效';
+                actBadge.style.background = '#eef5ff';
+                actBadge.style.color = 'var(--primary-blue)';
+                actJudgement.textContent = `pulse = ${item.val} 为正常有效数据`;
+
+                setTimeout(() => {
+                  highlightPath('3-4');
+                  highlightFlowNode(4);
+                  highlightCodeLine(7);
+
+                  // 累加与计数
+                  sum += item.val;
+                  count++;
+
+                  valSum.textContent = sum;
+                  valCount.textContent = count;
+                  clearMetricHighlights();
+                  mcardSum.classList.add('highlight');
+                  mcardCount.classList.add('highlight');
+
+                  actActionName.textContent = `sum += ${item.val}; count++;`;
+                  actExplanation.textContent = `执行正常业务处理: sum 累计为 ${sum}，有效数据个数 count 增加为 ${count}。`;
+                  pathIndicatorTag.textContent = '④ 正常处理 ➔ sum与count自增';
+
+                  currentCard.className = 'data-card state-processed';
+                  currentBadge.textContent = '已处理';
+
+                  // 变量影响
+                  impactTag.textContent = '本轮正常更新';
+                  impSum.textContent = `+${item.val}`;
+                  impCount.textContent = '+1';
+                  impLoop.textContent = '进入下一轮';
+                  impLoop.style.color = 'var(--primary-blue)';
+
+                  valLoopStatus.innerHTML =
+                    '<span style="color:var(--primary-blue);">循环进行中</span>';
+
+                  setTimeout(() => {
+                    highlightCodeLine(8);
+                    highlightPath('4-5');
+                    highlightFlowNode(5);
+
+                    // 记录历史
+                    appendHistoryRow(
+                      roundCounter,
+                      item.val,
+                      '有效数据',
+                      '正常累加处理',
+                      sum,
+                      count,
+                      'normal',
+                    );
+
+                    currentIndex++;
+                    if (currentIndex < rawDataList.length) {
+                      const nextC = document.getElementById(`data-card-${currentIndex}`);
+                      if (nextC) nextC.classList.add('state-ready-next');
+                    }
+
+                    setTimeout(() => {
+                      highlightPath('5-loop');
+                      if (!isRunningAuto) btnStep.disabled = false;
+                      if (callback) callback(true);
+                    }, 300);
+                  }, 350);
+                }, 400);
+              }
+            }, 350);
+          }, 350);
+        }
+
+        // 自动运行管理
+        function startAutoRun() {
+          if (isRunningAuto) return;
+          if (isTerminated || currentIndex >= rawDataList.length) {
+            resetApp();
+          }
+
+          isRunningAuto = true;
+          btnAuto.disabled = true;
+          btnPause.disabled = false;
+          btnStep.disabled = true;
+
+          function runLoopTick() {
+            executeOneItem((hasMore) => {
+              if (hasMore && isRunningAuto && !isTerminated) {
+                autoTimer = setTimeout(runLoopTick, 450);
+              } else {
+                stopAutoRun();
+              }
+            });
+          }
+
+          runLoopTick();
+        }
+
+        function stopAutoRun() {
+          isRunningAuto = false;
+          if (autoTimer) {
+            clearTimeout(autoTimer);
+            autoTimer = null;
+          }
+          btnAuto.disabled = false;
+          btnPause.disabled = true;
+          if (!isTerminated && currentIndex < rawDataList.length) {
+            btnStep.disabled = false;
+          }
+        }
+
+        // 重置应用
+        function resetApp() {
+          stopAutoRun();
+          currentIndex = 0;
+          sum = 0;
+          count = 0;
+          isTerminated = false;
+          roundCounter = 0;
+
+          valIndex.textContent = '-';
+          valPulse.textContent = '-';
+          valSum.textContent = '0';
+          valCount.textContent = '0';
+          valLoopStatus.textContent = '等待开始';
+          valLoopStatus.style.color = 'var(--title-blue)';
+
+          actBadge.textContent = '尚未开始';
+          actBadge.style.background = '#eef5ff';
+          actBadge.style.color = 'var(--primary-blue)';
+          actPulseVal.textContent = '-';
+          actJudgement.textContent = '-';
+          actActionName.textContent = '-';
+          actExplanation.textContent =
+            '点击“下一步”或“自动运行”，程序将从队列中读入第 1 个数据 72。';
+          pathIndicatorTag.textContent = '等待启动';
+
+          impactTag.textContent = '尚未执行';
+          impSum.textContent = '-';
+          impCount.textContent = '-';
+          impLoop.textContent = '-';
+
+          btnStep.disabled = false;
+          btnAuto.disabled = false;
+
+          clearFlowchart();
+          clearCodeHighlight();
+          clearMetricHighlights();
+          historyTbody.innerHTML = '';
+
+          renderQueue();
+        }
+
+        // 事件监听
+        btnStep.addEventListener('click', () => executeOneItem());
+        btnAuto.addEventListener('click', startAutoRun);
+        btnPause.addEventListener('click', stopAutoRun);
+        btnReset.addEventListener('click', resetApp);
+
+        btnToggleContrast.addEventListener('click', () => {
+          pathContrastBox.classList.toggle('show');
+          btnToggleContrast.textContent = pathContrastBox.classList.contains('show')
+            ? '收起对比'
+            : '路径对比';
+        });
+
+        // 首次加载初始化
+        renderQueue();
+        resetApp();
+      }
+    </script>
+  </body>
+</html>

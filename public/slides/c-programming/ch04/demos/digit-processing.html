@@ -1,0 +1,1855 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>整数逐位处理可视化 - C语言程序设计基础</title>
+    <style>
+      /* ==========================================================================
+           1. 教学课件统一设计系统 (针对 1600x900 / 16:9 投影教室优化)
+           ========================================================================== */
+      :root {
+        --bg-canvas: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-card-soft: #f7fbff;
+        --bg-active: #e8f2ff;
+        --border-color: #cbd8e6;
+        --border-focus: #2c7be5;
+
+        --title-blue: #163f78;
+        --primary-blue: #2056a8;
+        --accent-blue: #2c7be5;
+        --text-dark: #1f2937;
+        --text-secondary: #5b6573;
+        --highlight-orange: #a65b00;
+        --alert-red: #b42318;
+        --success-blue: #0f52ba;
+
+        --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
+        --radius-card: 10px;
+        --radius-sm: 6px;
+
+        --font-ui:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', sans-serif;
+        --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background-color: #0f172a; /* 教室深色投影衬底 */
+        font-family: var(--font-ui);
+        color: var(--text-dark);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* 1600x900 教学等比主画布 */
+      #stage-scaler {
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        min-width: 1600px;
+        min-height: 900px;
+        max-width: 1600px;
+        max-height: 900px;
+        background-color: var(--bg-canvas);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        padding: 12px 20px 10px 20px;
+        transform-origin: center center;
+        user-select: none;
+        overflow: hidden;
+      }
+
+      /* ==========================================================================
+           2. 顶部标题栏 (约 50px)
+           ========================================================================== */
+      header.top-bar {
+        height: 52px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+
+      .title-group h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--title-blue);
+        line-height: 1.15;
+        letter-spacing: -0.2px;
+      }
+
+      .title-group .sub-title {
+        font-size: 13.5px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 1px;
+      }
+
+      .header-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .academic-badge {
+        background-color: #eef5ff;
+        color: var(--primary-blue);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 16px;
+        border: 1px solid #bfdbfe;
+      }
+
+      .inquiry-prompt {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--highlight-orange);
+        background: #fff8ee;
+        padding: 3px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px dashed #fbd38d;
+      }
+
+      /* ==========================================================================
+           3. 工作区网格 (980px 左栏 + 1fr 右栏)
+           ========================================================================== */
+      .workspace-grid {
+        display: grid;
+        grid-template-columns: 980px 1fr;
+        gap: 12px;
+        height: 726px;
+        max-height: 726px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+        align-items: stretch;
+        overflow: hidden;
+      }
+
+      .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+      }
+
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+        max-height: 100%;
+        overflow: hidden;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 8px 12px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* 通用按钮系统 */
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 13.5px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-family: var(--font-ui);
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-blue);
+        color: #ffffff;
+        border-color: var(--primary-blue);
+      }
+      .btn-primary:hover {
+        background-color: #174284;
+      }
+      .btn-primary:disabled {
+        background-color: #94a3b8;
+        border-color: #94a3b8;
+        cursor: not-allowed;
+      }
+
+      .btn-outline {
+        background-color: #ffffff;
+        color: var(--primary-blue);
+        border-color: var(--border-color);
+      }
+      .btn-outline:hover:not(:disabled) {
+        background-color: var(--bg-card-soft);
+        border-color: var(--accent-blue);
+      }
+      .btn-outline:disabled {
+        color: #94a3b8;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+      }
+
+      .btn-quick {
+        height: 24px;
+        padding: 0 8px;
+        font-size: 12px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: var(--text-dark);
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: var(--font-mono);
+      }
+      .btn-quick:hover {
+        background: #e2e8f0;
+        border-color: var(--primary-blue);
+      }
+
+      /* ==========================================================================
+           4. 控件工具栏 (输入、模式选择、单步控制)
+           ========================================================================== */
+      .toolbar-card {
+        padding: 8px 12px;
+        flex-shrink: 0;
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .number-input {
+        width: 120px;
+        height: 32px;
+        font-size: 16px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        padding: 0 8px;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--title-blue);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .number-input:focus {
+        border-color: var(--border-focus);
+      }
+
+      .mode-toggle-group {
+        display: flex;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .mode-tab-btn {
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        transition: all 0.15s;
+        border-right: 1px solid var(--border-color);
+      }
+      .mode-tab-btn:last-child {
+        border-right: none;
+      }
+      .mode-tab-btn.active {
+        background-color: var(--primary-blue);
+        color: #ffffff;
+      }
+
+      .contrast-switch-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        cursor: pointer;
+        background: #f0f7ff;
+        padding: 3px 8px;
+        border-radius: var(--radius-sm);
+        border: 1px solid #bfdbfe;
+      }
+      .contrast-switch-label input {
+        cursor: pointer;
+      }
+
+      .quick-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+
+      /* ==========================================================================
+           5. 核心逐位消除动画舞台 (Card消除、步骤提示、模式专属结果)
+           ========================================================================== */
+      .stage-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 14px;
+        min-height: 250px;
+      }
+
+      .stage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+
+      .stage-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .step-progress-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #ffffff;
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 3px 6px;
+      }
+
+      .step-pill {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: var(--text-secondary);
+        background: #f1f5f9;
+        transition: all 0.2s;
+      }
+      .step-pill.active {
+        background: var(--accent-blue);
+        color: #ffffff;
+        box-shadow: 0 1px 3px rgba(44, 123, 229, 0.3);
+      }
+
+      /* 数字卡片展示槽 */
+      .digit-cards-viewport {
+        height: 110px;
+        background: linear-gradient(180deg, #f8fbff 0%, #f0f6ff 100%);
+        border: 1.5px dashed #bfdbfe;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        padding: 6px 16px;
+        overflow: hidden;
+      }
+
+      .digit-strip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.25s ease;
+      }
+
+      .digit-box {
+        width: 64px;
+        height: 78px;
+        background: #ffffff;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(22, 63, 120, 0.08);
+        position: relative;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .digit-box .digit-char {
+        font-size: 42px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+        line-height: 1;
+      }
+
+      .digit-box .digit-sub {
+        font-size: 10px;
+        color: var(--text-secondary);
+        margin-top: 2px;
+        font-weight: 600;
+      }
+
+      /* 状态变体 */
+      .digit-box.is-units {
+        border-color: var(--accent-blue);
+        background: #f0f7ff;
+        box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.2);
+      }
+      .digit-box.is-units .digit-sub {
+        color: var(--accent-blue);
+        font-weight: 700;
+      }
+
+      .digit-box.is-processing {
+        border-color: var(--highlight-orange);
+        background: #fff8ee;
+        transform: translateY(-2px);
+      }
+      .digit-box.is-processing .digit-char {
+        color: var(--highlight-orange);
+      }
+
+      .digit-box.is-processed {
+        opacity: 0.55;
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        position: relative;
+      }
+      .digit-box.is-processed::after {
+        content: '';
+        position: absolute;
+        width: 80%;
+        height: 3px;
+        background: var(--alert-red);
+        border-radius: 2px;
+        top: 45%;
+      }
+
+      .digit-box.is-dropped {
+        transform: translateY(30px) scale(0.6);
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .empty-placeholder {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--alert-red);
+        font-family: var(--font-mono);
+        background: #fff1f0;
+        padding: 8px 18px;
+        border-radius: 6px;
+        border: 1px dashed #fca5a5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* 动作说明与引导横幅 */
+      .action-banner {
+        background: #ffffff;
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13.5px;
+        min-height: 34px;
+      }
+
+      .action-text {
+        color: var(--title-blue);
+        font-weight: 600;
+        font-family: var(--font-mono);
+      }
+
+      .action-tag {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+        background: #eef5ff;
+        color: var(--primary-blue);
+      }
+
+      /* 结果展示卡片 */
+      .result-dedicated-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .result-title {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      .result-body {
+        font-size: 16px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .output-token {
+        display: inline-block;
+        background: #e8f2ff;
+        color: var(--primary-blue);
+        border: 1px solid #bfdbfe;
+        padding: 1px 8px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 15px;
+        animation: tokenFadeIn 0.25s ease-out;
+      }
+
+      @keyframes tokenFadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* ==========================================================================
+           6. 状态变量显微镜 (5 个大型指标卡)
+           ========================================================================== */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .metric-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .metric-card.highlight {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
+        background: #f7fbff;
+      }
+
+      .metric-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        white-space: nowrap;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .metric-value {
+        font-size: 18px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ==========================================================================
+           7. 紧凑执行历史表格
+           ========================================================================== */
+      .history-card {
+        height: 170px;
+        flex-shrink: 0;
+        padding: 6px 10px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .history-header {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--title-blue);
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .history-table-wrapper {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+      }
+
+      .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        text-align: left;
+      }
+
+      .history-table th {
+        position: sticky;
+        top: 0;
+        background: #edf4fe;
+        color: var(--title-blue);
+        padding: 3px 6px;
+        font-weight: 600;
+        border-bottom: 1.5px solid #cbd8e6;
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      .history-table td {
+        padding: 2.5px 6px;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--text-dark);
+        white-space: nowrap;
+      }
+
+      .history-table tr.latest-row {
+        background-color: #eef6ff;
+        font-weight: 600;
+      }
+      .history-table tr.latest-row td {
+        color: var(--primary-blue);
+      }
+
+      /* ==========================================================================
+           8. 右侧：C 代码同步高亮与循环不变模型
+           ========================================================================== */
+      .code-card {
+        height: 255px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 8px 12px;
+      }
+
+      .code-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eef2f6;
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+      }
+
+      .code-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--title-blue);
+      }
+
+      .code-box {
+        background: #ffffff;
+        border: 1.5px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 4px 0;
+        font-family: var(--font-mono);
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--text-dark);
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .code-line {
+        padding: 1px 10px;
+        display: flex;
+        align-items: center;
+        transition: all 0.15s ease;
+        position: relative;
+      }
+
+      .line-num {
+        width: 24px;
+        color: #94a3b8;
+        font-size: 11px;
+        user-select: none;
+      }
+
+      .code-line.active {
+        background-color: #e8f2ff;
+        border-left: 3px solid var(--accent-blue);
+        font-weight: bold;
+        color: var(--title-blue);
+      }
+
+      /* 每一轮都在做什么？不变操作卡片 */
+      .invariant-card {
+        height: 215px;
+        flex-shrink: 0;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .invariant-steps {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .inv-step-item {
+        background: var(--bg-card-soft);
+        border: 1px solid #d9e5f3;
+        border-radius: 4px;
+        padding: 4px 6px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .inv-step-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .inv-step-code {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--primary-blue);
+        margin-top: 2px;
+        font-weight: 600;
+      }
+
+      /* do-while 与 输入0 深度辨析面板 */
+      .special-zero-card {
+        flex: 1;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: #fffdfa;
+        border-color: #fed7aa;
+      }
+
+      .special-zero-header {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--highlight-orange);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .while-contrast-box {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .contrast-item {
+        background: #ffffff;
+        border: 1px solid #fed7aa;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-size: 11.5px;
+      }
+
+      /* ==========================================================================
+           9. 底部核心概念总结区 (约 82px)
+           ========================================================================== */
+      footer.summary-container {
+        height: 84px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .summary-cards-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        height: 56px;
+      }
+
+      .summary-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 4px 8px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .summary-card-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+      }
+
+      .summary-card-title .card-idx {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        background: #e6f0fa;
+        color: var(--primary-blue);
+        border-radius: 50%;
+        text-align: center;
+        line-height: 15px;
+        font-size: 10.5px;
+        font-weight: 700;
+      }
+
+      .summary-card-desc {
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.25;
+        margin-top: 1px;
+      }
+
+      .bottom-aphorism {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        letter-spacing: 0.3px;
+        background: #f0f7ff;
+        border: 1px dashed #bfdbfe;
+        border-radius: var(--radius-sm);
+        padding: 2px 0;
+        white-space: nowrap;
+      }
+
+      .code-inline {
+        font-family: var(--font-mono);
+        background: #f1f5f9;
+        padding: 1px 3px;
+        border-radius: 3px;
+        color: #1e293b;
+        font-size: 11.5px;
+      }
+
+      /* 细滚动条 */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage-scaler">
+      <!-- 顶部标题栏 -->
+      <header class="top-bar">
+        <div class="title-group">
+          <h1>整数逐位处理可视化</h1>
+          <div class="sub-title">观察 %10、/10 与 do-while 循环状态如何协同演变</div>
+        </div>
+        <div class="header-meta">
+          <span class="academic-badge">D04-01B · do-while 循环教学</span>
+          <div class="inquiry-prompt">“495 为什么会依次变成 49、4、0？循环何时结束？”</div>
+        </div>
+      </header>
+
+      <!-- 工作区主体两列 -->
+      <main class="workspace-grid">
+        <!-- 左侧列：控制栏 + 卡片消除动画 + 状态显微镜 + 执行表格 -->
+        <div class="left-column">
+          <!-- 控件工具栏 -->
+          <div class="card toolbar-card">
+            <div class="control-row">
+              <div class="input-group">
+                <label
+                  for="num-input"
+                  style="
+                    font-size: 13.5px;
+                    font-weight: 600;
+                    color: var(--text-dark);
+                    white-space: nowrap;
+                  "
+                  >输入整数:</label
+                >
+                <input type="number" id="num-input" class="number-input" value="495" step="1" />
+                <button class="btn btn-primary" id="btn-load-num">载入</button>
+              </div>
+
+              <!-- 模式切换 -->
+              <div class="mode-toggle-group">
+                <button class="mode-tab-btn active" id="tab-mode-count" data-mode="count">
+                  模式A：统计位数
+                </button>
+                <button class="mode-tab-btn" id="tab-mode-reverse" data-mode="reverse">
+                  模式B：逆序输出
+                </button>
+              </div>
+
+              <!-- 对比 while 开关 -->
+              <label
+                class="contrast-switch-label"
+                title="开启后对比 while 与 do-while 在处理 0 时的差异"
+              >
+                <input type="checkbox" id="chk-while-contrast" />
+                <span>开启 while 对照</span>
+              </label>
+
+              <!-- 执行控制 -->
+              <div style="display: flex; gap: 5px">
+                <button
+                  class="btn btn-outline"
+                  id="btn-step"
+                  style="border-color: var(--accent-blue); font-weight: 700"
+                >
+                  下一步
+                </button>
+                <button class="btn btn-primary" id="btn-auto">自动运行</button>
+                <button class="btn btn-outline" id="btn-pause" disabled>暂停</button>
+                <button class="btn btn-outline" id="btn-reset">重置</button>
+              </div>
+            </div>
+
+            <!-- 快捷输入行 -->
+            <div class="quick-row">
+              <span>快捷示例:</span>
+              <button class="btn-quick" data-val="495">495</button>
+              <button class="btn-quick" data-val="12345">12345</button>
+              <button class="btn-quick" data-val="7">7 (单数位)</button>
+              <button
+                class="btn-quick"
+                data-val="0"
+                style="color: var(--alert-red); font-weight: bold"
+              >
+                0 (零测试)
+              </button>
+              <button class="btn-quick" data-val="105">105 (含零)</button>
+              <button class="btn-quick" data-val="-308">-308 (负数取绝对值)</button>
+              <span
+                id="negative-note"
+                style="
+                  color: var(--highlight-orange);
+                  font-size: 11.5px;
+                  margin-left: 6px;
+                  display: none;
+                "
+                >提示：程序预先取绝对值进行位拆分</span
+              >
+            </div>
+          </div>
+
+          <!-- 核心动画卡片 -->
+          <section class="card stage-card" aria-label="核心逐位动画展示">
+            <div class="stage-header">
+              <div class="stage-title">
+                <span>核心执行舞台 · 卡片逐位剥离</span>
+                <span
+                  id="loop-state-tag"
+                  class="academic-badge"
+                  style="font-size: 11.5px; padding: 1px 8px"
+                  >等待执行</span
+                >
+              </div>
+
+              <div class="step-progress-indicator">
+                <span class="step-pill" id="pill-step-1">1.进入循环</span>
+                <span class="step-pill" id="pill-step-2">2.取个位(%10)</span>
+                <span class="step-pill" id="pill-step-3">3.处理当前位</span>
+                <span class="step-pill" id="pill-step-4">4.删个位(/10)</span>
+                <span class="step-pill" id="pill-step-5">5.判断(!=0)</span>
+              </div>
+            </div>
+
+            <!-- 数字卡片容器 -->
+            <div class="digit-cards-viewport">
+              <div class="digit-strip" id="digit-strip-box">
+                <!-- JS 动态填充数字盒子 -->
+              </div>
+            </div>
+
+            <!-- 动作导引条 -->
+            <div class="action-banner">
+              <span class="action-text" id="action-desc-text"
+                >点击“下一步”或“自动运行”开始观察循环演进</span
+              >
+              <span class="action-tag" id="action-badge-tag">准备就绪</span>
+            </div>
+
+            <!-- 专属模式结果面板 -->
+            <div class="result-dedicated-card">
+              <div class="result-title" id="result-panel-title">统计位数累计结果:</div>
+              <div class="result-body" id="result-panel-body">
+                <span style="font-size: 13.5px; color: var(--text-secondary)">尚未开始</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 状态变量显微镜 (5 卡片) -->
+          <div class="metrics-grid">
+            <div class="metric-card" id="mcard-number">
+              <div class="metric-label"><span>当前 number</span><span>进入状态</span></div>
+              <div class="metric-value" id="val-cur-num">495</div>
+            </div>
+
+            <div class="metric-card" id="mcard-mod">
+              <div class="metric-label">
+                <span>number % 10</span><span style="color: var(--accent-blue)">当前个位</span>
+              </div>
+              <div class="metric-value" id="val-digit">-</div>
+            </div>
+
+            <div class="metric-card" id="mcard-div">
+              <div class="metric-label"><span>number / 10</span><span>整数除法</span></div>
+              <div class="metric-value" id="val-div-num">-</div>
+            </div>
+
+            <div class="metric-card" id="mcard-count">
+              <div class="metric-label">
+                <span id="lbl-count-metric">count (位数)</span><span>累计状态</span>
+              </div>
+              <div class="metric-value" id="val-count-metric">0</div>
+            </div>
+
+            <div class="metric-card" id="mcard-cond">
+              <div class="metric-label"><span>number != 0</span><span>退出判定</span></div>
+              <div class="metric-value" id="val-cond-result" style="font-size: 15px">准备中</div>
+            </div>
+          </div>
+
+          <!-- 紧凑历史记录表格 -->
+          <div class="card history-card">
+            <div class="history-header">
+              <span>各轮次状态演化跟踪表 (do-while)</span>
+              <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal"
+                >记录每轮进入时的 number、计算得到的个位与除法后的新状态</span
+              >
+            </div>
+            <div class="history-table-wrapper" id="history-scroll-box">
+              <table class="history-table" id="history-table-main">
+                <thead>
+                  <tr>
+                    <th style="width: 55px">轮次</th>
+                    <th>进入时 number</th>
+                    <th>number % 10 (个位)</th>
+                    <th>number / 10 (新值)</th>
+                    <th>当前 count</th>
+                    <th>判断 (number != 0)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 动态行 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧列：代码联动 + 循环不变模型 + 0的特别教学 -->
+        <div class="right-column">
+          <!-- C 代码同步高亮卡片 -->
+          <div class="card code-card">
+            <div class="code-card-header">
+              <span class="code-title" id="code-panel-title"
+                >C 语言程序对应代码 (模式A: 统计位数)</span
+              >
+              <span class="tip-tag" style="font-size: 11px; color: var(--text-secondary)"
+                >单步同步高亮</span
+              >
+            </div>
+
+            <div class="code-box" id="code-content-box">
+              <!-- 由 JS 依据模式渲染并高亮 -->
+            </div>
+          </div>
+
+          <!-- 每一轮都在做什么？不变操作分析卡片 -->
+          <div class="card invariant-card">
+            <div
+              style="
+                font-size: 13.5px;
+                font-weight: 700;
+                color: var(--title-blue);
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>循环不变操作 · 每一轮都在做什么？</span>
+              <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal"
+                >4步循环体原型</span
+              >
+            </div>
+
+            <div class="invariant-steps">
+              <div class="inv-step-item">
+                <div class="inv-step-title">
+                  <span style="color: var(--accent-blue)">①</span> 取当前个位
+                </div>
+                <div class="inv-step-code">digit = number % 10;</div>
+                <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 1px">
+                  剥离最末尾数字供处理
+                </div>
+              </div>
+
+              <div class="inv-step-item">
+                <div class="inv-step-title">
+                  <span style="color: var(--accent-blue)">②</span> 处理这一位
+                </div>
+                <div class="inv-step-code" id="inv-desc-step2">
+                  count++; 或 printf("%d", digit);
+                </div>
+                <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 1px">
+                  统计位数或输出当前数字
+                </div>
+              </div>
+
+              <div class="inv-step-item">
+                <div class="inv-step-title">
+                  <span style="color: var(--accent-blue)">③</span> 剔除当前个位
+                </div>
+                <div class="inv-step-code">number = number / 10;</div>
+                <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 1px">
+                  整数截断，数字向右收缩
+                </div>
+              </div>
+
+              <div class="inv-step-item">
+                <div class="inv-step-title">
+                  <span style="color: var(--accent-blue)">④</span> 判定剩余数字
+                </div>
+                <div class="inv-step-code">while (number != 0);</div>
+                <div style="font-size: 10.5px; color: var(--text-secondary); margin-top: 1px">
+                  不为 0 继续，归 0 退出
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="
+                font-size: 11px;
+                color: var(--text-secondary);
+                background: #f0f7ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 4px;
+                padding: 2px 6px;
+              "
+            >
+              <strong>核心认知：</strong>每轮操作完全相同，但
+              <code class="code-inline">number</code> 的数值逐步递减，驱动循环迈向终点。
+            </div>
+          </div>
+
+          <!-- do-while 与 特别输入 0 卡片 -->
+          <div class="card special-zero-card">
+            <div class="special-zero-header">
+              <span>为什么输入 0 时 do-while 特别自然？</span>
+              <span
+                style="font-size: 11px; padding: 1px 6px; background: #ffedd5; border-radius: 4px"
+                >核心考点</span
+              >
+            </div>
+
+            <div style="font-size: 11.5px; color: var(--text-dark); line-height: 1.35">
+              数学上 <strong>0 是一位整数</strong>。若采用普通
+              <code class="code-inline">while (number != 0)</code>，输入为 0
+              时条件一开始就为假，循环体一次都不执行，得到错误结果 0 位。<br />
+              <strong>do-while 保证循环体至少执行一次</strong>：先进入循环体处理个位 0（count 增加为
+              1），再判断 <code class="code-inline">0 != 0</code> 为假而优雅终止！
+            </div>
+
+            <!-- while 对比容器 (可开关) -->
+            <div class="while-contrast-box" id="while-contrast-panel">
+              <div class="contrast-item" style="border-left: 3px solid #94a3b8">
+                <strong style="color: var(--text-secondary)">普通 while 语句:</strong>
+                <div style="font-family: var(--font-mono); font-size: 11px; margin-top: 2px">
+                  while (number != 0) { ... }
+                </div>
+                <div style="color: var(--alert-red); margin-top: 2px">
+                  输入 0: 执行 0 次 ➔ 统计为 0 位 (错误)
+                </div>
+              </div>
+
+              <div
+                class="contrast-item"
+                style="border-left: 3px solid var(--accent-blue); background: #f0f7ff"
+              >
+                <strong style="color: var(--primary-blue)">do-while 语句:</strong>
+                <div style="font-family: var(--font-mono); font-size: 11px; margin-top: 2px">
+                  do { ... } while (number != 0);
+                </div>
+                <div style="color: var(--primary-blue); font-weight: bold; margin-top: 2px">
+                  输入 0: 至少执行 1 次 ➔ 统计为 1 位 (正确)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 底部教学总结区 -->
+      <footer class="summary-container" aria-label="核心结论总结">
+        <div class="summary-cards-row">
+          <div class="summary-card">
+            <div class="summary-card-title">
+              <span class="card-idx">1</span>
+              <span>% 10 负责“取个位”</span>
+            </div>
+            <div class="summary-card-desc">
+              通过模 10 运算精准剥离整数最末尾的个位数字，例如
+              <code class="code-inline">495 % 10 = 5</code>。
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">
+              <span class="card-idx">2</span>
+              <span>/ 10 负责“删个位”</span>
+            </div>
+            <div class="summary-card-desc">
+              C语言整数除法自动截断小数部分，实现彻底移除当前个位：<code class="code-inline"
+                >495 / 10 = 49</code
+              >。
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">
+              <span class="card-idx">3</span>
+              <span>状态单向收缩收敛</span>
+            </div>
+            <div class="summary-card-desc">
+              状态演进序列：<code class="code-inline">495 → 49 → 4 → 0</code
+              >，数值步步缩减直至触发终止条件 <code class="code-inline">number == 0</code>。
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-card-title">
+              <span class="card-idx">4</span>
+              <span>同一个算法骨架</span>
+            </div>
+            <div class="summary-card-desc">
+              无论统计位数 (<code class="code-inline">count++</code>) 还是逆序打印 (<code
+                class="code-inline"
+                >printf</code
+              >)，核心骨架均为重复的 <code class="code-inline">%10</code> 与
+              <code class="code-inline">/10</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-aphorism">
+          教学箴言：找到“每轮重复的操作”和“不断收敛的状态”，就是在设计循环！
+        </div>
+      </footer>
+    </div>
+
+    <!-- ==========================================================================
+     JavaScript 核心交互与模拟引擎
+     纯原生原生实现，零外部依赖，16:9自适应投影适配
+     ========================================================================== -->
+    <script>
+      /* --------------------------------------------------------------------------
+       * 0. 课堂投影自适应引擎 (等比 1600x900 缩放，保持界面全屏无滚动条展示)
+       * -------------------------------------------------------------------------- */
+      function applyStageScale() {
+        const stage = document.getElementById('stage-scaler');
+        const targetWidth = 1600;
+        const targetHeight = 900;
+
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        const scaleX = winWidth / targetWidth;
+        const scaleY = winHeight / targetHeight;
+        const scale = Math.min(scaleX, scaleY);
+
+        stage.style.transform = `scale(${scale})`;
+      }
+
+      window.addEventListener('resize', applyStageScale);
+      window.addEventListener('DOMContentLoaded', () => {
+        applyStageScale();
+        initDigitProcessorApp();
+      });
+
+      /* --------------------------------------------------------------------------
+       * 1. 核心应用与状态机管理
+       * -------------------------------------------------------------------------- */
+      function initDigitProcessorApp() {
+        // DOM 引用
+        const numInput = document.getElementById('num-input');
+        const btnLoadNum = document.getElementById('btn-load-num');
+        const tabModeCount = document.getElementById('tab-mode-count');
+        const tabModeReverse = document.getElementById('tab-mode-reverse');
+        const chkWhileContrast = document.getElementById('chk-while-contrast');
+        const whileContrastPanel = document.getElementById('while-contrast-panel');
+        const negativeNote = document.getElementById('negative-note');
+
+        const btnStep = document.getElementById('btn-step');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnPause = document.getElementById('btn-pause');
+        const btnReset = document.getElementById('btn-reset');
+
+        const digitStripBox = document.getElementById('digit-strip-box');
+        const actionDescText = document.getElementById('action-desc-text');
+        const actionBadgeTag = document.getElementById('action-badge-tag');
+        const loopStateTag = document.getElementById('loop-state-tag');
+
+        const resultPanelTitle = document.getElementById('result-panel-title');
+        const resultPanelBody = document.getElementById('result-panel-body');
+
+        // 状态变量显微镜 DOM
+        const valCurNum = document.getElementById('val-cur-num');
+        const valDigit = document.getElementById('val-digit');
+        const valDivNum = document.getElementById('val-div-num');
+        const valCountMetric = document.getElementById('val-count-metric');
+        const lblCountMetric = document.getElementById('lbl-count-metric');
+        const valCondResult = document.getElementById('val-cond-result');
+
+        const mcardNum = document.getElementById('mcard-number');
+        const mcardMod = document.getElementById('mcard-mod');
+        const mcardDiv = document.getElementById('mcard-div');
+        const mcardCount = document.getElementById('mcard-count');
+        const mcardCond = document.getElementById('mcard-cond');
+
+        // 步骤指示灯
+        const pills = {
+          1: document.getElementById('pill-step-1'),
+          2: document.getElementById('pill-step-2'),
+          3: document.getElementById('pill-step-3'),
+          4: document.getElementById('pill-step-4'),
+          5: document.getElementById('pill-step-5'),
+        };
+
+        const codeContentBox = document.getElementById('code-content-box');
+        const codePanelTitle = document.getElementById('code-panel-title');
+        const invDescStep2 = document.getElementById('inv-desc-step2');
+        const historyTbody = document.querySelector('#history-table-main tbody');
+        const historyScrollBox = document.getElementById('history-scroll-box');
+        const quickBtns = document.querySelectorAll('.btn-quick');
+
+        // 状态数据
+        let currentMode = 'count'; // 'count' | 'reverse'
+        let initialNumber = 495;
+        let isNegative = false;
+
+        let round = 0;
+        let curNumber = 495;
+        let count = 0;
+        let outputSequence = [];
+        let isTerminated = false;
+        let autoTimer = null;
+        let isRunningAuto = false;
+
+        // C 代码模板配置
+        const codeTemplates = {
+          count: [
+            { id: 'c1', text: 'int number = 495, count = 0;' },
+            { id: 'c2', text: 'do {' },
+            { id: 'c3', text: '    int digit = number % 10;   // 1. 取出当前个位' },
+            { id: 'c4', text: '    count++;                   // 2. 统计增加 1 位' },
+            { id: 'c5', text: '    number = number / 10;      // 3. 剔除当前个位' },
+            { id: 'c6', text: '} while (number != 0);         // 4. 判定是否继续' },
+            { id: 'c7', text: 'printf("共有 %d 位\\n", count);' },
+          ],
+          reverse: [
+            { id: 'r1', text: 'int number = 495;' },
+            { id: 'r2', text: 'do {' },
+            { id: 'r3', text: '    int digit = number % 10;   // 1. 取出当前个位' },
+            { id: 'r4', text: '    printf("%d ", digit);      // 2. 打印输出当前位' },
+            { id: 'r5', text: '    number = number / 10;      // 3. 剔除当前个位' },
+            { id: 'r6', text: '} while (number != 0);         // 4. 判定是否继续' },
+          ],
+        };
+
+        // 渲染 C 语言代码行
+        function renderCodeBlock() {
+          const list = codeTemplates[currentMode];
+          codeContentBox.innerHTML = '';
+          list.forEach((item, idx) => {
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'code-line';
+            lineDiv.id = `code-line-${idx + 1}`;
+            lineDiv.innerHTML = `<span class="line-num">${idx + 1}</span><span>${escapeHtml(item.text)}</span>`;
+            codeContentBox.appendChild(lineDiv);
+          });
+        }
+
+        function highlightCodeLine(lineIdx) {
+          const lines = codeContentBox.querySelectorAll('.code-line');
+          lines.forEach((l) => l.classList.remove('active'));
+          if (lineIdx > 0) {
+            const target = document.getElementById(`code-line-${lineIdx}`);
+            if (target) target.classList.add('active');
+          }
+        }
+
+        function escapeHtml(text) {
+          return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // 高亮特定步骤药丸
+        function highlightStepPill(step) {
+          Object.values(pills).forEach((p) => p.classList.remove('active'));
+          if (step && pills[step]) {
+            pills[step].classList.add('active');
+          }
+        }
+
+        // 清理所有卡片高亮样式
+        function clearMetricHighlights() {
+          [mcardNum, mcardMod, mcardDiv, mcardCount, mcardCond].forEach((c) =>
+            c.classList.remove('highlight'),
+          );
+        }
+
+        // 渲染数字卡片组
+        function renderDigitCards(numVal, highlightLastDigit = false, isProcessing = false) {
+          digitStripBox.innerHTML = '';
+          const s = Math.abs(numVal).toString();
+
+          if (numVal === 0 && round > 0 && isTerminated) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-placeholder';
+            empty.innerHTML = '<span>number == 0 (所有数位已处理完毕)</span>';
+            digitStripBox.appendChild(empty);
+            return;
+          }
+
+          for (let i = 0; i < s.length; i++) {
+            const isLast = i === s.length - 1;
+            const box = document.createElement('div');
+            box.className = 'digit-box';
+            box.id = `digit-box-${i}`;
+
+            if (isLast) {
+              if (isProcessing) {
+                box.classList.add('is-processing');
+              } else if (highlightLastDigit) {
+                box.classList.add('is-units');
+              }
+            }
+
+            const charSpan = document.createElement('div');
+            charSpan.className = 'digit-char';
+            charSpan.textContent = s[i];
+
+            const subSpan = document.createElement('div');
+            subSpan.className = 'digit-sub';
+            subSpan.textContent = isLast ? '当前个位' : `位权 10^${s.length - 1 - i}`;
+
+            box.appendChild(charSpan);
+            box.appendChild(subSpan);
+            digitStripBox.appendChild(box);
+          }
+        }
+
+        // 专属结果面板更新
+        function updateResultPanel() {
+          if (currentMode === 'count') {
+            resultPanelTitle.textContent = '统计位数累计结果:';
+            if (round === 0) {
+              resultPanelBody.innerHTML = `<span style="font-size:13.5px; color:var(--text-secondary);">初始计数 count = 0</span>`;
+            } else if (isTerminated) {
+              const absN = Math.abs(initialNumber);
+              resultPanelBody.innerHTML = `
+                        <span style="color:var(--primary-blue); font-size:17px;">
+                            ${absN} 共有 <strong>${count}</strong> 位整数
+                        </span>
+                        ${initialNumber === 0 ? '<span style="font-size:11.5px; color:var(--highlight-orange); margin-left:8px;">(体现 do-while 至少执行1次)</span>' : ''}
+                    `;
+            } else {
+              resultPanelBody.innerHTML = `<span>当前累计: count = <strong>${count}</strong> 位</span>`;
+            }
+          } else {
+            resultPanelTitle.textContent = '逆序输出字符序列:';
+            if (outputSequence.length === 0) {
+              resultPanelBody.innerHTML = `<span style="font-size:13.5px; color:var(--text-secondary);">尚未输出任何数字</span>`;
+            } else {
+              const tokens = outputSequence
+                .map((d) => `<span class="output-token">${d}</span>`)
+                .join(' ');
+              resultPanelBody.innerHTML = `<div>${tokens} ${isTerminated ? '<span style="font-size:12px; color:var(--text-secondary); margin-left:6px;">(输出完毕)</span>' : ''}</div>`;
+            }
+          }
+        }
+
+        // 添加表格记录
+        function appendHistoryRow(r, inNum, modVal, divVal, cntVal, condVal) {
+          const oldRows = historyTbody.querySelectorAll('.latest-row');
+          oldRows.forEach((row) => row.classList.remove('latest-row'));
+
+          const tr = document.createElement('tr');
+          tr.className = 'latest-row';
+
+          const condText = condVal
+            ? `<span style="color:var(--primary-blue)">true (继续)</span>`
+            : `<span style="color:var(--alert-red);font-weight:bold;">false (结束)</span>`;
+
+          tr.innerHTML = `
+                <td>#${r}</td>
+                <td style="font-weight:bold; color:var(--title-blue);">${inNum}</td>
+                <td style="color:var(--highlight-orange); font-weight:bold;">${modVal}</td>
+                <td>${divVal}</td>
+                <td>${cntVal}</td>
+                <td>${condText}</td>
+            `;
+
+          historyTbody.appendChild(tr);
+          historyScrollBox.scrollTop = historyScrollBox.scrollHeight;
+        }
+
+        // 重置系统
+        function resetSimulation() {
+          stopAutoRun();
+
+          let val = parseInt(numInput.value, 10);
+          if (isNaN(val)) val = 495;
+          if (val > 99999999) val = 99999999;
+          if (val < -99999999) val = -99999999;
+          numInput.value = val;
+
+          initialNumber = val;
+          isNegative = val < 0;
+          negativeNote.style.display = isNegative ? 'inline' : 'none';
+
+          round = 0;
+          curNumber = Math.abs(val);
+          count = 0;
+          outputSequence = [];
+          isTerminated = false;
+
+          // 恢复控件
+          btnStep.disabled = false;
+          loopStateTag.textContent = '准备就绪';
+          loopStateTag.style.background = '#eef5ff';
+          loopStateTag.style.color = 'var(--primary-blue)';
+
+          actionDescText.textContent = `初始 number = ${curNumber}。点击“下一步”开始第 1 轮循环`;
+          actionBadgeTag.textContent = '等待执行';
+          actionBadgeTag.style.background = '#eef5ff';
+          actionBadgeTag.style.color = 'var(--primary-blue)';
+
+          // 状态变量初始化
+          valCurNum.textContent = curNumber;
+          valDigit.textContent = '-';
+          valDivNum.textContent = '-';
+          valCountMetric.textContent = '0';
+          lblCountMetric.textContent = currentMode === 'count' ? 'count (位数)' : '输出个数';
+          valCondResult.textContent = '未判定';
+          valCondResult.style.color = 'var(--text-secondary)';
+
+          clearMetricHighlights();
+          highlightStepPill(null);
+          highlightCodeLine(1);
+
+          renderDigitCards(curNumber, true);
+          updateResultPanel();
+          historyTbody.innerHTML = '';
+        }
+
+        // 执行单轮微动画序列
+        function executeOneRound(callback) {
+          if (isTerminated) return;
+
+          round++;
+          btnStep.disabled = true;
+          loopStateTag.textContent = `正在执行第 ${round} 轮`;
+          loopStateTag.style.background = '#e0f2fe';
+          loopStateTag.style.color = 'var(--title-blue)';
+
+          const roundInNumber = curNumber;
+          const digit = roundInNumber % 10;
+          const newNumber = Math.trunc(roundInNumber / 10);
+          count++;
+          outputSequence.push(digit);
+          const isContinue = newNumber !== 0;
+
+          // ================= 阶段 1: 判断/进入循环 =================
+          highlightStepPill(1);
+          highlightCodeLine(2);
+          clearMetricHighlights();
+          mcardNum.classList.add('highlight');
+          valCurNum.textContent = roundInNumber;
+
+          actionDescText.textContent =
+            round === 1
+              ? `第 1 轮: do-while 核心机制 — 先直接进入循环体，不预先判断条件`
+              : `第 ${round} 轮: 承接上一轮剩余数值 number = ${roundInNumber}，继续循环`;
+          actionBadgeTag.textContent = '进入循环';
+          actionBadgeTag.style.background = '#eef5ff';
+          actionBadgeTag.style.color = 'var(--primary-blue)';
+
+          // ================= 阶段 2: 取得个位 (number % 10) =================
+          setTimeout(() => {
+            highlightStepPill(2);
+            highlightCodeLine(3);
+            clearMetricHighlights();
+            mcardMod.classList.add('highlight');
+
+            valDigit.textContent = digit;
+            actionDescText.textContent = `执行 % 10: ${roundInNumber} % 10 = ${digit} (精准取出最末尾个位)`;
+            actionBadgeTag.textContent = '取出个位';
+            actionBadgeTag.style.background = '#fef3c7';
+            actionBadgeTag.style.color = 'var(--highlight-orange)';
+
+            renderDigitCards(roundInNumber, false, true);
+
+            // ================= 阶段 3: 处理当前个位 (统计 / 打印) =================
+            setTimeout(() => {
+              highlightStepPill(3);
+              highlightCodeLine(4);
+              clearMetricHighlights();
+              mcardCount.classList.add('highlight');
+
+              valCountMetric.textContent = count;
+              updateResultPanel();
+
+              if (currentMode === 'count') {
+                actionDescText.textContent = `处理当前位: count++，有效位数从 ${count - 1} 递增为 ${count}`;
+              } else {
+                actionDescText.textContent = `处理当前位: printf 输出字符 '${digit}' 并追加到屏幕`;
+              }
+              actionBadgeTag.textContent = '处理个位';
+              actionBadgeTag.style.background = '#e0f2fe';
+              actionBadgeTag.style.color = 'var(--title-blue)';
+
+              // 卡片加上已处理删除线
+              const lastBox = digitStripBox.querySelector('.digit-box.is-processing');
+              if (lastBox) {
+                lastBox.classList.remove('is-processing');
+                lastBox.classList.add('is-processed');
+              }
+
+              // ================= 阶段 4: 删除当前个位 (number / 10) =================
+              setTimeout(() => {
+                highlightStepPill(4);
+                highlightCodeLine(5);
+                clearMetricHighlights();
+                mcardDiv.classList.add('highlight');
+
+                valDivNum.textContent = newNumber;
+                actionDescText.textContent = `执行 / 10: 整数截断 ${roundInNumber} / 10 = ${newNumber} (该位已被彻底剔除)`;
+                actionBadgeTag.textContent = '删除个位';
+                actionBadgeTag.style.background = '#f1f5f9';
+                actionBadgeTag.style.color = 'var(--text-dark)';
+
+                // 删除动画
+                if (lastBox) {
+                  lastBox.classList.add('is-dropped');
+                }
+
+                // ================= 阶段 5: 判断是否继续 (while 条件) =================
+                setTimeout(() => {
+                  highlightStepPill(5);
+                  highlightCodeLine(6);
+                  clearMetricHighlights();
+                  mcardCond.classList.add('highlight');
+
+                  curNumber = newNumber;
+                  valCurNum.textContent = curNumber;
+
+                  if (isContinue) {
+                    valCondResult.innerHTML = `<span style="color:var(--primary-blue)">${newNumber} != 0 → true</span>`;
+                    actionDescText.textContent = `判定: number 为 ${newNumber} (≠ 0)，条件成立，继续下一轮！`;
+                    actionBadgeTag.textContent = '条件成立';
+                    actionBadgeTag.style.background = '#eef5ff';
+                    actionBadgeTag.style.color = 'var(--primary-blue)';
+                  } else {
+                    isTerminated = true;
+                    valCondResult.innerHTML = `<span style="color:var(--alert-red);font-weight:bold;">0 != 0 → false</span>`;
+                    actionDescText.textContent = `判定: number 已归 0，条件不成立，退出 do-while 循环！`;
+                    actionBadgeTag.textContent = '循环结束';
+                    actionBadgeTag.style.background = '#fee2e2';
+                    actionBadgeTag.style.color = 'var(--alert-red)';
+
+                    loopStateTag.textContent = '执行完毕';
+                    loopStateTag.style.background = '#fee2e2';
+                    loopStateTag.style.color = 'var(--alert-red)';
+                  }
+
+                  // 写入记录表
+                  appendHistoryRow(round, roundInNumber, digit, newNumber, count, isContinue);
+                  renderDigitCards(curNumber, true);
+                  updateResultPanel();
+
+                  if (isTerminated) {
+                    highlightCodeLine(currentMode === 'count' ? 7 : 6);
+                    stopAutoRun();
+                    btnStep.disabled = true;
+                  } else {
+                    if (!isRunningAuto) btnStep.disabled = false;
+                  }
+
+                  if (callback) callback(!isTerminated);
+                }, 300);
+              }, 300);
+            }, 300);
+          }, 300);
+        }
+
+        // 自动运行逻辑
+        function startAutoRun() {
+          if (isRunningAuto) return;
+          if (isTerminated) resetSimulation();
+
+          isRunningAuto = true;
+          btnAuto.disabled = true;
+          btnPause.disabled = false;
+          btnStep.disabled = true;
+
+          function runLoopTick() {
+            executeOneRound((hasMore) => {
+              if (hasMore && isRunningAuto) {
+                autoTimer = setTimeout(runLoopTick, 350);
+              } else {
+                stopAutoRun();
+              }
+            });
+          }
+
+          runLoopTick();
+        }
+
+        function stopAutoRun() {
+          isRunningAuto = false;
+          if (autoTimer) {
+            clearTimeout(autoTimer);
+            autoTimer = null;
+          }
+          btnAuto.disabled = false;
+          btnPause.disabled = true;
+          if (!isTerminated) {
+            btnStep.disabled = false;
+          }
+        }
+
+        // 事件绑定
+        btnStep.addEventListener('click', () => executeOneRound());
+        btnAuto.addEventListener('click', startAutoRun);
+        btnPause.addEventListener('click', stopAutoRun);
+        btnReset.addEventListener('click', resetSimulation);
+        btnLoadNum.addEventListener('click', resetSimulation);
+
+        numInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') resetSimulation();
+        });
+
+        // 模式切换
+        tabModeCount.addEventListener('click', () => {
+          if (currentMode === 'count') return;
+          currentMode = 'count';
+          tabModeCount.classList.add('active');
+          tabModeReverse.classList.remove('active');
+          codePanelTitle.textContent = 'C 语言程序对应代码 (模式A: 统计位数)';
+          invDescStep2.textContent = 'count++;';
+          renderCodeBlock();
+          resetSimulation();
+        });
+
+        tabModeReverse.addEventListener('click', () => {
+          if (currentMode === 'reverse') return;
+          currentMode = 'reverse';
+          tabModeReverse.classList.add('active');
+          tabModeCount.classList.remove('active');
+          codePanelTitle.textContent = 'C 语言程序对应代码 (模式B: 逆序输出)';
+          invDescStep2.textContent = 'printf("%d ", digit);';
+          renderCodeBlock();
+          resetSimulation();
+        });
+
+        // 快捷示例按钮
+        quickBtns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            numInput.value = btn.getAttribute('data-val');
+            resetSimulation();
+          });
+        });
+
+        // 对比 while 开关
+        chkWhileContrast.addEventListener('change', (e) => {
+          whileContrastPanel.style.display = e.target.checked ? 'grid' : 'none';
+        });
+        whileContrastPanel.style.display = 'none'; // 默认折叠收纳，保证整洁
+
+        // 初始渲染
+        renderCodeBlock();
+        resetSimulation();
+      }
+    </script>
+  </body>
+</html>

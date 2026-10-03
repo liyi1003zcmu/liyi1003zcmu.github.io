@@ -1,0 +1,1649 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>搬砖问题枚举搜索可视化 - C语言程序设计基础</title>
+    <style>
+      /* ==========================================================================
+           1. 教学课件统一设计系统 (针对 1600x900 / 16:9 投影教室优化)
+           ========================================================================== */
+      :root {
+        --bg-canvas: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-card-soft: #f7fbff;
+        --bg-active: #e8f2ff;
+        --border-color: #cbd8e6;
+        --border-focus: #2c7be5;
+
+        --title-blue: #163f78;
+        --primary-blue: #2056a8;
+        --accent-blue: #2c7be5;
+        --text-dark: #1f2937;
+        --text-secondary: #5b6573;
+        --highlight-orange: #a65b00;
+        --alert-red: #b42318;
+        --success-blue: #0f52ba;
+        --valid-green: #15803d;
+        --valid-bg: #f0fdf4;
+        --valid-border: #86efac;
+
+        --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
+        --radius-card: 10px;
+        --radius-sm: 6px;
+
+        --font-ui:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', sans-serif;
+        --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background-color: #0f172a; /* 教室深色投影衬底 */
+        font-family: var(--font-ui);
+        color: var(--text-dark);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* 1600x900 教学等比主画布 */
+      #stage-scaler {
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        min-width: 1600px;
+        min-height: 900px;
+        max-width: 1600px;
+        max-height: 900px;
+        background-color: var(--bg-canvas);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        padding: 10px 18px 8px 18px;
+        transform-origin: center center;
+        user-select: none;
+        overflow: hidden;
+      }
+
+      /* ==========================================================================
+           2. 顶部标题栏与全局约束输入栏
+           ========================================================================== */
+      header.top-bar {
+        height: 46px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 4px;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+      }
+
+      .title-group h1 {
+        font-size: 23px;
+        font-weight: 700;
+        color: var(--title-blue);
+        line-height: 1.15;
+        letter-spacing: -0.2px;
+      }
+
+      .title-group .sub-title {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: 1px;
+      }
+
+      .header-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .academic-badge {
+        background-color: #eef5ff;
+        color: var(--primary-blue);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 14px;
+        border: 1px solid #bfdbfe;
+      }
+
+      .inquiry-prompt {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--highlight-orange);
+        background: #fff8ee;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        border: 1px dashed #fbd38d;
+      }
+
+      /* 顶部全局控制与公式栏 */
+      .global-control-bar {
+        display: grid;
+        grid-template-columns: 460px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 5px 10px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+
+      .param-input-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--title-blue);
+      }
+
+      .num-input {
+        width: 68px;
+        height: 28px;
+        font-family: var(--font-mono);
+        font-size: 15px;
+        font-weight: 700;
+        padding: 0 6px;
+        border: 1.5px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--title-blue);
+        outline: none;
+        text-align: center;
+      }
+      .num-input:focus {
+        border-color: var(--border-focus);
+      }
+
+      .btn-quick {
+        height: 24px;
+        padding: 0 6px;
+        font-size: 11.5px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        color: var(--text-dark);
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: var(--font-mono);
+      }
+      .btn-quick:hover {
+        background: #e2e8f0;
+        border-color: var(--primary-blue);
+      }
+
+      .constraints-pills {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pill-cond {
+        background: var(--bg-card-soft);
+        border: 1px solid #bfdbfe;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-family: var(--font-mono);
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* 按钮体系 */
+      .btn {
+        height: 30px;
+        padding: 0 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        border: 1.5px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-family: var(--font-ui);
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-blue);
+        color: #ffffff;
+        border-color: var(--primary-blue);
+      }
+      .btn-primary:hover:not(:disabled) {
+        background-color: #174284;
+      }
+      .btn-primary:disabled {
+        background-color: #94a3b8;
+        border-color: #94a3b8;
+        cursor: not-allowed;
+      }
+
+      .btn-outline {
+        background-color: #ffffff;
+        color: var(--primary-blue);
+        border-color: var(--border-color);
+      }
+      .btn-outline:hover:not(:disabled) {
+        background-color: var(--bg-card-soft);
+        border-color: var(--accent-blue);
+      }
+      .btn-outline:disabled {
+        color: #94a3b8;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 5px;
+      }
+
+      /* ==========================================================================
+           3. 中部双栏对照工作区 (左: 方案A, 右: 方案B, 宽度对称 1fr:1fr)
+           ========================================================================== */
+      .workspace-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        height: 570px;
+        max-height: 570px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+        align-items: stretch;
+        overflow: hidden;
+      }
+
+      .column-card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 8px 12px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .col-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eef2f6;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+        flex-shrink: 0;
+      }
+
+      .col-header h2 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .progress-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-card-soft);
+        border: 1px solid #d9e5f3;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 11.5px;
+        font-family: var(--font-mono);
+      }
+
+      .progress-bar-wrap {
+        width: 100px;
+        height: 7px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: var(--accent-blue);
+        width: 0%;
+        transition: width 0.1s ease;
+      }
+
+      /* 代码预览区 */
+      .code-box-mini {
+        background: #ffffff;
+        border: 1px solid #d9e5f3;
+        border-radius: var(--radius-sm);
+        padding: 4px 8px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-dark);
+        height: 106px;
+        overflow-y: auto;
+        flex-shrink: 0;
+        margin-bottom: 6px;
+      }
+
+      .code-box-mini .line {
+        padding: 1px 4px;
+        border-radius: 2px;
+      }
+      .code-box-mini .line.active {
+        background: #e8f2ff;
+        font-weight: bold;
+        color: var(--title-blue);
+        border-left: 3px solid var(--accent-blue);
+      }
+      .c-kw {
+        color: #0f52ba;
+        font-weight: 700;
+      }
+      .c-comm {
+        color: #94a3b8;
+        font-style: italic;
+      }
+
+      /* 当前变量卡片槽 */
+      .vars-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+      }
+
+      .var-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: 6px;
+        padding: 4px 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        position: relative;
+      }
+
+      .var-card.calculated {
+        background: #f0f7ff;
+        border-color: #93c5fd;
+        border-style: dashed;
+      }
+
+      .var-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+      .var-val {
+        font-size: 24px;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--title-blue);
+        line-height: 1.1;
+        margin: 1px 0;
+      }
+      .var-badge {
+        font-size: 9.5px;
+        padding: 1px 4px;
+        border-radius: 4px;
+        background: #eef5ff;
+        color: var(--primary-blue);
+        font-weight: 600;
+      }
+
+      /* 验证与判断条 */
+      .eval-status-bar {
+        background: var(--bg-card-soft);
+        border: 1px solid #cbd8e6;
+        border-radius: 6px;
+        padding: 4px 8px;
+        margin-bottom: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 11.5px;
+        font-family: var(--font-mono);
+        flex-shrink: 0;
+      }
+
+      .eval-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .eval-check-pill {
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+      .eval-check-pill.pass {
+        background: #dcfce7;
+        color: var(--valid-green);
+      }
+      .eval-check-pill.fail {
+        background: #fee2e2;
+        color: var(--alert-red);
+      }
+
+      /* 紧凑最近尝试历史表 */
+      .recent-table-box {
+        flex: 1;
+        min-height: 0;
+        border: 1px solid #d9e5f3;
+        border-radius: 6px;
+        overflow-y: auto;
+        position: relative;
+        background: #ffffff;
+        margin-bottom: 4px;
+      }
+
+      .recent-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        text-align: left;
+      }
+
+      .recent-table th {
+        position: sticky;
+        top: 0;
+        background: #edf4fe;
+        color: var(--title-blue);
+        padding: 2.5px 6px;
+        font-weight: 600;
+        border-bottom: 1.5px solid #cbd8e6;
+        z-index: 2;
+        white-space: nowrap;
+      }
+
+      .recent-table td {
+        padding: 2px 6px;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+      }
+
+      .recent-table tr.row-valid {
+        background: #ecfdf5;
+        font-weight: bold;
+        color: var(--valid-green);
+      }
+
+      .recent-table tr.row-latest {
+        background: #eef6ff;
+        font-weight: 600;
+      }
+
+      .loop-status-tag {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-align: center;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #f1f5f9;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+      }
+      .loop-status-tag.active {
+        background: #e0f2fe;
+        color: var(--title-blue);
+      }
+      .loop-status-tag.done {
+        background: #dcfce7;
+        color: var(--valid-green);
+      }
+
+      /* ==========================================================================
+           4. 底部尝试次数对比 + 合法解汇总 + 核心教学结论 (高约 180px)
+           ========================================================================== */
+      .bottom-summary-grid {
+        display: grid;
+        grid-template-columns: 460px 480px 1fr;
+        gap: 10px;
+        height: 154px;
+        max-height: 154px;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .summary-card {
+        background: #ffffff;
+        border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-card);
+        padding: 6px 10px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+      }
+
+      .summary-title {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--title-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 2px;
+        margin-bottom: 4px;
+      }
+
+      /* 尝试次数直观柱状图 */
+      .bars-compare-box {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin: 2px 0;
+      }
+
+      .bar-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-family: var(--font-mono);
+      }
+
+      .bar-label {
+        width: 68px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .bar-track {
+        flex: 1;
+        height: 14px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid #e2e8f0;
+      }
+      .bar-fill-a {
+        height: 100%;
+        background: #94a3b8;
+        border-radius: 2px;
+      }
+      .bar-fill-b {
+        height: 100%;
+        background: var(--accent-blue);
+        border-radius: 2px;
+      }
+      .bar-num {
+        width: 95px;
+        text-align: right;
+        font-weight: 700;
+        color: var(--title-blue);
+      }
+
+      .reduction-stats-badge {
+        background: #fff8ee;
+        border: 1px solid #fbd38d;
+        border-radius: 4px;
+        padding: 3px 6px;
+        font-size: 11px;
+        color: var(--highlight-orange);
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* 合法组合解列表 */
+      .solutions-table-box {
+        flex: 1;
+        min-height: 0;
+        border: 1px solid #d9e5f3;
+        border-radius: 4px;
+        overflow-y: auto;
+        background: #fbfcfe;
+      }
+
+      .solutions-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        text-align: center;
+      }
+
+      .solutions-table th {
+        position: sticky;
+        top: 0;
+        background: #eef5ff;
+        color: var(--title-blue);
+        padding: 2px 4px;
+        border-bottom: 1px solid #cbd8e6;
+        z-index: 2;
+      }
+
+      .solutions-table td {
+        padding: 2px 4px;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      /* 核心推导三步卡片 */
+      .three-steps-chain {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11.5px;
+        margin: 2px 0;
+      }
+
+      .chain-step {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--bg-card-soft);
+        border: 1px solid #d9e5f3;
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      .step-num-badge {
+        width: 15px;
+        height: 15px;
+        background: var(--primary-blue);
+        color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        flex-shrink: 0;
+      }
+
+      /* 教学箴言条 */
+      .bottom-aphorism {
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        background: #f0f7ff;
+        border: 1px dashed #bfdbfe;
+        border-radius: var(--radius-sm);
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 4px;
+      }
+
+      .code-inline {
+        font-family: var(--font-mono);
+        background: #f1f5f9;
+        padding: 1px 3px;
+        border-radius: 3px;
+        color: #1e293b;
+      }
+
+      /* 细滚动条 */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage-scaler">
+      <!-- 顶部标题栏 -->
+      <header class="top-bar">
+        <div class="title-group">
+          <h1>搬砖问题枚举搜索可视化</h1>
+          <div class="sub-title">少枚举一个变量，会发生什么？从三重循环到二重循环的算法优化</div>
+        </div>
+        <div class="header-meta">
+          <span class="academic-badge">D04-04 · 枚举搜索与优化</span>
+          <div class="inquiry-prompt">
+            “如果 children 已经可以由 men 和 women 算出来，还需要第三重循环吗？”
+          </div>
+        </div>
+      </header>
+
+      <!-- 顶部全局参数与控制栏 -->
+      <div class="global-control-bar">
+        <div class="param-input-group">
+          <span>总人数 / 砖数 n:</span>
+          <input
+            type="number"
+            id="input-n"
+            class="num-input"
+            value="30"
+            min="6"
+            max="100"
+            step="1"
+          />
+          <button
+            class="btn btn-outline"
+            id="btn-apply-n"
+            style="height: 26px; padding: 0 8px; font-size: 12px"
+          >
+            载入
+          </button>
+          <span style="font-size: 11.5px; color: var(--text-secondary); margin-left: 4px"
+            >快捷:</span
+          >
+          <button class="btn-quick" data-val="12">12</button>
+          <button class="btn-quick" data-val="24">24</button>
+          <button class="btn-quick" data-val="30">30</button>
+          <button class="btn-quick" data-val="36">36</button>
+          <button class="btn-quick" data-val="60">60</button>
+        </div>
+
+        <div class="constraints-pills">
+          <div class="pill-cond" title="人数约束">
+            <strong style="color: var(--primary-blue)">人数:</strong> men + women + children = n
+          </div>
+          <div class="pill-cond" title="无浮点搬砖约束: 两边乘2保证整型精准判定">
+            <strong style="color: var(--primary-blue)">砖数:</strong> 6×men + 4×women + children =
+            2n
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-step">下一步</button>
+          <button class="btn btn-outline" id="btn-auto">自动执行</button>
+          <button class="btn btn-outline" id="btn-pause" disabled>暂停</button>
+          <button class="btn btn-outline" id="btn-fast-forward">快速完成</button>
+          <button class="btn btn-outline" id="btn-reset">重置</button>
+        </div>
+      </div>
+
+      <!-- 中部左右对照实验区 -->
+      <main class="workspace-grid">
+        <!-- 左侧方案A：三重循环全部枚举 -->
+        <div class="column-card" id="col-scheme-a">
+          <div class="col-header">
+            <h2>
+              <span>方案A · 三重循环全部枚举</span>
+              <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
+                >(穷举所有组合)</span
+              >
+            </h2>
+            <div class="progress-indicator">
+              <span id="label-progress-a">0 / 29,791</span>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-fill-a"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- C 语言源码预览 -->
+          <div class="code-box-mini" id="code-box-a">
+            <div class="line" id="line-a-1">
+              <span class="c-kw">for</span> (men = <span style="color: #d97706">0</span>; men &lt;=
+              n; men++) {
+            </div>
+            <div class="line" id="line-a-2">
+              &nbsp;&nbsp;<span class="c-kw">for</span> (women =
+              <span style="color: #d97706">0</span>; women &lt;= n; women++) {
+            </div>
+            <div class="line" id="line-a-3">
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">for</span> (children =
+              <span style="color: #d97706">0</span>; children &lt;= n; children++) {
+            </div>
+            <div class="line" id="line-a-4">
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">if</span> (men + women +
+              children == n &amp;&amp;
+            </div>
+            <div class="line" id="line-a-5">
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6*men + 4*women + children
+              == 2*n) { ... }
+            </div>
+            <div class="line">&nbsp;&nbsp;&nbsp;&nbsp;} } }</div>
+          </div>
+
+          <!-- 方案A 变量卡片 -->
+          <div class="vars-container">
+            <div class="var-card" id="card-a-men">
+              <span class="var-label">men (男: 3块)</span>
+              <span class="var-val" id="val-a-men">0</span>
+              <span class="var-badge">外层循环</span>
+            </div>
+            <div class="var-card" id="card-a-women">
+              <span class="var-label">women (女: 2块)</span>
+              <span class="var-val" id="val-a-women">0</span>
+              <span class="var-badge">中层循环</span>
+            </div>
+            <div class="var-card" id="card-a-children">
+              <span class="var-label">children (小: 半块)</span>
+              <span class="var-val" id="val-a-children">0</span>
+              <span class="var-badge">内层穷举</span>
+            </div>
+          </div>
+
+          <!-- 方案A 实时算式与验证 -->
+          <div class="eval-status-bar">
+            <div class="eval-row">
+              <span
+                >人数式: <span id="eq-a-people">0+0+0 = 0</span> (目标:
+                <span id="target-a-people">30</span>)</span
+              >
+              <span class="eval-check-pill fail" id="pill-a-people">不符</span>
+            </div>
+            <div class="eval-row">
+              <span
+                >搬砖式: <span id="eq-a-bricks">6(0)+4(0)+0 = 0</span> (目标:
+                <span id="target-a-bricks">60</span>)</span
+              >
+              <span class="eval-check-pill fail" id="pill-a-bricks">不符</span>
+            </div>
+          </div>
+
+          <!-- 方案A 最近尝试历史表 (滑动保存最近12条) -->
+          <div class="recent-table-box" id="box-table-a">
+            <table class="recent-table" id="table-recent-a">
+              <thead>
+                <tr>
+                  <th style="width: 55px">序号</th>
+                  <th>men</th>
+                  <th>women</th>
+                  <th>children</th>
+                  <th>人数和</th>
+                  <th>砖式和</th>
+                  <th>判定</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="loop-status-tag" id="status-tag-a">等待开始 · 预计 (n+1)³ 次尝试</div>
+        </div>
+
+        <!-- 右侧方案B：二重循环 + 计算 children -->
+        <div class="column-card" id="col-scheme-b">
+          <div class="col-header">
+            <h2>
+              <span>方案B · 二重循环 + 计算 children</span>
+              <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
+                >(代数化简剪枝)</span
+              >
+            </h2>
+            <div class="progress-indicator">
+              <span id="label-progress-b">0 / 176</span>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="bar-fill-b"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- C 语言源码预览 -->
+          <div class="code-box-mini" id="code-box-b">
+            <div class="line" id="line-b-1">
+              <span class="c-kw">for</span> (men = <span style="color: #d97706">0</span>; men &lt;=
+              n / <span style="color: #d97706">3</span>; men++) { &nbsp;<span class="c-comm"
+                >// 缩小范围</span
+              >
+            </div>
+            <div class="line" id="line-b-2">
+              &nbsp;&nbsp;<span class="c-kw">for</span> (women =
+              <span style="color: #d97706">0</span>; women &lt;= n /
+              <span style="color: #d97706">2</span>; women++) {
+            </div>
+            <div class="line" id="line-b-3">
+              &nbsp;&nbsp;&nbsp;&nbsp;children = n - men - women; &nbsp;<span class="c-comm"
+                >// 直接代数计算</span
+              >
+            </div>
+            <div class="line" id="line-b-4">
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">if</span> (children &gt;=
+              <span style="color: #d97706">0</span> &amp;&amp;
+            </div>
+            <div class="line" id="line-b-5">
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6*men + 4*women + children == 2*n) {
+              ... }
+            </div>
+            <div class="line">&nbsp;&nbsp;} }</div>
+          </div>
+
+          <!-- 方案B 变量卡片 (children 标识为直接计算得到) -->
+          <div class="vars-container">
+            <div class="var-card" id="card-b-men">
+              <span class="var-label">men (0 ~ n/3)</span>
+              <span class="var-val" id="val-b-men">0</span>
+              <span class="var-badge">外层枚举</span>
+            </div>
+            <div class="var-card" id="card-b-women">
+              <span class="var-label">women (0 ~ n/2)</span>
+              <span class="var-val" id="val-b-women">0</span>
+              <span class="var-badge">内层枚举</span>
+            </div>
+            <div class="var-card calculated" id="card-b-children">
+              <span class="var-label" style="color: var(--primary-blue)"
+                >children (计算值得出)</span
+              >
+              <span class="var-val" id="val-b-children" style="color: var(--primary-blue)">30</span>
+              <span class="var-badge" style="background: #bfdbfe; color: #174284"
+                >无需第三重循环</span
+              >
+            </div>
+          </div>
+
+          <!-- 方案B 实时算式与验证 -->
+          <div class="eval-status-bar">
+            <div class="eval-row">
+              <span
+                >代数算式: <span id="eq-b-people">children = 30 - 0 - 0 = 30</span> (天然保和)</span
+              >
+              <span class="eval-check-pill pass" id="pill-b-people">≥0有效</span>
+            </div>
+            <div class="eval-row">
+              <span
+                >搬砖式: <span id="eq-b-bricks">6(0)+4(0)+30 = 30</span> (目标:
+                <span id="target-b-bricks">60</span>)</span
+              >
+              <span class="eval-check-pill fail" id="pill-b-bricks">不符</span>
+            </div>
+          </div>
+
+          <!-- 方案B 最近尝试历史表 (滑动保存最近12条) -->
+          <div class="recent-table-box" id="box-table-b">
+            <table class="recent-table" id="table-recent-b">
+              <thead>
+                <tr>
+                  <th style="width: 55px">序号</th>
+                  <th>men</th>
+                  <th>women</th>
+                  <th>children</th>
+                  <th>搬砖和</th>
+                  <th>目标 2n</th>
+                  <th>判定</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="loop-status-tag" id="status-tag-b">
+            等待开始 · 预计 (n/3+1)×(n/2+1) 次尝试
+          </div>
+        </div>
+      </main>
+
+      <!-- 底部状态对比与教学结论区 -->
+      <footer class="bottom-summary-grid">
+        <!-- 卡片 1: 尝试总次数数量级直观对比 -->
+        <div class="summary-card">
+          <div class="summary-title">
+            <span>尝试总次数对比 (运算量数量级)</span>
+            <span
+              id="badge-ratio-percent"
+              class="academic-badge"
+              style="font-size: 11px; padding: 1px 6px"
+              >减少约 99.4%</span
+            >
+          </div>
+
+          <div class="bars-compare-box">
+            <div class="bar-item">
+              <span class="bar-label">方案A (3重):</span>
+              <div class="bar-track">
+                <div class="bar-fill-a" id="vis-bar-a" style="width: 100%"></div>
+              </div>
+              <span class="bar-num" id="stat-count-a">29,791 次</span>
+            </div>
+            <div class="bar-item">
+              <span class="bar-label">方案B (2重):</span>
+              <div class="bar-track">
+                <div class="bar-fill-b" id="vis-bar-b" style="width: 2%"></div>
+              </div>
+              <span class="bar-num" id="stat-count-b" style="color: var(--primary-blue)"
+                >176 次</span
+              >
+            </div>
+          </div>
+
+          <div class="reduction-stats-badge" id="reduction-statement">
+            方案B 仅需 176 次检查，减少 29,615 次无效穷举！
+          </div>
+        </div>
+
+        <!-- 卡片 2: 已找到的全部合法组合结果 (双方核对) -->
+        <div class="summary-card">
+          <div class="summary-title">
+            <span>合法人员组合结果集 (最终解核对)</span>
+            <span
+              id="badge-solutions-match"
+              style="font-size: 11px; font-weight: 700; color: var(--text-secondary)"
+              >等待搜索...</span
+            >
+          </div>
+
+          <div class="solutions-table-box">
+            <table class="solutions-table" id="table-solutions">
+              <thead>
+                <tr>
+                  <th>解序号</th>
+                  <th>men (男)</th>
+                  <th>women (女)</th>
+                  <th>children (小)</th>
+                  <th>方案A检出</th>
+                  <th>方案B检出</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-solutions">
+                <tr>
+                  <td colspan="6" style="color: #94a3b8; font-style: italic">尚未发现合法解</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 卡片 3: 核心优化推导三阶段教学 -->
+        <div class="summary-card">
+          <div class="summary-title">
+            <span>核心思维 · 从暴力枚举到代数化简</span>
+            <span class="academic-badge" style="font-size: 10px; padding: 1px 5px">算法核心</span>
+          </div>
+
+          <div class="three-steps-chain">
+            <div class="chain-step">
+              <span class="step-num-badge">1</span>
+              <span><strong>无脑穷举：</strong>3个未知数，直接套用三重循环 (n+1)³</span>
+            </div>
+            <div class="chain-step">
+              <span class="step-num-badge">2</span>
+              <span><strong>发现约束：</strong>men + women + children = n 给出数学等式</span>
+            </div>
+            <div class="chain-step" style="background: #eef5ff; border-color: #bfdbfe">
+              <span class="step-num-badge" style="background: var(--accent-blue)">3</span>
+              <span
+                ><strong>代数消除：</strong
+                ><code class="code-inline">children = n - men - women</code> 剔除整层循环！</span
+              >
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <!-- 底部教学箴言条 -->
+      <div class="bottom-aphorism">
+        教学箴言：优化不是“少算几个答案”，而是“用更少的尝试找到同样的答案”；能算出来的变量，绝不继续枚举！
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+     JavaScript 核心业务逻辑与动态加速引擎
+     ========================================================================== -->
+    <script>
+      /* --------------------------------------------------------------------------
+       * 0. 课堂投影自适应缩放引擎 (1600x900 等比无滚动条缩放)
+       * -------------------------------------------------------------------------- */
+      function applyStageScale() {
+        const stage = document.getElementById('stage-scaler');
+        const targetWidth = 1600;
+        const targetHeight = 900;
+
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+
+        const scaleX = winWidth / targetWidth;
+        const scaleY = winHeight / targetHeight;
+        const scale = Math.min(scaleX, scaleY);
+
+        stage.style.transform = `scale(${scale})`;
+      }
+
+      window.addEventListener('resize', applyStageScale);
+      window.addEventListener('DOMContentLoaded', () => {
+        applyStageScale();
+        initBrickApp();
+      });
+
+      /* --------------------------------------------------------------------------
+       * 1. 搬砖问题核心模拟器
+       * -------------------------------------------------------------------------- */
+      function initBrickApp() {
+        // DOM 引用
+        const inputN = document.getElementById('input-n');
+        const btnApplyN = document.getElementById('btn-apply-n');
+        const btnQuickList = document.querySelectorAll('.btn-quick');
+
+        const btnStep = document.getElementById('btn-step');
+        const btnAuto = document.getElementById('btn-auto');
+        const btnPause = document.getElementById('btn-pause');
+        const btnFastForward = document.getElementById('btn-fast-forward');
+        const btnReset = document.getElementById('btn-reset');
+
+        // 方案A DOM
+        const labelProgressA = document.getElementById('label-progress-a');
+        const barFillA = document.getElementById('bar-fill-a');
+        const valAMen = document.getElementById('val-a-men');
+        const valAWomen = document.getElementById('val-a-women');
+        const valAChildren = document.getElementById('val-a-children');
+        const eqAPeople = document.getElementById('eq-a-people');
+        const targetAPeople = document.getElementById('target-a-people');
+        const pillAPeople = document.getElementById('pill-a-people');
+        const eqABricks = document.getElementById('eq-a-bricks');
+        const targetABricks = document.getElementById('target-a-bricks');
+        const pillABricks = document.getElementById('pill-a-bricks');
+        const tableRecentABody = document.querySelector('#table-recent-a tbody');
+        const statusTagA = document.getElementById('status-tag-a');
+
+        // 方案B DOM
+        const labelProgressB = document.getElementById('label-progress-b');
+        const barFillB = document.getElementById('bar-fill-b');
+        const valBMen = document.getElementById('val-b-men');
+        const valBWomen = document.getElementById('val-b-women');
+        const valBChildren = document.getElementById('val-b-children');
+        const eqBPeople = document.getElementById('eq-b-people');
+        const pillBPeople = document.getElementById('pill-b-people');
+        const eqBBricks = document.getElementById('eq-b-bricks');
+        const targetBBricks = document.getElementById('target-b-bricks');
+        const pillBBricks = document.getElementById('pill-b-bricks');
+        const tableRecentBBody = document.querySelector('#table-recent-b tbody');
+        const statusTagB = document.getElementById('status-tag-b');
+
+        // 底部统计与解
+        const statCountA = document.getElementById('stat-count-a');
+        const statCountB = document.getElementById('stat-count-b');
+        const visBarB = document.getElementById('vis-bar-b');
+        const badgeRatioPercent = document.getElementById('badge-ratio-percent');
+        const reductionStatement = document.getElementById('reduction-statement');
+        const tbodySolutions = document.getElementById('tbody-solutions');
+        const badgeSolutionsMatch = document.getElementById('badge-solutions-match');
+
+        // 代码行高亮 DOM 引用
+        const linesA = {
+          1: document.getElementById('line-a-1'),
+          2: document.getElementById('line-a-2'),
+          3: document.getElementById('line-a-3'),
+          4: document.getElementById('line-a-4'),
+          5: document.getElementById('line-a-5'),
+        };
+        const linesB = {
+          1: document.getElementById('line-b-1'),
+          2: document.getElementById('line-b-2'),
+          3: document.getElementById('line-b-3'),
+          4: document.getElementById('line-b-4'),
+          5: document.getElementById('line-b-5'),
+        };
+
+        // 状态变量
+        let n = 30;
+        let totalA = 0;
+        let totalB = 0;
+
+        let countA = 0;
+        let countB = 0;
+
+        // 游标状态: 方案A (men, women, children)
+        let curAM = 0;
+        let curAW = 0;
+        let curAC = 0;
+        let isDoneA = false;
+
+        // 游标状态: 方案B (men, women)
+        let curBM = 0;
+        let curBW = 0;
+        let isDoneB = false;
+
+        // 找到的解集
+        let solutionsA = [];
+        let solutionsB = [];
+
+        // 运行与定时器
+        let isRunning = false;
+        let runTimer = null;
+
+        // 理论全量正确答案快速预存 (用于核对)
+        let canonicalSolutions = [];
+
+        function calculateExpectedStats() {
+          totalA = Math.pow(n + 1, 3);
+          const maxBM = Math.floor(n / 3);
+          const maxBW = Math.floor(n / 2);
+          totalB = (maxBM + 1) * (maxBW + 1);
+
+          // 预先求出基准解 (以方案B逻辑精确推导)
+          canonicalSolutions = [];
+          for (let m = 0; m <= maxBM; m++) {
+            for (let w = 0; w <= maxBW; w++) {
+              const c = n - m - w;
+              if (c >= 0 && 6 * m + 4 * w + c === 2 * n) {
+                canonicalSolutions.push({ m, w, c });
+              }
+            }
+          }
+
+          // 更新静态看板指标
+          statCountA.textContent = `${totalA.toLocaleString()} 次`;
+          statCountB.textContent = `${totalB.toLocaleString()} 次`;
+
+          const ratio = ((totalB / totalA) * 100).toFixed(2);
+          const saved = (totalA - totalB).toLocaleString();
+          const pctReduced = (100 - (totalB / totalA) * 100).toFixed(1);
+
+          badgeRatioPercent.textContent = `减少约 ${pctReduced}%`;
+          reductionStatement.innerHTML = `方案B仅需 <strong>${totalB.toLocaleString()}</strong> 次检查，减少 <strong>${saved}</strong> 次无效穷举！(约为方案A的 ${ratio}%)`;
+
+          // 柱状图长度映射 (使用对数缩放保证二重循环依然可见)
+          const logA = Math.log10(totalA + 1);
+          const logB = Math.log10(totalB + 1);
+          const barBWidth = Math.max(3, (logB / logA) * 100);
+          visBarB.style.width = `${barBWidth}%`;
+
+          targetAPeople.textContent = n;
+          targetABricks.textContent = 2 * n;
+          targetBBricks.textContent = 2 * n;
+        }
+
+        /* STREAMING_CHUNK:Rendering UI rows and updating solution cards -->
+        /* 渲染方案A和方案B的表格行 */
+        function appendRecentRow(tbodyEl, record, isValid) {
+          const tr = document.createElement('tr');
+          if (isValid) tr.className = 'row-valid';
+          else tr.className = 'row-latest';
+
+          tr.innerHTML = record;
+          tbodyEl.insertBefore(tr, tbodyEl.firstChild);
+
+          // 保持最新 12 条记录，避免 DOM 膨胀
+          while (tbodyEl.children.length > 12) {
+            tbodyEl.removeChild(tbodyEl.lastChild);
+          }
+        }
+
+        // 高亮代码行工具
+        function setCodeHighlight(scheme, lineNum) {
+          const group = scheme === 'A' ? linesA : linesB;
+          Object.values(group).forEach((l) => l.classList.remove('active'));
+          if (lineNum && group[lineNum]) {
+            group[lineNum].classList.add('active');
+          }
+        }
+
+        // 更新合法组合全局表格
+        function updateSolutionsTable() {
+          if (solutionsA.length === 0 && solutionsB.length === 0) {
+            tbodySolutions.innerHTML = `<tr><td colspan="6" style="color:#94a3b8; font-style:italic;">尚未发现合法解 (共 ${canonicalSolutions.length} 个潜在解)</td></tr>`;
+            badgeSolutionsMatch.textContent = `待检出 (0 / ${canonicalSolutions.length})`;
+            badgeSolutionsMatch.style.color = 'var(--text-secondary)';
+            return;
+          }
+
+          tbodySolutions.innerHTML = '';
+          canonicalSolutions.forEach((sol, idx) => {
+            const foundInA = solutionsA.some(
+              (s) => s.m === sol.m && s.w === sol.w && s.c === sol.c,
+            );
+            const foundInB = solutionsB.some(
+              (s) => s.m === sol.m && s.w === sol.w && s.c === sol.c,
+            );
+
+            const tr = document.createElement('tr');
+            if (foundInA || foundInB) tr.style.background = '#f0fdf4';
+
+            tr.innerHTML = `
+                    <td style="font-weight:bold;">#${idx + 1}</td>
+                    <td style="color:var(--title-blue); font-weight:bold;">${sol.m}</td>
+                    <td style="color:var(--accent-blue); font-weight:bold;">${sol.w}</td>
+                    <td style="color:#047857; font-weight:bold;">${sol.c}</td>
+                    <td>${foundInA ? '<span style="color:var(--valid-green); font-weight:bold;">✓ 已检出</span>' : '<span style="color:#94a3b8;">等待中</span>'}</td>
+                    <td>${foundInB ? '<span style="color:var(--valid-green); font-weight:bold;">✓ 已检出</span>' : '<span style="color:#94a3b8;">等待中</span>'}</td>
+                `;
+            tbodySolutions.appendChild(tr);
+          });
+
+          if (isDoneA && isDoneB) {
+            badgeSolutionsMatch.innerHTML =
+              '<span style="color:var(--valid-green);">✓ 两种方法解集完全一致</span>';
+          } else {
+            const distinctB = solutionsB.length;
+            badgeSolutionsMatch.textContent = `已发现 ${distinctB} / ${canonicalSolutions.length} 个解`;
+            badgeSolutionsMatch.style.color = 'var(--primary-blue)';
+          }
+        }
+
+        /* --------------------------------------------------------------------------
+         * 单步步进逻辑：方案A 执行 1 次尝试
+         * -------------------------------------------------------------------------- */
+        function stepSchemeA() {
+          if (isDoneA) return;
+
+          const m = curAM;
+          const w = curAW;
+          const c = curAC;
+          countA++;
+
+          const peopleSum = m + w + c;
+          const brickSum = 6 * m + 4 * w + c;
+          const isPeopleValid = peopleSum === n;
+          const isBricksValid = brickSum === 2 * n;
+          const isValid = isPeopleValid && isBricksValid;
+
+          // 1. 卡片数据展示
+          valAMen.textContent = m;
+          valAWomen.textContent = w;
+          valAChildren.textContent = c;
+
+          // 2. 算式展示
+          eqAPeople.textContent = `${m} + ${w} + ${c} = ${peopleSum}`;
+          pillAPeople.textContent = isPeopleValid ? '符合' : '不符';
+          pillAPeople.className = `eval-check-pill ${isPeopleValid ? 'pass' : 'fail'}`;
+
+          eqABricks.textContent = `6(${m}) + 4(${w}) + ${c} = ${brickSum}`;
+          pillABricks.textContent = isBricksValid ? '符合' : '不符';
+          pillABricks.className = `eval-check-pill ${isBricksValid ? 'pass' : 'fail'}`;
+
+          // 3. 记录历史表
+          appendRecentRow(
+            tableRecentABody,
+            `<td>#${countA}</td><td>${m}</td><td>${w}</td><td>${c}</td><td>${peopleSum}</td><td>${brickSum}</td><td>${isValid ? '✓ 合法' : '不符'}</td>`,
+            isValid,
+          );
+
+          // 4. 进度与高亮
+          labelProgressA.textContent = `${countA.toLocaleString()} / ${totalA.toLocaleString()}`;
+          barFillA.style.width = `${Math.min(100, (countA / totalA) * 100)}%`;
+
+          if (isValid) {
+            if (!solutionsA.some((s) => s.m === m && s.w === w && s.c === c)) {
+              solutionsA.push({ m, w, c });
+              updateSolutionsTable();
+            }
+          }
+
+          // 5. 游标向后推进 (Triple loop)
+          curAC++;
+          if (curAC > n) {
+            curAC = 0;
+            curAW++;
+            if (curAW > n) {
+              curAW = 0;
+              curAM++;
+              if (curAM > n) {
+                isDoneA = true;
+                statusTagA.textContent = `★ 三重循环搜索完毕 (共完成 ${countA.toLocaleString()} 次尝试)`;
+                statusTagA.className = 'loop-status-tag done';
+                setCodeHighlight('A', null);
+                return;
+              }
+              setCodeHighlight('A', 1);
+            } else {
+              setCodeHighlight('A', 2);
+            }
+          } else {
+            setCodeHighlight('A', 3);
+          }
+        }
+
+        /* --------------------------------------------------------------------------
+         * 单步步进逻辑：方案B 执行 1 次尝试
+         * -------------------------------------------------------------------------- */
+        function stepSchemeB() {
+          if (isDoneB) return;
+
+          const maxBM = Math.floor(n / 3);
+          const maxBW = Math.floor(n / 2);
+
+          const m = curBM;
+          const w = curBW;
+          const c = n - m - w; // 代数计算得出
+          countB++;
+
+          const isCValid = c >= 0;
+          const brickSum = 6 * m + 4 * w + c;
+          const isBricksValid = isCValid && brickSum === 2 * n;
+          const isValid = isCValid && isBricksValid;
+
+          // 1. 卡片数据展示
+          valBMen.textContent = m;
+          valBWomen.textContent = w;
+          valBChildren.textContent = c;
+
+          // 2. 算式展示
+          eqBPeople.textContent = `children = ${n} - ${m} - ${w} = ${c}`;
+          pillBPeople.textContent = isCValid ? '≥0有效' : '<0非法';
+          pillBPeople.className = `eval-check-pill ${isCValid ? 'pass' : 'fail'}`;
+
+          eqBBricks.textContent = `6(${m}) + 4(${w}) + ${c} = ${brickSum}`;
+          pillBBricks.textContent = isBricksValid ? '符合' : '不符';
+          pillBBricks.className = `eval-check-pill ${isBricksValid ? 'pass' : 'fail'}`;
+
+          // 3. 记录历史表
+          appendRecentRow(
+            tableRecentBBody,
+            `<td>#${countB}</td><td>${m}</td><td>${w}</td><td>${c}</td><td>${brickSum}</td><td>${2 * n}</td><td>${isValid ? '✓ 合法' : '不符'}</td>`,
+            isValid,
+          );
+
+          // 4. 进度与高亮
+          labelProgressB.textContent = `${countB} / ${totalB}`;
+          barFillB.style.width = `${Math.min(100, (countB / totalB) * 100)}%`;
+
+          if (isValid) {
+            if (!solutionsB.some((s) => s.m === m && s.w === w && s.c === c)) {
+              solutionsB.push({ m, w, c });
+              updateSolutionsTable();
+            }
+          }
+
+          // 5. 游标推进 (Double loop)
+          curBW++;
+          if (curBW > maxBW) {
+            curBW = 0;
+            curBM++;
+            if (curBM > maxBM) {
+              isDoneB = true;
+              statusTagB.textContent = `★ 二重循环已提前完成！(仅用 ${countB} 次全部解出)`;
+              statusTagB.className = 'loop-status-tag done';
+              setCodeHighlight('B', null);
+              return;
+            }
+            setCodeHighlight('B', 1);
+          } else {
+            setCodeHighlight('B', 2);
+          }
+        }
+
+        // 单步联合执行
+        function executeStep() {
+          if (isDoneA && isDoneB) return;
+          if (!isDoneA) stepSchemeA();
+          if (!isDoneB) stepSchemeB();
+        }
+
+        /* --------------------------------------------------------------------------
+         * 自动执行机制 (含平滑动态加速，防止主线程卡顿)
+         * -------------------------------------------------------------------------- */
+        function startAutoRun() {
+          if (isRunning) return;
+          if (isDoneA && isDoneB) resetApp();
+
+          isRunning = true;
+          btnAuto.disabled = true;
+          btnPause.disabled = false;
+          btnStep.disabled = true;
+          btnFastForward.disabled = false;
+
+          let stepCount = 0;
+
+          function autoTick() {
+            if (!isRunning) return;
+
+            if (isDoneA && isDoneB) {
+              stopAutoRun();
+              return;
+            }
+
+            // 前 25 次以正常教学观察速度单步前进；
+            // 随着轮次递增，方案A在每帧内批量执行，保证在几秒内演示完成全貌
+            let batch = 1;
+            if (stepCount > 25) {
+              batch = Math.min(60, Math.floor(stepCount / 2));
+            }
+
+            for (let i = 0; i < batch; i++) {
+              executeStep();
+              if (isDoneA && isDoneB) break;
+            }
+
+            stepCount += batch;
+            const delay = stepCount < 20 ? 300 : stepCount < 60 ? 80 : 20;
+            runTimer = setTimeout(autoTick, delay);
+          }
+
+          autoTick();
+        }
+
+        function stopAutoRun() {
+          isRunning = false;
+          if (runTimer) {
+            clearTimeout(runTimer);
+            runTimer = null;
+          }
+          btnAuto.disabled = false;
+          btnPause.disabled = true;
+          if (!isDoneA || !isDoneB) {
+            btnStep.disabled = false;
+          }
+        }
+
+        // 快速直接完成全部搜索
+        function fastForwardAll() {
+          stopAutoRun();
+          while (!isDoneB) stepSchemeB();
+          while (!isDoneA) stepSchemeA();
+          updateSolutionsTable();
+        }
+
+        // 重置应用
+        function resetApp() {
+          stopAutoRun();
+
+          let parsedN = parseInt(inputN.value, 10);
+          if (isNaN(parsedN) || parsedN < 6) parsedN = 6;
+          if (parsedN > 100) parsedN = 100;
+          inputN.value = parsedN;
+          n = parsedN;
+
+          countA = 0;
+          countB = 0;
+          curAM = 0;
+          curAW = 0;
+          curAC = 0;
+          isDoneA = false;
+          curBM = 0;
+          curBW = 0;
+          isDoneB = false;
+
+          solutionsA = [];
+          solutionsB = [];
+
+          // UI 恢复初始化
+          valAMen.textContent = '0';
+          valAWomen.textContent = '0';
+          valAChildren.textContent = '0';
+          valBMen.textContent = '0';
+          valBWomen.textContent = '0';
+          valBChildren.textContent = n;
+
+          eqAPeople.textContent = '0 + 0 + 0 = 0';
+          pillAPeople.textContent = '不符';
+          pillAPeople.className = 'eval-check-pill fail';
+          eqABricks.textContent = '6(0) + 4(0) + 0 = 0';
+          pillABricks.textContent = '不符';
+          pillABricks.className = 'eval-check-pill fail';
+
+          eqBPeople.textContent = `children = ${n} - 0 - 0 = ${n}`;
+          pillBPeople.textContent = '≥0有效';
+          pillBPeople.className = 'eval-check-pill pass';
+          eqBBricks.textContent = `6(0) + 4(0) + ${n} = ${n}`;
+          pillBBricks.textContent = '不符';
+          pillBBricks.className = 'eval-check-pill fail';
+
+          tableRecentABody.innerHTML = '';
+          tableRecentBBody.innerHTML = '';
+
+          labelProgressA.textContent = `0 / ${Math.pow(n + 1, 3).toLocaleString()}`;
+          barFillA.style.width = '0%';
+          statusTagA.textContent = '等待开始 · 预计 (n+1)³ 次尝试';
+          statusTagA.className = 'loop-status-tag';
+
+          const maxBM = Math.floor(n / 3);
+          const maxBW = Math.floor(n / 2);
+          labelProgressB.textContent = `0 / ${(maxBM + 1) * (maxBW + 1)}`;
+          barFillB.style.width = '0%';
+          statusTagB.textContent = '等待开始 · 预计 (n/3+1)×(n/2+1) 次尝试';
+          statusTagB.className = 'loop-status-tag';
+
+          btnStep.disabled = false;
+          btnAuto.disabled = false;
+
+          setCodeHighlight('A', 1);
+          setCodeHighlight('B', 1);
+
+          calculateExpectedStats();
+          updateSolutionsTable();
+        }
+
+        // 按钮事件绑定
+        btnStep.addEventListener('click', executeStep);
+        btnAuto.addEventListener('click', startAutoRun);
+        btnPause.addEventListener('click', stopAutoRun);
+        btnFastForward.addEventListener('click', fastForwardAll);
+        btnReset.addEventListener('click', resetApp);
+        btnApplyN.addEventListener('click', resetApp);
+
+        inputN.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') resetApp();
+        });
+
+        btnQuickList.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            inputN.value = btn.getAttribute('data-val');
+            resetApp();
+          });
+        });
+
+        // 首次加载初始化
+        resetApp();
+      }
+    </script>
+  </body>
+</html>

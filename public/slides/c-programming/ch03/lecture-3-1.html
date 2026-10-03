@@ -1,0 +1,1139 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>程序设计基础：第三章 分支结构（一）</title>
+    <meta content="第3次课第1课时：多分支与不同类型数据输入" name="description" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+    <style>
+      :root {
+        --blue: #2056a8;
+        --blue2: #2c7be5;
+        --cyan: #eaf4ff;
+        --ink: #1f2937;
+        --muted: #5b6573;
+        --green: #1d7a46;
+        --orange: #a65b00;
+        --red: #b42318;
+        --purple: #6d28d9;
+        --line: #d8e1ec;
+        --soft: #f7f9fc;
+      }
+
+      .reveal {
+        color: var(--ink);
+        font-size: 28px;
+      }
+
+      .reveal .slides section {
+        box-sizing: border-box;
+        text-align: left;
+        padding: 20px 28px;
+      }
+
+      .reveal .slides section.stack {
+        padding: 0;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        color: #163f78;
+        text-transform: none;
+      }
+
+      .reveal h1 {
+        font-size: 76px;
+        line-height: 1.1;
+        margin: 0.1em 0 0.24em;
+      }
+
+      .reveal h2 {
+        font-size: 50px;
+        line-height: 1.16;
+        margin: 0 0 24px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dbe7f6;
+      }
+
+      .reveal h3 {
+        font-size: 32px;
+        line-height: 1.22;
+        margin: 0 0 14px;
+      }
+
+      .reveal p {
+        font-size: 28px;
+        line-height: 1.42;
+        margin: 12px 0;
+      }
+
+      .reveal ul,
+      .reveal ol {
+        margin: 0.25em 0 0.25em 1.15em;
+      }
+
+      .reveal li {
+        font-size: 26px;
+        line-height: 1.4;
+        margin: 8px 0;
+      }
+
+      .reveal code,
+      .reveal pre code,
+      .reveal pre code.hljs,
+      .reveal pre .hljs,
+      code,
+      .mono {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'liga' 0,
+          'calt' 0,
+          'dlig' 0 !important;
+      }
+
+      .reveal :not(pre) > code {
+        font-size: 24px;
+        background: #f3f6fa;
+        padding: 2px 7px;
+        border-radius: 5px;
+        color: #173d70;
+      }
+
+      .reveal pre {
+        width: 94%;
+        box-shadow: none;
+        font-size: 24px;
+        line-height: 1.32;
+        margin: 18px auto;
+      }
+
+      .reveal pre code {
+        max-height: 540px;
+        font-size: 1em;
+        line-height: 1.32;
+        padding: 18px 22px;
+        border-radius: 12px;
+        background: #fff !important;
+        color: #1f2937 !important;
+        border: 1px solid #d8e1ec;
+        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
+      }
+
+      .small {
+        font-size: 23px !important;
+        line-height: 1.38 !important;
+      }
+
+      .tiny {
+        font-size: 20px !important;
+        line-height: 1.36 !important;
+      }
+
+      .large {
+        font-size: 31px !important;
+        line-height: 1.36 !important;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .accent {
+        color: var(--blue);
+        font-weight: 700;
+      }
+
+      .danger {
+        color: var(--red);
+        font-weight: 700;
+      }
+
+      .good {
+        color: var(--green);
+        font-weight: 700;
+      }
+
+      .orange {
+        color: var(--orange);
+        font-weight: 700;
+      }
+
+      .purple {
+        color: var(--purple);
+        font-weight: 700;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .left {
+        text-align: left !important;
+      }
+
+      .lead {
+        max-width: 1350px;
+        margin: 0 auto 24px !important;
+        font-size: 34px !important;
+        line-height: 1.45 !important;
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        box-sizing: border-box;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px 23px;
+        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+      }
+
+      .card.soft {
+        background: var(--soft);
+      }
+
+      .card.blue {
+        background: #f4f8ff;
+        border-color: #c9d9ef;
+      }
+
+      .card.warn {
+        background: #fff8ed;
+        border-color: #f0d7b4;
+      }
+
+      .card.red {
+        background: #fff5f5;
+        border-color: #efc8c8;
+      }
+
+      .bluebox {
+        background: var(--cyan);
+        border-left: 6px solid var(--blue2);
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-size: 26px;
+        line-height: 1.42;
+      }
+
+      .quote {
+        font-size: 29px;
+        line-height: 1.52;
+        padding: 26px 34px;
+        border-left: 7px solid var(--blue2);
+        background: var(--soft);
+        text-align: left;
+        border-radius: 0 14px 14px 0;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #e8eef7;
+        color: #24405f;
+        font-size: 22px;
+        margin: 5px;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .step {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 16px 9px;
+        border: 1px solid #c6d5e8;
+        border-radius: 13px;
+        background: #fff;
+        font-size: 28px;
+        line-height: 1.2;
+        text-align: center;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
+      }
+
+      .arrow {
+        flex: 0 0 auto;
+        font-size: 34px;
+        color: #6683a6;
+      }
+
+      table.compare {
+        width: 100%;
+        margin: auto;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        border: 1px solid #d7dee8 !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+        font-size: 27px;
+      }
+
+      table.compare th,
+      table.compare td {
+        border-right: 1px solid #d7dee8 !important;
+        border-bottom: 1px solid #d7dee8 !important;
+        border-top: none !important;
+        border-left: none !important;
+        padding: 12px 14px;
+      }
+
+      table.compare th:last-child,
+      table.compare td:last-child {
+        border-right: none !important;
+      }
+
+      table.compare tr:last-child td {
+        border-bottom: none !important;
+      }
+
+      table.compare th {
+        background: #edf4fb;
+        color: #173d70;
+      }
+
+      .sectiontag {
+        color: #46709f;
+        font-size: 34px !important;
+        letter-spacing: 0.09em;
+      }
+
+      .title-meta {
+        font-size: 34px !important;
+        margin-top: 34px !important;
+      }
+
+      .bigq {
+        font-size: 42px !important;
+        color: #143b70;
+        font-weight: 700;
+        line-height: 1.26 !important;
+      }
+
+      .rule {
+        font-size: 31px !important;
+        font-weight: 700;
+        color: #163f78;
+        letter-spacing: 0.03em;
+      }
+
+      .modulecover {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 720px;
+        padding: 55px 70px;
+        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+        border: 1px solid #dbe7f6;
+        border-radius: 22px;
+        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
+      }
+
+      .modulecover .cover-kicker {
+        font-size: 27px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #5c7da5;
+        margin-bottom: 16px;
+      }
+
+      .modulecover .cover-title {
+        font-size: 62px;
+        line-height: 1.16;
+        color: #163f78;
+        font-weight: 800;
+        margin: 0 0 18px;
+      }
+
+      .modulecover .cover-subtitle {
+        font-size: 31px;
+        color: #48627f;
+        line-height: 1.4;
+        max-width: 1120px;
+      }
+
+      .modulecover .cover-tags {
+        margin-top: 20px;
+      }
+
+      .modulecover .cover-tags .pill {
+        font-size: 27px;
+        background: #ddeafb;
+        color: #214c84;
+      }
+
+      .slide-label {
+        position: absolute;
+        top: 9px;
+        right: 24px;
+        z-index: 50;
+        max-width: 46%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 5px 10px;
+        border: 1px solid #cbd9ec;
+        border-radius: 999px;
+        background: #f4f8ff;
+        color: #375a82;
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-size: 16px !important;
+        line-height: 1.15;
+        opacity: 0.92;
+        pointer-events: none;
+      }
+
+      .placeholder {
+        border: 2px dashed #9ab4cc;
+        border-radius: 16px;
+        padding: 20px;
+        background: #f8fbff;
+        color: #39566f;
+        text-align: center;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .placeholder .title {
+        font-weight: 700;
+        color: #2056a8;
+        margin-bottom: 8px;
+        font-size: 27px;
+      }
+
+      .prompt-note {
+        font-size: 18px !important;
+        color: #6b7280 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 42px;
+        row-gap: 4px;
+        margin-left: 1.1em !important;
+      }
+
+      .reveal .fragment.fade-up {
+        transform: translateY(18px);
+        transition:
+          opacity 0.38s ease,
+          transform 0.38s ease;
+        will-change: opacity, transform;
+      }
+
+      .reveal .fragment.fade-up.visible {
+        transform: translateY(0);
+      }
+
+      /* 白底、高对比、避免绿色语法高亮 */
+      .hljs {
+        background: #fff !important;
+        color: #1f2937 !important;
+      }
+
+      .hljs-keyword,
+      .hljs-built_in,
+      .hljs-type {
+        color: #2056a8 !important;
+        font-weight: 700 !important;
+      }
+
+      .hljs-meta,
+      .hljs-preprocessor,
+      .hljs-title,
+      .hljs-function .hljs-title,
+      .hljs-name {
+        color: #6d28d9 !important;
+        font-weight: 700 !important;
+      }
+
+      .hljs-string,
+      .hljs-number,
+      .hljs-literal,
+      .hljs-params {
+        color: #a65b00 !important;
+      }
+
+      .hljs-comment {
+        color: #64748b !important;
+        font-style: italic !important;
+      }
+
+      .hljs-symbol,
+      .hljs-operator,
+      .hljs-punctuation {
+        color: #334155 !important;
+      }
+
+      /* Chapter 4 specific helper classes */
+      .tcm-badge {
+        display: inline-block;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #edf4fb;
+        color: #173d70;
+        border: 1px solid #c6d5e8;
+        font-size: 24px !important;
+        margin: 5px;
+        font-weight: 700;
+      }
+      .data-strip {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .data-token {
+        min-width: 76px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid #cbd8e6;
+        text-align: center;
+        font-size: 32px;
+        font-weight: 800;
+        box-shadow: 0 5px 12px rgba(31, 41, 55, 0.05);
+      }
+      .data-token.stop {
+        background: #fff5f5;
+        color: #b42318;
+      }
+      .data-token.skip {
+        background: #fff7ed;
+        color: #a65b00;
+      }
+      .formula {
+        font-size: 44px !important;
+        color: #173d70;
+        text-align: center !important;
+        margin: 25px 0 !important;
+      }
+      .code-small pre code {
+        max-height: 510px !important;
+        font-size: 22px !important;
+        line-height: 1.28 !important;
+      }
+      .path-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+      .path {
+        border-radius: 16px;
+        border: 1px solid #cbd8e6;
+        background: #fff;
+        padding: 20px;
+      }
+      .path.break {
+        border-left: 8px solid #b42318;
+      }
+      .path.continue {
+        border-left: 8px solid #2c7be5;
+      }
+      .binary-line {
+        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+        font-size: 40px;
+        text-align: center;
+        background: #fff;
+        border: 1px solid #d8e1ec;
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .prompt {
+        background: #f7f7fb;
+        border-left: 6px solid #6d28d9;
+        padding: 18px 22px;
+        border-radius: 10px;
+        font-size: 22px;
+        line-height: 1.55;
+        text-align: left;
+        white-space: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1-0">
+          <section id="sec-1-1">
+            <p class="center sectiontag">程序设计基础 · 第3次课 · 第1课时</p>
+            <h1 class="center">分支结构（一）<br />多种情况，程序怎样作出选择？</h1>
+            <p class="center title-meta">从脉搏状态判断到混合数据输入与多分支</p>
+          </section>
+          <section id="sec-1-2">
+            <h2>进一步理解分支结构</h2>
+            <div class="flow">
+              <div class="step">脉搏二分支</div>
+              <div class="arrow">→</div>
+              <div class="step">多区间判断</div>
+              <div class="arrow">→</div>
+              <div class="step">读入运算符</div>
+              <div class="arrow">→</div>
+              <div class="step">多分支计算</div>
+            </div>
+            <p class="center bigq">
+              核心不是“多写几个 <code>if</code>”，而是<span class="accent"
+                >把规则变成互斥、完整、有顺序的分支</span
+              >。
+            </p>
+          </section>
+        </section>
+        <section id="sec-2-0">
+          <section class="module-cover-slide" id="sec-2-1">
+            <div class="modulecover">
+              <div class="cover-kicker">案例1 / 脉搏状态判断器</div>
+              <div class="cover-title">先理解数据，<br />再决定怎样分支</div>
+              <div class="cover-subtitle">脉搏以“次/分钟”记录，是常见生命体征信息之一。</div>
+              <div class="cover-tags">
+                <span class="pill">脉率</span><span class="pill">区间</span
+                ><span class="pill">else if</span><span class="pill">边界</span>
+              </div>
+            </div>
+            <aside class="notes">
+              案例背景只讲三点：①pulse表示每分钟脉搏次数；②测量值要结合情境解释；③本案例仅用于程序设计教学，不构成医学诊断。建议配图：简洁的桡动脉测量示意。生图提示词：16:9白底大学教学信息图，右手两指轻触左腕桡动脉位置，旁边显示“72
+              次/分钟”，蓝灰与青蓝配色，线性医学插图风格，中文标签“脉搏/脉率”“次/分钟”，不要真实病患照片，不要诊断性文字，适合课堂PPT。
+            </aside>
+          </section>
+          <section id="sec-2-2">
+            <h2>一次脉搏测量，程序需要知道什么？</h2>
+            <div class="grid2">
+              <div style="text-align: center">
+                <img
+                  alt="脉搏测量示意"
+                  src="./images/chap03/3-1.png"
+                  style="
+                    max-height: 480px;
+                    width: auto;
+                    border-radius: 12px;
+                    border: 1px solid #d8e1ec;
+                  "
+                />
+              </div>
+              <div class="card soft">
+                <h3>说明</h3>
+                <ul>
+                  <li>变量 <code>p</code> 表示每分钟脉搏次数。</li>
+                  <li>一个数值本身不是结论，程序必须依据明确规则解释。</li>
+                </ul>
+              </div>
+            </div>
+            <aside class="notes">
+              教学示例不作为医学诊断或处置依据。2–3分钟完成。不要扩展医学知识。快速提问：72、55、108如果只用一个if-else，能否表达三种情况？
+            </aside>
+          </section>
+          <section id="sec-2-3">
+            <h2>上一课已经会“二选一”</h2>
+            <pre><code class="language-c" data-line-numbers="1|3|4-8" data-trim="">int p;
+scanf("%d", &amp;p);
+
+if (p &gt;= 60 &amp;&amp; p &lt;= 100)
+    printf("Suitable\n");
+else
+    printf("Need further classification\n");</code></pre>
+            <p class="center bigq">
+              问题：<code>55</code> 和 <code>108</code> 都进入
+              <code>else</code>，但它们应该是同一种情况吗？
+            </p>
+          </section>
+          <section id="sec-2-4">
+            <h2>三种情况：先把规则分清楚</h2>
+            <div class="pulsebar">
+              <div class="low">p &lt; 60<br />心跳偏缓<br /><span class="tiny">教学提示</span></div>
+              <div class="normal">
+                60 &lt;= p &amp;&amp; p &lt;= 100<br />适合<br /><span class="tiny">教学提示</span>
+              </div>
+              <div class="high">
+                p &gt; 100<br />心跳偏快<br /><span class="tiny">教学提示</span>
+              </div>
+            </div>
+            <div class="grid3">
+              <div class="card">覆盖完整</div>
+              <div class="card">互不重叠</div>
+              <div class="card">边界明确</div>
+            </div>
+            <aside class="notes">
+              <p class="center small muted">
+                本页沿用第二次课的脉搏示例规则，重点是“区间→条件”的转换。
+              </p>
+            </aside>
+          </section>
+          <section id="sec-2-5">
+            <h2><code>else if</code>：前面不成立，才继续判断</h2>
+            <div class="grid2">
+              <div class="card blue">
+                <pre><code class="language-c" data-trim="">if (条件1) {
+    语句1;
+} else if (条件2) {
+    语句2;
+} else {
+    语句3;
+}</code></pre>
+              </div>
+              <div class="card soft">
+                <h3>执行逻辑</h3>
+                <ol>
+                  <li>先判断条件1。</li>
+                  <li>不成立，才判断条件2。</li>
+                  <li>前面都不成立，执行 <code>else</code>。</li>
+                  <li>一旦某个分支执行，后面分支跳过。</li>
+                </ol>
+              </div>
+            </div>
+          </section>
+          <section id="sec-2-6">
+            <h2>把三个区间写成一个多分支</h2>
+            <pre
+              class="fragment"
+            ><code class="language-c" data-line-numbers="1-2|4|6|8" data-trim="">int p;
+scanf("%d", &amp;p);
+
+if (p &lt; 60) {
+    printf("Slow pulse\n");
+} else if (p &lt;= 100) {
+    printf("Suitable\n");
+} else {
+    printf("Fast pulse\n");
+}</code></pre>
+            <p class="center bigq fragment">为什么第二个条件只写 <code>p &lt;= 100</code>？</p>
+            <p class="center small muted fragment">
+              因为走到这里已经意味着 <code>p &gt;= 60</code>。
+            </p>
+          </section>
+          <section id="sec-2-7">
+            <h2>条件写对了，顺序也可能写错</h2>
+            <div class="compare-code">
+              <div>
+                <div class="code-label">版本A：从具体区间开始</div>
+                <pre><code class="language-c" data-trim="">if (p &lt; 60)
+    printf("Slow\n");
+else if (p &lt;= 100)
+    printf("Suitable\n");
+else
+    printf("Fast\n");</code></pre>
+              </div>
+              <div>
+                <div class="code-label">版本B：先写更宽条件</div>
+                <pre><code class="language-c" data-trim="">if (p &lt;= 100)
+    printf("Suitable\n");
+else if (p &lt; 60)
+    printf("Slow\n");
+else
+    printf("Fast\n");</code></pre>
+              </div>
+            </div>
+            <p class="center bigq">输入 <code>55</code>，版本B会进入哪一支？</p>
+          </section>
+          <section id="sec-2-8">
+            <h2>用4个数，快速检查三个分支</h2>
+            <div class="scoreline">
+              <span class="score">59</span><span class="score">60</span
+              ><span class="score">100</span><span class="score">101</span>
+            </div>
+            <table class="compare">
+              <tr>
+                <th>输入</th>
+                <th>预期分支</th>
+                <th>为什么有用</th>
+              </tr>
+              <tr>
+                <td>59</td>
+                <td>Slow</td>
+                <td>检查60左侧</td>
+              </tr>
+              <tr>
+                <td>60</td>
+                <td>Suitable</td>
+                <td>检查下边界</td>
+              </tr>
+              <tr>
+                <td>100</td>
+                <td>Suitable</td>
+                <td>检查上边界</td>
+              </tr>
+              <tr>
+                <td>101</td>
+                <td>Fast</td>
+                <td>检查100右侧</td>
+              </tr>
+            </table>
+            <aside class="notes">互动控制在2分钟。让学生先口头预测，再点击逐行显示答案。</aside>
+          </section>
+        </section>
+        <section id="sec-3-0">
+          <section class="module-cover-slide" id="sec-3-1">
+            <div class="modulecover">
+              <div class="cover-kicker">案例2 / 脉搏数据计算模块</div>
+              <div class="cover-title">分支条件不一定来自“数值范围”，<br />也可以来自一个字符</div>
+              <div class="cover-subtitle">
+                把上一案例扩展为“记录与分析助手”的一个计算模块：用户输入两个数值和一个运算符，由程序选择相应计算。
+              </div>
+              <div class="cover-tags">
+                <span class="pill">double</span><span class="pill">char</span
+                ><span class="pill">scanf</span><span class="pill">多分支</span>
+              </div>
+            </div>
+          </section>
+          <section id="sec-3-2">
+            <h2>输入 <code>72 + 76</code>，程序要保存什么？</h2>
+            <div class="grid3">
+              <div class="card">
+                <h3 class="center">72</h3>
+                <p class="center"><code>double value1</code></p>
+                <p class="center small muted">第1个数值</p>
+              </div>
+              <div class="card blue">
+                <h3 class="center">+</h3>
+                <p class="center"><code>char op</code></p>
+                <p class="center small muted">一个字符</p>
+              </div>
+              <div class="card">
+                <h3 class="center">76</h3>
+                <p class="center"><code>double value2</code></p>
+                <p class="center small muted">第2个数值</p>
+              </div>
+            </div>
+            <p class="center bigq">新的问题：<code>'+'</code> 不是数字，怎样输入？</p>
+          </section>
+          <section id="sec-3-3">
+            <h2><code>char</code>：保存一个字符</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>字符常量</h3>
+                <pre><code class="language-c" data-trim="">'+'  '-'  '*'  '/'
+'A'  '1'  ' '</code></pre>
+                <p class="small">字符常量用<strong>单引号</strong>括起来。</p>
+              </div>
+              <div class="card soft">
+                <h3>字符变量</h3>
+                <pre><code class="language-c" data-trim="">char op;
+op = '+';</code></pre>
+                <p class="small"><code>op</code> 保存用户选择的运算符。</p>
+              </div>
+            </div>
+            <aside class="notes">
+              <p class="center small muted">
+                本课不展开完整ASCII表，只理解“字符也可以作为程序数据”。
+              </p>
+            </aside>
+          </section>
+          <section id="sec-3-4">
+            <h2><code>scanf</code> 按数据类型读取</h2>
+            <pre><code class="language-c" data-line-numbers="1-2|4" data-trim="">double value1, value2;
+char op;
+
+scanf("%lf %c %lf", &amp;value1, &amp;op, &amp;value2);</code></pre>
+            <div class="grid3">
+              <div class="card center">
+                <code>%lf</code>
+                <p class="small">读取 <code>double</code></p>
+              </div>
+              <div class="card blue center">
+                <code>%c</code>
+                <p class="small">读取一个字符</p>
+              </div>
+              <div class="card center">
+                <code>%lf</code>
+                <p class="small">读取 <code>double</code></p>
+              </div>
+            </div>
+            <div class="bluebox">
+              <strong>注意：</strong>格式串中的空格可以跳过输入中的空白字符，避免
+              <code>%c</code> 意外读到前面的空格或换行。
+            </div>
+          </section>
+          <section id="sec-3-5">
+            <h2>同样是多分支，只是条件换成了字符</h2>
+            <pre><code class="language-c" data-trim="">if (op == '+')
+    计算 value1 + value2;
+else if (op == '-')
+    计算 value1 - value2;
+else if (op == '*')
+    计算 value1 * value2;
+else if (op == '/')
+    计算 value1 / value2;
+else
+    提示 Unknown operator;</code></pre>
+            <p class="center rule">连续区间 → 比较数值；固定运算符 → 比较字符。</p>
+          </section>
+          <section id="sec-3-6">
+            <h2>完整的 <code>if-else if</code> 版本</h2>
+            <pre><code class="language-c" data-line-numbers="1-2|4|6-12|13-20|21-23" data-trim="">double value1, value2;
+char op;
+
+scanf("%lf %c %lf", &amp;value1, &amp;op, &amp;value2);
+
+if (op == '+') {
+    printf("= %.2f\n", value1 + value2);
+} else if (op == '-') {
+    printf("= %.2f\n", value1 - value2);
+} else if (op == '*') {
+    printf("= %.2f\n", value1 * value2);
+} else if (op == '/') {
+    if (value2 != 0)
+        printf("= %.2f\n", value1 / value2);
+    else
+        printf("Divisor cannot be 0!\n");
+} else {
+    printf("Unknown operator!\n");
+}</code></pre>
+          </section>
+          <section id="sec-3-7">
+            <h2>为什么除法分支里还要再判断一次？</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>第一层</h3>
+                <p><code>op == '/'</code></p>
+                <p class="small">用户选择了除法。</p>
+              </div>
+              <div class="card warn">
+                <h3>第二层</h3>
+                <p><code>value2 != 0</code></p>
+                <p class="small">除法还有自己的前提条件。</p>
+              </div>
+            </div>
+            <p class="center bigq">这就是“分支内部继续分支”的最小例子。</p>
+          </section>
+        </section>
+        <section id="sec-4-0">
+          <section id="sec-4-1">
+            <h2>现在你能解释这两种“多分支”了吗？</h2>
+            <div class="grid2">
+              <div class="card">
+                <h3>脉搏区间</h3>
+                <p><code>p &lt; 60</code> / <code>p &lt;= 100</code> / 其它</p>
+                <p class="small">条件来自<strong>连续数值区间</strong>。</p>
+              </div>
+              <div class="card blue">
+                <h3>运算符</h3>
+                <p>
+                  <code>op == '+'</code> / <code>'-'</code> / <code>'*'</code> / <code>'/'</code>
+                </p>
+                <p class="small">条件来自<strong>若干固定字符</strong>。</p>
+              </div>
+            </div>
+            <p class="center bigq">下一课时：固定选项很多时，能不能写得更清楚？</p>
+          </section>
+          <section id="sec-4-2">
+            <h2>第1课时小结</h2>
+            <ul class="summary-grid">
+              <li><strong>多分支：</strong><code>else if</code> 按顺序检查多个条件。</li>
+              <li><strong>隐含范围：</strong>前一条件失败，会缩小后一条件的有效范围。</li>
+              <li><strong>边界测试：</strong>优先检查59/60、100/101一类边界。</li>
+              <li><strong>字符数据：</strong><code>char</code> 可保存运算符等单字符信息。</li>
+              <li><strong>混合输入：</strong><code>%lf %c %lf</code> 读取不同类型数据。</li>
+              <li><strong>嵌套判断：</strong>一个分支内部可以继续判断自己的特殊条件。</li>
+            </ul>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+      /* 为每个实际展示页加上可定位标签。 */
+      document.querySelectorAll('.slides section').forEach((slide, idx) => {
+        if (slide.querySelector(':scope > section')) return;
+        if (!slide.id) slide.id = `slide-${idx + 1}`;
+        if (!slide.querySelector(':scope > .slide-label')) {
+          const label = document.createElement('div');
+          label.className = 'slide-label';
+          label.setAttribute('data-static', '');
+          label.textContent = `§ ${slide.id}`;
+          slide.prepend(label);
+        }
+      });
+
+      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+      document.querySelectorAll('.slides section').forEach((slide) => {
+        if (slide.querySelector(':scope > section')) return;
+
+        const candidates = slide.querySelectorAll(
+          [
+            ':scope#sec-1-1 > *:not(script)',
+            ':scope > .card',
+            ':scope > .grid2 > .card',
+            ':scope > .grid3 > .card',
+            ':scope > .grid4 > .card',
+            ':scope > .grid2 > div:not(.card)',
+            ':scope > .grid3 > div:not(.card)',
+            ':scope > .bluebox',
+            ':scope > .quote',
+            ':scope > .bigq',
+            ':scope > .rule',
+            ':scope > ul > li',
+            ':scope > ol > li',
+            ':scope > table.compare tr:not(:first-child)',
+            ':scope > .timeline > *',
+            ':scope > .pulsebar > *',
+            ':scope > .scoreline > *',
+            ':scope > .menu',
+            ':scope > .switch-map > *',
+            ':scope > .placeholder',
+            ':scope > .prompt',
+            ':scope > .data-strip > .data-token',
+            ':scope > .path-grid > .path',
+            ':scope > .binary-line',
+            ':scope > pre',
+            ':scope > .compare-code > *',
+            ':scope > .modulecover > *:not(aside.notes)',
+            ':scope > img',
+          ].join(','),
+        );
+
+        candidates.forEach((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          if (
+            !el.hasAttribute('data-static') &&
+            !parentFragment &&
+            !el.querySelector('.fragment')
+          ) {
+            el.classList.add('fragment', 'fade-up');
+          }
+        });
+        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
+
+        /* 流程图的箭头与它右侧的步骤同步出现。 */
+        slide.querySelectorAll('.flow').forEach((flow) => {
+          flow.querySelectorAll('.step,.node').forEach((step) => {
+            step.classList.add('fragment', 'fade-up');
+            const arrow = step.previousElementSibling;
+            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+          });
+        });
+
+        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
+          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+          return !parentFragment || !slide.contains(parentFragment);
+        });
+        const handled = new Set();
+        let order = 0;
+        topLevelFragments.forEach((el) => {
+          if (handled.has(el)) return;
+          const parent = el.parentElement;
+          const isFlow = parent && parent.classList.contains('flow');
+          const isTimeline = parent && parent.classList.contains('timeline');
+
+          if (el.hasAttribute('data-fragment-index')) {
+            return;
+          }
+          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else if (isTimeline && el.nextElementSibling) {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
+              el.nextElementSibling.setAttribute('data-fragment-index', order);
+            handled.add(el.nextElementSibling);
+          } else {
+            if (!el.hasAttribute('data-fragment-index'))
+              el.setAttribute('data-fragment-index', order);
+          }
+          order += 1;
+        });
+      });
+
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.035,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        defaultTiming: 120,
+        slideNumber: true,
+        history: false,
+        keyboard: true,
+        overview: true,
+        center: true,
+        touch: true,
+        loop: false,
+        rtl: false,
+        shuffle: false,
+        fragment: true,
+        embedded: false,
+        help: true,
+        showNotes: false,
+        autoPlayMedia: null,
+        autoSlide: 0,
+        autoSlideStoppable: true,
+        autoSlideMethod: Reveal.navigateNext,
+        mouseWheel: false,
+        hideAddressBar: true,
+        previewLinks: false,
+        transition: 'slide',
+        transitionSpeed: 'default',
+        backgroundTransition: 'fade',
+        viewDistance: 3,
+        display: 'block',
+        pdfMaxPagesPerSlide: 1,
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+        },
+        plugins: [
+          RevealZoom,
+          RevealNotes,
+          RevealSearch,
+          RevealMarkdown,
+          RevealHighlight,
+          RevealMath,
+        ],
+      });
+    </script>
+  </body>
+</html>
