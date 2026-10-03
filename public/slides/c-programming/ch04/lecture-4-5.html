@@ -1,718 +1,696 @@
-<!doctype html>
+<!DOCTYPE HTML>
 
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>程序设计基础：第4次课第二次课第2课时 综合循环Ⅰ</title>
-    <meta content="状态迭代与筛选" name="description" />
-    <meta
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-      name="viewport"
-    />
-    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
-    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
-    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
-    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
-    <style>
-      :root {
-        --blue: #2056a8;
-        --blue2: #2c7be5;
-        --cyan: #eaf4ff;
-        --ink: #1f2937;
-        --muted: #5b6573;
-        --green: #1d7a46;
-        --orange: #a65b00;
-        --red: #b42318;
-        --purple: #6d28d9;
-        --line: #d8e1ec;
-        --soft: #f7f9fc;
-      }
-
-      .reveal {
-        color: var(--ink);
-        font-size: 28px;
-      }
-
-      .reveal .slides section {
-        box-sizing: border-box;
-        text-align: left;
-        padding: 20px 28px;
-      }
-
-      .reveal .slides section.stack {
-        padding: 0;
-      }
-
-      .reveal h1,
-      .reveal h2,
-      .reveal h3 {
-        color: #163f78;
-        text-transform: none;
-      }
-
-      .reveal h1 {
-        font-size: 76px;
-        line-height: 1.1;
-        margin: 0.1em 0 0.24em;
-      }
-
-      .reveal h2 {
-        font-size: 50px;
-        line-height: 1.16;
-        margin: 0 0 24px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #dbe7f6;
-      }
-
-      .reveal h3 {
-        font-size: 32px;
-        line-height: 1.22;
-        margin: 0 0 14px;
-      }
-
-      .reveal p {
-        font-size: 28px;
-        line-height: 1.42;
-        margin: 12px 0;
-      }
-
-      .reveal ul,
-      .reveal ol {
-        margin: 0.25em 0 0.25em 1.15em;
-      }
-
-      .reveal li {
-        font-size: 26px;
-        line-height: 1.4;
-        margin: 8px 0;
-      }
-
-      .reveal code,
-      .reveal pre code,
-      .reveal pre code.hljs,
-      .reveal pre .hljs,
-      code,
-      .mono {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-variant-ligatures: none !important;
-        font-feature-settings:
-          'liga' 0,
-          'calt' 0,
-          'dlig' 0 !important;
-      }
-
-      .reveal :not(pre) > code {
-        font-size: 24px;
-        background: #f3f6fa;
-        padding: 2px 7px;
-        border-radius: 5px;
-        color: #173d70;
-      }
-
-      .reveal pre {
-        width: 94%;
-        box-shadow: none;
-        font-size: 24px;
-        line-height: 1.32;
-        margin: 18px auto;
-      }
-
-      .reveal pre code {
-        max-height: 540px;
-        font-size: 1em;
-        line-height: 1.32;
-        padding: 18px 22px;
-        border-radius: 12px;
-        background: #fff !important;
-        color: #1f2937 !important;
-        border: 1px solid #d8e1ec;
-        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
-      }
-
-      .small {
-        font-size: 23px !important;
-        line-height: 1.38 !important;
-      }
-
-      .tiny {
-        font-size: 20px !important;
-        line-height: 1.36 !important;
-      }
-
-      .large {
-        font-size: 31px !important;
-        line-height: 1.36 !important;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .accent {
-        color: var(--blue);
-        font-weight: 700;
-      }
-
-      .danger {
-        color: var(--red);
-        font-weight: 700;
-      }
-
-      .good {
-        color: var(--green);
-        font-weight: 700;
-      }
-
-      .orange {
-        color: var(--orange);
-        font-weight: 700;
-      }
-
-      .purple {
-        color: var(--purple);
-        font-weight: 700;
-      }
-
-      .center {
-        text-align: center !important;
-      }
-
-      .left {
-        text-align: left !important;
-      }
-
-      .lead {
-        max-width: 1350px;
-        margin: 0 auto 24px !important;
-        font-size: 34px !important;
-        line-height: 1.45 !important;
-      }
-
-      .grid2 {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 28px;
-        align-items: stretch;
-      }
-
-      .grid3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-        align-items: stretch;
-      }
-
-      .grid4 {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-        align-items: stretch;
-      }
-
-      .card {
-        box-sizing: border-box;
-        height: 100%;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 20px 23px;
-        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
-      }
-
-      .card.soft {
-        background: var(--soft);
-      }
-
-      .card.blue {
-        background: #f4f8ff;
-        border-color: #c9d9ef;
-      }
-
-      .card.warn {
-        background: #fff8ed;
-        border-color: #f0d7b4;
-      }
-
-      .card.red {
-        background: #fff5f5;
-        border-color: #efc8c8;
-      }
-
-      .bluebox {
-        background: var(--cyan);
-        border-left: 6px solid var(--blue2);
-        padding: 16px 20px;
-        border-radius: 12px;
-        font-size: 26px;
-        line-height: 1.42;
-      }
-
-      .quote {
-        font-size: 29px;
-        line-height: 1.52;
-        padding: 26px 34px;
-        border-left: 7px solid var(--blue2);
-        background: var(--soft);
-        text-align: left;
-        border-radius: 0 14px 14px 0;
-      }
-
-      .pill {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #e8eef7;
-        color: #24405f;
-        font-size: 22px;
-        margin: 5px;
-      }
-
-      .flow {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
-        gap: 12px;
-        margin-top: 26px;
-      }
-
-      .step {
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 16px 9px;
-        border: 1px solid #c6d5e8;
-        border-radius: 13px;
-        background: #fff;
-        font-size: 28px;
-        line-height: 1.2;
-        text-align: center;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
-      }
-
-      .arrow {
-        flex: 0 0 auto;
-        font-size: 34px;
-        color: #6683a6;
-      }
-
-      table.compare {
-        width: 100%;
-        margin: auto;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        border: 1px solid #d7dee8 !important;
-        border-radius: 12px !important;
-        overflow: hidden;
-        font-size: 27px;
-      }
-
-      table.compare th,
-      table.compare td {
-        border-right: 1px solid #d7dee8 !important;
-        border-bottom: 1px solid #d7dee8 !important;
-        border-top: none !important;
-        border-left: none !important;
-        padding: 12px 14px;
-      }
-
-      table.compare th:last-child,
-      table.compare td:last-child {
-        border-right: none !important;
-      }
-
-      table.compare tr:last-child td {
-        border-bottom: none !important;
-      }
-
-      table.compare th {
-        background: #edf4fb;
-        color: #173d70;
-      }
-
-      .sectiontag {
-        color: #46709f;
-        font-size: 34px !important;
-        letter-spacing: 0.09em;
-      }
-
-      .title-meta {
-        font-size: 34px !important;
-        margin-top: 34px !important;
-      }
-
-      .bigq {
-        font-size: 42px !important;
-        color: #143b70;
-        font-weight: 700;
-        line-height: 1.26 !important;
-      }
-
-      .rule {
-        font-size: 31px !important;
-        font-weight: 700;
-        color: #163f78;
-        letter-spacing: 0.03em;
-      }
-
-      .modulecover {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 720px;
-        padding: 55px 70px;
-        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
-        border: 1px solid #dbe7f6;
-        border-radius: 22px;
-        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
-      }
-
-      .modulecover .cover-kicker {
-        font-size: 27px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #5c7da5;
-        margin-bottom: 16px;
-      }
-
-      .modulecover .cover-title {
-        font-size: 62px;
-        line-height: 1.16;
-        color: #163f78;
-        font-weight: 800;
-        margin: 0 0 18px;
-      }
-
-      .modulecover .cover-subtitle {
-        font-size: 31px;
-        color: #48627f;
-        line-height: 1.4;
-        max-width: 1120px;
-      }
-
-      .modulecover .cover-tags {
-        margin-top: 20px;
-      }
-
-      .modulecover .cover-tags .pill {
-        font-size: 27px;
-        background: #ddeafb;
-        color: #214c84;
-      }
-
-      .slide-label {
-        position: absolute;
-        top: 9px;
-        right: 24px;
-        z-index: 50;
-        max-width: 46%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 5px 10px;
-        border: 1px solid #cbd9ec;
-        border-radius: 999px;
-        background: #f4f8ff;
-        color: #375a82;
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 16px !important;
-        line-height: 1.15;
-        opacity: 0.92;
-        pointer-events: none;
-      }
-
-      .placeholder {
-        border: 2px dashed #9ab4cc;
-        border-radius: 16px;
-        padding: 20px;
-        background: #f8fbff;
-        color: #39566f;
-        text-align: center;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .placeholder .title {
-        font-weight: 700;
-        color: #2056a8;
-        margin-bottom: 8px;
-        font-size: 27px;
-      }
-
-      .prompt-note {
-        font-size: 18px !important;
-        color: #6b7280 !important;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 42px;
-        row-gap: 4px;
-        margin-left: 1.1em !important;
-      }
-
-      .reveal .fragment.fade-up {
-        transform: translateY(18px);
-        transition:
-          opacity 0.38s ease,
-          transform 0.38s ease;
-        will-change: opacity, transform;
-      }
-
-      .reveal .fragment.fade-up.visible {
-        transform: translateY(0);
-      }
-
-      /* 白底、高对比、避免绿色语法高亮 */
-      .hljs {
-        background: #fff !important;
-        color: #1f2937 !important;
-      }
-
-      .hljs-keyword,
-      .hljs-built_in,
-      .hljs-type {
-        color: #2056a8 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-meta,
-      .hljs-preprocessor,
-      .hljs-title,
-      .hljs-function .hljs-title,
-      .hljs-name {
-        color: #6d28d9 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-string,
-      .hljs-number,
-      .hljs-literal,
-      .hljs-params {
-        color: #a65b00 !important;
-      }
-
-      .hljs-comment {
-        color: #64748b !important;
-        font-style: italic !important;
-      }
-
-      .hljs-symbol,
-      .hljs-operator,
-      .hljs-punctuation {
-        color: #334155 !important;
-      }
-
-      /* Chapter 4 specific helper classes */
-      .tcm-badge {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #edf4fb;
-        color: #173d70;
-        border: 1px solid #c6d5e8;
-        font-size: 24px !important;
-        margin: 5px;
-        font-weight: 700;
-      }
-
-      .data-strip {
-        display: flex;
-        gap: 14px;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin: 20px 0;
-      }
-
-      .data-token {
-        min-width: 76px;
-        padding: 14px 18px;
-        border-radius: 14px;
-        background: #fff;
-        border: 1px solid #cbd8e6;
-        text-align: center;
-        font-size: 32px;
-        font-weight: 800;
-        box-shadow: 0 5px 12px rgba(31, 41, 55, 0.05);
-      }
-
-      .data-token.stop {
-        background: #fff5f5;
-        color: #b42318;
-      }
-
-      .data-token.skip {
-        background: #fff7ed;
-        color: #a65b00;
-      }
-
-      .formula {
-        font-size: 44px !important;
-        color: #173d70;
-        text-align: center !important;
-        margin: 25px 0 !important;
-      }
-
-      .code-small pre code {
-        max-height: 510px !important;
-        font-size: 22px !important;
-        line-height: 1.28 !important;
-      }
-
-      .path-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: stretch;
-      }
-
-      .path {
-        border-radius: 16px;
-        border: 1px solid #cbd8e6;
-        background: #fff;
-        padding: 20px;
-      }
-
-      .path.break {
-        border-left: 8px solid #b42318;
-      }
-
-      .path.continue {
-        border-left: 8px solid #2c7be5;
-      }
-
-      .binary-line {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 40px;
-        text-align: center;
-        background: #fff;
-        border: 1px solid #d8e1ec;
-        border-radius: 12px;
-        padding: 18px;
-      }
-
-      .prompt {
-        background: #f7f7fb;
-        border-left: 6px solid #6d28d9;
-        padding: 18px 22px;
-        border-radius: 10px;
-        font-size: 22px;
-        line-height: 1.55;
-        text-align: left;
-        white-space: normal;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="reveal">
-      <div class="slides">
-        <section id="sec-1-0">
-          <section id="sec-1-1">
-            <p class="center sectiontag">程序设计基础 · 第4次课 · 第二次课 · 第2课时</p>
-            <h1 class="center">循环结构（五）<br />综合循环Ⅰ：状态迭代与筛选</h1>
-            <p class="center title-meta">
-              从最高分、Fibonacci到区间素数，训练循环程序的模型识别能力
-            </p>
-          </section>
-          <section id="sec-1-2">
-            <h2>本课不增加新语法，而是训练模型识别</h2>
-            <p class="lead center">看到一个循环问题，先判断它属于哪一种“重复模式”。</p>
-            <div class="grid3">
-              <div class="card">
-                <h3>求最值</h3>
-                <p class="small">保留“到目前为止最好的结果”。</p>
-              </div>
-              <div class="card">
-                <h3>状态迭代</h3>
-                <p class="small">新状态由旧状态产生。</p>
-              </div>
-              <div class="card soft">
-                <h3>批量筛选</h3>
-                <p class="small">对一批候选对象逐个判断。</p>
-              </div>
-            </div>
-          </section>
-          <section id="sec-1-3">
-            <h2>第2课时学习目标</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>知识目标</h3>
-                <ul>
-                  <li>理解求最值的循环结构</li>
-                  <li>理解 Fibonacci 数列中的状态更新</li>
-                  <li>理解“外层枚举 + 内层判断”的素数筛选结构</li>
-                </ul>
-              </div>
-              <div class="card soft">
-                <h3>能力目标</h3>
-                <ul>
-                  <li>能从题目中识别循环模型</li>
-                  <li>能用表格跟踪关键变量变化</li>
-                  <li>能把已学的素数判断组合进区间输出问题</li>
-                </ul>
-              </div>
-            </div>
-          </section>
+
+<head>
+  <meta charset="utf-8" />
+  <title>程序设计基础：第4次课第二次课第2课时 综合循环Ⅰ</title>
+  <meta content="状态迭代与筛选" name="description" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+  <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+  <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+  <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .placeholder {
+      border: 2px dashed #9ab4cc;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fbff;
+      color: #39566f;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .placeholder .title {
+      font-weight: 700;
+      color: #2056a8;
+      margin-bottom: 8px;
+      font-size: 27px;
+    }
+
+    .prompt-note {
+      font-size: 18px !important;
+      color: #6b7280 !important;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 42px;
+      row-gap: 4px;
+      margin-left: 1.1em !important;
+    }
+
+    .reveal .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity .38s ease, transform .38s ease;
+      will-change: opacity, transform;
+    }
+
+    .reveal .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+
+    /* 白底、高对比、避免绿色语法高亮 */
+    .hljs {
+      background: #fff !important;
+      color: #1f2937 !important;
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-type {
+      color: #2056a8 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-meta,
+    .hljs-preprocessor,
+    .hljs-title,
+    .hljs-function .hljs-title,
+    .hljs-name {
+      color: #6d28d9 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-string,
+    .hljs-number,
+    .hljs-literal,
+    .hljs-params {
+      color: #a65b00 !important;
+    }
+
+    .hljs-comment {
+      color: #64748b !important;
+      font-style: italic !important;
+    }
+
+    .hljs-symbol,
+    .hljs-operator,
+    .hljs-punctuation {
+      color: #334155 !important;
+    }
+
+    /* Chapter 4 specific helper classes */
+    .tcm-badge {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #edf4fb;
+      color: #173d70;
+      border: 1px solid #c6d5e8;
+      font-size: 24px !important;
+      margin: 5px;
+      font-weight: 700;
+    }
+
+    .data-strip {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .data-token {
+      min-width: 76px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #cbd8e6;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      box-shadow: 0 5px 12px rgba(31, 41, 55, .05);
+    }
+
+    .data-token.stop {
+      background: #fff5f5;
+      color: #b42318;
+    }
+
+    .data-token.skip {
+      background: #fff7ed;
+      color: #a65b00;
+    }
+
+    .formula {
+      font-size: 44px !important;
+      color: #173d70;
+      text-align: center !important;
+      margin: 25px 0 !important;
+    }
+
+    .code-small pre code {
+      max-height: 510px !important;
+      font-size: 22px !important;
+      line-height: 1.28 !important;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .path {
+      border-radius: 16px;
+      border: 1px solid #cbd8e6;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .path.break {
+      border-left: 8px solid #b42318;
+    }
+
+    .path.continue {
+      border-left: 8px solid #2c7be5;
+    }
+
+    .binary-line {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 40px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid #d8e1ec;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .prompt {
+      background: #f7f7fb;
+      border-left: 6px solid #6d28d9;
+      padding: 18px 22px;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1.55;
+      text-align: left;
+      white-space: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="sec-1-0">
+        <section id="sec-1-1">
+          <p class="center sectiontag">程序设计基础 · 第4次课 · 第二次课 · 第2课时</p>
+          <h1 class="center">循环结构（五）<br>综合循环Ⅰ：状态迭代与筛选</h1>
+          <p class="center title-meta">从最高分、Fibonacci到区间素数，训练循环程序的模型识别能力</p>
         </section>
-        <section id="sec-2-0">
-          <section class="module-cover-slide" id="sec-2-1">
-            <div class="modulecover">
-              <div class="cover-kicker">教材例4-8</div>
-              <div class="cover-title">求最高分：<br />记录“到目前为止”的最大值</div>
-              <div class="cover-subtitle">最值问题的关键，是让一个变量保存当前最优结果。</div>
-              <div class="cover-tags">
-                <span class="pill">max</span><span class="pill">状态保持</span
-                ><span class="pill">比较更新</span>
-              </div>
+        <section id="sec-1-2">
+          <h2>本课不增加新语法，而是训练模型识别</h2>
+          <p class="lead center">看到一个循环问题，先判断它属于哪一种“重复模式”。</p>
+          <div class="grid3">
+            <div class="card">
+              <h3>求最值</h3>
+              <p class="small">保留“到目前为止最好的结果”。</p>
             </div>
-          </section>
-          <section id="sec-2-1a">
-            <h2>教材例4-8 题面描述</h2>
-            <div
-              class="card blue"
-              style="margin-top: 24px; padding: 32px 40px; border-radius: 16px"
-            >
-              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px">📋 题目要求</h3>
-              <p style="font-size: 30px; line-height: 1.6; color: #1f2937">
-                输入一批学生的成绩，找出最高分。<br />
-                <span
-                  class="muted small"
-                  style="font-size: 24px; display: inline-block; margin-top: 16px"
-                  >（注：当输入负数时标志数据输入结束）</span
-                >
-              </p>
+            <div class="card">
+              <h3>状态迭代</h3>
+              <p class="small">新状态由旧状态产生。</p>
             </div>
-          </section>
-          <section id="sec-2-2">
-            <h2>从脉搏记录看“当前最大值”</h2>
-            <div class="data-strip">
-              <span class="data-token">72</span><span class="data-token">68</span
-              ><span class="data-token">75</span><span class="data-token">71</span
-              ><span class="data-token">69</span>
+            <div class="card soft">
+              <h3>批量筛选</h3>
+              <p class="small">对一批候选对象逐个判断。</p>
             </div>
-            <div class="flow">
-              <div class="step">读入当前值</div>
-              <div class="arrow">→</div>
-              <div class="step">与 <code>max</code> 比较</div>
-              <div class="arrow">→</div>
-              <div class="step">更大则更新</div>
-              <div class="arrow">→</div>
-              <div class="step">继续下一条</div>
+          </div>
+        </section>
+        <section id="sec-1-3">
+          <h2>第2课时学习目标</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>知识目标</h3>
+              <ul>
+                <li>理解求最值的循环结构</li>
+                <li>理解 Fibonacci 数列中的状态更新</li>
+                <li>理解“外层枚举 + 内层判断”的素数筛选结构</li>
+              </ul>
             </div>
-            <aside class="notes">
-              <p class="small center muted">
-                医学情境只用于理解变量更新；教材例题仍以学生成绩为主进行训练。
-              </p>
-            </aside>
-          </section>
-          <section id="sec-2-3">
-            <h2>求一批成绩中的最高分</h2>
-            <pre><code class="language-c" data-line-numbers="1|2|4|5-6|7" data-trim="">scanf("%d", &amp;mark);
+            <div class="card soft">
+              <h3>能力目标</h3>
+              <ul>
+                <li>能从题目中识别循环模型</li>
+                <li>能用表格跟踪关键变量变化</li>
+                <li>能把已学的素数判断组合进区间输出问题</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </section>
+      <section id="sec-2-0">
+        <section class="module-cover-slide" id="sec-2-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例4-8</div>
+            <div class="cover-title">求最高分：<br>记录“到目前为止”的最大值</div>
+            <div class="cover-subtitle">最值问题的关键，是让一个变量保存当前最优结果。</div>
+            <div class="cover-tags"><span class="pill">max</span><span class="pill">状态保持</span><span
+                class="pill">比较更新</span></div>
+          </div>
+        </section>
+        <section id="sec-2-1a">
+          <h2>教材例4-8 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              输入一批学生的成绩，找出最高分。<br>
+              <span class="muted small"
+                style="font-size:24px; display:inline-block; margin-top:16px;">（注：当输入负数时标志数据输入结束）</span>
+            </p>
+          </div>
+        </section>
+        <section id="sec-2-2">
+          <h2>从脉搏记录看“当前最大值”</h2>
+          <div class="data-strip"><span class="data-token">72</span><span class="data-token">68</span><span
+              class="data-token">75</span><span class="data-token">71</span><span class="data-token">69</span></div>
+          <div class="flow">
+            <div class="step">读入当前值</div>
+            <div class="arrow">→</div>
+            <div class="step">与 <code>max</code> 比较</div>
+            <div class="arrow">→</div>
+            <div class="step">更大则更新</div>
+            <div class="arrow">→</div>
+            <div class="step">继续下一条</div>
+          </div>
+          <aside class="notes">
+            <p class="small center muted">医学情境只用于理解变量更新；教材例题仍以学生成绩为主进行训练。</p>
+          </aside>
+        </section>
+        <section id="sec-2-3">
+          <h2>求一批成绩中的最高分</h2>
+          <pre><code class="language-c" data-line-numbers="1|2|4|5-6|7" data-trim="">scanf("%d", &amp;mark);
 max = mark;          /* 假设第一个成绩是最高分 */
 
 while (mark &gt;= 0) {
@@ -720,169 +698,154 @@ while (mark &gt;= 0) {
         max = mark;
     scanf("%d", &amp;mark);
 }</code></pre>
-            <div class="bluebox">
-              求最值的核心：先让 <code>max</code> 有一个合理初值，再不断用新数据挑战它。
+          <div class="bluebox">求最值的核心：先让 <code>max</code> 有一个合理初值，再不断用新数据挑战它。</div>
+        </section>
+        <section id="sec-2-4">
+          <h2>跟踪 <code>max</code>：它什么时候变化？</h2>
+          <table class="compare">
+            <tr>
+              <th>输入成绩</th>
+              <th>比较前 max</th>
+              <th>是否更新</th>
+              <th>比较后 max</th>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>-</td>
+              <td>初始化</td>
+              <td>82</td>
+            </tr>
+            <tr>
+              <td>76</td>
+              <td>82</td>
+              <td>否</td>
+              <td>82</td>
+            </tr>
+            <tr>
+              <td>91</td>
+              <td>82</td>
+              <td>是</td>
+              <td>91</td>
+            </tr>
+            <tr>
+              <td>88</td>
+              <td>91</td>
+              <td>否</td>
+              <td>91</td>
+            </tr>
+            <tr>
+              <td>-1</td>
+              <td>91</td>
+              <td>结束标志</td>
+              <td>91</td>
+            </tr>
+          </table>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：极值初始化陷阱</h3>
+            <div class="prompt">
+              在循环求一组数据的最大值 max 时，如果我把 max 的初值设为 0，当输入的全部都是负数（如 -5, -12, -3）时会发生什么？请提示我如何正确初始化 max。
             </div>
-          </section>
-          <section id="sec-2-4">
-            <h2>跟踪 <code>max</code>：它什么时候变化？</h2>
-            <table class="compare">
-              <tr>
-                <th>输入成绩</th>
-                <th>比较前 max</th>
-                <th>是否更新</th>
-                <th>比较后 max</th>
-              </tr>
-              <tr>
-                <td>82</td>
-                <td>-</td>
-                <td>初始化</td>
-                <td>82</td>
-              </tr>
-              <tr>
-                <td>76</td>
-                <td>82</td>
-                <td>否</td>
-                <td>82</td>
-              </tr>
-              <tr>
-                <td>91</td>
-                <td>82</td>
-                <td>是</td>
-                <td>91</td>
-              </tr>
-              <tr>
-                <td>88</td>
-                <td>91</td>
-                <td>否</td>
-                <td>91</td>
-              </tr>
-              <tr>
-                <td>-1</td>
-                <td>91</td>
-                <td>结束标志</td>
-                <td>91</td>
-              </tr>
-            </table>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🤖 AI 协作互动：极值初始化陷阱</h3>
-              <div class="prompt">
-                在循环求一组数据的最大值 max 时，如果我把 max 的初值设为 0，当输入的全部都是负数（如
-                -5, -12, -3）时会发生什么？请提示我如何正确初始化 max。
-              </div>
-              <p class="small muted" style="margin-top: 8px">
-                💡 <b>课堂互动：</b>向 AI 提问“初值设为 INT_MIN 或第一个输入数据”的严密逻辑。
-              </p>
-            </div>
-          </section>
-          <section id="sec-2-5">
-            <h2>求最值常见错误：初值随便给</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>可能出错</h3>
-                <pre><code class="language-c" data-trim="">max = 0;
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>向 AI 提问“初值设为 INT_MIN 或第一个输入数据”的严密逻辑。</p>
+          </div>
+        </section>
+        <section id="sec-2-5">
+          <h2>求最值常见错误：初值随便给</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>可能出错</h3>
+              <pre><code class="language-c" data-trim="">max = 0;
 while (...) {
     ...
 }</code></pre>
-                <p class="small">如果数据范围不是0以上，就可能出错。</p>
-              </div>
-              <div class="card soft">
-                <h3>更稳妥</h3>
-                <pre><code class="language-c" data-trim="">scanf("%d", &amp;mark);
+              <p class="small">如果数据范围不是0以上，就可能出错。</p>
+            </div>
+            <div class="card soft">
+              <h3>更稳妥</h3>
+              <pre><code class="language-c" data-trim="">scanf("%d", &amp;mark);
 max = mark;</code></pre>
-                <p class="small">用第一个有效数据初始化最大值。</p>
-              </div>
+              <p class="small">用第一个有效数据初始化最大值。</p>
             </div>
-            <p class="center bigq">初值不是形式问题，而是算法正确性的起点。</p>
-          </section>
+          </div>
+          <p class="center bigq">初值不是形式问题，而是算法正确性的起点。</p>
         </section>
-        <section id="sec-3-0">
-          <section class="module-cover-slide" id="sec-3-1">
-            <div class="modulecover">
-              <div class="cover-kicker">教材例4-9</div>
-              <div class="cover-title">Fibonacci数列：<br />新状态由旧状态产生</div>
-              <div class="cover-subtitle">
-                循环中最重要的变量，常常不是输入，而是“上一轮留下来的状态”。
-              </div>
-              <div class="cover-tags">
-                <span class="pill">x1</span><span class="pill">x2</span
-                ><span class="pill">状态迭代</span>
-              </div>
+      </section>
+      <section id="sec-3-0">
+        <section class="module-cover-slide" id="sec-3-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例4-9</div>
+            <div class="cover-title">Fibonacci数列：<br>新状态由旧状态产生</div>
+            <div class="cover-subtitle">循环中最重要的变量，常常不是输入，而是“上一轮留下来的状态”。</div>
+            <div class="cover-tags"><span class="pill">x1</span><span class="pill">x2</span><span
+                class="pill">状态迭代</span></div>
+          </div>
+        </section>
+        <section id="sec-3-1a">
+          <h2>教材例4-9 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              输入正整数 \(n\) (\(1 \le n \le 46\))，输出斐波那契（Fibonacci）数列的前 \(n\) 项：\(1, 1, 2, 3, 5, 8, 13, \ldots\)，每行输出 5
+              个。<br>
+              <span class="muted small" style="font-size:24px; display:inline-block; margin-top:16px;">（注：Fibonacci
+                数列满足任一项数字是前两项的和，最开始的两项均定义为 1）</span>
+            </p>
+          </div>
+        </section>
+        <section id="sec-3-2">
+          <h2>Fibonacci数列规则</h2>
+          <p class="lead center"><code>1, 1, 2, 3, 5, 8, 13, ...</code></p>
+          <div class="grid3">
+            <div class="card">
+              <h3>前两项</h3>
+              <p class="small"><code>x1 = 1</code>, <code>x2 = 1</code></p>
             </div>
-          </section>
-          <section id="sec-3-1a">
-            <h2>教材例4-9 题面描述</h2>
-            <div
-              class="card blue"
-              style="margin-top: 24px; padding: 32px 40px; border-radius: 16px"
-            >
-              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px">📋 题目要求</h3>
-              <p style="font-size: 30px; line-height: 1.6; color: #1f2937">
-                输入正整数 \(n\) (\(1 \le n \le 46\))，输出斐波那契（Fibonacci）数列的前 \(n\)
-                项：\(1, 1, 2, 3, 5, 8, 13, \ldots\)，每行输出 5 个。<br />
-                <span
-                  class="muted small"
-                  style="font-size: 24px; display: inline-block; margin-top: 16px"
-                  >（注：Fibonacci 数列满足任一项数字是前两项的和，最开始的两项均定义为 1）</span
-                >
-              </p>
+            <div class="card">
+              <h3>新项</h3>
+              <p class="small"><code>x = x1 + x2</code></p>
             </div>
-          </section>
-          <section id="sec-3-2">
-            <h2>Fibonacci数列规则</h2>
-            <p class="lead center"><code>1, 1, 2, 3, 5, 8, 13, ...</code></p>
-            <div class="grid3">
-              <div class="card">
-                <h3>前两项</h3>
-                <p class="small"><code>x1 = 1</code>, <code>x2 = 1</code></p>
-              </div>
-              <div class="card">
-                <h3>新项</h3>
-                <p class="small"><code>x = x1 + x2</code></p>
-              </div>
-              <div class="card soft">
-                <h3>状态移动</h3>
-                <p class="small"><code>x1 = x2;</code><br /><code>x2 = x;</code></p>
-              </div>
+            <div class="card soft">
+              <h3>状态移动</h3>
+              <p class="small"><code>x1 = x2;</code><br /><code>x2 = x;</code></p>
             </div>
-          </section>
-          <section id="sec-3-3">
-            <h2>状态如何向前移动？</h2>
-            <table class="compare">
-              <tr>
-                <th>轮次</th>
-                <th><code>x1</code></th>
-                <th><code>x2</code></th>
-                <th><code>x=x1+x2</code></th>
-                <th>更新后</th>
-              </tr>
-              <tr>
-                <td>开始</td>
-                <td>1</td>
-                <td>1</td>
-                <td>2</td>
-                <td><code>x1=1, x2=2</code></td>
-              </tr>
-              <tr>
-                <td>下一轮</td>
-                <td>1</td>
-                <td>2</td>
-                <td>3</td>
-                <td><code>x1=2, x2=3</code></td>
-              </tr>
-              <tr>
-                <td>再下一轮</td>
-                <td>2</td>
-                <td>3</td>
-                <td>5</td>
-                <td><code>x1=3, x2=5</code></td>
-              </tr>
-            </table>
-            <div class="quote">本题的循环体不是简单输出，而是不断更新“前两项”的状态。</div>
-          </section>
-          <section id="sec-3-4">
-            <h2>输出Fibonacci数列前 <code>n</code> 项</h2>
-            <pre><code class="language-c" data-line-numbers="1|2|3|4|5|6-7" data-trim="">x1 = 1;
+          </div>
+        </section>
+        <section id="sec-3-3">
+          <h2>状态如何向前移动？</h2>
+          <table class="compare">
+            <tr>
+              <th>轮次</th>
+              <th><code>x1</code></th>
+              <th><code>x2</code></th>
+              <th><code>x=x1+x2</code></th>
+              <th>更新后</th>
+            </tr>
+            <tr>
+              <td>开始</td>
+              <td>1</td>
+              <td>1</td>
+              <td>2</td>
+              <td><code>x1=1, x2=2</code></td>
+            </tr>
+            <tr>
+              <td>下一轮</td>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td><code>x1=2, x2=3</code></td>
+            </tr>
+            <tr>
+              <td>再下一轮</td>
+              <td>2</td>
+              <td>3</td>
+              <td>5</td>
+              <td><code>x1=3, x2=5</code></td>
+            </tr>
+          </table>
+          <div class="quote">本题的循环体不是简单输出，而是不断更新“前两项”的状态。</div>
+        </section>
+        <section id="sec-3-4">
+          <h2>输出Fibonacci数列前 <code>n</code> 项</h2>
+          <pre><code class="language-c" data-line-numbers="1|2|3|4|5|6-7" data-trim="">x1 = 1;
 x2 = 1;
 printf("%10d%10d", x1, x2);
 for (i = 3; i &lt;= n; i++) {
@@ -891,105 +854,86 @@ for (i = 3; i &lt;= n; i++) {
     x1 = x2;
     x2 = x;
 }</code></pre>
-            <p class="center small muted">先输出前两项，再循环产生后面的 <code>n-2</code> 项。</p>
-          </section>
-          <section id="sec-3-5">
-            <h2>每行输出5个：循环中的格式控制</h2>
-            <pre><code class="language-c" data-trim="">printf("%10d", x);
+          <p class="center small muted">先输出前两项，再循环产生后面的 <code>n-2</code> 项。</p>
+        </section>
+        <section id="sec-3-5">
+          <h2>每行输出5个：循环中的格式控制</h2>
+          <pre><code class="language-c" data-trim="">printf("%10d", x);
 if (i % 5 == 0)
     printf("\n");</code></pre>
-            <div class="grid2">
-              <div class="card">
-                <h3>计算任务</h3>
-                <p class="small">产生数列的下一项。</p>
-              </div>
-              <div class="card soft">
-                <h3>显示任务</h3>
-                <p class="small">每输出5项后换行，便于阅读。</p>
-              </div>
+          <div class="grid2">
+            <div class="card">
+              <h3>计算任务</h3>
+              <p class="small">产生数列的下一项。</p>
             </div>
-            <p class="center bigq">循环体中可以同时包含“计算”和“输出控制”。</p>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🤖 AI 协作互动：状态平移逻辑推演</h3>
-              <div class="prompt">
-                在用循环输出 Fibonacci 数列时，更新状态的逻辑是 f1 = f2; f2 =
-                f3;。如果我把赋值顺序颠倒写成 f2 = f3; f1 = f2; 会发生什么？请帮我推演变量覆盖过程。
-              </div>
-              <p class="small muted" style="margin-top: 8px">
-                💡 <b>课堂互动：</b>利用 AI 推演顺序列出变量临时覆盖，体会多状态同步平移的顺序要求。
-              </p>
+            <div class="card soft">
+              <h3>显示任务</h3>
+              <p class="small">每输出5项后换行，便于阅读。</p>
             </div>
-          </section>
-          <section id="sec-3-6">
-            <h2>Fibonacci状态滚动</h2>
-            <div class="center">
-              <img
-                alt="Fibonacci状态滚动"
-                src="./images/chap04/4-5.png"
-                style="
-                  max-height: 720px;
-                  border-radius: 12px;
-                  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-                "
-              />
+          </div>
+          <p class="center bigq">循环体中可以同时包含“计算”和“输出控制”。</p>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：状态平移逻辑推演</h3>
+            <div class="prompt">
+              在用循环输出 Fibonacci 数列时，更新状态的逻辑是 f1 = f2; f2 = f3;。如果我把赋值顺序颠倒写成 f2 = f3; f1 = f2; 会发生什么？请帮我推演变量覆盖过程。
             </div>
-          </section>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>利用 AI 推演顺序列出变量临时覆盖，体会多状态同步平移的顺序要求。</p>
+          </div>
         </section>
-        <section id="sec-4-0">
-          <section class="module-cover-slide" id="sec-4-1">
-            <div class="modulecover">
-              <div class="cover-kicker">教材例4-10</div>
-              <div class="cover-title">输出区间内所有素数：<br />枚举 + 判断</div>
-              <div class="cover-subtitle">把“判断一个数是否为素数”组合进“遍历一个区间”。</div>
-              <div class="cover-tags">
-                <span class="pill">外层枚举</span><span class="pill">内层判断</span
-                ><span class="pill">组合算法</span>
-              </div>
+        <section id="sec-3-6">
+          <h2>Fibonacci状态滚动</h2>
+          <div class="center">
+            <img alt="Fibonacci状态滚动" src="./images/chap04/4-5.png"
+              style="max-height: 720px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08);" />
+          </div>
+        </section>
+      </section>
+      <section id="sec-4-0">
+        <section class="module-cover-slide" id="sec-4-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例4-10</div>
+            <div class="cover-title">输出区间内所有素数：<br>枚举 + 判断</div>
+            <div class="cover-subtitle">把“判断一个数是否为素数”组合进“遍历一个区间”。</div>
+            <div class="cover-tags"><span class="pill">外层枚举</span><span class="pill">内层判断</span><span
+                class="pill">组合算法</span></div>
+          </div>
+        </section>
+        <section id="sec-4-1a">
+          <h2>教材例4-10 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              输入 2 个正整数 \(m\) 和 \(n\) (\(1 \le m \le n \le 500\))，输出 \(m\) 到 \(n\) 之间的全部素数，每行输出 10 个。<br>
+              <span class="muted small" style="font-size:24px; display:inline-block; margin-top:16px;">（注：素数指的是只能被 1
+                和自身整除的正整数，1 不是素数，2 是素数）</span>
+            </p>
+          </div>
+        </section>
+        <section id="sec-4-2">
+          <h2>从“一个素数”到“一批素数”</h2>
+          <div class="flow">
+            <div class="step">枚举 <code>k=m...n</code></div>
+            <div class="arrow">→</div>
+            <div class="step">判断 <code>k</code> 是否为素数</div>
+            <div class="arrow">→</div>
+            <div class="step">若是则输出</div>
+            <div class="arrow">→</div>
+            <div class="step">控制每行数量</div>
+          </div>
+          <div class="grid2" style="margin-top:26px;">
+            <div class="card">
+              <h3>外层</h3>
+              <p class="small">候选数 <code>k</code> 从 <code>m</code> 到 <code>n</code>。</p>
             </div>
-          </section>
-          <section id="sec-4-1a">
-            <h2>教材例4-10 题面描述</h2>
-            <div
-              class="card blue"
-              style="margin-top: 24px; padding: 32px 40px; border-radius: 16px"
-            >
-              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px">📋 题目要求</h3>
-              <p style="font-size: 30px; line-height: 1.6; color: #1f2937">
-                输入 2 个正整数 \(m\) 和 \(n\) (\(1 \le m \le n \le 500\))，输出 \(m\) 到 \(n\)
-                之间的全部素数，每行输出 10 个。<br />
-                <span
-                  class="muted small"
-                  style="font-size: 24px; display: inline-block; margin-top: 16px"
-                  >（注：素数指的是只能被 1 和自身整除的正整数，1 不是素数，2 是素数）</span
-                >
-              </p>
+            <div class="card soft">
+              <h3>内层</h3>
+              <p class="small">对当前 <code>k</code> 尝试寻找因子。</p>
             </div>
-          </section>
-          <section id="sec-4-2">
-            <h2>从“一个素数”到“一批素数”</h2>
-            <div class="flow">
-              <div class="step">枚举 <code>k=m...n</code></div>
-              <div class="arrow">→</div>
-              <div class="step">判断 <code>k</code> 是否为素数</div>
-              <div class="arrow">→</div>
-              <div class="step">若是则输出</div>
-              <div class="arrow">→</div>
-              <div class="step">控制每行数量</div>
-            </div>
-            <div class="grid2" style="margin-top: 26px">
-              <div class="card">
-                <h3>外层</h3>
-                <p class="small">候选数 <code>k</code> 从 <code>m</code> 到 <code>n</code>。</p>
-              </div>
-              <div class="card soft">
-                <h3>内层</h3>
-                <p class="small">对当前 <code>k</code> 尝试寻找因子。</p>
-              </div>
-            </div>
-          </section>
-          <section id="sec-4-3">
-            <h2>复用上一课：判断 <code>k</code> 是否为素数</h2>
-            <pre><code class="language-c" data-line-numbers="1-4|6|7|8-10" data-trim="">flag = 1;
+          </div>
+        </section>
+        <section id="sec-4-3">
+          <h2>复用上一课：判断 <code>k</code> 是否为素数</h2>
+          <pre><code class="language-c" data-line-numbers="1-4|6|7|8-10" data-trim="">flag = 1;
 limit = sqrt(k) + 1;
 for (i = 2; i &lt;= limit; i++) {
     if (k % i == 0) {
@@ -999,13 +943,11 @@ for (i = 2; i &lt;= limit; i++) {
 }
 if (flag == 1)
     printf("%d ", k);</code></pre>
-            <div class="bluebox">
-              这里的 <code>break</code> 表示：只要找到一个因子，就不需要继续检查。
-            </div>
-          </section>
-          <section id="sec-4-4">
-            <h2>输出 <code>m</code> 到 <code>n</code> 之间的全部素数</h2>
-            <pre><code class="language-c" data-line-numbers="1|2|4|5-12|13-17" data-trim="">count = 0;
+          <div class="bluebox">这里的 <code>break</code> 表示：只要找到一个因子，就不需要继续检查。</div>
+        </section>
+        <section id="sec-4-4">
+          <h2>输出 <code>m</code> 到 <code>n</code> 之间的全部素数</h2>
+          <pre><code class="language-c" data-line-numbers="1|2|4|5-12|13-17" data-trim="">count = 0;
 for (k = m; k &lt;= n; k++) {
     flag = 1;
     limit = sqrt(k) + 1;
@@ -1021,232 +963,160 @@ for (k = m; k &lt;= n; k++) {
         if (count % 10 == 0) printf("\n");
     }
 }</code></pre>
-          </section>
-          <section id="sec-4-5">
-            <h2>代码诊断：区间素数中最容易错在哪里？</h2>
-            <div class="grid3">
-              <div class="card">
-                <h3>边界</h3>
-                <p class="small"><code>1</code> 不是素数，<code>2</code> 是素数。</p>
-              </div>
-              <div class="card">
-                <h3>flag重置</h3>
-                <p class="small">每判断一个新的 <code>k</code>，都要重新设置 <code>flag</code>。</p>
-              </div>
-              <div class="card soft">
-                <h3>循环条件</h3>
-                <p class="small">
-                  <code>i &lt;= limit</code> 与 <code>i &lt; limit</code> 要保持逻辑一致。
-                </p>
-              </div>
-            </div>
-            <div class="quote">
-              组合程序最容易出错的地方，往往不是语法，而是“每一轮是否重新初始化状态”。
-            </div>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🤖 AI 协作互动：算法开销与优化评估</h3>
-              <div class="prompt">
-                求 m 到 n 之间的所有素数时，内层判断素数的循环写成 k &lt;= sqrt(i) 比 k &lt; i
-                能节省多少计算量？请用 O(N*sqrt(N)) 与 O(N^2) 帮我做简单的算力对比。
-              </div>
-              <p class="small muted" style="margin-top: 8px">
-                💡 <b>课堂互动：</b>向 AI 提问开方优化的数学原理，理解为什么超过 sqrt(i)
-                的因子必然成对出现。
-              </p>
-            </div>
-          </section>
-          <section id="sec-4-6">
-            <h2>三类综合循环模型</h2>
-            <table class="compare">
-              <tr>
-                <th>模型</th>
-                <th>关键变量</th>
-                <th>典型例题</th>
-              </tr>
-              <tr>
-                <td>求最值</td>
-                <td><code>max</code></td>
-                <td>输入一批成绩找最高分</td>
-              </tr>
-              <tr>
-                <td>状态迭代</td>
-                <td><code>x1, x2, x</code></td>
-                <td>Fibonacci前n项</td>
-              </tr>
-              <tr>
-                <td>枚举筛选</td>
-                <td><code>k, flag, count</code></td>
-                <td>输出m和n之间所有素数</td>
-              </tr>
-            </table>
-            <p class="center bigq">先识别模型，再选择循环结构。</p>
-          </section>
         </section>
-      </div>
+        <section id="sec-4-5">
+          <h2>代码诊断：区间素数中最容易错在哪里？</h2>
+          <div class="grid3">
+            <div class="card">
+              <h3>边界</h3>
+              <p class="small"><code>1</code> 不是素数，<code>2</code> 是素数。</p>
+            </div>
+            <div class="card">
+              <h3>flag重置</h3>
+              <p class="small">每判断一个新的 <code>k</code>，都要重新设置 <code>flag</code>。</p>
+            </div>
+            <div class="card soft">
+              <h3>循环条件</h3>
+              <p class="small"><code>i &lt;= limit</code> 与 <code>i &lt; limit</code> 要保持逻辑一致。</p>
+            </div>
+          </div>
+          <div class="quote">组合程序最容易出错的地方，往往不是语法，而是“每一轮是否重新初始化状态”。</div>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：算法开销与优化评估</h3>
+            <div class="prompt">
+              求 m 到 n 之间的所有素数时，内层判断素数的循环写成 k &lt;= sqrt(i) 比 k &lt; i 能节省多少计算量？请用 O(N*sqrt(N)) 与 O(N^2) 帮我做简单的算力对比。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>向 AI 提问开方优化的数学原理，理解为什么超过 sqrt(i) 的因子必然成对出现。
+            </p>
+          </div>
+        </section>
+        <section id="sec-4-6">
+          <h2>三类综合循环模型</h2>
+          <table class="compare">
+            <tr>
+              <th>模型</th>
+              <th>关键变量</th>
+              <th>典型例题</th>
+            </tr>
+            <tr>
+              <td>求最值</td>
+              <td><code>max</code></td>
+              <td>输入一批成绩找最高分</td>
+            </tr>
+            <tr>
+              <td>状态迭代</td>
+              <td><code>x1, x2, x</code></td>
+              <td>Fibonacci前n项</td>
+            </tr>
+            <tr>
+              <td>枚举筛选</td>
+              <td><code>k, flag, count</code></td>
+              <td>输出m和n之间所有素数</td>
+            </tr>
+          </table>
+          <p class="center bigq">先识别模型，再选择循环结构。</p>
+        </section>
+      </section>
     </div>
-    <script src="/vendor/reveal/reveal.js"></script>
-    <script src="/vendor/reveal/zoom/zoom.js"></script>
-    <script src="/vendor/reveal/notes/notes.js"></script>
-    <script src="/vendor/reveal/search/search.js"></script>
-    <script src="/vendor/reveal/markdown/markdown.js"></script>
-    <script src="/vendor/reveal/math/math.js"></script>
-    <script src="/vendor/reveal/highlight/highlight.js"></script>
-    <script>
-      /* 为每个实际展示页加上可定位标签。 */
-      document.querySelectorAll('.slides section').forEach((slide, idx) => {
-        if (slide.querySelector(':scope > section')) return;
-        if (!slide.id) slide.id = `slide-${idx + 1}`;
-        if (!slide.querySelector(':scope > .slide-label')) {
-          const label = document.createElement('div');
-          label.className = 'slide-label';
-          label.setAttribute('data-static', '');
-          label.textContent = `§ ${slide.id}`;
-          slide.prepend(label);
+  </div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
         }
       });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
 
-      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
-      document.querySelectorAll('.slides section').forEach((slide) => {
-        if (slide.querySelector(':scope > section')) return;
-
-        const candidates = slide.querySelectorAll(
-          [
-            ':scope#sec-1-1 > *:not(script)',
-            ':scope > .card',
-            ':scope > .grid2 > .card',
-            ':scope > .grid3 > .card',
-            ':scope > .grid4 > .card',
-            ':scope > .grid2 > div:not(.card)',
-            ':scope > .grid3 > div:not(.card)',
-            ':scope > .bluebox',
-            ':scope > .quote',
-            ':scope > .bigq',
-            ':scope > .rule',
-            ':scope > ul > li',
-            ':scope > ol > li',
-            ':scope > table.compare tr:not(:first-child)',
-            ':scope > .timeline > *',
-            ':scope > .pulsebar > *',
-            ':scope > .scoreline > *',
-            ':scope > .menu',
-            ':scope > .switch-map > *',
-            ':scope > .placeholder',
-            ':scope > .prompt',
-            ':scope > .data-strip > .data-token',
-            ':scope > .path-grid > .path',
-            ':scope > .binary-line',
-            ':scope > pre',
-            ':scope > .compare-code > *',
-            ':scope > .modulecover > *:not(aside.notes)',
-            ':scope > img',
-          ].join(','),
-        );
-
-        candidates.forEach((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          if (
-            !el.hasAttribute('data-static') &&
-            !parentFragment &&
-            !el.querySelector('.fragment')
-          ) {
-            el.classList.add('fragment', 'fade-up');
-          }
-        });
-        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
-
-        /* 流程图的箭头与它右侧的步骤同步出现。 */
-        slide.querySelectorAll('.flow').forEach((flow) => {
-          flow.querySelectorAll('.step,.node').forEach((step) => {
-            step.classList.add('fragment', 'fade-up');
-            const arrow = step.previousElementSibling;
-            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
-          });
-        });
-
-        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
-        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          return !parentFragment || !slide.contains(parentFragment);
-        });
-        const handled = new Set();
-        let order = 0;
-        topLevelFragments.forEach((el) => {
-          if (handled.has(el)) return;
-          const parent = el.parentElement;
-          const isFlow = parent && parent.classList.contains('flow');
-          const isTimeline = parent && parent.classList.contains('timeline');
-
-          if (el.hasAttribute('data-fragment-index')) {
-            return;
-          }
-          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else if (isTimeline && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-          }
-          order += 1;
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
         });
       });
 
-      Reveal.initialize({
-        width: 1600,
-        height: 900,
-        margin: 0.035,
-        minScale: 0.2,
-        maxScale: 1.5,
-        controls: true,
-        progress: true,
-        defaultTiming: 120,
-        slideNumber: true,
-        history: false,
-        keyboard: true,
-        overview: true,
-        center: true,
-        touch: true,
-        loop: false,
-        rtl: false,
-        shuffle: false,
-        fragment: true,
-        embedded: false,
-        help: true,
-        showNotes: false,
-        autoPlayMedia: null,
-        autoSlide: 0,
-        autoSlideStoppable: true,
-        autoSlideMethod: Reveal.navigateNext,
-        mouseWheel: false,
-        hideAddressBar: true,
-        previewLinks: false,
-        transition: 'slide',
-        transitionSpeed: 'default',
-        backgroundTransition: 'fade',
-        viewDistance: 3,
-        display: 'block',
-        pdfMaxPagesPerSlide: 1,
-        math: {
-          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
-          config: 'TeX-AMS_HTML-full',
-        },
-        plugins: [
-          RevealZoom,
-          RevealNotes,
-          RevealSearch,
-          RevealMarkdown,
-          RevealHighlight,
-          RevealMath,
-        ],
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
       });
-    </script>
-  </body>
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
+
 </html>

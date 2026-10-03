@@ -1,1353 +1,1210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>浮点数与循环精度显微镜 - C语言程序设计基础</title>
     <style>
-      /* ==========================================================================
+        /* ==========================================================================
            1. 教学课件级统一设计系统 (针对 1600x900 / 16:9 投影教室优化)
            ========================================================================== */
-      :root {
-        --bg-canvas: #f8fafc;
-        --bg-card: #ffffff;
-        --bg-card-soft: #f7fbff;
-        --bg-active: #e8f2ff;
-        --border-color: #cbd8e6;
-        --border-focus: #2c7be5;
+        :root {
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-soft: #f7fbff;
+            --bg-active: #e8f2ff;
+            --border-color: #cbd8e6;
+            --border-focus: #2c7be5;
 
-        --title-blue: #163f78;
-        --primary-blue: #2056a8;
-        --accent-blue: #2c7be5;
-        --text-dark: #1f2937;
-        --text-secondary: #5b6573;
-        --highlight-orange: #a65b00;
-        --alert-red: #b42318;
-        --success-blue: #0f52ba;
+            --title-blue: #163f78;
+            --primary-blue: #2056a8;
+            --accent-blue: #2c7be5;
+            --text-dark: #1f2937;
+            --text-secondary: #5b6573;
+            --highlight-orange: #a65b00;
+            --alert-red: #b42318;
+            --success-blue: #0f52ba;
 
-        --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
-        --radius-card: 10px;
-        --radius-sm: 6px;
+            --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
+            --radius-card: 10px;
+            --radius-sm: 6px;
 
-        --font-ui:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
-          'Microsoft YaHei', sans-serif;
-        --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace;
-      }
+            --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, "Courier New", monospace;
+        }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        -webkit-font-smoothing: antialiased;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
 
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        background-color: #0f172a; /* 教室大屏投影深底，衬托 16:9 演示白板 */
-        font-family: var(--font-ui);
-        color: var(--text-dark);
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a; /* 教室大屏投影深底，衬托 16:9 演示白板 */
+            font-family: var(--font-ui);
+            color: var(--text-dark);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-      /* 1600x900 真实等比教学主舞台 */
-      #stage-scaler {
-        position: relative;
-        width: 1600px;
-        height: 900px;
-        min-width: 1600px;
-        min-height: 900px;
-        max-width: 1600px;
-        max-height: 900px;
-        background-color: var(--bg-canvas);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-        display: flex;
-        flex-direction: column;
-        padding: 14px 22px 12px 22px;
-        transform-origin: center center;
-        user-select: none;
-        overflow: hidden;
-      }
+        /* 1600x900 真实等比教学主舞台 */
+        #stage-scaler {
+            position: relative;
+            width: 1600px;
+            height: 900px;
+            min-width: 1600px;
+            min-height: 900px;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--bg-canvas);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            padding: 14px 22px 12px 22px;
+            transform-origin: center center;
+            user-select: none;
+            overflow: hidden;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            2. 顶部标题区 (占高约 8%)
            ========================================================================== */
-      header.top-bar {
-        height: 56px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid var(--border-color);
-        padding-bottom: 6px;
-        margin-bottom: 10px;
-        flex-shrink: 0;
-      }
+        header.top-bar {
+            height: 56px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
 
-      .title-group h1 {
-        font-size: 26px;
-        font-weight: 700;
-        color: var(--title-blue);
-        line-height: 1.15;
-        letter-spacing: -0.3px;
-      }
+        .title-group h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--title-blue);
+            line-height: 1.15;
+            letter-spacing: -0.3px;
+        }
 
-      .title-group .sub-title {
-        font-size: 14px;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-top: 1px;
-      }
+        .title-group .sub-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 1px;
+        }
 
-      .header-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-      .academic-badge {
-        background-color: #eef5ff;
-        color: var(--primary-blue);
-        font-size: 13px;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 16px;
-        border: 1px solid #bfdbfe;
-      }
+        .academic-badge {
+            background-color: #eef5ff;
+            color: var(--primary-blue);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 16px;
+            border: 1px solid #bfdbfe;
+        }
 
-      .inquiry-prompt {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--highlight-orange);
-        background: #fff8ee;
-        padding: 3px 10px;
-        border-radius: var(--radius-sm);
-        border: 1px dashed #fbd38d;
-      }
+        .inquiry-prompt {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--highlight-orange);
+            background: #fff8ee;
+            padding: 3px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px dashed #fbd38d;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            3. 中部三大实验区两列布局 (总高 686px)
            ========================================================================== */
-      .workspace-grid {
-        display: grid;
-        grid-template-columns: 550px 1fr;
-        gap: 14px;
-        height: 686px;
-        max-height: 686px;
-        margin-bottom: 10px;
-        flex-shrink: 0;
-        align-items: stretch;
-        overflow: hidden;
-      }
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            gap: 14px;
+            height: 686px;
+            max-height: 686px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            align-items: stretch;
+            overflow: hidden;
+        }
 
-      /* 左侧列：实验1 (上) + 实验2 (下) */
-      .left-column {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        height: 100%;
-        max-height: 100%;
-        overflow: hidden;
-      }
+        /* 左侧列：实验1 (上) + 实验2 (下) */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
 
-      /* 右侧列：实验3 (独占一列，完整高度) */
-      .right-column {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        max-height: 100%;
-        overflow: hidden;
-      }
+        /* 右侧列：实验3 (独占一列，完整高度) */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
 
-      .card {
-        background: var(--bg-card);
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-card);
-        padding: 10px 14px;
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
+        .card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 10px 14px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eef2f6;
-        padding-bottom: 5px;
-        margin-bottom: 8px;
-        flex-shrink: 0;
-      }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eef2f6;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
 
-      .card-header h2 {
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--title-blue);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
+        .card-header h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--title-blue);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-      .card-header .tip-tag {
-        font-size: 12px;
-        color: var(--text-secondary);
-        font-weight: normal;
-      }
+        .card-header .tip-tag {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
 
-      /* 实验1：整数转二进制卡片 */
-      .exp1-card {
-        height: 250px;
-        flex-shrink: 0;
-      }
+        /* 实验1：整数转二进制卡片 */
+        .exp1-card {
+            height: 250px;
+            flex-shrink: 0;
+        }
 
-      .input-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
-      }
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
 
-      .number-input {
-        width: 120px;
-        height: 32px;
-        font-size: 16px;
-        font-family: var(--font-mono);
-        font-weight: 600;
-        padding: 0 8px;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        color: var(--title-blue);
-        outline: none;
-        transition: border-color 0.2s;
-      }
+        .number-input {
+            width: 120px;
+            height: 32px;
+            font-size: 16px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 0 8px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--title-blue);
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-      .number-input:focus {
-        border-color: var(--border-focus);
-      }
+        .number-input:focus {
+            border-color: var(--border-focus);
+        }
 
-      .btn {
-        height: 32px;
-        padding: 0 12px;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: var(--radius-sm);
-        border: 1.5px solid transparent;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        font-family: var(--font-ui);
-        white-space: nowrap;
-      }
+        .btn {
+            height: 32px;
+            padding: 0 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-family: var(--font-ui);
+            white-space: nowrap;
+        }
 
-      .btn-primary {
-        background-color: var(--primary-blue);
-        color: #ffffff;
-        border-color: var(--primary-blue);
-      }
-      .btn-primary:hover {
-        background-color: #174284;
-      }
-      .btn-primary:disabled {
-        background-color: #94a3b8;
-        border-color: #94a3b8;
-        cursor: not-allowed;
-      }
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border-color: var(--primary-blue);
+        }
+        .btn-primary:hover {
+            background-color: #174284;
+        }
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            border-color: #94a3b8;
+            cursor: not-allowed;
+        }
 
-      .btn-outline {
-        background-color: #ffffff;
-        color: var(--primary-blue);
-        border-color: var(--border-color);
-      }
-      .btn-outline:hover:not(:disabled) {
-        background-color: var(--bg-card-soft);
-        border-color: var(--accent-blue);
-      }
-      .btn-outline:disabled {
-        color: #94a3b8;
-        border-color: #e2e8f0;
-        cursor: not-allowed;
-      }
+        .btn-outline {
+            background-color: #ffffff;
+            color: var(--primary-blue);
+            border-color: var(--border-color);
+        }
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--bg-card-soft);
+            border-color: var(--accent-blue);
+        }
+        .btn-outline:disabled {
+            color: #94a3b8;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
 
-      .btn-quick {
-        height: 24px;
-        padding: 0 7px;
-        font-size: 12px;
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
-        color: var(--text-dark);
-        border-radius: 4px;
-        cursor: pointer;
-        font-family: var(--font-mono);
-      }
-      .btn-quick:hover {
-        background: #e2e8f0;
-        border-color: var(--primary-blue);
-      }
+        .btn-quick {
+            height: 24px;
+            padding: 0 7px;
+            font-size: 12px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: var(--text-dark);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+        }
+        .btn-quick:hover {
+            background: #e2e8f0;
+            border-color: var(--primary-blue);
+        }
 
-      .quick-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 6px;
-        font-size: 13px;
-        color: var(--text-secondary);
-      }
+        .quick-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
 
-      .binary-display-box {
-        background: var(--bg-card-soft);
-        border: 1px solid #d9e5f5;
-        border-radius: var(--radius-sm);
-        padding: 6px 10px;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+        .binary-display-box {
+            background: var(--bg-card-soft);
+            border: 1px solid #d9e5f5;
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-      .bit-boxes {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-        margin: 4px 0;
-        max-height: 82px;
-        overflow-y: auto;
-      }
+        .bit-boxes {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin: 4px 0;
+            max-height: 82px;
+            overflow-y: auto;
+        }
 
-      .bit-cell {
-        width: 28px;
-        height: 34px;
-        background: #ffffff;
-        border: 1.5px solid #b8cde6;
-        border-radius: 4px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        transition: all 0.2s;
-      }
+        .bit-cell {
+            width: 28px;
+            height: 34px;
+            background: #ffffff;
+            border: 1.5px solid #b8cde6;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: all 0.2s;
+        }
 
-      .bit-cell.active-1 {
-        background-color: #e8f1fc;
-        border-color: var(--accent-blue);
-        color: var(--title-blue);
-        font-weight: 700;
-      }
+        .bit-cell.active-1 {
+            background-color: #e8f1fc;
+            border-color: var(--accent-blue);
+            color: var(--title-blue);
+            font-weight: 700;
+        }
 
-      .bit-val {
-        font-size: 15px;
-        line-height: 1;
-      }
+        .bit-val {
+            font-size: 15px;
+            line-height: 1;
+        }
 
-      .bit-weight {
-        font-size: 9px;
-        color: var(--text-secondary);
-        margin-top: 1px;
-      }
+        .bit-weight {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
 
-      .exp-caption {
-        font-size: 12px;
-        color: var(--text-secondary);
-        line-height: 1.35;
-      }
+        .exp-caption {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
 
-      /* 实验2：十进制小数与浮点近似 */
-      .exp2-card {
-        flex: 1; /* 填满剩余高度 ~424px */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        overflow: hidden;
-      }
+        /* 实验2：十进制小数与浮点近似 */
+        .exp2-card {
+            flex: 1; /* 填满剩余高度 ~424px */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
 
-      .calc-btn-group {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-        margin-bottom: 6px;
-      }
+        .calc-btn-group {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 6px;
+        }
 
-      .btn-calc {
-        height: 30px;
-        font-size: 13px;
-        font-weight: 600;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        color: var(--primary-blue);
-        cursor: pointer;
-        transition: all 0.15s;
-        font-family: var(--font-mono);
-      }
-      .btn-calc:hover,
-      .btn-calc.selected {
-        background: var(--bg-active);
-        border-color: var(--accent-blue);
-        color: var(--title-blue);
-      }
+        .btn-calc {
+            height: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: var(--font-mono);
+        }
+        .btn-calc:hover, .btn-calc.selected {
+            background: var(--bg-active);
+            border-color: var(--accent-blue);
+            color: var(--title-blue);
+        }
 
-      .precision-output {
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 4px 8px;
-        font-family: var(--font-mono);
-        font-size: 14px;
-        color: var(--text-dark);
-        margin-bottom: 6px;
-        min-height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+        .precision-output {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 4px 8px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-      .diff-inspection-panel {
-        background: #fbfcfe;
-        border: 1px solid #d9e5f3;
-        border-radius: var(--radius-sm);
-        padding: 6px 10px;
-        margin-bottom: 6px;
-      }
+        .diff-inspection-panel {
+            background: #fbfcfe;
+            border: 1px solid #d9e5f3;
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            margin-bottom: 6px;
+        }
 
-      /* 实验2 专属核心教学：“为什么会这样？” 概念解释卡片 */
-      .concept-why-box {
-        background: #ffffff;
-        border: 1.5px solid #d9e2ec;
-        border-radius: var(--radius-sm);
-        padding: 8px 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-      }
+        /* 实验2 专属核心教学：“为什么会这样？” 概念解释卡片 */
+        .concept-why-box {
+            background: #ffffff;
+            border: 1.5px solid #d9e2ec;
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
-      .concept-why-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--title-blue);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+        .concept-why-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--title-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-      .concept-compare-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 6px;
-      }
+        .concept-compare-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
 
-      .concept-example-card {
-        background: var(--bg-card-soft);
-        border: 1px solid #d0dfef;
-        border-radius: 4px;
-        padding: 4px 6px;
-        font-size: 12px;
-      }
+        .concept-example-card {
+            background: var(--bg-card-soft);
+            border: 1px solid #d0dfef;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 12px;
+        }
 
-      .concept-math-str {
-        font-family: var(--font-mono);
-        font-weight: bold;
-        color: var(--primary-blue);
-        font-size: 12.5px;
-      }
+        .concept-math-str {
+            font-family: var(--font-mono);
+            font-weight: bold;
+            color: var(--primary-blue);
+            font-size: 12.5px;
+        }
 
-      .concept-sub-tag {
-        font-size: 11px;
-        color: var(--text-secondary);
-        margin-top: 1px;
-      }
+        .concept-sub-tag {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
 
-      /* 5级推导流式卡片 */
-      .chain-flow-steps {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 3px;
-        margin-top: 2px;
-      }
+        /* 5级推导流式卡片 */
+        .chain-flow-steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3px;
+            margin-top: 2px;
+        }
 
-      .chain-step-pill {
-        background: #edf4fe;
-        color: var(--title-blue);
-        font-size: 11px;
-        font-weight: 600;
-        padding: 3px 5px;
-        border-radius: 4px;
-        text-align: center;
-        white-space: nowrap;
-        border: 1px solid #d0e1f9;
-      }
+        .chain-step-pill {
+            background: #edf4fe;
+            color: var(--title-blue);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 5px;
+            border-radius: 4px;
+            text-align: center;
+            white-space: nowrap;
+            border: 1px solid #d0e1f9;
+        }
 
-      .chain-arrow {
-        color: var(--text-secondary);
-        font-size: 10px;
-        font-weight: bold;
-      }
+        .chain-arrow {
+            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: bold;
+        }
 
-      .academic-footnote {
-        font-size: 11px;
-        color: var(--text-secondary);
-        border-top: 1px dashed #e2e8f0;
-        padding-top: 3px;
-        margin-top: 2px;
-        display: flex;
-        justify-content: space-between;
-      }
+        .academic-footnote {
+            font-size: 11px;
+            color: var(--text-secondary);
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 3px;
+            margin-top: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            实验3：格里高里公式循环显微镜 (右侧大卡片)
            ========================================================================== */
-      .exp3-card {
-        height: 100%;
-        max-height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 10px 14px;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
+        .exp3-card {
+            height: 100%;
+            max-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 10px 14px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
 
-      .formula-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: var(--radius-sm);
-        padding: 4px 10px;
-        flex-shrink: 0;
-        margin-bottom: 6px;
-      }
+        .formula-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+            padding: 4px 10px;
+            flex-shrink: 0;
+            margin-bottom: 6px;
+        }
 
-      .formula-math {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--title-blue);
-        font-family: var(--font-mono);
-      }
+        .formula-math {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--title-blue);
+            font-family: var(--font-mono);
+        }
 
-      .controls-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: var(--bg-card-soft);
-        border: 1.5px solid #d9e5f3;
-        border-radius: var(--radius-sm);
-        padding: 5px 8px;
-        gap: 8px;
-        flex-shrink: 0;
-        margin-bottom: 6px;
-      }
+        .controls-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card-soft);
+            border: 1.5px solid #d9e5f3;
+            border-radius: var(--radius-sm);
+            padding: 5px 8px;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-bottom: 6px;
+        }
 
-      .control-subgroup {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--title-blue);
-        white-space: nowrap;
-      }
+        .control-subgroup {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--title-blue);
+            white-space: nowrap;
+        }
 
-      .radio-switch {
-        display: flex;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        overflow: hidden;
-        background: #ffffff;
-      }
+        .radio-switch {
+            display: flex;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: #ffffff;
+        }
 
-      .radio-label {
-        padding: 2px 8px;
-        font-size: 13px;
-        font-family: var(--font-mono);
-        cursor: pointer;
-        transition: all 0.15s;
-        border-right: 1px solid var(--border-color);
-        white-space: nowrap;
-      }
-      .radio-label:last-child {
-        border-right: none;
-      }
-      .radio-label.active {
-        background-color: var(--primary-blue);
-        color: #ffffff;
-        font-weight: bold;
-      }
+        .radio-label {
+            padding: 2px 8px;
+            font-size: 13px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: all 0.15s;
+            border-right: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        .radio-label:last-child {
+            border-right: none;
+        }
+        .radio-label.active {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            font-weight: bold;
+        }
 
-      /* 5步循环状态图 */
-      .cycle-flow-container {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr) 90px;
-        gap: 6px;
-        align-items: center;
-        margin-bottom: 6px;
-        flex-shrink: 0;
-      }
+        /* 5步循环状态图 */
+        .cycle-flow-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr) 90px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
 
-      .flow-step-node {
-        background: #ffffff;
-        border: 1.5px solid #d3e1f0;
-        border-radius: var(--radius-sm);
-        padding: 3px 4px;
-        text-align: center;
-        transition: all 0.25s ease;
-      }
+        .flow-step-node {
+            background: #ffffff;
+            border: 1.5px solid #d3e1f0;
+            border-radius: var(--radius-sm);
+            padding: 3px 4px;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
 
-      .flow-step-node .node-idx {
-        font-size: 10px;
-        color: var(--text-secondary);
-        font-weight: 600;
-      }
+        .flow-step-node .node-idx {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
 
-      .flow-step-node .node-text {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--text-dark);
-        margin-top: 1px;
-        white-space: nowrap;
-      }
+        .flow-step-node .node-text {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-top: 1px;
+            white-space: nowrap;
+        }
 
-      .flow-step-node.active-node {
-        background: var(--bg-active);
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
-        transform: translateY(-1px);
-      }
-      .flow-step-node.active-node .node-text {
-        color: var(--title-blue);
-      }
+        .flow-step-node.active-node {
+            background: var(--bg-active);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
+            transform: translateY(-1px);
+        }
+        .flow-step-node.active-node .node-text {
+            color: var(--title-blue);
+        }
 
-      .flow-terminal-node {
-        background: #ffffff;
-        border: 1.5px solid #cbd5e1;
-        border-radius: var(--radius-sm);
-        padding: 3px 4px;
-        text-align: center;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-secondary);
-        white-space: nowrap;
-      }
-      .flow-terminal-node.active-node {
-        background: #fff1f0;
-        border-color: var(--alert-red);
-        color: var(--alert-red);
-        font-weight: bold;
-      }
+        .flow-terminal-node {
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 3px 4px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .flow-terminal-node.active-node {
+            background: #fff1f0;
+            border-color: var(--alert-red);
+            color: var(--alert-red);
+            font-weight: bold;
+        }
 
-      /* 仪表盘指标卡片网格 */
-      .metrics-grid {
-        display: grid;
-        grid-template-columns: 120px 140px 1fr 1fr;
-        grid-template-rows: auto auto;
-        gap: 6px;
-        margin-bottom: 6px;
-        flex-shrink: 0;
-      }
+        /* 仪表盘指标卡片网格 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 120px 140px 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
 
-      .metric-card {
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 4px 8px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-width: 0;
-      }
+        .metric-card {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
 
-      .metric-label {
-        font-size: 12px;
-        color: var(--text-secondary);
-        font-weight: 500;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        white-space: nowrap;
-      }
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            white-space: nowrap;
+        }
 
-      .metric-value {
-        font-size: 16px;
-        font-family: var(--font-mono);
-        font-weight: 700;
-        color: var(--title-blue);
-        margin-top: 1px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+        .metric-value {
+            font-size: 16px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--title-blue);
+            margin-top: 1px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
-      .metric-card.judge-card {
-        grid-column: span 2;
-        background: #fcfdfe;
-        border-color: #bfdbfe;
-      }
+        .metric-card.judge-card {
+            grid-column: span 2;
+            background: #fcfdfe;
+            border-color: #bfdbfe;
+        }
 
-      /* 边界观察提示栏 */
-      .boundary-alert-box {
-        background: #fff8f0;
-        border: 1.5px solid #fbd38d;
-        border-radius: var(--radius-sm);
-        padding: 3px 8px;
-        font-size: 12px;
-        color: var(--highlight-orange);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        white-space: nowrap;
-        margin-bottom: 6px;
-        flex-shrink: 0;
-      }
+        /* 边界观察提示栏 */
+        .boundary-alert-box {
+            background: #fff8f0;
+            border: 1.5px solid #fbd38d;
+            border-radius: var(--radius-sm);
+            padding: 3px 8px;
+            font-size: 12px;
+            color: var(--highlight-orange);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            white-space: nowrap;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
 
-      /* 运行历史微型表格 */
-      .history-table-wrapper {
-        flex: 1;
-        min-height: 0;
-        max-height: 100%;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        overflow-y: auto;
-        position: relative;
-      }
+        /* 运行历史微型表格 */
+        .history-table-wrapper {
+            flex: 1;
+            min-height: 0;
+            max-height: 100%;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow-y: auto;
+            position: relative;
+        }
 
-      .history-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        text-align: left;
-      }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            text-align: left;
+        }
 
-      .history-table th {
-        position: sticky;
-        top: 0;
-        background: #edf4fe;
-        color: var(--title-blue);
-        padding: 4px 6px;
-        font-weight: 600;
-        border-bottom: 1.5px solid #cbd8e6;
-        z-index: 2;
-        white-space: nowrap;
-      }
+        .history-table th {
+            position: sticky;
+            top: 0;
+            background: #edf4fe;
+            color: var(--title-blue);
+            padding: 4px 6px;
+            font-weight: 600;
+            border-bottom: 1.5px solid #cbd8e6;
+            z-index: 2;
+            white-space: nowrap;
+        }
 
-      .history-table td {
-        padding: 2.5px 6px;
-        border-bottom: 1px solid #f1f5f9;
-        color: var(--text-dark);
-        white-space: nowrap;
-      }
+        .history-table td {
+            padding: 2.5px 6px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-dark);
+            white-space: nowrap;
+        }
 
-      .history-table tr.latest-row {
-        background-color: #eef6ff;
-        font-weight: 600;
-      }
-      .history-table tr.latest-row td {
-        color: var(--primary-blue);
-      }
+        .history-table tr.latest-row {
+            background-color: #eef6ff;
+            font-weight: 600;
+        }
+        .history-table tr.latest-row td {
+            color: var(--primary-blue);
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            4. 底部概念总结区 (占高约 12%)
            ========================================================================== */
-      footer.summary-container {
-        height: 96px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        flex-shrink: 0;
-      }
+        footer.summary-container {
+            height: 96px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-shrink: 0;
+        }
 
-      .summary-cards-row {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        height: 68px;
-      }
+        .summary-cards-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            height: 68px;
+        }
 
-      .summary-card {
-        background: #ffffff;
-        border: 1.5px solid #cbd8e6;
-        border-radius: var(--radius-card);
-        padding: 5px 8px;
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-      }
+        .summary-card {
+            background: #ffffff;
+            border: 1.5px solid #cbd8e6;
+            border-radius: var(--radius-card);
+            padding: 5px 8px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
 
-      .summary-card-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--title-blue);
-        margin-bottom: 2px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        white-space: nowrap;
-      }
+        .summary-card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--title-blue);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
 
-      .summary-card-title .card-idx {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        background: #e6f0fa;
-        color: var(--primary-blue);
-        border-radius: 50%;
-        text-align: center;
-        line-height: 16px;
-        font-size: 11px;
-        font-weight: 700;
-      }
+        .summary-card-title .card-idx {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #e6f0fa;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 11px;
+            font-weight: 700;
+        }
 
-      .summary-card-desc {
-        font-size: 11.5px;
-        color: var(--text-secondary);
-        line-height: 1.3;
-      }
+        .summary-card-desc {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
 
-      .bottom-aphorism {
-        text-align: center;
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--primary-blue);
-        letter-spacing: 0.3px;
-        background: #f0f7ff;
-        border: 1px dashed #bfdbfe;
-        border-radius: var(--radius-sm);
-        padding: 2px 0;
-        white-space: nowrap;
-      }
+        .bottom-aphorism {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            letter-spacing: 0.3px;
+            background: #f0f7ff;
+            border: 1px dashed #bfdbfe;
+            border-radius: var(--radius-sm);
+            padding: 2px 0;
+            white-space: nowrap;
+        }
 
-      .code-inline {
-        font-family: var(--font-mono);
-        background: #f1f5f9;
-        padding: 1px 4px;
-        border-radius: 3px;
-        color: #1e293b;
-        font-size: 13px;
-      }
+        .code-inline {
+            font-family: var(--font-mono);
+            background: #f1f5f9;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #1e293b;
+            font-size: 13px;
+        }
 
-      /* 滚动条细化 */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
+        /* 滚动条细化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
-  </head>
-  <body>
-    <div id="stage-scaler">
-      <!-- 顶部标题区 -->
-      <header class="top-bar">
+</head>
+<body>
+
+<div id="stage-scaler">
+
+    <!-- 顶部标题区 -->
+    <header class="top-bar">
         <div class="title-group">
-          <h1>浮点数与循环精度显微镜</h1>
-          <div class="sub-title">
-            从二进制表示到 while (fabs(item) &gt;= eps) · C 语言程序设计扩展
-          </div>
+            <h1>浮点数与循环精度显微镜</h1>
+            <div class="sub-title">从二进制表示到 while (fabs(item) &gt;= eps) · C 语言程序设计扩展</div>
         </div>
         <div class="header-meta">
-          <span class="academic-badge">D04-EXT01 · 循环结构精度扩展</span>
-          <div class="inquiry-prompt">
-            “0.1 + 0.2 为什么可能不等于 0.3？这和循环条件有什么关系？”
-          </div>
+            <span class="academic-badge">D04-EXT01 · 循环结构精度扩展</span>
+            <div class="inquiry-prompt">“0.1 + 0.2 为什么可能不等于 0.3？这和循环条件有什么关系？”</div>
         </div>
-      </header>
+    </header>
 
-      <!-- 中部三大实验区两列布局 -->
-      <main class="workspace-grid">
+    <!-- 中部三大实验区两列布局 -->
+    <main class="workspace-grid">
+
         <!-- 左侧列：实验1 + 实验2 -->
         <div class="left-column">
-          <!-- 实验1：整数转二进制 -->
-          <section class="card exp1-card" aria-label="实验1 整数表示">
-            <div class="card-header">
-              <h2>实验1 · 整数是怎样表示的？</h2>
-              <span class="tip-tag">范围: 0 ~ 65535</span>
-            </div>
 
-            <div class="input-row">
-              <label
-                for="int-input"
-                style="
-                  font-size: 14px;
-                  font-weight: 600;
-                  color: var(--text-dark);
-                  white-space: nowrap;
-                "
-                >十进制整数:</label
-              >
-              <input
-                type="number"
-                id="int-input"
-                class="number-input"
-                value="13"
-                min="0"
-                max="65535"
-                step="1"
-              />
-              <button class="btn btn-primary" id="btn-convert-int">转换</button>
-              <div
-                style="
-                  font-size: 13.5px;
-                  font-family: var(--font-mono);
-                  color: var(--primary-blue);
-                  font-weight: bold;
-                  margin-left: auto;
-                "
-                id="int-raw-str"
-              >
-                13 = 1101₂
-              </div>
-            </div>
-
-            <div class="quick-row">
-              <span>快捷示例:</span>
-              <button class="btn-quick" data-val="5">5</button>
-              <button class="btn-quick" data-val="10">10</button>
-              <button class="btn-quick" data-val="13">13</button>
-              <button class="btn-quick" data-val="255">255</button>
-              <button class="btn-quick" data-val="1024">1024</button>
-            </div>
-
-            <div class="binary-display-box">
-              <div style="font-size: 12px; font-weight: 600; color: var(--primary-blue)">
-                二进制位构成 (对应权值 2ᵏ):
-              </div>
-              <div class="bit-boxes" id="bit-grid-container">
-                <!-- JS 动态填充位格子 -->
-              </div>
-              <div class="exp-caption">
-                <strong style="color: var(--primary-blue)">教学结论：</strong
-                >在一定整数范围内，整数能被有限个 2ᵏ 权值<strong>精确表示</strong>。
-              </div>
-            </div>
-          </section>
-
-          <!-- 实验2：十进制小数与浮点近似 -->
-          <section class="card exp2-card" aria-label="实验2 浮点数近似">
-            <div class="card-header">
-              <h2>实验2 · 0.1 + 0.2 真的等于 0.3 吗？</h2>
-              <span class="tip-tag">高精度 17 位机器数展示</span>
-            </div>
-
-            <!-- 4个大号计算取值按钮 -->
-            <div class="calc-btn-group">
-              <button class="btn-calc selected" data-expr="0.1">0.1</button>
-              <button class="btn-calc" data-expr="0.2">0.2</button>
-              <button class="btn-calc" data-expr="0.3">0.3</button>
-              <button class="btn-calc" data-expr="0.1+0.2">0.1 + 0.2</button>
-            </div>
-
-            <!-- 17位有效数字真实展示 -->
-            <div class="precision-output">
-              <span style="font-size: 13px; color: var(--text-secondary)" id="calc-expr-label"
-                >观察值: 0.1</span
-              >
-              <span
-                class="code-inline"
-                style="color: var(--title-blue); font-weight: bold"
-                id="calc-val-17"
-                >0.10000000000000001</span
-              >
-            </div>
-
-            <!-- 判等核心对比板 -->
-            <div class="diff-inspection-panel">
-              <div
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  margin-bottom: 3px;
-                "
-              >
-                <span class="code-inline" style="font-size: 13px">0.1 + 0.2 == 0.3</span>
-                <button
-                  class="btn btn-outline"
-                  id="btn-run-compare"
-                  style="height: 24px; padding: 0 8px; font-size: 12px"
-                >
-                  运行比较
-                </button>
-                <span
-                  id="equality-result-tag"
-                  style="
-                    font-size: 13px;
-                    font-weight: 700;
-                    padding: 1px 7px;
-                    border-radius: 4px;
-                    background: #fee2e2;
-                    color: var(--alert-red);
-                  "
-                >
-                  false
-                </span>
-              </div>
-
-              <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-dark)">
-                (0.1 + 0.2) - 0.3 =
-                <strong style="color: var(--alert-red)" id="diff-exact-value"
-                  >5.551115123125783e-17</strong
-                >
-              </div>
-            </div>
-
-            <!-- 为什么会这样？概念卡片 -->
-            <div class="concept-why-box">
-              <div class="concept-why-title">
-                <span>为什么会这样？二进制小数的有限与无限</span>
-                <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal"
-                  >十进制与二进制基数差异</span
-                >
-              </div>
-
-              <div class="concept-compare-row">
-                <div class="concept-example-card">
-                  <div class="concept-math-str">示例A: 0.5₁₀ = 0.1₂</div>
-                  <div class="concept-sub-tag">1 × 2⁻¹，<strong>可以有限精确表示</strong></div>
+            <!-- 实验1：整数转二进制 -->
+            <section class="card exp1-card" aria-label="实验1 整数表示">
+                <div class="card-header">
+                    <h2>实验1 · 整数是怎样表示的？</h2>
+                    <span class="tip-tag">范围: 0 ~ 65535</span>
                 </div>
-                <div class="concept-example-card">
-                  <div class="concept-math-str">
-                    示例B: 0.1₁₀ ≈ 0.0001<span style="background: #fef3c7; color: #92400e"
-                      >1001</span
-                    ><span style="background: #fef3c7; color: #92400e">1001</span>…₂
-                  </div>
-                  <div class="concept-sub-tag">无限循环，<strong>只能存储近似截断值</strong></div>
+
+                <div class="input-row">
+                    <label for="int-input" style="font-size: 14px; font-weight: 600; color: var(--text-dark); white-space: nowrap;">十进制整数:</label>
+                    <input type="number" id="int-input" class="number-input" value="13" min="0" max="65535" step="1">
+                    <button class="btn btn-primary" id="btn-convert-int">转换</button>
+                    <div style="font-size: 13.5px; font-family: var(--font-mono); color: var(--primary-blue); font-weight: bold; margin-left: auto;" id="int-raw-str">
+                        13 = 1101₂
+                    </div>
                 </div>
-              </div>
 
-              <!-- 推导步骤条 -->
-              <div class="chain-flow-steps">
-                <span class="chain-step-pill">数学 0.1</span>
-                <span class="chain-arrow">→</span>
-                <span class="chain-step-pill">转二进制</span>
-                <span class="chain-arrow">→</span>
-                <span class="chain-step-pill" style="color: var(--alert-red)">无限展开</span>
-                <span class="chain-arrow">→</span>
-                <span class="chain-step-pill">有限位截断</span>
-                <span class="chain-arrow">→</span>
-                <span class="chain-step-pill" style="background: #e0f2fe; color: var(--title-blue)"
-                  >最接近机器数</span
-                >
-              </div>
+                <div class="quick-row">
+                    <span>快捷示例:</span>
+                    <button class="btn-quick" data-val="5">5</button>
+                    <button class="btn-quick" data-val="10">10</button>
+                    <button class="btn-quick" data-val="13">13</button>
+                    <button class="btn-quick" data-val="255">255</button>
+                    <button class="btn-quick" data-val="1024">1024</button>
+                </div>
 
-              <div class="academic-footnote">
-                <span
-                  >误差极其微小，但<strong>不严格为0</strong>（计算机并未算错，是表示机制决定的）</span
-                >
-                <span style="color: var(--primary-blue)">概念示意：不要求掌握 IEEE 754 细节</span>
-              </div>
-            </div>
-          </section>
+                <div class="binary-display-box">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--primary-blue);">
+                        二进制位构成 (对应权值 2ᵏ):
+                    </div>
+                    <div class="bit-boxes" id="bit-grid-container">
+                        <!-- JS 动态填充位格子 -->
+                    </div>
+                    <div class="exp-caption">
+                        <strong style="color: var(--primary-blue);">教学结论：</strong>在一定整数范围内，整数能被有限个 2ᵏ 权值<strong>精确表示</strong>。
+                    </div>
+                </div>
+            </section>
+
+            <!-- 实验2：十进制小数与浮点近似 -->
+            <section class="card exp2-card" aria-label="实验2 浮点数近似">
+                <div class="card-header">
+                    <h2>实验2 · 0.1 + 0.2 真的等于 0.3 吗？</h2>
+                    <span class="tip-tag">高精度 17 位机器数展示</span>
+                </div>
+
+                <!-- 4个大号计算取值按钮 -->
+                <div class="calc-btn-group">
+                    <button class="btn-calc selected" data-expr="0.1">0.1</button>
+                    <button class="btn-calc" data-expr="0.2">0.2</button>
+                    <button class="btn-calc" data-expr="0.3">0.3</button>
+                    <button class="btn-calc" data-expr="0.1+0.2">0.1 + 0.2</button>
+                </div>
+
+                <!-- 17位有效数字真实展示 -->
+                <div class="precision-output">
+                    <span style="font-size: 13px; color: var(--text-secondary);" id="calc-expr-label">观察值: 0.1</span>
+                    <span class="code-inline" style="color: var(--title-blue); font-weight: bold;" id="calc-val-17">0.10000000000000001</span>
+                </div>
+
+                <!-- 判等核心对比板 -->
+                <div class="diff-inspection-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                        <span class="code-inline" style="font-size: 13px;">0.1 + 0.2 == 0.3</span>
+                        <button class="btn btn-outline" id="btn-run-compare" style="height: 24px; padding: 0 8px; font-size: 12px;">运行比较</button>
+                        <span id="equality-result-tag" style="font-size: 13px; font-weight: 700; padding: 1px 7px; border-radius: 4px; background: #fee2e2; color: var(--alert-red);">
+                            false
+                        </span>
+                    </div>
+
+                    <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-dark);">
+                        (0.1 + 0.2) - 0.3 = <strong style="color: var(--alert-red);" id="diff-exact-value">5.551115123125783e-17</strong>
+                    </div>
+                </div>
+
+                <!-- 为什么会这样？概念卡片 -->
+                <div class="concept-why-box">
+                    <div class="concept-why-title">
+                        <span>为什么会这样？二进制小数的有限与无限</span>
+                        <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">十进制与二进制基数差异</span>
+                    </div>
+
+                    <div class="concept-compare-row">
+                        <div class="concept-example-card">
+                            <div class="concept-math-str">示例A: 0.5₁₀ = 0.1₂</div>
+                            <div class="concept-sub-tag">1 × 2⁻¹，<strong>可以有限精确表示</strong></div>
+                        </div>
+                        <div class="concept-example-card">
+                            <div class="concept-math-str">示例B: 0.1₁₀ ≈ 0.0001<span style="background:#fef3c7; color:#92400e;">1001</span><span style="background:#fef3c7; color:#92400e;">1001</span>…₂</div>
+                            <div class="concept-sub-tag">无限循环，<strong>只能存储近似截断值</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- 推导步骤条 -->
+                    <div class="chain-flow-steps">
+                        <span class="chain-step-pill">数学 0.1</span>
+                        <span class="chain-arrow">→</span>
+                        <span class="chain-step-pill">转二进制</span>
+                        <span class="chain-arrow">→</span>
+                        <span class="chain-step-pill" style="color: var(--alert-red);">无限展开</span>
+                        <span class="chain-arrow">→</span>
+                        <span class="chain-step-pill">有限位截断</span>
+                        <span class="chain-arrow">→</span>
+                        <span class="chain-step-pill" style="background: #e0f2fe; color: var(--title-blue);">最接近机器数</span>
+                    </div>
+
+                    <div class="academic-footnote">
+                        <span>误差极其微小，但<strong>不严格为0</strong>（计算机并未算错，是表示机制决定的）</span>
+                        <span style="color: var(--primary-blue);">概念示意：不要求掌握 IEEE 754 细节</span>
+                    </div>
+                </div>
+
+            </section>
+
         </div>
 
         <!-- 右侧列：实验3 · 格里高里公式循环显微镜 -->
         <div class="right-column">
-          <section class="card exp3-card" aria-label="实验3 循环显微镜">
-            <div class="card-header">
-              <h2>实验3 · while (fabs(item) &gt;= eps) 怎样控制循环？</h2>
-              <span class="tip-tag">教学说明：内部累加 π/4，最终展示 π = 4 × sum</span>
-            </div>
+            <section class="card exp3-card" aria-label="实验3 循环显微镜">
 
-            <!-- 数学公式与 C 代码展示行 -->
-            <div class="formula-bar">
-              <div class="formula-math">π/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ...</div>
-              <div
-                style="
-                  font-size: 13px;
-                  font-family: var(--font-mono);
-                  color: var(--text-secondary);
-                  background: #f8fafc;
-                  padding: 2px 8px;
-                  border-radius: 4px;
-                  border: 1px solid #e2e8f0;
-                "
-              >
-                while (fabs(item)
-                <span id="code-op-preview" style="color: var(--primary-blue); font-weight: bold"
-                  >&gt;=</span
-                >
-                eps) { pi += item; ... }
-              </div>
-            </div>
-
-            <!-- 控制工具栏：eps 选择、操作符切换、单步/连续执行控制 -->
-            <div class="controls-toolbar">
-              <div class="control-subgroup">
-                <label for="eps-select">选择 eps:</label>
-                <select
-                  id="eps-select"
-                  style="
-                    font-size: 13.5px;
-                    font-family: var(--font-mono);
-                    padding: 1px 6px;
-                    border-radius: 4px;
-                    border: 1.5px solid var(--border-color);
-                    background: #ffffff;
-                    color: var(--title-blue);
-                    font-weight: 700;
-                    cursor: pointer;
-                  "
-                >
-                  <option value="0.1">0.1</option>
-                  <option value="0.01" selected>0.01 (推荐)</option>
-                  <option value="0.001">0.001</option>
-                  <option value="0.0001">0.0001</option>
-                  <option value="0.00001">0.00001</option>
-                </select>
-              </div>
-
-              <div class="control-subgroup">
-                <span>条件模式:</span>
-                <div class="radio-switch" id="condition-mode-group">
-                  <div class="radio-label active" data-op=">=" title="等于阈值时仍继续循环">
-                    fabs(item) &gt;= eps
-                  </div>
-                  <div class="radio-label" data-op=">" title="严格大于阈值才继续，等于时终止">
-                    fabs(item) &gt; eps
-                  </div>
+                <div class="card-header">
+                    <h2>实验3 · while (fabs(item) &gt;= eps) 怎样控制循环？</h2>
+                    <span class="tip-tag">教学说明：内部累加 π/4，最终展示 π = 4 × sum</span>
                 </div>
-              </div>
 
-              <div style="display: flex; gap: 6px">
-                <button
-                  class="btn btn-outline"
-                  id="btn-step-next"
-                  style="border-color: var(--accent-blue); font-weight: 700"
-                >
-                  下一轮
-                </button>
-                <button class="btn btn-primary" id="btn-auto-run">自动运行</button>
-                <button class="btn btn-outline" id="btn-pause-run" disabled>暂停</button>
-                <button class="btn btn-outline" id="btn-reset-loop">重置</button>
-              </div>
-            </div>
-
-            <!-- 5步流程节点高亮教学条 -->
-            <div class="cycle-flow-container">
-              <div class="flow-step-node" id="flow-node-1">
-                <div class="node-idx">步骤 1</div>
-                <div class="node-text">判断条件</div>
-              </div>
-              <div class="flow-step-node" id="flow-node-2">
-                <div class="node-idx">步骤 2</div>
-                <div class="node-text">累加当前项</div>
-              </div>
-              <div class="flow-step-node" id="flow-node-3">
-                <div class="node-idx">步骤 3</div>
-                <div class="node-text">改变符号</div>
-              </div>
-              <div class="flow-step-node" id="flow-node-4">
-                <div class="node-idx">步骤 4</div>
-                <div class="node-text">分母 + 2</div>
-              </div>
-              <div class="flow-step-node" id="flow-node-5">
-                <div class="node-idx">步骤 5</div>
-                <div class="node-text">计算下一项</div>
-              </div>
-              <div class="flow-terminal-node" id="flow-node-end">循环终止</div>
-            </div>
-
-            <!-- 实时仪表板状态卡片 (单一份，避免重复嵌套) -->
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <div class="metric-label">已执行轮次</div>
-                <div class="metric-value" id="val-round-cnt">第 0 轮</div>
-              </div>
-
-              <div class="metric-card">
-                <div class="metric-label">分母 (den)</div>
-                <div class="metric-value" id="val-denominator">1</div>
-              </div>
-
-              <div class="metric-card">
-                <div class="metric-label">当前项 (item)</div>
-                <div class="metric-value" style="font-size: 15px" id="val-item">1.000000000000</div>
-              </div>
-
-              <div class="metric-card">
-                <div class="metric-label">绝对值 fabs(item)</div>
-                <div
-                  class="metric-value"
-                  style="font-size: 15px; color: var(--primary-blue)"
-                  id="val-fabs-item"
-                >
-                  1.000000000000
+                <!-- 数学公式与 C 代码展示行 -->
+                <div class="formula-bar">
+                    <div class="formula-math">
+                        π/4 = 1 - 1/3 + 1/5 - 1/7 + 1/9 - ...
+                    </div>
+                    <div style="font-size: 13px; font-family: var(--font-mono); color: var(--text-secondary); background: #f8fafc; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        while (fabs(item) <span id="code-op-preview" style="color: var(--primary-blue); font-weight: bold;">&gt;=</span> eps) { pi += item; ... }
+                    </div>
                 </div>
-              </div>
 
-              <!-- 复合判定卡片 -->
-              <div class="metric-card judge-card">
-                <div class="metric-label">
-                  <span>循环条件判定表达式</span>
-                  <span
-                    id="judge-status-badge"
-                    style="font-size: 12px; font-weight: 700; color: var(--primary-blue)"
-                    >等待启动</span
-                  >
-                </div>
-                <div
-                  class="metric-value"
-                  style="
-                    font-size: 16px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                  "
-                  id="val-judge-expr"
-                >
-                  <span>|1.000000| &gt;= 0.01</span>
-                  <span id="judge-bool-text" style="color: var(--primary-blue); font-size: 14px"
-                    >准备就绪</span
-                  >
-                </div>
-              </div>
+                <!-- 控制工具栏：eps 选择、操作符切换、单步/连续执行控制 -->
+                <div class="controls-toolbar">
+                    <div class="control-subgroup">
+                        <label for="eps-select">选择 eps:</label>
+                        <select id="eps-select" style="font-size: 13.5px; font-family: var(--font-mono); padding: 1px 6px; border-radius: 4px; border: 1.5px solid var(--border-color); background: #ffffff; color: var(--title-blue); font-weight: 700; cursor: pointer;">
+                            <option value="0.1">0.1</option>
+                            <option value="0.01" selected>0.01 (推荐)</option>
+                            <option value="0.001">0.001</option>
+                            <option value="0.0001">0.0001</option>
+                            <option value="0.00001">0.00001</option>
+                        </select>
+                    </div>
 
-              <!-- π 计算结果卡片 -->
-              <div class="metric-card" style="grid-column: span 2">
-                <div class="metric-label">
-                  <span>当前 π 近似值 (4 × sum)</span>
-                  <span style="font-size: 11px; color: var(--text-secondary)" id="val-pi-diff"
-                    >|π - Math.PI| = -</span
-                  >
-                </div>
-                <div
-                  class="metric-value"
-                  style="font-size: 17px; color: var(--title-blue)"
-                  id="val-pi-approx"
-                >
-                  0.00000000000000
-                </div>
-              </div>
-            </div>
+                    <div class="control-subgroup">
+                        <span>条件模式:</span>
+                        <div class="radio-switch" id="condition-mode-group">
+                            <div class="radio-label active" data-op=">=" title="等于阈值时仍继续循环">fabs(item) &gt;= eps</div>
+                            <div class="radio-label" data-op=">" title="严格大于阈值才继续，等于时终止">fabs(item) &gt; eps</div>
+                        </div>
+                    </div>
 
-            <!-- 边界观察提示栏 -->
-            <div class="boundary-alert-box" id="boundary-callout">
-              <span
-                >边界观察：当 fabs(item) 接近或到达 eps 时，&gt;= 相比 &gt; 会多执行一次累加。</span
-              >
-              <span style="font-weight: normal; font-size: 11.5px; color: #78350f"
-                >机器比较的是真实浮点存储近似值</span
-              >
-            </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-outline" id="btn-step-next" style="border-color: var(--accent-blue); font-weight: 700;">下一轮</button>
+                        <button class="btn btn-primary" id="btn-auto-run">自动运行</button>
+                        <button class="btn btn-outline" id="btn-pause-run" disabled>暂停</button>
+                        <button class="btn btn-outline" id="btn-reset-loop">重置</button>
+                    </div>
+                </div>
 
-            <!-- 运行历史微型表格 (可局部滚动) -->
-            <div class="history-table-wrapper" id="history-scroll-box">
-              <table class="history-table" id="history-table-body">
-                <thead>
-                  <tr>
-                    <th style="width: 70px">轮次</th>
-                    <th style="width: 100px">分母 (den)</th>
-                    <th>当前项 (item)</th>
-                    <th>fabs(item)</th>
-                    <th style="width: 150px">条件判断</th>
-                    <th>π 累加值 (4×sum)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- 动态追加行 -->
-                </tbody>
-              </table>
-            </div>
-          </section>
+                <!-- 5步流程节点高亮教学条 -->
+                <div class="cycle-flow-container">
+                    <div class="flow-step-node" id="flow-node-1">
+                        <div class="node-idx">步骤 1</div>
+                        <div class="node-text">判断条件</div>
+                    </div>
+                    <div class="flow-step-node" id="flow-node-2">
+                        <div class="node-idx">步骤 2</div>
+                        <div class="node-text">累加当前项</div>
+                    </div>
+                    <div class="flow-step-node" id="flow-node-3">
+                        <div class="node-idx">步骤 3</div>
+                        <div class="node-text">改变符号</div>
+                    </div>
+                    <div class="flow-step-node" id="flow-node-4">
+                        <div class="node-idx">步骤 4</div>
+                        <div class="node-text">分母 + 2</div>
+                    </div>
+                    <div class="flow-step-node" id="flow-node-5">
+                        <div class="node-idx">步骤 5</div>
+                        <div class="node-text">计算下一项</div>
+                    </div>
+                    <div class="flow-terminal-node" id="flow-node-end">
+                        循环终止
+                    </div>
+                </div>
+
+                <!-- 实时仪表板状态卡片 (单一份，避免重复嵌套) -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">已执行轮次</div>
+                        <div class="metric-value" id="val-round-cnt">第 0 轮</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">分母 (den)</div>
+                        <div class="metric-value" id="val-denominator">1</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">当前项 (item)</div>
+                        <div class="metric-value" style="font-size: 15px;" id="val-item">1.000000000000</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">绝对值 fabs(item)</div>
+                        <div class="metric-value" style="font-size: 15px; color: var(--primary-blue);" id="val-fabs-item">1.000000000000</div>
+                    </div>
+
+                    <!-- 复合判定卡片 -->
+                    <div class="metric-card judge-card">
+                        <div class="metric-label">
+                            <span>循环条件判定表达式</span>
+                            <span id="judge-status-badge" style="font-size: 12px; font-weight: 700; color: var(--primary-blue);">等待启动</span>
+                        </div>
+                        <div class="metric-value" style="font-size: 16px; display: flex; align-items: center; justify-content: space-between;" id="val-judge-expr">
+                            <span>|1.000000| &gt;= 0.01</span>
+                            <span id="judge-bool-text" style="color: var(--primary-blue); font-size: 14px;">准备就绪</span>
+                        </div>
+                    </div>
+
+                    <!-- π 计算结果卡片 -->
+                    <div class="metric-card" style="grid-column: span 2;">
+                        <div class="metric-label">
+                            <span>当前 π 近似值 (4 × sum)</span>
+                            <span style="font-size: 11px; color: var(--text-secondary);" id="val-pi-diff">|π - Math.PI| = -</span>
+                        </div>
+                        <div class="metric-value" style="font-size: 17px; color: var(--title-blue);" id="val-pi-approx">
+                            0.00000000000000
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 边界观察提示栏 -->
+                <div class="boundary-alert-box" id="boundary-callout">
+                    <span>边界观察：当 fabs(item) 接近或到达 eps 时，&gt;= 相比 &gt; 会多执行一次累加。</span>
+                    <span style="font-weight: normal; font-size: 11.5px; color: #78350f;">机器比较的是真实浮点存储近似值</span>
+                </div>
+
+                <!-- 运行历史微型表格 (可局部滚动) -->
+                <div class="history-table-wrapper" id="history-scroll-box">
+                    <table class="history-table" id="history-table-body">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">轮次</th>
+                                <th style="width: 100px;">分母 (den)</th>
+                                <th>当前项 (item)</th>
+                                <th>fabs(item)</th>
+                                <th style="width: 150px;">条件判断</th>
+                                <th>π 累加值 (4×sum)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 动态追加行 -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </section>
         </div>
-      </main>
 
-      <!-- ==========================================
+    </main>
+
+    <!-- ==========================================
          底部：课堂核心概念总结区
          ========================================== -->
-      <footer class="summary-container" aria-label="核心结论总结">
+    <footer class="summary-container" aria-label="核心结论总结">
         <div class="summary-cards-row">
-          <div class="summary-card">
-            <div class="summary-card-title">
-              <span class="card-idx">1</span>
-              <span>边界由问题定义</span>
-            </div>
-            <div class="summary-card-desc">
-              循环终止条件若为
-              <strong>fabs(item) &lt; eps</strong>，则其逻辑对立的<strong>继续条件</strong>即为
-              <strong>fabs(item) &gt;= eps</strong>。
-            </div>
-          </div>
 
-          <div class="summary-card">
-            <div class="summary-card-title">
-              <span class="card-idx">2</span>
-              <span>整数与小数不同</span>
+            <div class="summary-card">
+                <div class="summary-card-title">
+                    <span class="card-idx">1</span>
+                    <span>边界由问题定义</span>
+                </div>
+                <div class="summary-card-desc">
+                    循环终止条件若为 <strong>fabs(item) &lt; eps</strong>，则其逻辑对立的<strong>继续条件</strong>即为 <strong>fabs(item) &gt;= eps</strong>。
+                </div>
             </div>
-            <div class="summary-card-desc">
-              整数由有限个 2ᵏ 权值构成，能被<strong>精确表示</strong>；而 0.1
-              等小数转化为二进制是<strong>无限循环小数</strong>，只能近似存储。
-            </div>
-          </div>
 
-          <div class="summary-card">
-            <div class="summary-card-title">
-              <span class="card-idx">3</span>
-              <span>浮点判等须谨慎</span>
+            <div class="summary-card">
+                <div class="summary-card-title">
+                    <span class="card-idx">2</span>
+                    <span>整数与小数不同</span>
+                </div>
+                <div class="summary-card-desc">
+                    整数由有限个 2ᵏ 权值构成，能被<strong>精确表示</strong>；而 0.1 等小数转化为二进制是<strong>无限循环小数</strong>，只能近似存储。
+                </div>
             </div>
-            <div class="summary-card-desc">
-              绝不能把数学上的“相等”与机器浮点数的 <code class="code-inline">==</code> 画等号。0.1 +
-              0.2 在机器中与 0.3 存在微小舍入差值。
-            </div>
-          </div>
 
-          <div class="summary-card">
-            <div class="summary-card-title">
-              <span class="card-idx">4</span>
-              <span>eps 是允许误差</span>
+            <div class="summary-card">
+                <div class="summary-card-title">
+                    <span class="card-idx">3</span>
+                    <span>浮点判等须谨慎</span>
+                </div>
+                <div class="summary-card-desc">
+                    绝不能把数学上的“相等”与机器浮点数的 <code class="code-inline">==</code> 画等号。0.1 + 0.2 在机器中与 0.3 存在微小舍入差值。
+                </div>
             </div>
-            <div class="summary-card-desc">
-              数值计算不苛求“完全数学相等”，而是通过精度阈值
-              <strong>eps</strong> 控制逼近程度，判断余项绝对值是否已足够微小。
+
+            <div class="summary-card">
+                <div class="summary-card-title">
+                    <span class="card-idx">4</span>
+                    <span>eps 是允许误差</span>
+                </div>
+                <div class="summary-card-desc">
+                    数值计算不苛求“完全数学相等”，而是通过精度阈值 <strong>eps</strong> 控制逼近程度，判断余项绝对值是否已足够微小。
+                </div>
             </div>
-          </div>
+
         </div>
 
         <div class="bottom-aphorism">
-          教学箴言：先定义数学边界，再设计程序条件，最后考虑机器表示。
-          <span
-            style="
-              font-size: 11.5px;
-              font-weight: normal;
-              color: var(--text-secondary);
-              margin-left: 6px;
-            "
-            >（本演示用于理解浮点表示与循环精度的基本思想，不展开 IEEE 754 细节）</span
-          >
+            教学箴言：先定义数学边界，再设计程序条件，最后考虑机器表示。
+            <span style="font-size: 11.5px; font-weight: normal; color: var(--text-secondary); margin-left: 6px;">（本演示用于理解浮点表示与循环精度的基本思想，不展开 IEEE 754 细节）</span>
         </div>
-      </footer>
-    </div>
+    </footer>
 
-    <!-- ==========================================================================
+</div>
+
+<!-- ==========================================================================
      JavaScript 核心业务逻辑
      纯原生 JS 实现，零依赖，无网络即可本地双击运行
      ========================================================================== -->
-    <script>
-      /* --------------------------------------------------------------------------
-       * 0. 课堂投影自适应引擎 (等比 1600x900 缩放，保持无滚动条完整展现)
-       * -------------------------------------------------------------------------- */
-      function applyStageScale() {
+<script>
+    /* --------------------------------------------------------------------------
+     * 0. 课堂投影自适应引擎 (等比 1600x900 缩放，保持无滚动条完整展现)
+     * -------------------------------------------------------------------------- */
+    function applyStageScale() {
         const stage = document.getElementById('stage-scaler');
         const targetWidth = 1600;
         const targetHeight = 900;
@@ -1360,20 +1217,20 @@
         const scale = Math.min(scaleX, scaleY);
 
         stage.style.transform = `scale(${scale})`;
-      }
+    }
 
-      window.addEventListener('resize', applyStageScale);
-      window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('resize', applyStageScale);
+    window.addEventListener('DOMContentLoaded', () => {
         applyStageScale();
         initExp1();
         initExp2();
         initExp3();
-      });
+    });
 
-      /* --------------------------------------------------------------------------
-       * 1. 区域1 逻辑：十进制整数 -> 二进制精确表示实验
-       * -------------------------------------------------------------------------- */
-      function initExp1() {
+    /* --------------------------------------------------------------------------
+     * 1. 区域1 逻辑：十进制整数 -> 二进制精确表示实验
+     * -------------------------------------------------------------------------- */
+    function initExp1() {
         const inputElem = document.getElementById('int-input');
         const convertBtn = document.getElementById('btn-convert-int');
         const rawStrElem = document.getElementById('int-raw-str');
@@ -1381,62 +1238,62 @@
         const quickBtns = document.querySelectorAll('.btn-quick');
 
         function updateBinaryView(val) {
-          let num = parseInt(val, 10);
-          if (isNaN(num) || num < 0) num = 0;
-          if (num > 65535) num = 65535;
-          inputElem.value = num;
+            let num = parseInt(val, 10);
+            if (isNaN(num) || num < 0) num = 0;
+            if (num > 65535) num = 65535;
+            inputElem.value = num;
 
-          const binStr = num.toString(2);
-          rawStrElem.textContent = `${num} = ${binStr}₂`;
+            const binStr = num.toString(2);
+            rawStrElem.textContent = `${num} = ${binStr}₂`;
 
-          gridContainer.innerHTML = '';
+            gridContainer.innerHTML = '';
 
-          let displayLength = 4;
-          if (num > 15) displayLength = 8;
-          if (num > 255) displayLength = 16;
+            let displayLength = 4;
+            if (num > 15) displayLength = 8;
+            if (num > 255) displayLength = 16;
 
-          const paddedBin = binStr.padStart(displayLength, '0');
+            const paddedBin = binStr.padStart(displayLength, '0');
 
-          for (let i = 0; i < paddedBin.length; i++) {
-            const bitVal = paddedBin[i];
-            const power = paddedBin.length - 1 - i;
+            for (let i = 0; i < paddedBin.length; i++) {
+                const bitVal = paddedBin[i];
+                const power = paddedBin.length - 1 - i;
 
-            const cell = document.createElement('div');
-            cell.className = `bit-cell ${bitVal === '1' ? 'active-1' : ''}`;
+                const cell = document.createElement('div');
+                cell.className = `bit-cell ${bitVal === '1' ? 'active-1' : ''}`;
 
-            const valSpan = document.createElement('div');
-            valSpan.className = 'bit-val';
-            valSpan.textContent = bitVal;
+                const valSpan = document.createElement('div');
+                valSpan.className = 'bit-val';
+                valSpan.textContent = bitVal;
 
-            const weightSpan = document.createElement('div');
-            weightSpan.className = 'bit-weight';
-            weightSpan.textContent = `2^${power}`;
+                const weightSpan = document.createElement('div');
+                weightSpan.className = 'bit-weight';
+                weightSpan.textContent = `2^${power}`;
 
-            cell.appendChild(valSpan);
-            cell.appendChild(weightSpan);
-            gridContainer.appendChild(cell);
-          }
+                cell.appendChild(valSpan);
+                cell.appendChild(weightSpan);
+                gridContainer.appendChild(cell);
+            }
         }
 
         convertBtn.addEventListener('click', () => updateBinaryView(inputElem.value));
         inputElem.addEventListener('input', () => updateBinaryView(inputElem.value));
 
-        quickBtns.forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const targetVal = btn.getAttribute('data-val');
-            inputElem.value = targetVal;
-            updateBinaryView(targetVal);
-          });
+        quickBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetVal = btn.getAttribute('data-val');
+                inputElem.value = targetVal;
+                updateBinaryView(targetVal);
+            });
         });
 
         updateBinaryView(13);
-      }
+    }
 
-      /* STREAMING_CHUNK:Implementing Experiment 2 floating-point logic -->
+    /* STREAMING_CHUNK:Implementing Experiment 2 floating-point logic -->
     /* --------------------------------------------------------------------------
      * 2. 区域2 逻辑：0.1 + 0.2 高精度展示与判等误差
      * -------------------------------------------------------------------------- */
-      function initExp2() {
+    function initExp2() {
         const calcBtns = document.querySelectorAll('.btn-calc');
         const exprLabel = document.getElementById('calc-expr-label');
         const val17Elem = document.getElementById('calc-val-17');
@@ -1445,62 +1302,62 @@
         const diffExactElem = document.getElementById('diff-exact-value');
 
         function inspectValue(exprStr) {
-          let evaluated;
-          let displayTitle;
+            let evaluated;
+            let displayTitle;
 
-          if (exprStr === '0.1') {
-            evaluated = 0.1;
-            displayTitle = '0.1';
-          } else if (exprStr === '0.2') {
-            evaluated = 0.2;
-            displayTitle = '0.2';
-          } else if (exprStr === '0.3') {
-            evaluated = 0.3;
-            displayTitle = '0.3';
-          } else if (exprStr === '0.1+0.2') {
-            evaluated = 0.1 + 0.2;
-            displayTitle = '0.1 + 0.2';
-          }
+            if (exprStr === '0.1') {
+                evaluated = 0.1;
+                displayTitle = '0.1';
+            } else if (exprStr === '0.2') {
+                evaluated = 0.2;
+                displayTitle = '0.2';
+            } else if (exprStr === '0.3') {
+                evaluated = 0.3;
+                displayTitle = '0.3';
+            } else if (exprStr === '0.1+0.2') {
+                evaluated = 0.1 + 0.2;
+                displayTitle = '0.1 + 0.2';
+            }
 
-          exprLabel.textContent = `观察表达式: ${displayTitle}`;
-          val17Elem.textContent = evaluated.toPrecision(17);
+            exprLabel.textContent = `观察表达式: ${displayTitle}`;
+            val17Elem.textContent = evaluated.toPrecision(17);
         }
 
-        calcBtns.forEach((btn) => {
-          btn.addEventListener('click', () => {
-            calcBtns.forEach((b) => b.classList.remove('selected'));
-            btn.classList.add('selected');
-            inspectValue(btn.getAttribute('data-expr'));
-          });
+        calcBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                calcBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                inspectValue(btn.getAttribute('data-expr'));
+            });
         });
 
         function runEqualityTest() {
-          const isEqual = 0.1 + 0.2 === 0.3;
-          const delta = 0.1 + 0.2 - 0.3;
+            const isEqual = ((0.1 + 0.2) === 0.3);
+            const delta = (0.1 + 0.2) - 0.3;
 
-          equalityBadge.textContent = isEqual ? 'true · 相等' : 'false · 不相等';
-          if (isEqual) {
-            equalityBadge.style.background = '#e6f9ed';
-            equalityBadge.style.color = '#16a34a';
-          } else {
-            equalityBadge.style.background = '#fee2e2';
-            equalityBadge.style.color = '#b42318';
-          }
+            equalityBadge.textContent = isEqual ? "true · 相等" : "false · 不相等";
+            if (isEqual) {
+                equalityBadge.style.background = "#e6f9ed";
+                equalityBadge.style.color = "#16a34a";
+            } else {
+                equalityBadge.style.background = "#fee2e2";
+                equalityBadge.style.color = "#b42318";
+            }
 
-          diffExactElem.textContent = `${delta.toExponential(15)}  (${delta.toPrecision(17)})`;
+            diffExactElem.textContent = `${delta.toExponential(15)}  (${delta.toPrecision(17)})`;
         }
 
         runCompareBtn.addEventListener('click', runEqualityTest);
 
         inspectValue('0.1');
         runEqualityTest();
-      }
+    }
 
-      /* STREAMING_CHUNK:Implementing Experiment 3 state machine and simulation -->
+    /* STREAMING_CHUNK:Implementing Experiment 3 state machine and simulation -->
     /* --------------------------------------------------------------------------
      * 3. 区域3 逻辑：格里高里公式循环显微镜 (核心循环模拟与流程状态机)
      * -------------------------------------------------------------------------- */
-      function initExp3() {
+    function initExp3() {
         const epsSelect = document.getElementById('eps-select');
         const condOptions = document.querySelectorAll('#condition-mode-group .radio-label');
         const codeOpPreview = document.getElementById('code-op-preview');
@@ -1511,12 +1368,12 @@
         const btnResetLoop = document.getElementById('btn-reset-loop');
 
         const flowNodes = {
-          1: document.getElementById('flow-node-1'),
-          2: document.getElementById('flow-node-2'),
-          3: document.getElementById('flow-node-3'),
-          4: document.getElementById('flow-node-4'),
-          5: document.getElementById('flow-node-5'),
-          end: document.getElementById('flow-node-end'),
+            1: document.getElementById('flow-node-1'),
+            2: document.getElementById('flow-node-2'),
+            3: document.getElementById('flow-node-3'),
+            4: document.getElementById('flow-node-4'),
+            5: document.getElementById('flow-node-5'),
+            end: document.getElementById('flow-node-end')
         };
 
         const valRoundCnt = document.getElementById('val-round-cnt');
@@ -1547,79 +1404,76 @@
         let isRunningAuto = false;
 
         function setHighlightStep(step) {
-          Object.values(flowNodes).forEach((node) => node.classList.remove('active-node'));
-          if (step && flowNodes[step]) {
-            flowNodes[step].classList.add('active-node');
-          }
+            Object.values(flowNodes).forEach(node => node.classList.remove('active-node'));
+            if (step && flowNodes[step]) {
+                flowNodes[step].classList.add('active-node');
+            }
         }
 
         function evaluateCondition(itemVal, threshold, op) {
-          const absVal = Math.abs(itemVal);
-          if (op === '>=') {
-            return absVal >= threshold;
-          } else {
-            return absVal > threshold;
-          }
+            const absVal = Math.abs(itemVal);
+            if (op === '>=') {
+                return absVal >= threshold;
+            } else {
+                return absVal > threshold;
+            }
         }
 
         function updateDashboard(conditionResult, isBeforeLoopStart = false) {
-          valRoundCnt.textContent = `第 ${round} 轮`;
-          valDenominator.textContent = denominator;
-          valItem.textContent = item.toPrecision(12);
-          valFabsItem.textContent = Math.abs(item).toPrecision(12);
+            valRoundCnt.textContent = `第 ${round} 轮`;
+            valDenominator.textContent = denominator;
+            valItem.textContent = item.toPrecision(12);
+            valFabsItem.textContent = Math.abs(item).toPrecision(12);
 
-          const opSymbol = opMode;
-          const absItemStr = Math.abs(item).toFixed(6);
+            const opSymbol = opMode;
+            const absItemStr = Math.abs(item).toFixed(6);
 
-          valJudgeExpr.innerHTML = `<span>|${absItemStr}| ${opSymbol} ${eps}</span>`;
+            valJudgeExpr.innerHTML = `<span>|${absItemStr}| ${opSymbol} ${eps}</span>`;
 
-          if (isBeforeLoopStart) {
-            judgeStatusBadge.textContent = '准备就绪';
-            judgeStatusBadge.style.color = 'var(--primary-blue)';
-            judgeBoolText.textContent = '未开始';
-            judgeBoolText.style.color = 'var(--text-secondary)';
-          } else if (conditionResult) {
-            judgeStatusBadge.textContent = '条件成立';
-            judgeStatusBadge.style.color = 'var(--primary-blue)';
-            judgeBoolText.textContent = 'true · 继续循环';
-            judgeBoolText.style.color = 'var(--primary-blue)';
-          } else {
-            judgeStatusBadge.textContent = '条件不成立';
-            judgeStatusBadge.style.color = 'var(--alert-red)';
-            judgeBoolText.textContent = 'false · 退出循环';
-            judgeBoolText.style.color = 'var(--alert-red)';
-          }
+            if (isBeforeLoopStart) {
+                judgeStatusBadge.textContent = "准备就绪";
+                judgeStatusBadge.style.color = "var(--primary-blue)";
+                judgeBoolText.textContent = "未开始";
+                judgeBoolText.style.color = "var(--text-secondary)";
+            } else if (conditionResult) {
+                judgeStatusBadge.textContent = "条件成立";
+                judgeStatusBadge.style.color = "var(--primary-blue)";
+                judgeBoolText.textContent = "true · 继续循环";
+                judgeBoolText.style.color = "var(--primary-blue)";
+            } else {
+                judgeStatusBadge.textContent = "条件不成立";
+                judgeStatusBadge.style.color = "var(--alert-red)";
+                judgeBoolText.textContent = "false · 退出循环";
+                judgeBoolText.style.color = "var(--alert-red)";
+            }
 
-          const currentPi = piSum * 4;
-          valPiApprox.textContent = round === 0 ? '0.00000000000000' : currentPi.toFixed(14);
-          const err = Math.abs(currentPi - Math.PI);
-          valPiDiff.textContent =
-            round === 0 ? '|π - Math.PI| = -' : `|π - Math.PI| = ${err.toExponential(4)}`;
+            const currentPi = piSum * 4;
+            valPiApprox.textContent = round === 0 ? "0.00000000000000" : currentPi.toFixed(14);
+            const err = Math.abs(currentPi - Math.PI);
+            valPiDiff.textContent = round === 0 ? "|π - Math.PI| = -" : `|π - Math.PI| = ${err.toExponential(4)}`;
 
-          const absDiff = Math.abs(Math.abs(item) - eps);
-          if (absDiff < 0.005 || Math.abs(item) <= eps * 1.05) {
-            boundaryCallout.style.background = '#fff1f0';
-            boundaryCallout.style.borderColor = '#fecaca';
-            boundaryCallout.innerHTML = `<span><strong>边界观察时刻：</strong>当前 fabs(item) = ${Math.abs(item).toFixed(6)} 与 eps = ${eps} 非常接近。条件 [${opMode}] 决定是否在此退出！</span>`;
-          } else {
-            boundaryCallout.style.background = '#fff8f0';
-            boundaryCallout.style.borderColor = '#fbd38d';
-            boundaryCallout.innerHTML = `<span>观察：当 fabs(item) == eps 时，&gt;= 仍会执行本轮，而 &gt; 将立即停止。</span><span style="font-weight: normal; font-size: 11.5px; color: #78350f;">机器比较的是真实浮点数</span>`;
-          }
+            const absDiff = Math.abs(Math.abs(item) - eps);
+            if (absDiff < 0.005 || Math.abs(item) <= eps * 1.05) {
+                boundaryCallout.style.background = "#fff1f0";
+                boundaryCallout.style.borderColor = "#fecaca";
+                boundaryCallout.innerHTML = `<span><strong>边界观察时刻：</strong>当前 fabs(item) = ${Math.abs(item).toFixed(6)} 与 eps = ${eps} 非常接近。条件 [${opMode}] 决定是否在此退出！</span>`;
+            } else {
+                boundaryCallout.style.background = "#fff8f0";
+                boundaryCallout.style.borderColor = "#fbd38d";
+                boundaryCallout.innerHTML = `<span>观察：当 fabs(item) == eps 时，&gt;= 仍会执行本轮，而 &gt; 将立即停止。</span><span style="font-weight: normal; font-size: 11.5px; color: #78350f;">机器比较的是真实浮点数</span>`;
+            }
         }
 
         function appendHistoryRow(r, den, itm, condRes, currentPiVal) {
-          const oldRows = historyTbody.querySelectorAll('.latest-row');
-          oldRows.forEach((row) => row.classList.remove('latest-row'));
+            const oldRows = historyTbody.querySelectorAll('.latest-row');
+            oldRows.forEach(row => row.classList.remove('latest-row'));
 
-          const tr = document.createElement('tr');
-          tr.className = 'latest-row';
+            const tr = document.createElement('tr');
+            tr.className = 'latest-row';
 
-          const condText = condRes
-            ? `<span style="color:var(--primary-blue)">true (继续)</span>`
-            : `<span style="color:var(--alert-red);font-weight:bold;">false (结束)</span>`;
+            const condText = condRes ? `<span style="color:var(--primary-blue)">true (继续)</span>` : `<span style="color:var(--alert-red);font-weight:bold;">false (结束)</span>`;
 
-          tr.innerHTML = `
+            tr.innerHTML = `
                 <td>#${r}</td>
                 <td>${den}</td>
                 <td>${itm.toFixed(8)}</td>
@@ -1628,99 +1482,99 @@
                 <td style="font-weight:bold;">${(currentPiVal * 4).toFixed(8)}</td>
             `;
 
-          historyTbody.appendChild(tr);
-          historyScrollBox.scrollTop = historyScrollBox.scrollHeight;
+            historyTbody.appendChild(tr);
+            historyScrollBox.scrollTop = historyScrollBox.scrollHeight;
         }
 
         function executeOneRound() {
-          if (isTerminated) return false;
+            if (isTerminated) return false;
 
-          setHighlightStep(1);
-          const conditionMet = evaluateCondition(item, eps, opMode);
+            setHighlightStep(1);
+            const conditionMet = evaluateCondition(item, eps, opMode);
 
-          if (!conditionMet) {
-            isTerminated = true;
-            setHighlightStep('end');
-            updateDashboard(false);
-            appendHistoryRow(round + 1, denominator, item, false, piSum);
-            stopAutoRun();
-            btnStepNext.disabled = true;
-            return false;
-          }
+            if (!conditionMet) {
+                isTerminated = true;
+                setHighlightStep('end');
+                updateDashboard(false);
+                appendHistoryRow(round + 1, denominator, item, false, piSum);
+                stopAutoRun();
+                btnStepNext.disabled = true;
+                return false;
+            }
 
-          round++;
+            round++;
 
-          setHighlightStep(2);
-          piSum += item;
+            setHighlightStep(2);
+            piSum += item;
 
-          appendHistoryRow(round, denominator, item, true, piSum);
+            appendHistoryRow(round, denominator, item, true, piSum);
 
-          setHighlightStep(3);
-          flag = -flag;
+            setHighlightStep(3);
+            flag = -flag;
 
-          setHighlightStep(4);
-          denominator += 2;
+            setHighlightStep(4);
+            denominator += 2;
 
-          setHighlightStep(5);
-          item = (flag * 1.0) / denominator;
+            setHighlightStep(5);
+            item = (flag * 1.0) / denominator;
 
-          updateDashboard(true);
-          return true;
+            updateDashboard(true);
+            return true;
         }
 
         function resetSimulation() {
-          stopAutoRun();
-          round = 0;
-          denominator = 1;
-          flag = 1;
-          item = 1.0;
-          piSum = 0.0;
-          isTerminated = false;
+            stopAutoRun();
+            round = 0;
+            denominator = 1;
+            flag = 1;
+            item = 1.0;
+            piSum = 0.0;
+            isTerminated = false;
 
-          btnStepNext.disabled = false;
-          setHighlightStep(0);
-          historyTbody.innerHTML = '';
+            btnStepNext.disabled = false;
+            setHighlightStep(0);
+            historyTbody.innerHTML = '';
 
-          updateDashboard(true, true);
+            updateDashboard(true, true);
         }
 
         function startAutoRun() {
-          if (isRunningAuto) return;
-          if (isTerminated) resetSimulation();
+            if (isRunningAuto) return;
+            if (isTerminated) resetSimulation();
 
-          isRunningAuto = true;
-          btnAutoRun.disabled = true;
-          btnPauseRun.disabled = false;
-          btnStepNext.disabled = true;
+            isRunningAuto = true;
+            btnAutoRun.disabled = true;
+            btnPauseRun.disabled = false;
+            btnStepNext.disabled = true;
 
-          function runLoopTick() {
-            const hasNext = executeOneRound();
-            if (!hasNext || isTerminated) {
-              stopAutoRun();
-              return;
+            function runLoopTick() {
+                const hasNext = executeOneRound();
+                if (!hasNext || isTerminated) {
+                    stopAutoRun();
+                    return;
+                }
+                const interval = round < 5 ? 550 : (round < 15 ? 320 : 160);
+                autoTimer = setTimeout(runLoopTick, interval);
             }
-            const interval = round < 5 ? 550 : round < 15 ? 320 : 160;
-            autoTimer = setTimeout(runLoopTick, interval);
-          }
 
-          runLoopTick();
+            runLoopTick();
         }
 
         function stopAutoRun() {
-          isRunningAuto = false;
-          if (autoTimer) {
-            clearTimeout(autoTimer);
-            autoTimer = null;
-          }
-          btnAutoRun.disabled = false;
-          btnPauseRun.disabled = true;
-          if (!isTerminated) {
-            btnStepNext.disabled = false;
-          }
+            isRunningAuto = false;
+            if (autoTimer) {
+                clearTimeout(autoTimer);
+                autoTimer = null;
+            }
+            btnAutoRun.disabled = false;
+            btnPauseRun.disabled = true;
+            if (!isTerminated) {
+                btnStepNext.disabled = false;
+            }
         }
 
         btnStepNext.addEventListener('click', () => {
-          executeOneRound();
+            executeOneRound();
         });
 
         btnAutoRun.addEventListener('click', startAutoRun);
@@ -1728,22 +1582,22 @@
         btnResetLoop.addEventListener('click', resetSimulation);
 
         epsSelect.addEventListener('change', (e) => {
-          eps = parseFloat(e.target.value);
-          resetSimulation();
+            eps = parseFloat(e.target.value);
+            resetSimulation();
         });
 
-        condOptions.forEach((opt) => {
-          opt.addEventListener('click', () => {
-            condOptions.forEach((o) => o.classList.remove('active'));
-            opt.classList.add('active');
-            opMode = opt.getAttribute('data-op');
-            codeOpPreview.textContent = opMode;
-            resetSimulation();
-          });
+        condOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                condOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                opMode = opt.getAttribute('data-op');
+                codeOpPreview.textContent = opMode;
+                resetSimulation();
+            });
         });
 
         resetSimulation();
-      }
-    </script>
-  </body>
+    }
+</script>
+</body>
 </html>

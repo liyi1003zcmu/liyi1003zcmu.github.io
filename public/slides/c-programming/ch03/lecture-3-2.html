@@ -1,612 +1,532 @@
-<!doctype html>
+<!DOCTYPE HTML>
 
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>程序设计基础：第三章 分支结构（二）</title>
-    <meta content="第3次课第2课时：switch-case与菜单驱动程序" name="description" />
-    <meta
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-      name="viewport"
-    />
-    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
-    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
-    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
-    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
-    <style>
-      :root {
-        --blue: #2056a8;
-        --blue2: #2c7be5;
-        --cyan: #eaf4ff;
-        --ink: #1f2937;
-        --muted: #5b6573;
-        --green: #1d7a46;
-        --orange: #a65b00;
-        --red: #b42318;
-        --purple: #6d28d9;
-        --line: #d8e1ec;
-        --soft: #f7f9fc;
-      }
-
-      .reveal {
-        color: var(--ink);
-        font-size: 28px;
-      }
-
-      .reveal .slides section {
-        box-sizing: border-box;
-        text-align: left;
-        padding: 20px 28px;
-      }
-
-      .reveal .slides section.stack {
-        padding: 0;
-      }
-
-      .reveal h1,
-      .reveal h2,
-      .reveal h3 {
-        color: #163f78;
-        text-transform: none;
-      }
-
-      .reveal h1 {
-        font-size: 76px;
-        line-height: 1.1;
-        margin: 0.1em 0 0.24em;
-      }
-
-      .reveal h2 {
-        font-size: 50px;
-        line-height: 1.16;
-        margin: 0 0 24px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #dbe7f6;
-      }
-
-      .reveal h3 {
-        font-size: 32px;
-        line-height: 1.22;
-        margin: 0 0 14px;
-      }
-
-      .reveal p {
-        font-size: 28px;
-        line-height: 1.42;
-        margin: 12px 0;
-      }
-
-      .reveal ul,
-      .reveal ol {
-        margin: 0.25em 0 0.25em 1.15em;
-      }
-
-      .reveal li {
-        font-size: 26px;
-        line-height: 1.4;
-        margin: 8px 0;
-      }
-
-      .reveal code,
-      .reveal pre code,
-      .reveal pre code.hljs,
-      .reveal pre .hljs,
-      code,
-      .mono {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-variant-ligatures: none !important;
-        font-feature-settings:
-          'liga' 0,
-          'calt' 0,
-          'dlig' 0 !important;
-      }
-
-      .reveal :not(pre) > code {
-        font-size: 24px;
-        background: #f3f6fa;
-        padding: 2px 7px;
-        border-radius: 5px;
-        color: #173d70;
-      }
-
-      .reveal pre {
-        width: 94%;
-        box-shadow: none;
-        font-size: 24px;
-        line-height: 1.32;
-        margin: 18px auto;
-      }
-
-      .reveal pre code {
-        max-height: 540px;
-        font-size: 1em;
-        line-height: 1.32;
-        padding: 18px 22px;
-        border-radius: 12px;
-        background: #fff !important;
-        color: #1f2937 !important;
-        border: 1px solid #d8e1ec;
-        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
-      }
-
-      .small {
-        font-size: 23px !important;
-        line-height: 1.38 !important;
-      }
-
-      .tiny {
-        font-size: 20px !important;
-        line-height: 1.36 !important;
-      }
-
-      .large {
-        font-size: 31px !important;
-        line-height: 1.36 !important;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .accent {
-        color: var(--blue);
-        font-weight: 700;
-      }
-
-      .danger {
-        color: var(--red);
-        font-weight: 700;
-      }
-
-      .good {
-        color: var(--green);
-        font-weight: 700;
-      }
-
-      .orange {
-        color: var(--orange);
-        font-weight: 700;
-      }
-
-      .purple {
-        color: var(--purple);
-        font-weight: 700;
-      }
-
-      .center {
-        text-align: center !important;
-      }
-
-      .left {
-        text-align: left !important;
-      }
-
-      .lead {
-        max-width: 1350px;
-        margin: 0 auto 24px !important;
-        font-size: 34px !important;
-        line-height: 1.45 !important;
-      }
-
-      .grid2 {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 28px;
-        align-items: stretch;
-      }
-
-      .grid3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-        align-items: stretch;
-      }
-
-      .grid4 {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-        align-items: stretch;
-      }
-
-      .card {
-        box-sizing: border-box;
-        height: 100%;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 20px 23px;
-        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
-      }
-
-      .card.soft {
-        background: var(--soft);
-      }
-
-      .card.blue {
-        background: #f4f8ff;
-        border-color: #c9d9ef;
-      }
-
-      .card.warn {
-        background: #fff8ed;
-        border-color: #f0d7b4;
-      }
-
-      .card.red {
-        background: #fff5f5;
-        border-color: #efc8c8;
-      }
-
-      .bluebox {
-        background: var(--cyan);
-        border-left: 6px solid var(--blue2);
-        padding: 16px 20px;
-        border-radius: 12px;
-        font-size: 26px;
-        line-height: 1.42;
-      }
-
-      .quote {
-        font-size: 29px;
-        line-height: 1.52;
-        padding: 26px 34px;
-        border-left: 7px solid var(--blue2);
-        background: var(--soft);
-        text-align: left;
-        border-radius: 0 14px 14px 0;
-      }
-
-      .pill {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #e8eef7;
-        color: #24405f;
-        font-size: 22px;
-        margin: 5px;
-      }
-
-      .flow {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
-        gap: 12px;
-        margin-top: 26px;
-      }
-
-      .step {
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 16px 9px;
-        border: 1px solid #c6d5e8;
-        border-radius: 13px;
-        background: #fff;
-        font-size: 28px;
-        line-height: 1.2;
-        text-align: center;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
-      }
-
-      .arrow {
-        flex: 0 0 auto;
-        font-size: 34px;
-        color: #6683a6;
-      }
-
-      table.compare {
-        width: 100%;
-        margin: auto;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        border: 1px solid #d7dee8 !important;
-        border-radius: 12px !important;
-        overflow: hidden;
-        font-size: 27px;
-      }
-
-      table.compare th,
-      table.compare td {
-        border-right: 1px solid #d7dee8 !important;
-        border-bottom: 1px solid #d7dee8 !important;
-        border-top: none !important;
-        border-left: none !important;
-        padding: 12px 14px;
-      }
-
-      table.compare th:last-child,
-      table.compare td:last-child {
-        border-right: none !important;
-      }
-
-      table.compare tr:last-child td {
-        border-bottom: none !important;
-      }
-
-      table.compare th {
-        background: #edf4fb;
-        color: #173d70;
-      }
-
-      .sectiontag {
-        color: #46709f;
-        font-size: 34px !important;
-        letter-spacing: 0.09em;
-      }
-
-      .title-meta {
-        font-size: 34px !important;
-        margin-top: 34px !important;
-      }
-
-      .bigq {
-        font-size: 42px !important;
-        color: #143b70;
-        font-weight: 700;
-        line-height: 1.26 !important;
-      }
-
-      .rule {
-        font-size: 31px !important;
-        font-weight: 700;
-        color: #163f78;
-        letter-spacing: 0.03em;
-      }
-
-      .modulecover {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 720px;
-        padding: 55px 70px;
-        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
-        border: 1px solid #dbe7f6;
-        border-radius: 22px;
-        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
-      }
-
-      .modulecover .cover-kicker {
-        font-size: 27px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #5c7da5;
-        margin-bottom: 16px;
-      }
-
-      .modulecover .cover-title {
-        font-size: 62px;
-        line-height: 1.16;
-        color: #163f78;
-        font-weight: 800;
-        margin: 0 0 18px;
-      }
-
-      .modulecover .cover-subtitle {
-        font-size: 31px;
-        color: #48627f;
-        line-height: 1.4;
-        max-width: 1120px;
-      }
-
-      .modulecover .cover-tags {
-        margin-top: 20px;
-      }
-
-      .modulecover .cover-tags .pill {
-        font-size: 27px;
-        background: #ddeafb;
-        color: #214c84;
-      }
-
-      .slide-label {
-        position: absolute;
-        top: 9px;
-        right: 24px;
-        z-index: 50;
-        max-width: 46%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 5px 10px;
-        border: 1px solid #cbd9ec;
-        border-radius: 999px;
-        background: #f4f8ff;
-        color: #375a82;
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 16px !important;
-        line-height: 1.15;
-        opacity: 0.92;
-        pointer-events: none;
-      }
-
-      .placeholder {
-        border: 2px dashed #9ab4cc;
-        border-radius: 16px;
-        padding: 20px;
-        background: #f8fbff;
-        color: #39566f;
-        text-align: center;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .placeholder .title {
-        font-weight: 700;
-        color: #2056a8;
-        margin-bottom: 8px;
-        font-size: 27px;
-      }
-
-      .prompt-note {
-        font-size: 18px !important;
-        color: #6b7280 !important;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 42px;
-        row-gap: 4px;
-        margin-left: 1.1em !important;
-      }
-
-      .reveal .fragment.fade-up {
-        transform: translateY(18px);
-        transition:
-          opacity 0.38s ease,
-          transform 0.38s ease;
-        will-change: opacity, transform;
-      }
-
-      .reveal .fragment.fade-up.visible {
-        transform: translateY(0);
-      }
-
-      /* 白底、高对比、避免绿色语法高亮 */
-      .hljs {
-        background: #fff !important;
-        color: #1f2937 !important;
-      }
-
-      .hljs-keyword,
-      .hljs-built_in,
-      .hljs-type {
-        color: #2056a8 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-meta,
-      .hljs-preprocessor,
-      .hljs-title,
-      .hljs-function .hljs-title,
-      .hljs-name {
-        color: #6d28d9 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-string,
-      .hljs-number,
-      .hljs-literal,
-      .hljs-params {
-        color: #a65b00 !important;
-      }
-
-      .hljs-comment {
-        color: #64748b !important;
-        font-style: italic !important;
-      }
-
-      .hljs-symbol,
-      .hljs-operator,
-      .hljs-punctuation {
-        color: #334155 !important;
-      }
-
-      /* Chapter 4 specific helper classes */
-      .tcm-badge {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #edf4fb;
-        color: #173d70;
-        border: 1px solid #c6d5e8;
-        font-size: 24px !important;
-        margin: 5px;
-        font-weight: 700;
-      }
-      .data-strip {
-        display: flex;
-        gap: 14px;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin: 20px 0;
-      }
-      .data-token {
-        min-width: 76px;
-        padding: 14px 18px;
-        border-radius: 14px;
-        background: #fff;
-        border: 1px solid #cbd8e6;
-        text-align: center;
-        font-size: 32px;
-        font-weight: 800;
-        box-shadow: 0 5px 12px rgba(31, 41, 55, 0.05);
-      }
-      .data-token.stop {
-        background: #fff5f5;
-        color: #b42318;
-      }
-      .data-token.skip {
-        background: #fff7ed;
-        color: #a65b00;
-      }
-      .formula {
-        font-size: 44px !important;
-        color: #173d70;
-        text-align: center !important;
-        margin: 25px 0 !important;
-      }
-      .code-small pre code {
-        max-height: 510px !important;
-        font-size: 22px !important;
-        line-height: 1.28 !important;
-      }
-      .path-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: stretch;
-      }
-      .path {
-        border-radius: 16px;
-        border: 1px solid #cbd8e6;
-        background: #fff;
-        padding: 20px;
-      }
-      .path.break {
-        border-left: 8px solid #b42318;
-      }
-      .path.continue {
-        border-left: 8px solid #2c7be5;
-      }
-      .binary-line {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 40px;
-        text-align: center;
-        background: #fff;
-        border: 1px solid #d8e1ec;
-        border-radius: 12px;
-        padding: 18px;
-      }
-      .prompt {
-        background: #f7f7fb;
-        border-left: 6px solid #6d28d9;
-        padding: 18px 22px;
-        border-radius: 10px;
-        font-size: 22px;
-        line-height: 1.55;
-        text-align: left;
-        white-space: normal;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="reveal">
-      <div class="slides">
-        <section id="sec-1-0">
-          <section id="sec-1-1">
-            <p class="center sectiontag">程序设计基础 · 第3次课 · 第2课时</p>
-            <h1 class="center">分支结构（二）<br />固定选项很多时，怎样写得更清楚？</h1>
-            <p class="center title-meta">从脉搏数据计算模块到菜单驱动的健康数据助手</p>
-          </section>
-          <section id="sec-1-2">
-            <h2>四个固定运算符，都用 <code>else if</code> 可以吗？</h2>
-            <pre><code class="language-c" data-trim="">if (op == '+')
+<head>
+<meta charset="utf-8"/>
+<title>程序设计基础：第三章 分支结构（二）</title>
+<meta content="第3次课第2课时：switch-case与菜单驱动程序" name="description"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="/vendor/reveal/reset.css" rel="stylesheet"/>
+<link href="/vendor/reveal/reveal.css" rel="stylesheet"/>
+<link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet"/>
+<link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .placeholder {
+      border: 2px dashed #9ab4cc;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fbff;
+      color: #39566f;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .placeholder .title {
+      font-weight: 700;
+      color: #2056a8;
+      margin-bottom: 8px;
+      font-size: 27px;
+    }
+
+    .prompt-note {
+      font-size: 18px !important;
+      color: #6b7280 !important;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 42px;
+      row-gap: 4px;
+      margin-left: 1.1em !important;
+    }
+
+    .reveal .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity .38s ease, transform .38s ease;
+      will-change: opacity, transform;
+    }
+
+    .reveal .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+
+    /* 白底、高对比、避免绿色语法高亮 */
+    .hljs {
+      background: #fff !important;
+      color: #1f2937 !important;
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-type {
+      color: #2056a8 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-meta,
+    .hljs-preprocessor,
+    .hljs-title,
+    .hljs-function .hljs-title,
+    .hljs-name {
+      color: #6d28d9 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-string,
+    .hljs-number,
+    .hljs-literal,
+    .hljs-params {
+      color: #a65b00 !important;
+    }
+
+    .hljs-comment {
+      color: #64748b !important;
+      font-style: italic !important;
+    }
+
+    .hljs-symbol,
+    .hljs-operator,
+    .hljs-punctuation {
+      color: #334155 !important;
+    }
+
+    /* Chapter 4 specific helper classes */
+    .tcm-badge { display:inline-block; padding:7px 14px; border-radius:999px; background:#edf4fb; color:#173d70; border:1px solid #c6d5e8; font-size:24px !important; margin:5px; font-weight:700; }
+    .data-strip { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:20px 0; }
+    .data-token { min-width:76px; padding:14px 18px; border-radius:14px; background:#fff; border:1px solid #cbd8e6; text-align:center; font-size:32px; font-weight:800; box-shadow:0 5px 12px rgba(31,41,55,.05); }
+    .data-token.stop { background:#fff5f5; color:#b42318; }
+    .data-token.skip { background:#fff7ed; color:#a65b00; }
+    .formula { font-size:44px !important; color:#173d70; text-align:center !important; margin:25px 0 !important; }
+    .code-small pre code { max-height:510px !important; font-size:22px !important; line-height:1.28 !important; }
+    .path-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:stretch; }
+    .path { border-radius:16px; border:1px solid #cbd8e6; background:#fff; padding:20px; }
+    .path.break { border-left:8px solid #b42318; }
+    .path.continue { border-left:8px solid #2c7be5; }
+    .binary-line { font-family:"Cascadia Code",Consolas,"Courier New",monospace; font-size:40px; text-align:center; background:#fff; border:1px solid #d8e1ec; border-radius:12px; padding:18px; }
+    .prompt { background:#f7f7fb; border-left:6px solid #6d28d9; padding:18px 22px; border-radius:10px; font-size:22px; line-height:1.55; text-align:left; white-space:normal; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-1-0">
+<section id="sec-1-1">
+<p class="center sectiontag">程序设计基础 · 第3次课 · 第2课时</p>
+<h1 class="center">分支结构（二）<br>固定选项很多时，怎样写得更清楚？</h1>
+<p class="center title-meta">从脉搏数据计算模块到菜单驱动的健康数据助手</p>
+</section>
+<section id="sec-1-2">
+<h2>四个固定运算符，都用 <code>else if</code> 可以吗？</h2>
+<pre><code class="language-c" data-trim="">if (op == '+')
     ...
 else if (op == '-')
     ...
@@ -614,85 +534,70 @@ else if (op == '*')
     ...
 else if (op == '/')
     ...</code></pre>
-            <p class="center bigq">
-              共同特点：反复比较<span class="accent">同一个变量</span>与<span class="accent"
-                >若干固定值</span
-              >。
-            </p>
-          </section>
-        </section>
-        <section id="sec-2-0">
-          <section class="module-cover-slide" id="sec-2-1">
-            <div class="modulecover">
-              <div class="cover-kicker">案例3 / 脉搏数据助手</div>
-              <div class="cover-title">当程序有多个功能，<br />先让用户选择“做什么”</div>
-              <div class="cover-subtitle">
-                把上一课已有的“记录、判断、计算”功能组织成一个简单菜单，模拟健康数据记录终端的交互方式。
-              </div>
-              <div class="cover-tags">
-                <span class="pill">菜单</span><span class="pill">choice</span
-                ><span class="pill">switch</span><span class="pill">case</span>
-              </div>
-            </div>
-            <aside class="notes">
-              案例背景只讲“为什么需要菜单”：一个小程序已有多个功能，用户需要先选择功能。不要展开健康终端硬件。建议配图：白底简洁健康数据终端界面，含脉搏图标与4个菜单按钮。生图提示词：16:9白底教学信息图，简洁社区健康数据终端界面，蓝灰青蓝色，屏幕显示“脉搏数据助手”，四个按钮“记录脉搏、状态提示、两次比较、数据计算”，底部“0
-              退出”，不出现真实品牌与诊断结论，大学课堂PPT风格。
-            </aside>
-          </section>
-          <section id="sec-2-2">
-            <h2>一个程序开始有“多个功能”</h2>
-            <div class="grid2">
-              <div class="card blue">
-                <h3 class="center">脉搏数据助手</h3>
-                <ul>
-                  <li>记录一次脉搏数据</li>
-                  <li>显示范围提示</li>
-                  <li>比较两次读数</li>
-                  <li>完成简单数据计算</li>
-                </ul>
-                <p class="center tiny"><code>0</code>：退出程序</p>
-              </div>
-              <div class="card soft">
-                <h3>已有功能</h3>
-                <ul>
-                  <li>输入一次脉搏数据。</li>
-                  <li>根据区间给出教学提示。</li>
-                  <li>比较两次测量值。</li>
-                  <li>执行简单数据计算。</li>
-                </ul>
-              </div>
-            </div>
-            <p class="center bigq">用户怎样告诉程序：“我现在要做第3项”？</p>
-          </section>
-          <section id="sec-2-3">
-            <h2>把“功能选择”变成一个整数 <code>choice</code></h2>
-            <div class="menu">
-              <div class="menu-title">Pulse Data Assistant</div>
-              [1] Record pulse<br />
-              [2] Show range hint<br />
-              [3] Compare two readings<br />
-              [4] Simple calculator<br />
-              [0] Exit
-            </div>
-            <p class="center rule">输入的是一个值，决定的是一条执行路径。</p>
-          </section>
-        </section>
-        <section id="sec-3-0">
-          <section class="module-cover-slide" id="sec-3-1">
-            <div class="modulecover">
-              <div class="cover-kicker">3.1 / switch-case</div>
-              <div class="cover-title">
-                一个变量对应多个固定值：<br />用 <code>switch</code> 表达更直接
-              </div>
-              <div class="cover-tags">
-                <span class="pill">switch</span><span class="pill">case</span
-                ><span class="pill">break</span><span class="pill">default</span>
-              </div>
-            </div>
-          </section>
-          <section id="sec-3-2">
-            <h2><code>switch</code> 先看表达式的值，再找匹配的 <code>case</code></h2>
-            <pre><code class="language-c" data-line-numbers="1|3-5|6-8|9-11" data-trim="">switch (表达式) {
+<p class="center bigq">共同特点：反复比较<span class="accent">同一个变量</span>与<span class="accent">若干固定值</span>。</p>
+</section>
+</section>
+<section id="sec-2-0">
+<section class="module-cover-slide" id="sec-2-1">
+<div class="modulecover">
+<div class="cover-kicker">案例3 / 脉搏数据助手</div>
+<div class="cover-title">当程序有多个功能，<br>先让用户选择“做什么”</div>
+<div class="cover-subtitle">把上一课已有的“记录、判断、计算”功能组织成一个简单菜单，模拟健康数据记录终端的交互方式。</div>
+<div class="cover-tags"><span class="pill">菜单</span><span class="pill">choice</span><span class="pill">switch</span><span class="pill">case</span></div>
+</div>
+<aside class="notes">
+            案例背景只讲“为什么需要菜单”：一个小程序已有多个功能，用户需要先选择功能。不要展开健康终端硬件。建议配图：白底简洁健康数据终端界面，含脉搏图标与4个菜单按钮。生图提示词：16:9白底教学信息图，简洁社区健康数据终端界面，蓝灰青蓝色，屏幕显示“脉搏数据助手”，四个按钮“记录脉搏、状态提示、两次比较、数据计算”，底部“0
+            退出”，不出现真实品牌与诊断结论，大学课堂PPT风格。</aside>
+</section>
+<section id="sec-2-2">
+<h2>一个程序开始有“多个功能”</h2>
+<div class="grid2">
+<div class="card blue">
+<h3 class="center">脉搏数据助手</h3>
+<ul>
+<li>记录一次脉搏数据</li>
+<li>显示范围提示</li>
+<li>比较两次读数</li>
+<li>完成简单数据计算</li>
+</ul>
+<p class="center tiny"><code>0</code>：退出程序</p>
+</div>
+<div class="card soft">
+<h3>已有功能</h3>
+<ul>
+<li>输入一次脉搏数据。</li>
+<li>根据区间给出教学提示。</li>
+<li>比较两次测量值。</li>
+<li>执行简单数据计算。</li>
+</ul>
+</div>
+</div>
+<p class="center bigq">用户怎样告诉程序：“我现在要做第3项”？</p>
+</section>
+<section id="sec-2-3">
+<h2>把“功能选择”变成一个整数 <code>choice</code></h2>
+<div class="menu">
+<div class="menu-title">Pulse Data Assistant</div>
+            [1] Record pulse<br/>
+            [2] Show range hint<br/>
+            [3] Compare two readings<br>
+            [4] Simple calculator<br>
+            [0] Exit
+          </div>
+<p class="center rule">输入的是一个值，决定的是一条执行路径。</p>
+</section>
+</section>
+<section id="sec-3-0">
+<section class="module-cover-slide" id="sec-3-1">
+<div class="modulecover">
+<div class="cover-kicker">3.1 / switch-case</div>
+<div class="cover-title">一个变量对应多个固定值：<br>用 <code>switch</code> 表达更直接</div>
+<div class="cover-tags"><span class="pill">switch</span><span class="pill">case</span><span class="pill">break</span><span class="pill">default</span></div>
+</div>
+</section>
+<section id="sec-3-2">
+<h2><code>switch</code> 先看表达式的值，再找匹配的 <code>case</code></h2>
+<pre><code class="language-c" data-line-numbers="1|3-5|6-8|9-11" data-trim="">switch (表达式) {
     case 常量1:
         语句段1;
         break;
@@ -703,44 +608,44 @@ else if (op == '/')
         默认语句段;
         break;
 }</code></pre>
-            <div class="grid3">
-              <div class="card">
-                <h3>switch</h3>
-                <p>看哪个变量/表达式。</p>
-              </div>
-              <div class="card blue">
-                <h3>case</h3>
-                <p>与哪个固定值匹配。</p>
-              </div>
-              <div class="card warn">
-                <h3>break</h3>
-                <p>执行完当前分支后离开。</p>
-              </div>
-            </div>
-          </section>
-          <section id="sec-3-3">
-            <h2>把菜单映射成多条固定路径</h2>
-            <div class="switch-map">
-              <div class="case-list">
-                <div class="case-item">choice = 1</div>
-                <div class="case-item">choice = 2</div>
-                <div class="case-item">choice = 3</div>
-                <div class="case-item">choice = 4</div>
-                <div class="case-item">其他</div>
-              </div>
-              <div class="switch-center">switch<br />(choice)</div>
-              <div class="case-list">
-                <div class="case-item">case 1 → 记录脉搏</div>
-                <div class="case-item">case 2 → 状态提示</div>
-                <div class="case-item">case 3 → 比较两次数据</div>
-                <div class="case-item">case 4 → 数据计算</div>
-                <div class="case-item">default → 无效选项</div>
-              </div>
-            </div>
-          </section>
-          <section id="sec-3-4">
-            <h2>菜单的 <code>switch</code> 骨架</h2>
-            <pre><code class="language-c" data-line-numbers="1-2|4|6-9|10-13|14-17|18-21|22-25|26-28" data-trim="">int choice;
+<div class="grid3">
+<div class="card">
+<h3>switch</h3>
+<p>看哪个变量/表达式。</p>
+</div>
+<div class="card blue">
+<h3>case</h3>
+<p>与哪个固定值匹配。</p>
+</div>
+<div class="card warn">
+<h3>break</h3>
+<p>执行完当前分支后离开。</p>
+</div>
+</div>
+</section>
+<section id="sec-3-3">
+<h2>把菜单映射成多条固定路径</h2>
+<div class="switch-map">
+<div class="case-list">
+<div class="case-item">choice = 1</div>
+<div class="case-item">choice = 2</div>
+<div class="case-item">choice = 3</div>
+<div class="case-item">choice = 4</div>
+<div class="case-item">其他</div>
+</div>
+<div class="switch-center">switch<br/>(choice)</div>
+<div class="case-list">
+<div class="case-item">case 1 → 记录脉搏</div>
+<div class="case-item">case 2 → 状态提示</div>
+<div class="case-item">case 3 → 比较两次数据</div>
+<div class="case-item">case 4 → 数据计算</div>
+<div class="case-item">default → 无效选项</div>
+</div>
+</div>
+</section>
+<section id="sec-3-4">
+<h2>菜单的 <code>switch</code> 骨架</h2>
+<pre><code class="language-c" data-line-numbers="1-2|4|6-9|10-13|14-17|18-21|22-25|26-28" data-trim="">int choice;
 scanf("%d", &amp;choice);
 
 switch (choice) {
@@ -763,44 +668,40 @@ switch (choice) {
         printf("Invalid choice\n");
         break;
 }</code></pre>
-          </section>
-          <section id="sec-3-5">
-            <h2><code>case</code> 用来匹配固定的离散值</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>适合</h3>
-                <pre><code class="language-c" data-trim="">case 1:
+</section>
+<section id="sec-3-5">
+<h2><code>case</code> 用来匹配固定的离散值</h2>
+<div class="grid2">
+<div class="card">
+<h3>适合</h3>
+<pre><code class="language-c" data-trim="">case 1:
 case 2:
 case '+':
 case 'A':</code></pre>
-                <p class="small">固定整数或字符常量。</p>
-              </div>
-              <div class="card red">
-                <h3>不适合</h3>
-                <pre><code class="language-c" data-trim="">case p &lt; 60:
+<p class="small">固定整数或字符常量。</p>
+</div>
+<div class="card red">
+<h3>不适合</h3>
+<pre><code class="language-c" data-trim="">case p &lt; 60:
 case 60 &lt;= p &amp;&amp; p &lt;= 100:</code></pre>
-                <p class="small danger">范围判断仍应使用 <code>if-else</code>。</p>
-              </div>
-            </div>
-            <p class="center rule">范围判断找 <code>if</code>，固定选项想 <code>switch</code>。</p>
-          </section>
-        </section>
-        <section id="sec-4-0">
-          <section class="module-cover-slide" id="sec-4-1">
-            <div class="modulecover">
-              <div class="cover-kicker">3.2 / break 与贯穿执行</div>
-              <div class="cover-title">
-                为什么每个 <code>case</code><br />后面通常都要有 <code>break</code>？
-              </div>
-              <div class="cover-tags">
-                <span class="pill">预测</span><span class="pill">运行</span
-                ><span class="pill">解释</span>
-              </div>
-            </div>
-          </section>
-          <section id="sec-4-2">
-            <h2>如果删掉 <code>break</code>，输入 <code>1</code> 会输出什么？</h2>
-            <pre><code class="language-c" data-trim="">switch (choice) {
+<p class="small danger">范围判断仍应使用 <code>if-else</code>。</p>
+</div>
+</div>
+<p class="center rule">范围判断找 <code>if</code>，固定选项想 <code>switch</code>。</p>
+</section>
+</section>
+<section id="sec-4-0">
+<section class="module-cover-slide" id="sec-4-1">
+<div class="modulecover">
+<div class="cover-kicker">3.2 / break 与贯穿执行</div>
+<div class="cover-title">为什么每个 <code>case</code><br>后面通常都要有 <code>break</code>？</div>
+<div class="cover-tags"><span class="pill">预测</span><span class="pill">运行</span><span class="pill">解释</span>
+</div>
+</div>
+</section>
+<section id="sec-4-2">
+<h2>如果删掉 <code>break</code>，输入 <code>1</code> 会输出什么？</h2>
+<pre><code class="language-c" data-trim="">switch (choice) {
     case 1:
         printf("Record pulse\n");
     case 2:
@@ -810,62 +711,53 @@ case 60 &lt;= p &amp;&amp; p &lt;= 100:</code></pre>
     default:
         printf("End\n");
 }</code></pre>
-            <div class="grid3">
-              <div class="card center">只输出1行？</div>
-              <div class="card center">输出2行？</div>
-              <div class="card warn center">一直向后执行？</div>
-            </div>
-            <aside class="notes">
-              课堂投票30秒；再运行验证。重点不是记“break必须写”，而是理解case只负责找到入口。
-            </aside>
-          </section>
-          <section id="sec-4-3">
-            <h2>没有 <code>break</code>：会继续向后执行</h2>
-            <div class="grid2">
-              <div class="card blue">
-                <h3>输入1</h3>
-                <ol>
-                  <li>找到 <code>case 1</code></li>
-                  <li>执行case 1</li>
-                  <li>继续执行case 2</li>
-                  <li>继续执行case 3</li>
-                  <li>继续执行default</li>
-                </ol>
-              </div>
-              <div class="card soft">
-                <h3>因此</h3>
-                <p class="large"><code>break;</code></p>
-                <p>不是“结束程序”，而是<strong>离开当前 switch</strong>。</p>
-              </div>
-            </div>
-            <p class="center bigq">这也是为什么删除一个 <code>break</code> 会改变后续所有输出。</p>
-          </section>
-          <section id="sec-4-4">
-            <h2>用户输入 <code>9</code> 怎么办？</h2>
-            <pre><code class="language-c" data-trim="">default:
+<div class="grid3">
+<div class="card center">只输出1行？</div>
+<div class="card center">输出2行？</div>
+<div class="card warn center">一直向后执行？</div>
+</div>
+<aside class="notes">课堂投票30秒；再运行验证。重点不是记“break必须写”，而是理解case只负责找到入口。</aside>
+</section>
+<section id="sec-4-3">
+<h2>没有 <code>break</code>：会继续向后执行</h2>
+<div class="grid2">
+<div class="card blue">
+<h3>输入1</h3>
+<ol>
+<li>找到 <code>case 1</code></li>
+<li>执行case 1</li>
+<li>继续执行case 2</li>
+<li>继续执行case 3</li>
+<li>继续执行default</li>
+</ol>
+</div>
+<div class="card soft">
+<h3>因此</h3>
+<p class="large"><code>break;</code></p>
+<p>不是“结束程序”，而是<strong>离开当前 switch</strong>。</p>
+</div>
+</div>
+<p class="center bigq">这也是为什么删除一个 <code>break</code> 会改变后续所有输出。</p>
+</section>
+<section id="sec-4-4">
+<h2>用户输入 <code>9</code> 怎么办？</h2>
+<pre><code class="language-c" data-trim="">default:
     printf("Invalid choice\n");
     break;</code></pre>
-            <div class="bluebox">
-              <strong>设计意识：</strong>菜单不仅要说明“正确选项做什么”，还要定义“其他输入怎么办”。
-            </div>
-          </section>
-        </section>
-        <section id="sec-5-0">
-          <section class="module-cover-slide" id="sec-5-1">
-            <div class="modulecover">
-              <div class="cover-kicker">3.3 / 迁移与结构选择</div>
-              <div class="cover-title">
-                同一个问题，<br />什么时候用 <code>if</code>，什么时候用 <code>switch</code>？
-              </div>
-              <div class="cover-tags">
-                <span class="pill">范围</span><span class="pill">固定值</span
-                ><span class="pill">可读性</span>
-              </div>
-            </div>
-          </section>
-          <section id="sec-5-2">
-            <h2>运算符也是“一个变量 + 多个固定值”</h2>
-            <pre><code class="language-c" data-line-numbers="1|3-5|6-8|9-11|12-19|20-22" data-trim="">switch (op) {
+<div class="bluebox"><strong>设计意识：</strong>菜单不仅要说明“正确选项做什么”，还要定义“其他输入怎么办”。</div>
+</section>
+</section>
+<section id="sec-5-0">
+<section class="module-cover-slide" id="sec-5-1">
+<div class="modulecover">
+<div class="cover-kicker">3.3 / 迁移与结构选择</div>
+<div class="cover-title">同一个问题，<br>什么时候用 <code>if</code>，什么时候用 <code>switch</code>？</div>
+<div class="cover-tags"><span class="pill">范围</span><span class="pill">固定值</span><span class="pill">可读性</span></div>
+</div>
+</section>
+<section id="sec-5-2">
+<h2>运算符也是“一个变量 + 多个固定值”</h2>
+<pre><code class="language-c" data-line-numbers="1|3-5|6-8|9-11|12-19|20-22" data-trim="">switch (op) {
     case '+':
         printf("= %.2f\n", value1 + value2);
         break;
@@ -884,68 +776,66 @@ case 60 &lt;= p &amp;&amp; p &lt;= 100:</code></pre>
     default:
         printf("Unknown operator!\n");
 }</code></pre>
-            <p class="center small muted fragment">
-              同一个程序里可以同时存在 <code>switch</code> 和嵌套的 <code>if</code>。
-            </p>
-          </section>
-          <section id="sec-5-3">
-            <h2><code>if-else</code> 与 <code>switch</code> 各自擅长什么？</h2>
-            <table class="compare">
-              <tr>
-                <th>问题</th>
-                <th>更自然的结构</th>
-                <th>原因</th>
-              </tr>
-              <tr>
-                <td><code>p &lt; 60</code></td>
-                <td><code>if</code></td>
-                <td>范围比较</td>
-              </tr>
-              <tr>
-                <td><code>60 &lt;= p &amp;&amp; p &lt;= 100</code></td>
-                <td><code>if</code></td>
-                <td>复合条件</td>
-              </tr>
-              <tr>
-                <td><code>choice = 1/2/3/4</code></td>
-                <td><code>switch</code></td>
-                <td>固定离散选项</td>
-              </tr>
-              <tr>
-                <td><code>op = '+'/'-'/'*'/'/'</code></td>
-                <td><code>switch</code></td>
-                <td>固定字符值</td>
-              </tr>
-            </table>
-          </section>
-          <section id="sec-5-4">
-            <h2>脉搏数据助手的两层选择</h2>
-            <div class="grid2">
-              <div class="card blue">
-                <h3>第1层：选功能</h3>
-                <pre><code class="language-c" data-trim="">switch (choice) {
+<p class="center small muted fragment">同一个程序里可以同时存在 <code>switch</code> 和嵌套的 <code>if</code>。</p>
+</section>
+<section id="sec-5-3">
+<h2><code>if-else</code> 与 <code>switch</code> 各自擅长什么？</h2>
+<table class="compare">
+<tr>
+<th>问题</th>
+<th>更自然的结构</th>
+<th>原因</th>
+</tr>
+<tr>
+<td><code>p &lt; 60</code></td>
+<td><code>if</code></td>
+<td>范围比较</td>
+</tr>
+<tr>
+<td><code>60 &lt;= p &amp;&amp; p &lt;= 100</code></td>
+<td><code>if</code></td>
+<td>复合条件</td>
+</tr>
+<tr>
+<td><code>choice = 1/2/3/4</code></td>
+<td><code>switch</code></td>
+<td>固定离散选项</td>
+</tr>
+<tr>
+<td><code>op = '+'/'-'/'*'/'/'</code></td>
+<td><code>switch</code></td>
+<td>固定字符值</td>
+</tr>
+</table>
+</section>
+<section id="sec-5-4">
+<h2>脉搏数据助手的两层选择</h2>
+<div class="grid2">
+<div class="card blue">
+<h3>第1层：选功能</h3>
+<pre><code class="language-c" data-trim="">switch (choice) {
     case 2:
         // 查看状态提示
         ...
 }</code></pre>
-                <p class="small">固定菜单值 → <code>switch</code></p>
-              </div>
-              <div class="card">
-                <h3>第2层：做区间判断</h3>
-                <pre><code class="language-c" data-trim="">if (p &lt; 60)
+<p class="small">固定菜单值 → <code>switch</code></p>
+</div>
+<div class="card">
+<h3>第2层：做区间判断</h3>
+<pre><code class="language-c" data-trim="">if (p &lt; 60)
     ...
 else if (p &lt;= 100)
     ...
 else
     ...</code></pre>
-                <p class="small">连续范围 → <code>if-else</code></p>
-              </div>
-            </div>
-            <p class="center bigq">程序结构不是“二选一”，而是根据问题把不同结构组合起来。</p>
-          </section>
-          <section id="sec-5-5">
-            <h2>先搭结构，再逐步填充功能</h2>
-            <pre><code class="language-c" data-line-numbers="1-4|6-9|10-18|19-22" data-trim="">#include &lt;stdio.h&gt;
+<p class="small">连续范围 → <code>if-else</code></p>
+</div>
+</div>
+<p class="center bigq">程序结构不是“二选一”，而是根据问题把不同结构组合起来。</p>
+</section>
+<section id="sec-5-5">
+<h2>先搭结构，再逐步填充功能</h2>
+<pre><code class="language-c" data-line-numbers="1-4|6-9|10-18|19-22" data-trim="">#include &lt;stdio.h&gt;
 
 int main(void)
 {
@@ -970,216 +860,142 @@ int main(void)
     }
     return 0;
 }</code></pre>
-            <p class="center small muted fragment">
-              这里只展示结构骨架；循环菜单将在后续循环结构中继续升级。
-            </p>
-          </section>
-        </section>
-        <section id="sec-6-0">
-          <section id="sec-6-1">
-            <h2>只判断“该用什么结构”</h2>
-            <div class="grid3">
-              <div class="card">
-                <h3>问题A</h3>
-                <p>判断脉搏是否小于60。</p>
-                <p class="center bigq"><code>?</code></p>
-              </div>
-              <div class="card">
-                <h3>问题B</h3>
-                <p>选择菜单1/2/3/4。</p>
-                <p class="center bigq"><code>?</code></p>
-              </div>
-              <div class="card">
-                <h3>问题C</h3>
-                <p>选择 + - * /。</p>
-                <p class="center bigq"><code>?</code></p>
-              </div>
-            </div>
-            <p class="center rule">A：if　　B：switch　　C：switch（也可用else-if）</p>
-          </section>
-          <section id="sec-6-2">
-            <h2>第2课时小结</h2>
-            <ul class="summary-grid">
-              <li><strong>switch：</strong>适合“同一个变量匹配多个固定值”。</li>
-              <li><strong>case：</strong>提供可能的入口，不会自动结束。</li>
-              <li><strong>break：</strong>结束当前分支并离开 <code>switch</code>。</li>
-              <li><strong>default：</strong>处理没有匹配任何 <code>case</code> 的情况。</li>
-              <li>
-                <strong>结构选择：</strong>范围/复杂条件优先 <code>if</code>，固定离散值优先
-                <code>switch</code>。
-              </li>
-              <li>
-                <strong>组合：</strong>菜单用 <code>switch</code>，菜单内部仍可继续使用
-                <code>if</code>。
-              </li>
-            </ul>
-          </section>
-        </section>
-      </div>
-    </div>
-    <script src="/vendor/reveal/reveal.js"></script>
-    <script src="/vendor/reveal/zoom/zoom.js"></script>
-    <script src="/vendor/reveal/notes/notes.js"></script>
-    <script src="/vendor/reveal/search/search.js"></script>
-    <script src="/vendor/reveal/markdown/markdown.js"></script>
-    <script src="/vendor/reveal/math/math.js"></script>
-    <script src="/vendor/reveal/highlight/highlight.js"></script>
-    <script>
-      /* 为每个实际展示页加上可定位标签。 */
-      document.querySelectorAll('.slides section').forEach((slide, idx) => {
-        if (slide.querySelector(':scope > section')) return;
-        if (!slide.id) slide.id = `slide-${idx + 1}`;
-        if (!slide.querySelector(':scope > .slide-label')) {
-          const label = document.createElement('div');
-          label.className = 'slide-label';
-          label.setAttribute('data-static', '');
-          label.textContent = `§ ${slide.id}`;
-          slide.prepend(label);
+<p class="center small muted fragment">这里只展示结构骨架；循环菜单将在后续循环结构中继续升级。</p>
+</section>
+</section>
+<section id="sec-6-0">
+<section id="sec-6-1">
+<h2>只判断“该用什么结构”</h2>
+<div class="grid3">
+<div class="card">
+<h3>问题A</h3>
+<p>判断脉搏是否小于60。</p>
+<p class="center bigq"><code>?</code></p>
+</div>
+<div class="card">
+<h3>问题B</h3>
+<p>选择菜单1/2/3/4。</p>
+<p class="center bigq"><code>?</code></p>
+</div>
+<div class="card">
+<h3>问题C</h3>
+<p>选择 + - * /。</p>
+<p class="center bigq"><code>?</code></p>
+</div>
+</div>
+<p class="center rule">A：if　　B：switch　　C：switch（也可用else-if）</p>
+</section>
+<section id="sec-6-2">
+<h2>第2课时小结</h2>
+<ul class="summary-grid">
+<li><strong>switch：</strong>适合“同一个变量匹配多个固定值”。</li>
+<li><strong>case：</strong>提供可能的入口，不会自动结束。</li>
+<li><strong>break：</strong>结束当前分支并离开 <code>switch</code>。</li>
+<li><strong>default：</strong>处理没有匹配任何 <code>case</code> 的情况。</li>
+<li><strong>结构选择：</strong>范围/复杂条件优先 <code>if</code>，固定离散值优先 <code>switch</code>。</li>
+<li><strong>组合：</strong>菜单用 <code>switch</code>，菜单内部仍可继续使用 <code>if</code>。</li>
+</ul>
+</section>
+</section>
+</div>
+</div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
         }
       });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
 
-      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
-      document.querySelectorAll('.slides section').forEach((slide) => {
-        if (slide.querySelector(':scope > section')) return;
-
-        const candidates = slide.querySelectorAll(
-          [
-            ':scope#sec-1-1 > *:not(script)',
-            ':scope > .card',
-            ':scope > .grid2 > .card',
-            ':scope > .grid3 > .card',
-            ':scope > .grid4 > .card',
-            ':scope > .grid2 > div:not(.card)',
-            ':scope > .grid3 > div:not(.card)',
-            ':scope > .bluebox',
-            ':scope > .quote',
-            ':scope > .bigq',
-            ':scope > .rule',
-            ':scope > ul > li',
-            ':scope > ol > li',
-            ':scope > table.compare tr:not(:first-child)',
-            ':scope > .timeline > *',
-            ':scope > .pulsebar > *',
-            ':scope > .scoreline > *',
-            ':scope > .menu',
-            ':scope > .switch-map > *',
-            ':scope > .placeholder',
-            ':scope > .prompt',
-            ':scope > .data-strip > .data-token',
-            ':scope > .path-grid > .path',
-            ':scope > .binary-line',
-            ':scope > pre',
-            ':scope > .compare-code > *',
-            ':scope > .modulecover > *:not(aside.notes)',
-            ':scope > img',
-          ].join(','),
-        );
-
-        candidates.forEach((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          if (
-            !el.hasAttribute('data-static') &&
-            !parentFragment &&
-            !el.querySelector('.fragment')
-          ) {
-            el.classList.add('fragment', 'fade-up');
-          }
-        });
-        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
-
-        /* 流程图的箭头与它右侧的步骤同步出现。 */
-        slide.querySelectorAll('.flow').forEach((flow) => {
-          flow.querySelectorAll('.step,.node').forEach((step) => {
-            step.classList.add('fragment', 'fade-up');
-            const arrow = step.previousElementSibling;
-            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
-          });
-        });
-
-        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
-        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          return !parentFragment || !slide.contains(parentFragment);
-        });
-        const handled = new Set();
-        let order = 0;
-        topLevelFragments.forEach((el) => {
-          if (handled.has(el)) return;
-          const parent = el.parentElement;
-          const isFlow = parent && parent.classList.contains('flow');
-          const isTimeline = parent && parent.classList.contains('timeline');
-
-          if (el.hasAttribute('data-fragment-index')) {
-            return;
-          }
-          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else if (isTimeline && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-          }
-          order += 1;
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
         });
       });
 
-      Reveal.initialize({
-        width: 1600,
-        height: 900,
-        margin: 0.035,
-        minScale: 0.2,
-        maxScale: 1.5,
-        controls: true,
-        progress: true,
-        defaultTiming: 120,
-        slideNumber: true,
-        history: false,
-        keyboard: true,
-        overview: true,
-        center: true,
-        touch: true,
-        loop: false,
-        rtl: false,
-        shuffle: false,
-        fragment: true,
-        embedded: false,
-        help: true,
-        showNotes: false,
-        autoPlayMedia: null,
-        autoSlide: 0,
-        autoSlideStoppable: true,
-        autoSlideMethod: Reveal.navigateNext,
-        mouseWheel: false,
-        hideAddressBar: true,
-        previewLinks: false,
-        transition: 'slide',
-        transitionSpeed: 'default',
-        backgroundTransition: 'fade',
-        viewDistance: 3,
-        display: 'block',
-        pdfMaxPagesPerSlide: 1,
-        math: {
-          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
-          config: 'TeX-AMS_HTML-full',
-        },
-        plugins: [
-          RevealZoom,
-          RevealNotes,
-          RevealSearch,
-          RevealMarkdown,
-          RevealHighlight,
-          RevealMath,
-        ],
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
       });
-    </script>
-  </body>
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
 </html>

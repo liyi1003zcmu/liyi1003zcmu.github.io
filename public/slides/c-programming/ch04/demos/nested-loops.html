@@ -1,1227 +1,1075 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C语言嵌套循环执行过程可视化 - C语言程序设计基础</title>
     <style>
-      /* ==========================================================================
+        /* ==========================================================================
            1. 教学课件统一设计系统 (针对 1600x900 / 16:9 投影教室优化)
            ========================================================================== */
-      :root {
-        --bg-canvas: #f8fafc;
-        --bg-card: #ffffff;
-        --bg-card-soft: #f7fbff;
-        --bg-active: #e8f2ff;
-        --border-color: #cbd8e6;
-        --border-focus: #2c7be5;
+        :root {
+            --bg-canvas: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-soft: #f7fbff;
+            --bg-active: #e8f2ff;
+            --border-color: #cbd8e6;
+            --border-focus: #2c7be5;
 
-        --title-blue: #163f78;
-        --primary-blue: #2056a8;
-        --accent-blue: #2c7be5;
-        --text-dark: #1f2937;
-        --text-secondary: #5b6573;
-        --highlight-orange: #a65b00;
-        --alert-red: #b42318;
-        --success-blue: #0f52ba;
+            --title-blue: #163f78;
+            --primary-blue: #2056a8;
+            --accent-blue: #2c7be5;
+            --text-dark: #1f2937;
+            --text-secondary: #5b6573;
+            --highlight-orange: #a65b00;
+            --alert-red: #b42318;
+            --success-blue: #0f52ba;
 
-        --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
-        --radius-card: 10px;
-        --radius-sm: 6px;
+            --shadow-card: 0 2px 8px rgba(22, 63, 120, 0.05);
+            --radius-card: 10px;
+            --radius-sm: 6px;
 
-        --font-ui:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
-          'Microsoft YaHei', sans-serif;
-        --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace;
-      }
+            --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, "Courier New", monospace;
+        }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        -webkit-font-smoothing: antialiased;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
 
-      html,
-      body {
-        width: 100%;
-        height: 100%;
-        background-color: #0f172a; /* 教室深色投影衬底 */
-        font-family: var(--font-ui);
-        color: var(--text-dark);
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a; /* 教室深色投影衬底 */
+            font-family: var(--font-ui);
+            color: var(--text-dark);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-      /* 1600x900 教学等比主画布 */
-      #stage-scaler {
-        position: relative;
-        width: 1600px;
-        height: 900px;
-        min-width: 1600px;
-        min-height: 900px;
-        max-width: 1600px;
-        max-height: 900px;
-        background-color: var(--bg-canvas);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-        display: flex;
-        flex-direction: column;
-        padding: 12px 20px 10px 20px;
-        transform-origin: center center;
-        user-select: none;
-        overflow: hidden;
-      }
+        /* 1600x900 教学等比主画布 */
+        #stage-scaler {
+            position: relative;
+            width: 1600px;
+            height: 900px;
+            min-width: 1600px;
+            min-height: 900px;
+            max-width: 1600px;
+            max-height: 900px;
+            background-color: var(--bg-canvas);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            padding: 12px 20px 10px 20px;
+            transform-origin: center center;
+            user-select: none;
+            overflow: hidden;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            2. 顶部标题栏
            ========================================================================== */
-      header.top-bar {
-        height: 52px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid var(--border-color);
-        padding-bottom: 6px;
-        margin-bottom: 8px;
-        flex-shrink: 0;
-      }
+        header.top-bar {
+            height: 52px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
 
-      .title-group h1 {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--title-blue);
-        line-height: 1.15;
-        letter-spacing: -0.2px;
-      }
+        .title-group h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--title-blue);
+            line-height: 1.15;
+            letter-spacing: -0.2px;
+        }
 
-      .title-group .sub-title {
-        font-size: 13.5px;
-        color: var(--text-secondary);
-        font-weight: 500;
-        margin-top: 1px;
-      }
+        .title-group .sub-title {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 1px;
+        }
 
-      .header-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-      .academic-badge {
-        background-color: #eef5ff;
-        color: var(--primary-blue);
-        font-size: 13px;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 16px;
-        border: 1px solid #bfdbfe;
-      }
+        .academic-badge {
+            background-color: #eef5ff;
+            color: var(--primary-blue);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 16px;
+            border: 1px solid #bfdbfe;
+        }
 
-      .inquiry-prompt {
-        font-size: 13.5px;
-        font-weight: 600;
-        color: var(--highlight-orange);
-        background: #fff8ee;
-        padding: 3px 10px;
-        border-radius: var(--radius-sm);
-        border: 1px dashed #fbd38d;
-      }
+        .inquiry-prompt {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--highlight-orange);
+            background: #fff8ee;
+            padding: 3px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px dashed #fbd38d;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            3. 工作区网格 (左侧 42% 约 650px + 右侧 58% 约 898px)
            ========================================================================== */
-      .workspace-grid {
-        display: grid;
-        grid-template-columns: 650px 1fr;
-        gap: 12px;
-        height: 624px;
-        max-height: 624px;
-        margin-bottom: 8px;
-        flex-shrink: 0;
-        align-items: stretch;
-        overflow: hidden;
-      }
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 650px 1fr;
+            gap: 12px;
+            height: 624px;
+            max-height: 624px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+            align-items: stretch;
+            overflow: hidden;
+        }
 
-      .left-column {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        height: 100%;
-        max-height: 100%;
-        overflow: hidden;
-      }
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
 
-      .right-column {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        height: 100%;
-        max-height: 100%;
-        overflow: hidden;
-      }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
 
-      .card {
-        background: var(--bg-card);
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-card);
-        padding: 8px 12px;
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
+        .card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 8px 12px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-      /* 按钮体系 */
-      .btn {
-        height: 32px;
-        padding: 0 12px;
-        font-size: 13.5px;
-        font-weight: 600;
-        border-radius: var(--radius-sm);
-        border: 1.5px solid transparent;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        font-family: var(--font-ui);
-        white-space: nowrap;
-      }
+        /* 按钮体系 */
+        .btn {
+            height: 32px;
+            padding: 0 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-family: var(--font-ui);
+            white-space: nowrap;
+        }
 
-      .btn-primary {
-        background-color: var(--primary-blue);
-        color: #ffffff;
-        border-color: var(--primary-blue);
-      }
-      .btn-primary:hover:not(:disabled) {
-        background-color: #174284;
-      }
-      .btn-primary:disabled {
-        background-color: #94a3b8;
-        border-color: #94a3b8;
-        cursor: not-allowed;
-      }
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: #ffffff;
+            border-color: var(--primary-blue);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #174284;
+        }
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            border-color: #94a3b8;
+            cursor: not-allowed;
+        }
 
-      .btn-outline {
-        background-color: #ffffff;
-        color: var(--primary-blue);
-        border-color: var(--border-color);
-      }
-      .btn-outline:hover:not(:disabled) {
-        background-color: var(--bg-card-soft);
-        border-color: var(--accent-blue);
-      }
-      .btn-outline:disabled {
-        color: #94a3b8;
-        border-color: #e2e8f0;
-        cursor: not-allowed;
-      }
+        .btn-outline {
+            background-color: #ffffff;
+            color: var(--primary-blue);
+            border-color: var(--border-color);
+        }
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--bg-card-soft);
+            border-color: var(--accent-blue);
+        }
+        .btn-outline:disabled {
+            color: #94a3b8;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
 
-      /* 控制栏 */
-      .toolbar-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 6px 10px;
-        flex-shrink: 0;
-      }
+        /* 控制栏 */
+        .toolbar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            flex-shrink: 0;
+        }
 
-      .btn-group {
-        display: flex;
-        gap: 6px;
-      }
+        .btn-group {
+            display: flex;
+            gap: 6px;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            4. 左侧代码卡片与当前执行显微镜
            ========================================================================== */
-      .code-card {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 8px 12px;
-        overflow: hidden;
-      }
+        .code-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px;
+            overflow: hidden;
+        }
 
-      .code-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eef2f6;
-        padding-bottom: 4px;
-        margin-bottom: 6px;
-        flex-shrink: 0;
-      }
+        .code-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eef2f6;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
 
-      .code-box {
-        background: #ffffff;
-        border: 1.5px solid #d9e5f3;
-        border-radius: var(--radius-sm);
-        padding: 8px 0;
-        font-family: var(--font-mono);
-        font-size: 15px;
-        line-height: 1.7;
-        color: var(--text-dark);
-        flex: 1;
-        overflow-y: auto;
-      }
+        .code-box {
+            background: #ffffff;
+            border: 1.5px solid #d9e5f3;
+            border-radius: var(--radius-sm);
+            padding: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-dark);
+            flex: 1;
+            overflow-y: auto;
+        }
 
-      .code-line {
-        padding: 2px 12px;
-        display: flex;
-        align-items: center;
-        transition: all 0.2s ease;
-        position: relative;
-      }
+        .code-line {
+            padding: 2px 12px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
 
-      .line-num {
-        width: 26px;
-        color: #94a3b8;
-        font-size: 12px;
-        user-select: none;
-      }
+        .line-num {
+            width: 26px;
+            color: #94a3b8;
+            font-size: 12px;
+            user-select: none;
+        }
 
-      .code-line.active {
-        background-color: #e8f2ff;
-        border-left: 4px solid var(--accent-blue);
-        font-weight: 700;
-        color: var(--title-blue);
-      }
+        .code-line.active {
+            background-color: #e8f2ff;
+            border-left: 4px solid var(--accent-blue);
+            font-weight: 700;
+            color: var(--title-blue);
+        }
 
-      .code-line.active-inner-done {
-        background-color: #fff8ee;
-        border-left: 4px solid var(--highlight-orange);
-        font-weight: 700;
-        color: var(--highlight-orange);
-      }
+        .code-line.active-inner-done {
+            background-color: #fff8ee;
+            border-left: 4px solid var(--highlight-orange);
+            font-weight: 700;
+            color: var(--highlight-orange);
+        }
 
-      .code-line.active-all-done {
-        background-color: #fef2f2;
-        border-left: 4px solid var(--alert-red);
-        font-weight: 700;
-        color: var(--alert-red);
-      }
+        .code-line.active-all-done {
+            background-color: #fef2f2;
+            border-left: 4px solid var(--alert-red);
+            font-weight: 700;
+            color: var(--alert-red);
+        }
 
-      .c-kw {
-        color: #0f52ba;
-        font-weight: 700;
-      }
-      .c-num {
-        color: #d97706;
-        font-weight: 600;
-      }
-      .c-func {
-        color: #0284c7;
-        font-weight: 600;
-      }
-      .c-comm {
-        color: #94a3b8;
-        font-style: italic;
-      }
+        .c-kw { color: #0f52ba; font-weight: 700; }
+        .c-num { color: #d97706; font-weight: 600; }
+        .c-func { color: #0284c7; font-weight: 600; }
+        .c-comm { color: #94a3b8; font-style: italic; }
 
-      /* 左侧微观阶段卡片 */
-      .step-insight-card {
-        height: 170px;
-        flex-shrink: 0;
-        padding: 8px 12px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background: #ffffff;
-      }
+        /* 左侧微观阶段卡片 */
+        .step-insight-card {
+            height: 170px;
+            flex-shrink: 0;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #ffffff;
+        }
 
-      .insight-badge {
-        font-size: 12px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background: #eef5ff;
-        color: var(--primary-blue);
-      }
+        .insight-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #eef5ff;
+            color: var(--primary-blue);
+        }
 
-      .insight-desc-box {
-        background: var(--bg-card-soft);
-        border: 1px solid #d9e5f3;
-        border-radius: var(--radius-sm);
-        padding: 6px 10px;
-        font-size: 13px;
-        line-height: 1.4;
-        color: var(--text-dark);
-        min-height: 48px;
-        display: flex;
-        align-items: center;
-      }
+        .insight-desc-box {
+            background: var(--bg-card-soft);
+            border: 1px solid #d9e5f3;
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-dark);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
 
-      .context-mapping-box {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #fbfcfe;
-        border: 1px dashed #cbd8e6;
-        border-radius: var(--radius-sm);
-        padding: 4px 8px;
-        font-size: 12px;
-      }
+        .context-mapping-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fbfcfe;
+            border: 1px dashed #cbd8e6;
+            border-radius: var(--radius-sm);
+            padding: 4px 8px;
+            font-size: 12px;
+        }
 
-      /* ==========================================================================
+        /* ==========================================================================
            5. 右侧 3×4 二维网格可视化主区
            ========================================================================== */
-      .grid-card {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 8px 12px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .grid-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 10px 4px 34px;
-        flex: 1;
-      }
-
-      /* 外部纵向箭头：外层循环 i 控制行 */
-      .outer-arrow-axis {
-        position: absolute;
-        left: 6px;
-        top: 48px;
-        bottom: 12px;
-        width: 26px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .outer-axis-line {
-        width: 2px;
-        height: 100%;
-        background: #bfdbfe;
-        position: relative;
-      }
-
-      .outer-axis-line::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: -4px;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 7px solid var(--primary-blue);
-      }
-
-      .outer-axis-label {
-        writing-mode: vertical-lr;
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--primary-blue);
-        letter-spacing: 2px;
-        background: var(--bg-card);
-        padding: 4px 0;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        white-space: nowrap;
-      }
-
-      /* 3x4 二维网格布局容器 */
-      .mesh-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-        max-width: 780px;
-      }
-
-      /* 顶部列标签 */
-      .mesh-col-headers {
-        display: grid;
-        grid-template-columns: 88px repeat(4, 1fr);
-        gap: 10px;
-        align-items: center;
-        padding-right: 4px;
-      }
-
-      .col-header-pill {
-        text-align: center;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--primary-blue);
-        background: #eef5ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 4px;
-        padding: 3px 0;
-        transition: all 0.2s;
-      }
-
-      .col-header-pill.active {
-        background: var(--primary-blue);
-        color: #ffffff;
-        box-shadow: 0 2px 5px rgba(32, 86, 168, 0.25);
-      }
-
-      /* 网格每一行 */
-      .mesh-row {
-        display: grid;
-        grid-template-columns: 88px repeat(4, 1fr);
-        gap: 10px;
-        align-items: center;
-        padding: 5px 6px;
-        border-radius: 8px;
-        border: 1.5px solid transparent;
-        background: transparent;
-        transition: all 0.25s ease;
-      }
-
-      /* 当前外层循环行浅蓝强调 */
-      .mesh-row.row-active {
-        background: #f0f7ff;
-        border-color: #93c5fd;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
-      }
-
-      .mesh-row.row-completed {
-        background: #fafcfe;
-      }
-
-      .row-header-badge {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        height: 64px;
-        font-family: var(--font-mono);
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--title-blue);
-        transition: all 0.2s;
-      }
-
-      .mesh-row.row-active .row-header-badge {
-        border-color: var(--accent-blue);
-        background: #e8f2ff;
-        color: var(--title-blue);
-        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.25);
-      }
-
-      /* 单个网格单元格 */
-      .mesh-cell {
-        height: 64px;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        box-shadow: var(--shadow-card);
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .mesh-cell .cell-coords {
-        font-size: 20px;
-        font-family: var(--font-mono);
-        font-weight: 700;
-        color: var(--title-blue);
-      }
-
-      .mesh-cell .cell-sub {
-        font-size: 10px;
-        color: var(--text-secondary);
-        font-weight: 600;
-        margin-top: 1px;
-      }
-
-      .mesh-cell .cell-badge {
-        position: absolute;
-        top: -7px;
-        right: -6px;
-        font-size: 9px;
-        font-weight: 700;
-        padding: 1px 5px;
-        border-radius: 8px;
-        display: none;
-      }
-
-      /* 单元格状态变体 */
-      .mesh-cell.state-current {
-        background: #e8f2ff;
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.3);
-        transform: translateY(-2px);
-      }
-      .mesh-cell.state-current .cell-badge {
-        display: block;
-        background: var(--accent-blue);
-        color: #ffffff;
-      }
-
-      .mesh-cell.state-completed {
-        background: #f0fdf4;
-        border-color: #86efac;
-      }
-      .mesh-cell.state-completed .cell-coords {
-        color: #166534;
-      }
-      .mesh-cell.state-completed .cell-badge {
-        display: block;
-        background: #16a34a;
-        color: #ffffff;
-      }
-
-      .mesh-cell.state-next-hint {
-        border-style: dashed;
-        border-color: var(--accent-blue);
-        background: #fafcff;
-      }
-
-      /* 内层循环完成一轮的瞬态通知浮层 */
-      .round-notice-banner {
-        height: 32px;
-        background: #fff8ee;
-        border: 1.5px solid #fbd38d;
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 12px;
-        font-size: 12.5px;
-        font-weight: 700;
-        color: var(--highlight-orange);
-        margin-top: 4px;
-        opacity: 0;
-        transform: translateY(4px);
-        transition: all 0.3s ease;
-      }
-
-      .round-notice-banner.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      /* 执行顺序水平时间线卡片 */
-      .trace-card {
-        height: 98px;
-        flex-shrink: 0;
-        padding: 6px 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        overflow: hidden;
-      }
-
-      .trace-strip {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        overflow-x: auto;
-        padding: 4px 2px;
-        height: 48px;
-      }
-
-      .trace-node {
-        height: 34px;
-        min-width: 58px;
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: 4px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--text-dark);
-        flex-shrink: 0;
-        transition: all 0.2s;
-      }
-
-      .trace-node.active {
-        border-color: var(--accent-blue);
-        background: #e8f2ff;
-        color: var(--primary-blue);
-        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
-      }
-
-      .trace-node.newly-added {
-        animation: nodePop 0.25s ease-out;
-      }
-
-      @keyframes nodePop {
-        0% {
-          transform: scale(0.6);
-          opacity: 0;
+        .grid-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px 12px;
+            position: relative;
+            overflow: hidden;
         }
-        100% {
-          transform: scale(1);
-          opacity: 1;
+
+        .grid-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 10px 4px 34px;
+            flex: 1;
         }
-      }
 
-      .trace-arrow {
-        color: #94a3b8;
-        font-size: 12px;
-        font-weight: bold;
-        flex-shrink: 0;
-      }
+        /* 外部纵向箭头：外层循环 i 控制行 */
+        .outer-arrow-axis {
+            position: absolute;
+            left: 6px;
+            top: 48px;
+            bottom: 12px;
+            width: 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-      /* ==========================================================================
+        .outer-axis-line {
+            width: 2px;
+            height: 100%;
+            background: #bfdbfe;
+            position: relative;
+        }
+
+        .outer-axis-line::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: -4px;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 7px solid var(--primary-blue);
+        }
+
+        .outer-axis-label {
+            writing-mode: vertical-lr;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            letter-spacing: 2px;
+            background: var(--bg-card);
+            padding: 4px 0;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+        }
+
+        /* 3x4 二维网格布局容器 */
+        .mesh-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 780px;
+        }
+
+        /* 顶部列标签 */
+        .mesh-col-headers {
+            display: grid;
+            grid-template-columns: 88px repeat(4, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding-right: 4px;
+        }
+
+        .col-header-pill {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            background: #eef5ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 4px;
+            padding: 3px 0;
+            transition: all 0.2s;
+        }
+
+        .col-header-pill.active {
+            background: var(--primary-blue);
+            color: #ffffff;
+            box-shadow: 0 2px 5px rgba(32, 86, 168, 0.25);
+        }
+
+        /* 网格每一行 */
+        .mesh-row {
+            display: grid;
+            grid-template-columns: 88px repeat(4, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 5px 6px;
+            border-radius: 8px;
+            border: 1.5px solid transparent;
+            background: transparent;
+            transition: all 0.25s ease;
+        }
+
+        /* 当前外层循环行浅蓝强调 */
+        .mesh-row.row-active {
+            background: #f0f7ff;
+            border-color: #93c5fd;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+        }
+
+        .mesh-row.row-completed {
+            background: #fafcfe;
+        }
+
+        .row-header-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            height: 64px;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--title-blue);
+            transition: all 0.2s;
+        }
+
+        .mesh-row.row-active .row-header-badge {
+            border-color: var(--accent-blue);
+            background: #e8f2ff;
+            color: var(--title-blue);
+            box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.25);
+        }
+
+        /* 单个网格单元格 */
+        .mesh-cell {
+            height: 64px;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: var(--shadow-card);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mesh-cell .cell-coords {
+            font-size: 20px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--title-blue);
+        }
+
+        .mesh-cell .cell-sub {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        .mesh-cell .cell-badge {
+            position: absolute;
+            top: -7px;
+            right: -6px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        /* 单元格状态变体 */
+        .mesh-cell.state-current {
+            background: #e8f2ff;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.3);
+            transform: translateY(-2px);
+        }
+        .mesh-cell.state-current .cell-badge {
+            display: block;
+            background: var(--accent-blue);
+            color: #ffffff;
+        }
+
+        .mesh-cell.state-completed {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .mesh-cell.state-completed .cell-coords {
+            color: #166534;
+        }
+        .mesh-cell.state-completed .cell-badge {
+            display: block;
+            background: #16a34a;
+            color: #ffffff;
+        }
+
+        .mesh-cell.state-next-hint {
+            border-style: dashed;
+            border-color: var(--accent-blue);
+            background: #fafcff;
+        }
+
+        /* 内层循环完成一轮的瞬态通知浮层 */
+        .round-notice-banner {
+            height: 32px;
+            background: #fff8ee;
+            border: 1.5px solid #fbd38d;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--highlight-orange);
+            margin-top: 4px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all 0.3s ease;
+        }
+
+        .round-notice-banner.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 执行顺序水平时间线卡片 */
+        .trace-card {
+            height: 98px;
+            flex-shrink: 0;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .trace-strip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 4px 2px;
+            height: 48px;
+        }
+
+        .trace-node {
+            height: 34px;
+            min-width: 58px;
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .trace-node.active {
+            border-color: var(--accent-blue);
+            background: #e8f2ff;
+            color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
+        }
+
+        .trace-node.newly-added {
+            animation: nodePop 0.25s ease-out;
+        }
+
+        @keyframes nodePop {
+            0% { transform: scale(0.6); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .trace-arrow {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* ==========================================================================
            6. 底部状态显微镜 + 历史跟踪区 (约 88px)
            ========================================================================== */
-      .bottom-section {
-        height: 88px;
-        display: grid;
-        grid-template-columns: 650px 1fr;
-        gap: 12px;
-        flex-shrink: 0;
-      }
+        .bottom-section {
+            height: 88px;
+            display: grid;
+            grid-template-columns: 650px 1fr;
+            gap: 12px;
+            flex-shrink: 0;
+        }
 
-      .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
-        height: 100%;
-      }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            height: 100%;
+        }
 
-      .metric-card {
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 5px 8px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: var(--shadow-card);
-        transition: all 0.2s;
-      }
+        .metric-card {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 5px 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: var(--shadow-card);
+            transition: all 0.2s;
+        }
 
-      .metric-card.highlight {
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
-        background: #f7fbff;
-      }
+        .metric-card.highlight {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(44, 123, 229, 0.2);
+            background: #f7fbff;
+        }
 
-      .metric-label {
-        font-size: 11px;
-        color: var(--text-secondary);
-        font-weight: 600;
-        white-space: nowrap;
-        display: flex;
-        justify-content: space-between;
-      }
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            white-space: nowrap;
+            display: flex;
+            justify-content: space-between;
+        }
 
-      .metric-value {
-        font-size: 19px;
-        font-family: var(--font-mono);
-        font-weight: 700;
-        color: var(--title-blue);
-        margin-top: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+        .metric-value {
+            font-size: 19px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--title-blue);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-      /* 剩余次数与执行状态小卡片 */
-      .status-summary-card {
-        background: #ffffff;
-        border: 1.5px solid var(--border-color);
-        border-radius: var(--radius-sm);
-        padding: 4px 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-shadow: var(--shadow-card);
-      }
+        /* 剩余次数与执行状态小卡片 */
+        .status-summary-card {
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 4px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: var(--shadow-card);
+        }
 
-      .summary-pill-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-        font-size: 11px;
-        text-align: center;
-      }
+        .summary-pill-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            font-size: 11px;
+            text-align: center;
+        }
 
-      .summary-pill {
-        padding: 3px 6px;
-        border-radius: 4px;
-        background: var(--bg-card-soft);
-        border: 1px solid #d9e5f3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        line-height: 1.2;
-      }
+        .summary-pill {
+            padding: 3px 6px;
+            border-radius: 4px;
+            background: var(--bg-card-soft);
+            border: 1px solid #d9e5f3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+        }
 
-      .summary-pill .lbl {
-        color: var(--text-secondary);
-        font-size: 9.5px;
-      }
-      .summary-pill .val {
-        font-weight: 700;
-        font-size: 12px;
-        margin-top: 1px;
-        color: var(--title-blue);
-      }
+        .summary-pill .lbl { color: var(--text-secondary); font-size: 9.5px; }
+        .summary-pill .val { font-weight: 700; font-size: 12px; margin-top: 1px; color: var(--title-blue); }
 
-      /* ==========================================================================
+        /* ==========================================================================
            7. 底部教学箴言条
            ========================================================================== */
-      .bottom-aphorism {
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--primary-blue);
-        background: #f0f7ff;
-        border: 1px dashed #bfdbfe;
-        border-radius: var(--radius-sm);
-        letter-spacing: 0.3px;
-        white-space: nowrap;
-        flex-shrink: 0;
-        margin-top: 4px;
-      }
+        .bottom-aphorism {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            background: #f0f7ff;
+            border: 1px dashed #bfdbfe;
+            border-radius: var(--radius-sm);
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
 
-      .code-inline {
-        font-family: var(--font-mono);
-        background: #f1f5f9;
-        padding: 1px 4px;
-        border-radius: 3px;
-        color: #1e293b;
-      }
+        .code-inline {
+            font-family: var(--font-mono);
+            background: #f1f5f9;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #1e293b;
+        }
 
-      /* 细滚动条 */
-      ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
+        /* 细滚动条 */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
-  </head>
-  <body>
-    <div id="stage-scaler">
-      <!-- 顶部标题栏 -->
-      <header class="top-bar">
+</head>
+<body>
+
+<div id="stage-scaler">
+
+    <!-- 顶部标题栏 -->
+    <header class="top-bar">
         <div class="title-group">
-          <h1>C语言嵌套循环执行过程可视化</h1>
-          <div class="sub-title">外层循环控制行，内层循环完成当前行的一整轮</div>
+            <h1>C语言嵌套循环执行过程可视化</h1>
+            <div class="sub-title">外层循环控制行，内层循环完成当前行的一整轮</div>
         </div>
         <div class="header-meta">
-          <span class="academic-badge">D04-03 · 多重循环</span>
-          <div class="inquiry-prompt">“当 i = 2 时，j 会怎样变化？”</div>
+            <span class="academic-badge">D04-03 · 多重循环</span>
+            <div class="inquiry-prompt">“当 i = 2 时，j 会怎样变化？”</div>
         </div>
-      </header>
+    </header>
 
-      <!-- 工作区主体网格 -->
-      <main class="workspace-grid">
+    <!-- 工作区主体网格 -->
+    <main class="workspace-grid">
+
         <!-- 左侧列 (42%)：代码执行卡片 + 阶段说明卡片 -->
         <div class="left-column">
-          <!-- 控制工具栏 -->
-          <div class="toolbar-row">
-            <div
-              style="
-                font-size: 13.5px;
-                font-weight: 700;
-                color: var(--title-blue);
-                display: flex;
-                align-items: center;
-                gap: 6px;
-              "
-            >
-              <span>嵌套循环单步调试器:</span>
-              <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
-                >(3行 × 4列 = 12次)</span
-              >
+
+            <!-- 控制工具栏 -->
+            <div class="toolbar-row">
+                <div style="font-size: 13.5px; font-weight: 700; color: var(--title-blue); display: flex; align-items: center; gap: 6px;">
+                    <span>嵌套循环单步调试器:</span>
+                    <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal;">(3行 × 4列 = 12次)</span>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="btn-step">下一步</button>
+                    <button class="btn btn-outline" id="btn-auto">自动运行</button>
+                    <button class="btn btn-outline" id="btn-pause" disabled>暂停</button>
+                    <button class="btn btn-outline" id="btn-reset">重置</button>
+                </div>
             </div>
 
-            <div class="btn-group">
-              <button class="btn btn-primary" id="btn-step">下一步</button>
-              <button class="btn btn-outline" id="btn-auto">自动运行</button>
-              <button class="btn btn-outline" id="btn-pause" disabled>暂停</button>
-              <button class="btn btn-outline" id="btn-reset">重置</button>
-            </div>
-          </div>
+            <!-- C 语言源码卡片 -->
+            <div class="card code-card">
+                <div class="code-card-header">
+                    <span style="font-size: 13.5px; font-weight: 700; color: var(--title-blue);">C 语言双重 for 循环源码</span>
+                    <span style="font-size: 11px; color: var(--text-secondary);">单步同步高亮</span>
+                </div>
 
-          <!-- C 语言源码卡片 -->
-          <div class="card code-card">
-            <div class="code-card-header">
-              <span style="font-size: 13.5px; font-weight: 700; color: var(--title-blue)"
-                >C 语言双重 for 循环源码</span
-              >
-              <span style="font-size: 11px; color: var(--text-secondary)">单步同步高亮</span>
-            </div>
-
-            <div class="code-box" id="code-box-el">
-              <div class="code-line" id="line-1">
-                <span class="line-num">1</span
-                ><span
-                  ><span class="c-kw">for</span> (<span class="c-kw">int</span> i =
-                  <span class="c-num">1</span>; i &lt;= <span class="c-num">3</span>; i++) {</span
-                >
-              </div>
-              <div class="code-line" id="line-2">
-                <span class="line-num">2</span
-                ><span
-                  >&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">for</span> (<span class="c-kw"
-                    >int</span
-                  >
-                  j = <span class="c-num">1</span>; j &lt;= <span class="c-num">4</span>; j++)
-                  {</span
-                >
-              </div>
-              <div class="code-line" id="line-3">
-                <span class="line-num">3</span
-                ><span
-                  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-func">printf</span
-                  >(<span style="color: #059669">"%d %d\n"</span>, i, j); &nbsp;<span class="c-comm"
-                    >// 当前循环体</span
-                  ></span
-                >
-              </div>
-              <div class="code-line" id="line-4">
-                <span class="line-num">4</span
-                ><span
-                  >&nbsp;&nbsp;&nbsp;&nbsp;} &nbsp;<span class="c-comm"
-                    >// 内层循环每轮完毕：j 从 1..4 遍历</span
-                  ></span
-                >
-              </div>
-              <div class="code-line" id="line-5">
-                <span class="line-num">5</span
-                ><span
-                  >} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-comm"
-                    >// 外层循环进入下一行：i 增加并重置 j=1</span
-                  ></span
-                >
-              </div>
-              <div class="code-line" id="line-6">
-                <span class="line-num">6</span
-                ><span><span class="c-comm">// 嵌套循环全部结束 (总共打印 12 次)</span></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 当前微观执行解读卡片 -->
-          <div class="card step-insight-card">
-            <div style="display: flex; justify-content: space-between; align-items: center">
-              <span style="font-size: 13px; font-weight: 700; color: var(--title-blue)"
-                >当前微观执行状态</span
-              >
-              <span class="insight-badge" id="step-badge">准备启动</span>
+                <div class="code-box" id="code-box-el">
+                    <div class="code-line" id="line-1"><span class="line-num">1</span><span><span class="c-kw">for</span> (<span class="c-kw">int</span> i = <span class="c-num">1</span>; i &lt;= <span class="c-num">3</span>; i++) {</span></div>
+                    <div class="code-line" id="line-2"><span class="line-num">2</span><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-kw">for</span> (<span class="c-kw">int</span> j = <span class="c-num">1</span>; j &lt;= <span class="c-num">4</span>; j++) {</span></div>
+                    <div class="code-line" id="line-3"><span class="line-num">3</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-func">printf</span>(<span style="color:#059669;">"%d %d\n"</span>, i, j); &nbsp;<span class="c-comm">// 当前循环体</span></span></div>
+                    <div class="code-line" id="line-4"><span class="line-num">4</span><span>&nbsp;&nbsp;&nbsp;&nbsp;} &nbsp;<span class="c-comm">// 内层循环每轮完毕：j 从 1..4 遍历</span></span></div>
+                    <div class="code-line" id="line-5"><span class="line-num">5</span><span>} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-comm">// 外层循环进入下一行：i 增加并重置 j=1</span></span></div>
+                    <div class="code-line" id="line-6"><span class="line-num">6</span><span><span class="c-comm">// 嵌套循环全部结束 (总共打印 12 次)</span></span></div>
+                </div>
             </div>
 
-            <div class="insight-desc-box" id="step-explanation">
-              点击“下一步”或“自动运行”，外层循环初始化 i = 1，内层循环初始化 j = 1，进入首次循环体。
+            <!-- 当前微观执行解读卡片 -->
+            <div class="card step-insight-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--title-blue);">当前微观执行状态</span>
+                    <span class="insight-badge" id="step-badge">准备启动</span>
+                </div>
+
+                <div class="insight-desc-box" id="step-explanation">
+                    点击“下一步”或“自动运行”，外层循环初始化 i = 1，内层循环初始化 j = 1，进入首次循环体。
+                </div>
+
+                <!-- 场景映射辅助卡片 (与多名受试者x多次测量呼应) -->
+                <div class="context-mapping-box">
+                    <span style="color:var(--text-secondary);">情境映射:</span>
+                    <span><strong style="color:var(--title-blue);">i</strong> → 受试者 (Patient 行)</span>
+                    <span style="color:#cbd8e6;">|</span>
+                    <span><strong style="color:var(--accent-blue);">j</strong> → 测量次序 (Measure 列)</span>
+                    <span id="mapping-detail-tag" style="color:var(--highlight-orange); font-weight:600;">(未开始)</span>
+                </div>
             </div>
 
-            <!-- 场景映射辅助卡片 (与多名受试者x多次测量呼应) -->
-            <div class="context-mapping-box">
-              <span style="color: var(--text-secondary)">情境映射:</span>
-              <span><strong style="color: var(--title-blue)">i</strong> → 受试者 (Patient 行)</span>
-              <span style="color: #cbd8e6">|</span>
-              <span
-                ><strong style="color: var(--accent-blue)">j</strong> → 测量次序 (Measure 列)</span
-              >
-              <span id="mapping-detail-tag" style="color: var(--highlight-orange); font-weight: 600"
-                >(未开始)</span
-              >
-            </div>
-          </div>
         </div>
 
         <!-- 右侧列 (58%)：3×4 二维网格 + 循环轨迹 -->
         <div class="right-column">
-          <!-- 3×4 二维网格卡片 -->
-          <div class="card grid-card">
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 2px;
-              "
-            >
-              <div
-                style="
-                  font-size: 13.5px;
-                  font-weight: 700;
-                  color: var(--title-blue);
-                  display: flex;
-                  align-items: center;
-                  gap: 6px;
-                "
-              >
-                <span>3行 × 4列 二维网格映射区</span>
-                <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
-                  >(水平箭头: 内层 j 遍历; 垂直箭头: 外层 i 推进)</span
-                >
-              </div>
-              <span
-                id="loop-state-tag"
-                class="academic-badge"
-                style="font-size: 11px; padding: 1px 8px"
-                >就绪 (0 / 12)</span
-              >
-            </div>
 
-            <!-- 核心网格视图与外层轴线 -->
-            <div class="grid-wrapper">
-              <!-- 纵向外层轴提示 -->
-              <div class="outer-arrow-axis" title="外层循环控制行推进">
-                <div class="outer-axis-line"></div>
-                <div class="outer-axis-label">外层 i 控制行</div>
-              </div>
-
-              <!-- 网格容器 -->
-              <div class="mesh-container">
-                <!-- 顶部列标签 (内层循环 j 控制当前列) -->
-                <div class="mesh-col-headers">
-                  <div
-                    style="
-                      font-size: 11.5px;
-                      font-weight: 700;
-                      color: var(--text-secondary);
-                      text-align: center;
-                    "
-                  >
-                    行列标
-                  </div>
-                  <div class="col-header-pill" id="col-h-1">j = 1</div>
-                  <div class="col-header-pill" id="col-h-2">j = 2</div>
-                  <div class="col-header-pill" id="col-h-3">j = 3</div>
-                  <div class="col-header-pill" id="col-h-4">j = 4</div>
+            <!-- 3×4 二维网格卡片 -->
+            <div class="card grid-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--title-blue); display: flex; align-items: center; gap: 6px;">
+                        <span>3行 × 4列 二维网格映射区</span>
+                        <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal;">(水平箭头: 内层 j 遍历; 垂直箭头: 外层 i 推进)</span>
+                    </div>
+                    <span id="loop-state-tag" class="academic-badge" style="font-size: 11px; padding: 1px 8px;">就绪 (0 / 12)</span>
                 </div>
 
-                <!-- 第 1 行 (i = 1) -->
-                <div class="mesh-row" id="mesh-row-1">
-                  <div class="row-header-badge" id="row-h-1">
-                    <span>i = 1</span>
-                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal"
-                      >第1行</span
-                    >
-                  </div>
-                  <div class="mesh-cell" id="cell-1-1">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(1, 1)</span>
-                    <span class="cell-sub">i=1, j=1</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-1-2">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(1, 2)</span>
-                    <span class="cell-sub">i=1, j=2</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-1-3">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(1, 3)</span>
-                    <span class="cell-sub">i=1, j=3</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-1-4">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(1, 4)</span>
-                    <span class="cell-sub">i=1, j=4</span>
-                  </div>
+                <!-- 核心网格视图与外层轴线 -->
+                <div class="grid-wrapper">
+                    <!-- 纵向外层轴提示 -->
+                    <div class="outer-arrow-axis" title="外层循环控制行推进">
+                        <div class="outer-axis-line"></div>
+                        <div class="outer-axis-label">外层 i 控制行</div>
+                    </div>
+
+                    <!-- 网格容器 -->
+                    <div class="mesh-container">
+                        <!-- 顶部列标签 (内层循环 j 控制当前列) -->
+                        <div class="mesh-col-headers">
+                            <div style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-align: center;">行列标</div>
+                            <div class="col-header-pill" id="col-h-1">j = 1</div>
+                            <div class="col-header-pill" id="col-h-2">j = 2</div>
+                            <div class="col-header-pill" id="col-h-3">j = 3</div>
+                            <div class="col-header-pill" id="col-h-4">j = 4</div>
+                        </div>
+
+                        <!-- 第 1 行 (i = 1) -->
+                        <div class="mesh-row" id="mesh-row-1">
+                            <div class="row-header-badge" id="row-h-1">
+                                <span>i = 1</span>
+                                <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal;">第1行</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-1-1">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(1, 1)</span>
+                                <span class="cell-sub">i=1, j=1</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-1-2">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(1, 2)</span>
+                                <span class="cell-sub">i=1, j=2</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-1-3">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(1, 3)</span>
+                                <span class="cell-sub">i=1, j=3</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-1-4">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(1, 4)</span>
+                                <span class="cell-sub">i=1, j=4</span>
+                            </div>
+                        </div>
+
+                        <!-- 第 2 行 (i = 2) -->
+                        <div class="mesh-row" id="mesh-row-2">
+                            <div class="row-header-badge" id="row-h-2">
+                                <span>i = 2</span>
+                                <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal;">第2行</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-2-1">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(2, 1)</span>
+                                <span class="cell-sub">i=2, j=1</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-2-2">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(2, 2)</span>
+                                <span class="cell-sub">i=2, j=2</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-2-3">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(2, 3)</span>
+                                <span class="cell-sub">i=2, j=3</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-2-4">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(2, 4)</span>
+                                <span class="cell-sub">i=2, j=4</span>
+                            </div>
+                        </div>
+
+                        <!-- 第 3 行 (i = 3) -->
+                        <div class="mesh-row" id="mesh-row-3">
+                            <div class="row-header-badge" id="row-h-3">
+                                <span>i = 3</span>
+                                <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal;">第3行</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-3-1">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(3, 1)</span>
+                                <span class="cell-sub">i=3, j=1</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-3-2">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(3, 2)</span>
+                                <span class="cell-sub">i=3, j=2</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-3-3">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(3, 3)</span>
+                                <span class="cell-sub">i=3, j=3</span>
+                            </div>
+                            <div class="mesh-cell" id="cell-3-4">
+                                <span class="cell-badge">当前</span>
+                                <span class="cell-coords">(3, 4)</span>
+                                <span class="cell-sub">i=3, j=4</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 第 2 行 (i = 2) -->
-                <div class="mesh-row" id="mesh-row-2">
-                  <div class="row-header-badge" id="row-h-2">
-                    <span>i = 2</span>
-                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal"
-                      >第2行</span
-                    >
-                  </div>
-                  <div class="mesh-cell" id="cell-2-1">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(2, 1)</span>
-                    <span class="cell-sub">i=2, j=1</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-2-2">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(2, 2)</span>
-                    <span class="cell-sub">i=2, j=2</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-2-3">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(2, 3)</span>
-                    <span class="cell-sub">i=2, j=3</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-2-4">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(2, 4)</span>
-                    <span class="cell-sub">i=2, j=4</span>
-                  </div>
+                <!-- 内层循环一轮完成通知横幅 -->
+                <div class="round-notice-banner" id="round-banner">
+                    <span id="banner-text">★ 内层循环完成一轮：j 遍历完毕 (1..4)，外层循环推进 i++，下一轮 j 重新从 1 开始！</span>
+                    <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal;">(继续按“下一步”进入下一行)</span>
                 </div>
+            </div>
 
-                <!-- 第 3 行 (i = 3) -->
-                <div class="mesh-row" id="mesh-row-3">
-                  <div class="row-header-badge" id="row-h-3">
-                    <span>i = 3</span>
-                    <span style="font-size: 10px; color: var(--text-secondary); font-weight: normal"
-                      >第3行</span
-                    >
-                  </div>
-                  <div class="mesh-cell" id="cell-3-1">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(3, 1)</span>
-                    <span class="cell-sub">i=3, j=1</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-3-2">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(3, 2)</span>
-                    <span class="cell-sub">i=3, j=2</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-3-3">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(3, 3)</span>
-                    <span class="cell-sub">i=3, j=3</span>
-                  </div>
-                  <div class="mesh-cell" id="cell-3-4">
-                    <span class="cell-badge">当前</span>
-                    <span class="cell-coords">(3, 4)</span>
-                    <span class="cell-sub">i=3, j=4</span>
-                  </div>
+            <!-- 执行轨迹卡片 -->
+            <div class="card trace-card">
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--title-blue); display: flex; justify-content: space-between; align-items: center;">
+                    <span>执行顺序时序轨迹 (从左向右追加):</span>
+                    <span style="font-size: 11px; color: var(--text-secondary);" id="trace-summary-tag">累计已记录 0 个点</span>
                 </div>
-              </div>
+                <div class="trace-strip" id="trace-strip-el">
+                    <span style="font-size: 12px; color: #94a3b8; font-style: italic; margin-left: 6px;">等待执行...</span>
+                </div>
             </div>
 
-            <!-- 内层循环一轮完成通知横幅 -->
-            <div class="round-notice-banner" id="round-banner">
-              <span id="banner-text"
-                >★ 内层循环完成一轮：j 遍历完毕 (1..4)，外层循环推进 i++，下一轮 j 重新从 1
-                开始！</span
-              >
-              <span style="font-size: 11.5px; color: var(--text-secondary); font-weight: normal"
-                >(继续按“下一步”进入下一行)</span
-              >
-            </div>
-          </div>
-
-          <!-- 执行轨迹卡片 -->
-          <div class="card trace-card">
-            <div
-              style="
-                font-size: 12.5px;
-                font-weight: 700;
-                color: var(--title-blue);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-              "
-            >
-              <span>执行顺序时序轨迹 (从左向右追加):</span>
-              <span style="font-size: 11px; color: var(--text-secondary)" id="trace-summary-tag"
-                >累计已记录 0 个点</span
-              >
-            </div>
-            <div class="trace-strip" id="trace-strip-el">
-              <span style="font-size: 12px; color: #94a3b8; font-style: italic; margin-left: 6px"
-                >等待执行...</span
-              >
-            </div>
-          </div>
         </div>
-      </main>
 
-      <!-- 底部状态统计区 -->
-      <div class="bottom-section">
+    </main>
+
+    <!-- 底部状态统计区 -->
+    <div class="bottom-section">
+
         <!-- 5 个大号指标卡 -->
         <div class="metrics-grid">
-          <div class="metric-card" id="mcard-i">
-            <div class="metric-label"><span>外层循环 i</span><span>当前行号</span></div>
-            <div class="metric-value" id="val-i">—</div>
-          </div>
+            <div class="metric-card" id="mcard-i">
+                <div class="metric-label"><span>外层循环 i</span><span>当前行号</span></div>
+                <div class="metric-value" id="val-i">—</div>
+            </div>
 
-          <div class="metric-card" id="mcard-j">
-            <div class="metric-label"><span>内层循环 j</span><span>当前列号</span></div>
-            <div class="metric-value" id="val-j">—</div>
-          </div>
+            <div class="metric-card" id="mcard-j">
+                <div class="metric-label"><span>内层循环 j</span><span>当前列号</span></div>
+                <div class="metric-value" id="val-j">—</div>
+            </div>
 
-          <div class="metric-card" id="mcard-coord">
-            <div class="metric-label"><span>当前坐标 (i, j)</span><span>二维网格</span></div>
-            <div class="metric-value" id="val-coord">—</div>
-          </div>
+            <div class="metric-card" id="mcard-coord">
+                <div class="metric-label"><span>当前坐标 (i, j)</span><span>二维网格</span></div>
+                <div class="metric-value" id="val-coord">—</div>
+            </div>
 
-          <div class="metric-card" id="mcard-count">
-            <div class="metric-label"><span>总执行次数 count</span><span>已执行/总数</span></div>
-            <div class="metric-value" id="val-count">0 / 12</div>
-          </div>
+            <div class="metric-card" id="mcard-count">
+                <div class="metric-label"><span>总执行次数 count</span><span>已执行/总数</span></div>
+                <div class="metric-value" id="val-count">0 / 12</div>
+            </div>
 
-          <div class="metric-card" id="mcard-status">
-            <div class="metric-label"><span>当前循环状态</span><span>生命周期</span></div>
-            <div class="metric-value" id="val-status" style="font-size: 15px">等待开始</div>
-          </div>
+            <div class="metric-card" id="mcard-status">
+                <div class="metric-label"><span>当前循环状态</span><span>生命周期</span></div>
+                <div class="metric-value" id="val-status" style="font-size: 15px;">等待开始</div>
+            </div>
         </div>
 
         <!-- 剩余次数与执行状态分析小卡片 -->
         <div class="status-summary-card">
-          <div
-            style="
-              font-size: 11.5px;
-              font-weight: 700;
-              color: var(--title-blue);
-              display: flex;
-              justify-content: space-between;
-            "
-          >
-            <span>执行进度与剩余轮次分析</span>
-            <span id="progress-percent" style="color: var(--primary-blue)">0% 完成</span>
-          </div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--title-blue); display: flex; justify-content: space-between;">
+                <span>执行进度与剩余轮次分析</span>
+                <span id="progress-percent" style="color:var(--primary-blue);">0% 完成</span>
+            </div>
 
-          <div class="summary-pill-row">
-            <div class="summary-pill">
-              <span class="lbl">本行剩余内层</span>
-              <span class="val" id="pill-row-remain">4 次</span>
+            <div class="summary-pill-row">
+                <div class="summary-pill">
+                    <span class="lbl">本行剩余内层</span>
+                    <span class="val" id="pill-row-remain">4 次</span>
+                </div>
+                <div class="summary-pill">
+                    <span class="lbl">全网格总剩余</span>
+                    <span class="val" id="pill-total-remain">12 次</span>
+                </div>
+                <div class="summary-pill">
+                    <span class="lbl">下次动作预测</span>
+                    <span class="val" id="pill-next-action" style="font-size: 11px;">进入 (1,1)</span>
+                </div>
             </div>
-            <div class="summary-pill">
-              <span class="lbl">全网格总剩余</span>
-              <span class="val" id="pill-total-remain">12 次</span>
-            </div>
-            <div class="summary-pill">
-              <span class="lbl">下次动作预测</span>
-              <span class="val" id="pill-next-action" style="font-size: 11px">进入 (1,1)</span>
-            </div>
-          </div>
         </div>
-      </div>
 
-      <!-- 底部教学箴言条 -->
-      <div class="bottom-aphorism">
-        教学箴言：外层走一步，内层完整走一轮；外层循环控制行 (i=1..3)，内层循环跑满当前行
-        (j=1..4)，总次数 = 3 × 4 = 12 次！
-      </div>
     </div>
 
-    <script>
-      /* --------------------------------------------------------------------------
-       * 0. 课堂投影自适应缩放引擎 (等比 1600x900 缩放，保持界面全屏无滚动条展示)
-       * -------------------------------------------------------------------------- */
-      function applyStageScale() {
+    <!-- 底部教学箴言条 -->
+    <div class="bottom-aphorism">
+        教学箴言：外层走一步，内层完整走一轮；外层循环控制行 (i=1..3)，内层循环跑满当前行 (j=1..4)，总次数 = 3 × 4 = 12 次！
+    </div>
+
+</div>
+
+<script>
+    /* --------------------------------------------------------------------------
+     * 0. 课堂投影自适应缩放引擎 (等比 1600x900 缩放，保持界面全屏无滚动条展示)
+     * -------------------------------------------------------------------------- */
+    function applyStageScale() {
         const stage = document.getElementById('stage-scaler');
         const targetWidth = 1600;
         const targetHeight = 900;
@@ -1234,18 +1082,18 @@
         const scale = Math.min(scaleX, scaleY);
 
         stage.style.transform = `scale(${scale})`;
-      }
+    }
 
-      window.addEventListener('resize', applyStageScale);
-      window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('resize', applyStageScale);
+    window.addEventListener('DOMContentLoaded', () => {
         applyStageScale();
         initNestedLoopApp();
-      });
+    });
 
-      /* --------------------------------------------------------------------------
-       * 1. 核心应用与状态机管理
-       * -------------------------------------------------------------------------- */
-      function initNestedLoopApp() {
+    /* --------------------------------------------------------------------------
+     * 1. 核心应用与状态机管理
+     * -------------------------------------------------------------------------- */
+    function initNestedLoopApp() {
         // DOM 引用
         const btnStep = document.getElementById('btn-step');
         const btnAuto = document.getElementById('btn-auto');
@@ -1281,12 +1129,12 @@
 
         // 代码行引用
         const codeLines = {
-          1: document.getElementById('line-1'),
-          2: document.getElementById('line-2'),
-          3: document.getElementById('line-3'),
-          4: document.getElementById('line-4'),
-          5: document.getElementById('line-5'),
-          6: document.getElementById('line-6'),
+            1: document.getElementById('line-1'),
+            2: document.getElementById('line-2'),
+            3: document.getElementById('line-3'),
+            4: document.getElementById('line-4'),
+            5: document.getElementById('line-5'),
+            6: document.getElementById('line-6')
         };
 
         // 状态定义
@@ -1302,319 +1150,311 @@
         // 预设严格执行序列 (3x4 = 12项)
         const executionSequence = [];
         for (let i = 1; i <= MAX_I; i++) {
-          for (let j = 1; j <= MAX_J; j++) {
-            executionSequence.push({
-              i,
-              j,
-              isRowEnd: j === MAX_J,
-              isTotalEnd: i === MAX_I && j === MAX_J,
-            });
-          }
+            for (let j = 1; j <= MAX_J; j++) {
+                executionSequence.push({ i, j, isRowEnd: j === MAX_J, isTotalEnd: (i === MAX_I && j === MAX_J) });
+            }
         }
 
         // 清理代码高亮
         function clearCodeHighlights() {
-          Object.values(codeLines).forEach((line) => {
-            line.classList.remove('active', 'active-inner-done', 'active-all-done');
-          });
+            Object.values(codeLines).forEach(line => {
+                line.classList.remove('active', 'active-inner-done', 'active-all-done');
+            });
         }
 
         function highlightCodeLine(lineNum, variant = 'active') {
-          clearCodeHighlights();
-          if (codeLines[lineNum]) {
-            codeLines[lineNum].classList.add(variant);
-          }
+            clearCodeHighlights();
+            if (codeLines[lineNum]) {
+                codeLines[lineNum].classList.add(variant);
+            }
         }
 
         function clearMetricHighlights() {
-          [mcardI, mcardJ, mcardCoord, mcardCount, mcardStatus].forEach((c) =>
-            c.classList.remove('highlight'),
-          );
+            [mcardI, mcardJ, mcardCoord, mcardCount, mcardStatus].forEach(c => c.classList.remove('highlight'));
         }
 
         // 高亮行与列标
         function updateMeshRowColHeaders(activeI, activeJ) {
-          // 列标 (j=1..4)
-          for (let j = 1; j <= 4; j++) {
-            const colPill = document.getElementById(`col-h-${j}`);
-            if (colPill) {
-              if (j === activeJ) colPill.classList.add('active');
-              else colPill.classList.remove('active');
+            // 列标 (j=1..4)
+            for (let j = 1; j <= 4; j++) {
+                const colPill = document.getElementById(`col-h-${j}`);
+                if (colPill) {
+                    if (j === activeJ) colPill.classList.add('active');
+                    else colPill.classList.remove('active');
+                }
             }
-          }
 
-          // 行背景及行标 (i=1..3)
-          for (let i = 1; i <= 3; i++) {
-            const rowEl = document.getElementById(`mesh-row-${i}`);
-            if (rowEl) {
-              rowEl.classList.remove('row-active', 'row-completed');
-              if (i === activeI) {
-                rowEl.classList.add('row-active');
-              } else if (i < activeI || (isCompleted && i === activeI)) {
-                rowEl.classList.add('row-completed');
-              }
+            // 行背景及行标 (i=1..3)
+            for (let i = 1; i <= 3; i++) {
+                const rowEl = document.getElementById(`mesh-row-${i}`);
+                if (rowEl) {
+                    rowEl.classList.remove('row-active', 'row-completed');
+                    if (i === activeI) {
+                        rowEl.classList.add('row-active');
+                    } else if (i < activeI || (isCompleted && i === activeI)) {
+                        rowEl.classList.add('row-completed');
+                    }
+                }
             }
-          }
         }
 
         // 更新单元格样式
         function renderMeshGrid(stepIdx) {
-          // 清理并重新标记所有格子
-          for (let i = 1; i <= MAX_I; i++) {
-            for (let j = 1; j <= MAX_J; j++) {
-              const cell = document.getElementById(`cell-${i}-${j}`);
-              if (!cell) continue;
+            // 清理并重新标记所有格子
+            for (let i = 1; i <= MAX_I; i++) {
+                for (let j = 1; j <= MAX_J; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    if (!cell) continue;
 
-              cell.className = 'mesh-cell';
-              const seqIndex = (i - 1) * MAX_J + (j - 1);
+                    cell.className = 'mesh-cell';
+                    const seqIndex = (i - 1) * MAX_J + (j - 1);
 
-              if (seqIndex < stepIdx) {
-                cell.classList.add('state-completed');
-                cell.querySelector('.cell-badge').textContent = '已执行';
-              } else if (seqIndex === stepIdx && !isCompleted) {
-                cell.classList.add('state-current');
-                cell.querySelector('.cell-badge').textContent = '当前';
-              } else if (seqIndex === stepIdx + 1 && !isCompleted) {
-                cell.classList.add('state-next-hint');
-              }
+                    if (seqIndex < stepIdx) {
+                        cell.classList.add('state-completed');
+                        cell.querySelector('.cell-badge').textContent = '已执行';
+                    } else if (seqIndex === stepIdx && !isCompleted) {
+                        cell.classList.add('state-current');
+                        cell.querySelector('.cell-badge').textContent = '当前';
+                    } else if (seqIndex === stepIdx + 1 && !isCompleted) {
+                        cell.classList.add('state-next-hint');
+                    }
+                }
             }
-          }
         }
 
         // 添加时间线节点
         function appendTraceNode(i, j, stepNumber) {
-          if (stepNumber === 1) {
-            traceStripEl.innerHTML = '';
-          }
+            if (stepNumber === 1) {
+                traceStripEl.innerHTML = '';
+            }
 
-          // 移除旧节点的 active
-          traceStripEl.querySelectorAll('.trace-node').forEach((n) => n.classList.remove('active'));
+            // 移除旧节点的 active
+            traceStripEl.querySelectorAll('.trace-node').forEach(n => n.classList.remove('active'));
 
-          if (stepNumber > 1) {
-            const arrow = document.createElement('span');
-            arrow.className = 'trace-arrow';
-            arrow.textContent = '→';
-            traceStripEl.appendChild(arrow);
-          }
+            if (stepNumber > 1) {
+                const arrow = document.createElement('span');
+                arrow.className = 'trace-arrow';
+                arrow.textContent = '→';
+                traceStripEl.appendChild(arrow);
+            }
 
-          const node = document.createElement('div');
-          node.className = 'trace-node active newly-added';
-          node.innerHTML = `<span>(${i},${j})</span><span style="font-size:9.5px;color:#64748b;">#${stepNumber}</span>`;
-          traceStripEl.appendChild(node);
+            const node = document.createElement('div');
+            node.className = 'trace-node active newly-added';
+            node.innerHTML = `<span>(${i},${j})</span><span style="font-size:9.5px;color:#64748b;">#${stepNumber}</span>`;
+            traceStripEl.appendChild(node);
 
-          traceSummaryTag.textContent = `已记录 ${stepNumber} / 12 次调用`;
-          traceStripEl.scrollLeft = traceStripEl.scrollWidth;
+            traceSummaryTag.textContent = `已记录 ${stepNumber} / 12 次调用`;
+            traceStripEl.scrollLeft = traceStripEl.scrollWidth;
         }
 
         // 单步执行函数
         function executeStep(callback) {
-          if (isCompleted || currentStepIndex >= TOTAL_STEPS) return;
+            if (isCompleted || currentStepIndex >= TOTAL_STEPS) return;
 
-          const item = executionSequence[currentStepIndex];
-          const currentRoundNumber = currentStepIndex + 1;
-          btnStep.disabled = true;
+            const item = executionSequence[currentStepIndex];
+            const currentRoundNumber = currentStepIndex + 1;
+            btnStep.disabled = true;
 
-          // 1. 数据指标卡更新
-          valI.textContent = item.i;
-          valJ.textContent = item.j;
-          valCoord.textContent = `(${item.i}, ${item.j})`;
-          valCount.textContent = `${currentRoundNumber} / ${TOTAL_STEPS}`;
+            // 1. 数据指标卡更新
+            valI.textContent = item.i;
+            valJ.textContent = item.j;
+            valCoord.textContent = `(${item.i}, ${item.j})`;
+            valCount.textContent = `${currentRoundNumber} / ${TOTAL_STEPS}`;
 
-          clearMetricHighlights();
-          mcardI.classList.add('highlight');
-          mcardJ.classList.add('highlight');
-          mcardCoord.classList.add('highlight');
-          mcardCount.classList.add('highlight');
+            clearMetricHighlights();
+            mcardI.classList.add('highlight');
+            mcardJ.classList.add('highlight');
+            mcardCoord.classList.add('highlight');
+            mcardCount.classList.add('highlight');
 
-          // 2. 进度计算
-          const pct = Math.round((currentRoundNumber / TOTAL_STEPS) * 100);
-          progressPercent.textContent = `${pct}% 完成`;
-          pillRowRemain.textContent = `${MAX_J - item.j} 次`;
-          pillTotalRemain.textContent = `${TOTAL_STEPS - currentRoundNumber} 次`;
+            // 2. 进度计算
+            const pct = Math.round((currentRoundNumber / TOTAL_STEPS) * 100);
+            progressPercent.textContent = `${pct}% 完成`;
+            pillRowRemain.textContent = `${MAX_J - item.j} 次`;
+            pillTotalRemain.textContent = `${TOTAL_STEPS - currentRoundNumber} 次`;
 
-          // 3. 行列高亮与单元格状态
-          updateMeshRowColHeaders(item.i, item.j);
-          renderMeshGrid(currentStepIndex);
-          appendTraceNode(item.i, item.j, currentRoundNumber);
+            // 3. 行列高亮与单元格状态
+            updateMeshRowColHeaders(item.i, item.j);
+            renderMeshGrid(currentStepIndex);
+            appendTraceNode(item.i, item.j, currentRoundNumber);
 
-          // 4. 代码高亮与解读文本
-          highlightCodeLine(3); // printf("%d %d\n", i, j);
-          valStatus.innerHTML = `<span style="color:var(--primary-blue);">正在打印 (${item.i},${item.j})</span>`;
-          stepBadge.textContent = `第 ${currentRoundNumber} 次 · 内层执行`;
-          stepBadge.style.background = '#eef5ff';
-          stepBadge.style.color = 'var(--primary-blue)';
+            // 4. 代码高亮与解读文本
+            highlightCodeLine(3); // printf("%d %d\n", i, j);
+            valStatus.innerHTML = `<span style="color:var(--primary-blue);">正在打印 (${item.i},${item.j})</span>`;
+            stepBadge.textContent = `第 ${currentRoundNumber} 次 · 内层执行`;
+            stepBadge.style.background = '#eef5ff';
+            stepBadge.style.color = 'var(--primary-blue)';
 
-          stepExplanation.innerHTML = `
+            stepExplanation.innerHTML = `
                 外层循环行 <strong style="color:var(--title-blue);">i = ${item.i}</strong>，内层循环列 <strong style="color:var(--accent-blue);">j = ${item.j}</strong>。
                 执行循环体：<code class="code-inline">printf("%d %d\\n", ${item.i}, ${item.j})</code> 输出数据对。
             `;
-          mappingDetailTag.textContent = `受试者 #${item.i} 的第 ${item.j} 次测量`;
-          loopStateTag.textContent = `执行中 (${currentRoundNumber} / 12)`;
+            mappingDetailTag.textContent = `受试者 #${item.i} 的第 ${item.j} 次测量`;
+            loopStateTag.textContent = `执行中 (${currentRoundNumber} / 12)`;
 
-          // 检查是否是一行的末尾或整体末尾
-          if (item.isTotalEnd) {
-            // 全部执行完成
-            isCompleted = true;
-            currentStepIndex++;
-            pillNextAction.textContent = '循环已彻底完成';
-            pillNextAction.style.color = 'var(--alert-red)';
+            // 检查是否是一行的末尾或整体末尾
+            if (item.isTotalEnd) {
+                // 全部执行完成
+                isCompleted = true;
+                currentStepIndex++;
+                pillNextAction.textContent = '循环已彻底完成';
+                pillNextAction.style.color = 'var(--alert-red)';
 
-            setTimeout(() => {
-              highlightCodeLine(6, 'active-all-done');
-              clearMetricHighlights();
-              mcardStatus.classList.add('highlight');
-              valStatus.innerHTML =
-                '<span style="color:var(--alert-red);font-weight:bold;">全部执行完成 (12/12)</span>';
-              stepBadge.textContent = '整个循环结束';
-              stepBadge.style.background = '#fee2e2';
-              stepBadge.style.color = 'var(--alert-red)';
+                setTimeout(() => {
+                    highlightCodeLine(6, 'active-all-done');
+                    clearMetricHighlights();
+                    mcardStatus.classList.add('highlight');
+                    valStatus.innerHTML = '<span style="color:var(--alert-red);font-weight:bold;">全部执行完成 (12/12)</span>';
+                    stepBadge.textContent = '整个循环结束';
+                    stepBadge.style.background = '#fee2e2';
+                    stepBadge.style.color = 'var(--alert-red)';
 
-              stepExplanation.innerHTML = `
+                    stepExplanation.innerHTML = `
                         外层循环下次判断 <code class="code-inline">i = 4 &lt;= 3</code> 假，彻底退出双重 for 循环！
                         <strong style="color:var(--primary-blue);">总计执行：3 × 4 = 12 次</strong>。
                     `;
 
-              bannerText.innerHTML =
-                '🎉 整个嵌套循环全部执行完成！3行 × 4列 = 12次。外层循环步进3次，内层完整执行3轮。';
-              roundBanner.classList.add('show');
-              roundBanner.style.background = '#f0fdf4';
-              roundBanner.style.borderColor = '#86efac';
-              roundBanner.style.color = '#166534';
+                    bannerText.innerHTML = '🎉 整个嵌套循环全部执行完成！3行 × 4列 = 12次。外层循环步进3次，内层完整执行3轮。';
+                    roundBanner.classList.add('show');
+                    roundBanner.style.background = '#f0fdf4';
+                    roundBanner.style.borderColor = '#86efac';
+                    roundBanner.style.color = '#166534';
 
-              renderMeshGrid(TOTAL_STEPS); // 标记全部格子已完成
-              stopAutoRun();
-              btnStep.disabled = true;
-              if (callback) callback(false);
-            }, 400);
-          } else if (item.isRowEnd) {
-            // 本行内层遍历完毕，即将进入下一行
-            currentStepIndex++;
-            const nextItem = executionSequence[currentStepIndex];
-            pillNextAction.textContent = `重置 j=1, 进 (${nextItem.i},${nextItem.j})`;
+                    renderMeshGrid(TOTAL_STEPS); // 标记全部格子已完成
+                    stopAutoRun();
+                    btnStep.disabled = true;
+                    if (callback) callback(false);
+                }, 400);
 
-            setTimeout(() => {
-              highlightCodeLine(4, 'active-inner-done');
-              valStatus.innerHTML = `<span style="color:var(--highlight-orange);font-weight:bold;">第 ${item.i} 行内层完成</span>`;
-              stepBadge.textContent = `行 i=${item.i} 内层跑满`;
-              stepBadge.style.background = '#fff8ee';
-              stepBadge.style.color = 'var(--highlight-orange)';
+            } else if (item.isRowEnd) {
+                // 本行内层遍历完毕，即将进入下一行
+                currentStepIndex++;
+                const nextItem = executionSequence[currentStepIndex];
+                pillNextAction.textContent = `重置 j=1, 进 (${nextItem.i},${nextItem.j})`;
 
-              bannerText.innerHTML = `★ <strong>内层循环完成一轮</strong>：第 ${item.i} 行 j 遍历完毕 (1..4)！外层推进 i++ 进入第 ${nextItem.i} 行，内层将重新从 j = 1 开始！`;
-              roundBanner.classList.add('show');
-              roundBanner.style.background = '#fff8ee';
-              roundBanner.style.borderColor = '#fbd38d';
-              roundBanner.style.color = 'var(--highlight-orange)';
+                setTimeout(() => {
+                    highlightCodeLine(4, 'active-inner-done');
+                    valStatus.innerHTML = `<span style="color:var(--highlight-orange);font-weight:bold;">第 ${item.i} 行内层完成</span>`;
+                    stepBadge.textContent = `行 i=${item.i} 内层跑满`;
+                    stepBadge.style.background = '#fff8ee';
+                    stepBadge.style.color = 'var(--highlight-orange)';
 
-              stepExplanation.innerHTML = `
+                    bannerText.innerHTML = `★ <strong>内层循环完成一轮</strong>：第 ${item.i} 行 j 遍历完毕 (1..4)！外层推进 i++ 进入第 ${nextItem.i} 行，内层将重新从 j = 1 开始！`;
+                    roundBanner.classList.add('show');
+                    roundBanner.style.background = '#fff8ee';
+                    roundBanner.style.borderColor = '#fbd38d';
+                    roundBanner.style.color = 'var(--highlight-orange)';
+
+                    stepExplanation.innerHTML = `
                         <strong style="color:var(--highlight-orange);">内层循环完成一轮：</strong>
                         内层 <code class="code-inline">j</code> 已跑满 1 → 2 → 3 → 4。
                         准备触发外层 <code class="code-inline">i++</code>，进入受试者 #${nextItem.i}，<strong style="color:var(--title-blue);">内层 j 重新从 1 开始</strong>。
                     `;
 
-              setTimeout(() => {
-                highlightCodeLine(5);
-                if (!isRunningAuto) btnStep.disabled = false;
-                if (callback) callback(true);
-              }, 350);
-            }, 400);
-          } else {
-            // 正常的内层单步递增
-            currentStepIndex++;
-            const nextItem = executionSequence[currentStepIndex];
-            pillNextAction.textContent = `进入 (${nextItem.i},${nextItem.j})`;
-            roundBanner.classList.remove('show');
+                    setTimeout(() => {
+                        highlightCodeLine(5);
+                        if (!isRunningAuto) btnStep.disabled = false;
+                        if (callback) callback(true);
+                    }, 350);
 
-            setTimeout(() => {
-              highlightCodeLine(2);
-              if (!isRunningAuto) btnStep.disabled = false;
-              if (callback) callback(true);
-            }, 300);
-          }
+                }, 400);
+
+            } else {
+                // 正常的内层单步递增
+                currentStepIndex++;
+                const nextItem = executionSequence[currentStepIndex];
+                pillNextAction.textContent = `进入 (${nextItem.i},${nextItem.j})`;
+                roundBanner.classList.remove('show');
+
+                setTimeout(() => {
+                    highlightCodeLine(2);
+                    if (!isRunningAuto) btnStep.disabled = false;
+                    if (callback) callback(true);
+                }, 300);
+            }
         }
 
         // 自动运行控制
         function startAutoRun() {
-          if (isRunningAuto) return;
-          if (isCompleted || currentStepIndex >= TOTAL_STEPS) {
-            resetApp();
-          }
+            if (isRunningAuto) return;
+            if (isCompleted || currentStepIndex >= TOTAL_STEPS) {
+                resetApp();
+            }
 
-          isRunningAuto = true;
-          btnAuto.disabled = true;
-          btnPause.disabled = false;
-          btnStep.disabled = true;
+            isRunningAuto = true;
+            btnAuto.disabled = true;
+            btnPause.disabled = false;
+            btnStep.disabled = true;
 
-          function runLoopTick() {
-            executeStep((hasMore) => {
-              if (hasMore && isRunningAuto && !isCompleted) {
-                autoTimer = setTimeout(runLoopTick, 550);
-              } else {
-                stopAutoRun();
-              }
-            });
-          }
+            function runLoopTick() {
+                executeStep((hasMore) => {
+                    if (hasMore && isRunningAuto && !isCompleted) {
+                        autoTimer = setTimeout(runLoopTick, 550);
+                    } else {
+                        stopAutoRun();
+                    }
+                });
+            }
 
-          runLoopTick();
+            runLoopTick();
         }
 
         function stopAutoRun() {
-          isRunningAuto = false;
-          if (autoTimer) {
-            clearTimeout(autoTimer);
-            autoTimer = null;
-          }
-          btnAuto.disabled = false;
-          btnPause.disabled = true;
-          if (!isCompleted && currentStepIndex < TOTAL_STEPS) {
-            btnStep.disabled = false;
-          }
+            isRunningAuto = false;
+            if (autoTimer) {
+                clearTimeout(autoTimer);
+                autoTimer = null;
+            }
+            btnAuto.disabled = false;
+            btnPause.disabled = true;
+            if (!isCompleted && currentStepIndex < TOTAL_STEPS) {
+                btnStep.disabled = false;
+            }
         }
 
         // 重置应用
         function resetApp() {
-          stopAutoRun();
-          currentStepIndex = 0;
-          isCompleted = false;
+            stopAutoRun();
+            currentStepIndex = 0;
+            isCompleted = false;
 
-          valI.textContent = '—';
-          valJ.textContent = '—';
-          valCoord.textContent = '—';
-          valCount.textContent = '0 / 12';
-          valStatus.textContent = '等待开始';
-          valStatus.style.color = 'var(--title-blue)';
+            valI.textContent = '—';
+            valJ.textContent = '—';
+            valCoord.textContent = '—';
+            valCount.textContent = '0 / 12';
+            valStatus.textContent = '等待开始';
+            valStatus.style.color = 'var(--title-blue)';
 
-          progressPercent.textContent = '0% 完成';
-          pillRowRemain.textContent = '4 次';
-          pillTotalRemain.textContent = '12 次';
-          pillNextAction.textContent = '进入 (1,1)';
-          pillNextAction.style.color = 'var(--title-blue)';
+            progressPercent.textContent = '0% 完成';
+            pillRowRemain.textContent = '4 次';
+            pillTotalRemain.textContent = '12 次';
+            pillNextAction.textContent = '进入 (1,1)';
+            pillNextAction.style.color = 'var(--title-blue)';
 
-          stepBadge.textContent = '准备启动';
-          stepBadge.style.background = '#eef5ff';
-          stepBadge.style.color = 'var(--primary-blue)';
-          stepExplanation.textContent =
-            '点击“下一步”或“自动运行”，外层循环初始化 i = 1，内层循环初始化 j = 1，进入首次循环体。';
-          mappingDetailTag.textContent = '(未开始)';
-          loopStateTag.textContent = '就绪 (0 / 12)';
+            stepBadge.textContent = '准备启动';
+            stepBadge.style.background = '#eef5ff';
+            stepBadge.style.color = 'var(--primary-blue)';
+            stepExplanation.textContent = '点击“下一步”或“自动运行”，外层循环初始化 i = 1，内层循环初始化 j = 1，进入首次循环体。';
+            mappingDetailTag.textContent = '(未开始)';
+            loopStateTag.textContent = '就绪 (0 / 12)';
 
-          roundBanner.classList.remove('show');
-          roundBanner.style.background = '#fff8ee';
-          roundBanner.style.borderColor = '#fbd38d';
-          roundBanner.style.color = 'var(--highlight-orange)';
+            roundBanner.classList.remove('show');
+            roundBanner.style.background = '#fff8ee';
+            roundBanner.style.borderColor = '#fbd38d';
+            roundBanner.style.color = 'var(--highlight-orange)';
 
-          btnStep.disabled = false;
-          btnAuto.disabled = false;
+            btnStep.disabled = false;
+            btnAuto.disabled = false;
 
-          clearCodeHighlights();
-          clearMetricHighlights();
-          highlightCodeLine(1);
+            clearCodeHighlights();
+            clearMetricHighlights();
+            highlightCodeLine(1);
 
-          updateMeshRowColHeaders(0, 0);
-          renderMeshGrid(0);
+            updateMeshRowColHeaders(0, 0);
+            renderMeshGrid(0);
 
-          traceStripEl.innerHTML =
-            '<span style="font-size: 12px; color: #94a3b8; font-style: italic; margin-left: 6px;">等待执行...</span>';
-          traceSummaryTag.textContent = '累计已记录 0 个点';
+            traceStripEl.innerHTML = '<span style="font-size: 12px; color: #94a3b8; font-style: italic; margin-left: 6px;">等待执行...</span>';
+            traceSummaryTag.textContent = '累计已记录 0 个点';
         }
 
         // 按钮事件绑定
@@ -1625,7 +1465,7 @@
 
         // 初始化
         resetApp();
-      }
-    </script>
-  </body>
+    }
+</script>
+</body>
 </html>

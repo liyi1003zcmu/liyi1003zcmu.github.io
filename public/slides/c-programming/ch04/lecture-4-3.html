@@ -1,716 +1,699 @@
-<!doctype html>
+<!DOCTYPE HTML>
 
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <title>程序设计基础：第4次课第3课时 break continue</title>
-    <meta content="第4次课第3课时：break与continue" name="description" />
-    <meta
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-      name="viewport"
-    />
-    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
-    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
-    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
-    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
-    <style>
-      :root {
-        --blue: #2056a8;
-        --blue2: #2c7be5;
-        --cyan: #eaf4ff;
-        --ink: #1f2937;
-        --muted: #5b6573;
-        --green: #1d7a46;
-        --orange: #a65b00;
-        --red: #b42318;
-        --purple: #6d28d9;
-        --line: #d8e1ec;
-        --soft: #f7f9fc;
-      }
-
-      .reveal {
-        color: var(--ink);
-        font-size: 28px;
-      }
-
-      .reveal .slides section {
-        box-sizing: border-box;
-        text-align: left;
-        padding: 20px 28px;
-      }
-
-      .reveal .slides section.stack {
-        padding: 0;
-      }
-
-      .reveal h1,
-      .reveal h2,
-      .reveal h3 {
-        color: #163f78;
-        text-transform: none;
-      }
-
-      .reveal h1 {
-        font-size: 76px;
-        line-height: 1.1;
-        margin: 0.1em 0 0.24em;
-      }
-
-      .reveal h2 {
-        font-size: 50px;
-        line-height: 1.16;
-        margin: 0 0 24px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #dbe7f6;
-      }
-
-      .reveal h3 {
-        font-size: 32px;
-        line-height: 1.22;
-        margin: 0 0 14px;
-      }
-
-      .reveal p {
-        font-size: 28px;
-        line-height: 1.42;
-        margin: 12px 0;
-      }
-
-      .reveal ul,
-      .reveal ol {
-        margin: 0.25em 0 0.25em 1.15em;
-      }
-
-      .reveal li {
-        font-size: 26px;
-        line-height: 1.4;
-        margin: 8px 0;
-      }
-
-      .reveal code,
-      .reveal pre code,
-      .reveal pre code.hljs,
-      .reveal pre .hljs,
-      code,
-      .mono {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-variant-ligatures: none !important;
-        font-feature-settings:
-          'liga' 0,
-          'calt' 0,
-          'dlig' 0 !important;
-      }
-
-      .reveal :not(pre) > code {
-        font-size: 24px;
-        background: #f3f6fa;
-        padding: 2px 7px;
-        border-radius: 5px;
-        color: #173d70;
-      }
-
-      .reveal pre {
-        width: 94%;
-        box-shadow: none;
-        font-size: 24px;
-        line-height: 1.32;
-        margin: 18px auto;
-      }
-
-      .reveal pre code {
-        max-height: 540px;
-        font-size: 1em;
-        line-height: 1.32;
-        padding: 18px 22px;
-        border-radius: 12px;
-        background: #fff !important;
-        color: #1f2937 !important;
-        border: 1px solid #d8e1ec;
-        box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
-      }
-
-      .small {
-        font-size: 23px !important;
-        line-height: 1.38 !important;
-      }
-
-      .tiny {
-        font-size: 20px !important;
-        line-height: 1.36 !important;
-      }
-
-      .large {
-        font-size: 31px !important;
-        line-height: 1.36 !important;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .accent {
-        color: var(--blue);
-        font-weight: 700;
-      }
-
-      .danger {
-        color: var(--red);
-        font-weight: 700;
-      }
-
-      .good {
-        color: var(--green);
-        font-weight: 700;
-      }
-
-      .orange {
-        color: var(--orange);
-        font-weight: 700;
-      }
-
-      .purple {
-        color: var(--purple);
-        font-weight: 700;
-      }
-
-      .center {
-        text-align: center !important;
-      }
-
-      .left {
-        text-align: left !important;
-      }
-
-      .lead {
-        max-width: 1350px;
-        margin: 0 auto 24px !important;
-        font-size: 34px !important;
-        line-height: 1.45 !important;
-      }
-
-      .grid2 {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 28px;
-        align-items: stretch;
-      }
-
-      .grid3 {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 22px;
-        align-items: stretch;
-      }
-
-      .grid4 {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-        align-items: stretch;
-      }
-
-      .card {
-        box-sizing: border-box;
-        height: 100%;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 20px 23px;
-        box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
-      }
-
-      .card.soft {
-        background: var(--soft);
-      }
-
-      .card.blue {
-        background: #f4f8ff;
-        border-color: #c9d9ef;
-      }
-
-      .card.warn {
-        background: #fff8ed;
-        border-color: #f0d7b4;
-      }
-
-      .card.red {
-        background: #fff5f5;
-        border-color: #efc8c8;
-      }
-
-      .bluebox {
-        background: var(--cyan);
-        border-left: 6px solid var(--blue2);
-        padding: 16px 20px;
-        border-radius: 12px;
-        font-size: 26px;
-        line-height: 1.42;
-      }
-
-      .quote {
-        font-size: 29px;
-        line-height: 1.52;
-        padding: 26px 34px;
-        border-left: 7px solid var(--blue2);
-        background: var(--soft);
-        text-align: left;
-        border-radius: 0 14px 14px 0;
-      }
-
-      .pill {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #e8eef7;
-        color: #24405f;
-        font-size: 22px;
-        margin: 5px;
-      }
-
-      .flow {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
-        gap: 12px;
-        margin-top: 26px;
-      }
-
-      .step {
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 16px 9px;
-        border: 1px solid #c6d5e8;
-        border-radius: 13px;
-        background: #fff;
-        font-size: 28px;
-        line-height: 1.2;
-        text-align: center;
-        font-weight: 700;
-        box-shadow: 0 4px 12px rgba(31, 41, 55, 0.05);
-      }
-
-      .arrow {
-        flex: 0 0 auto;
-        font-size: 34px;
-        color: #6683a6;
-      }
-
-      table.compare {
-        width: 100%;
-        margin: auto;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        border: 1px solid #d7dee8 !important;
-        border-radius: 12px !important;
-        overflow: hidden;
-        font-size: 27px;
-      }
-
-      table.compare th,
-      table.compare td {
-        border-right: 1px solid #d7dee8 !important;
-        border-bottom: 1px solid #d7dee8 !important;
-        border-top: none !important;
-        border-left: none !important;
-        padding: 12px 14px;
-      }
-
-      table.compare th:last-child,
-      table.compare td:last-child {
-        border-right: none !important;
-      }
-
-      table.compare tr:last-child td {
-        border-bottom: none !important;
-      }
-
-      table.compare th {
-        background: #edf4fb;
-        color: #173d70;
-      }
-
-      .sectiontag {
-        color: #46709f;
-        font-size: 34px !important;
-        letter-spacing: 0.09em;
-      }
-
-      .title-meta {
-        font-size: 34px !important;
-        margin-top: 34px !important;
-      }
-
-      .bigq {
-        font-size: 42px !important;
-        color: #143b70;
-        font-weight: 700;
-        line-height: 1.26 !important;
-      }
-
-      .rule {
-        font-size: 31px !important;
-        font-weight: 700;
-        color: #163f78;
-        letter-spacing: 0.03em;
-      }
-
-      .modulecover {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 720px;
-        padding: 55px 70px;
-        background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
-        border: 1px solid #dbe7f6;
-        border-radius: 22px;
-        box-shadow: 0 10px 28px rgba(31, 41, 55, 0.07);
-      }
-
-      .modulecover .cover-kicker {
-        font-size: 27px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #5c7da5;
-        margin-bottom: 16px;
-      }
-
-      .modulecover .cover-title {
-        font-size: 62px;
-        line-height: 1.16;
-        color: #163f78;
-        font-weight: 800;
-        margin: 0 0 18px;
-      }
-
-      .modulecover .cover-subtitle {
-        font-size: 31px;
-        color: #48627f;
-        line-height: 1.4;
-        max-width: 1120px;
-      }
-
-      .modulecover .cover-tags {
-        margin-top: 20px;
-      }
-
-      .modulecover .cover-tags .pill {
-        font-size: 27px;
-        background: #ddeafb;
-        color: #214c84;
-      }
-
-      .slide-label {
-        position: absolute;
-        top: 9px;
-        right: 24px;
-        z-index: 50;
-        max-width: 46%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 5px 10px;
-        border: 1px solid #cbd9ec;
-        border-radius: 999px;
-        background: #f4f8ff;
-        color: #375a82;
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 16px !important;
-        line-height: 1.15;
-        opacity: 0.92;
-        pointer-events: none;
-      }
-
-      .placeholder {
-        border: 2px dashed #9ab4cc;
-        border-radius: 16px;
-        padding: 20px;
-        background: #f8fbff;
-        color: #39566f;
-        text-align: center;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .placeholder .title {
-        font-weight: 700;
-        color: #2056a8;
-        margin-bottom: 8px;
-        font-size: 27px;
-      }
-
-      .prompt-note {
-        font-size: 18px !important;
-        color: #6b7280 !important;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 42px;
-        row-gap: 4px;
-        margin-left: 1.1em !important;
-      }
-
-      .reveal .fragment.fade-up {
-        transform: translateY(18px);
-        transition:
-          opacity 0.38s ease,
-          transform 0.38s ease;
-        will-change: opacity, transform;
-      }
-
-      .reveal .fragment.fade-up.visible {
-        transform: translateY(0);
-      }
-
-      /* 白底、高对比、避免绿色语法高亮 */
-      .hljs {
-        background: #fff !important;
-        color: #1f2937 !important;
-      }
-
-      .hljs-keyword,
-      .hljs-built_in,
-      .hljs-type {
-        color: #2056a8 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-meta,
-      .hljs-preprocessor,
-      .hljs-title,
-      .hljs-function .hljs-title,
-      .hljs-name {
-        color: #6d28d9 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-string,
-      .hljs-number,
-      .hljs-literal,
-      .hljs-params {
-        color: #a65b00 !important;
-      }
-
-      .hljs-comment {
-        color: #64748b !important;
-        font-style: italic !important;
-      }
-
-      .hljs-symbol,
-      .hljs-operator,
-      .hljs-punctuation {
-        color: #334155 !important;
-      }
-
-      /* Chapter 4 specific helper classes */
-      .tcm-badge {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        background: #edf4fb;
-        color: #173d70;
-        border: 1px solid #c6d5e8;
-        font-size: 24px !important;
-        margin: 5px;
-        font-weight: 700;
-      }
-
-      .data-strip {
-        display: flex;
-        gap: 14px;
-        justify-content: center;
-        flex-wrap: wrap;
-        margin: 20px 0;
-      }
-
-      .data-token {
-        min-width: 76px;
-        padding: 14px 18px;
-        border-radius: 14px;
-        background: #fff;
-        border: 1px solid #cbd8e6;
-        text-align: center;
-        font-size: 32px;
-        font-weight: 800;
-        box-shadow: 0 5px 12px rgba(31, 41, 55, 0.05);
-      }
-
-      .data-token.stop {
-        background: #fff5f5;
-        color: #b42318;
-      }
-
-      .data-token.skip {
-        background: #fff7ed;
-        color: #a65b00;
-      }
-
-      .formula {
-        font-size: 44px !important;
-        color: #173d70;
-        text-align: center !important;
-        margin: 25px 0 !important;
-      }
-
-      .code-small pre code {
-        max-height: 510px !important;
-        font-size: 22px !important;
-        line-height: 1.28 !important;
-      }
-
-      .path-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        align-items: stretch;
-      }
-
-      .path {
-        border-radius: 16px;
-        border: 1px solid #cbd8e6;
-        background: #fff;
-        padding: 20px;
-      }
-
-      .path.break {
-        border-left: 8px solid #b42318;
-      }
-
-      .path.continue {
-        border-left: 8px solid #2c7be5;
-      }
-
-      .binary-line {
-        font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
-        font-size: 40px;
-        text-align: center;
-        background: #fff;
-        border: 1px solid #d8e1ec;
-        border-radius: 12px;
-        padding: 18px;
-      }
-
-      .prompt {
-        background: #f7f7fb;
-        border-left: 6px solid #6d28d9;
-        padding: 18px 22px;
-        border-radius: 10px;
-        font-size: 22px;
-        line-height: 1.55;
-        text-align: left;
-        white-space: normal;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="reveal">
-      <div class="slides">
-        <section id="sec-1-0">
-          <section id="sec-1-1">
-            <p class="center sectiontag">程序设计基础 · 第4次课 · 第3课时</p>
-            <h1 class="center">循环结构（三）<br />break 与 continue</h1>
-            <p class="center title-meta">
-              从脉搏数据质控到素数判断与猜数游戏，理解循环流程的中途改变
-            </p>
-          </section>
-          <section id="sec-1-2">
-            <h2>循环一定要完整执行到条件变假吗？</h2>
-            <div class="grid3">
-              <div class="card">
-                <h3>while</h3>
-                <p class="small">由条件控制是否继续。</p>
-              </div>
-              <div class="card">
-                <h3>do-while</h3>
-                <p class="small">至少执行一次，再判断是否继续。</p>
-              </div>
-              <div class="card soft">
-                <h3>新问题</h3>
-                <p class="small">循环中途遇到特殊情况，能否提前离开或跳过本轮？</p>
-              </div>
-            </div>
-          </section>
-          <section id="sec-1-3">
-            <h2>第3课时学习目标</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>知识目标</h3>
-                <ul>
-                  <li>理解 <code>break</code> 终止当前循环</li>
-                  <li>理解 <code>continue</code> 跳过本轮剩余语句</li>
-                  <li>理解循环多出口与标志变量</li>
-                </ul>
-              </div>
-              <div class="card soft">
-                <h3>能力目标</h3>
-                <ul>
-                  <li>能判断特殊情况应该退出还是跳过</li>
-                  <li>能用 <code>break</code> 优化素数判断</li>
-                  <li>
-                    能分析 <code>continue</code> 在 <code>for</code> 与 <code>while</code> 中的差异
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </section>
+
+<head>
+  <meta charset="utf-8" />
+  <title>程序设计基础：第4次课第3课时 break continue</title>
+  <meta content="第4次课第3课时：break与continue" name="description" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+  <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+  <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+  <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .placeholder {
+      border: 2px dashed #9ab4cc;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fbff;
+      color: #39566f;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .placeholder .title {
+      font-weight: 700;
+      color: #2056a8;
+      margin-bottom: 8px;
+      font-size: 27px;
+    }
+
+    .prompt-note {
+      font-size: 18px !important;
+      color: #6b7280 !important;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 42px;
+      row-gap: 4px;
+      margin-left: 1.1em !important;
+    }
+
+    .reveal .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity .38s ease, transform .38s ease;
+      will-change: opacity, transform;
+    }
+
+    .reveal .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+
+    /* 白底、高对比、避免绿色语法高亮 */
+    .hljs {
+      background: #fff !important;
+      color: #1f2937 !important;
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-type {
+      color: #2056a8 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-meta,
+    .hljs-preprocessor,
+    .hljs-title,
+    .hljs-function .hljs-title,
+    .hljs-name {
+      color: #6d28d9 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-string,
+    .hljs-number,
+    .hljs-literal,
+    .hljs-params {
+      color: #a65b00 !important;
+    }
+
+    .hljs-comment {
+      color: #64748b !important;
+      font-style: italic !important;
+    }
+
+    .hljs-symbol,
+    .hljs-operator,
+    .hljs-punctuation {
+      color: #334155 !important;
+    }
+
+    /* Chapter 4 specific helper classes */
+    .tcm-badge {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #edf4fb;
+      color: #173d70;
+      border: 1px solid #c6d5e8;
+      font-size: 24px !important;
+      margin: 5px;
+      font-weight: 700;
+    }
+
+    .data-strip {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .data-token {
+      min-width: 76px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #cbd8e6;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      box-shadow: 0 5px 12px rgba(31, 41, 55, .05);
+    }
+
+    .data-token.stop {
+      background: #fff5f5;
+      color: #b42318;
+    }
+
+    .data-token.skip {
+      background: #fff7ed;
+      color: #a65b00;
+    }
+
+    .formula {
+      font-size: 44px !important;
+      color: #173d70;
+      text-align: center !important;
+      margin: 25px 0 !important;
+    }
+
+    .code-small pre code {
+      max-height: 510px !important;
+      font-size: 22px !important;
+      line-height: 1.28 !important;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .path {
+      border-radius: 16px;
+      border: 1px solid #cbd8e6;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .path.break {
+      border-left: 8px solid #b42318;
+    }
+
+    .path.continue {
+      border-left: 8px solid #2c7be5;
+    }
+
+    .binary-line {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 40px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid #d8e1ec;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .prompt {
+      background: #f7f7fb;
+      border-left: 6px solid #6d28d9;
+      padding: 18px 22px;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1.55;
+      text-align: left;
+      white-space: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section id="sec-1-0">
+        <section id="sec-1-1">
+          <p class="center sectiontag">程序设计基础 · 第4次课 · 第3课时</p>
+          <h1 class="center">循环结构（三）<br>break 与 continue</h1>
+          <p class="center title-meta">从脉搏数据质控到素数判断与猜数游戏，理解循环流程的中途改变</p>
         </section>
-        <section id="sec-2-0">
-          <section class="module-cover-slide" id="sec-2-1">
-            <div class="modulecover">
-              <div class="cover-kicker">4.3 / break 与 continue</div>
-              <div class="cover-title">有些数据要跳过，<br />有些情况要终止</div>
-              <div class="cover-subtitle">脉搏数据质控：无效值跳过，结束标志退出。</div>
-              <div class="cover-tags">
-                <span class="pill">continue</span><span class="pill">break</span
-                ><span class="pill">控制流</span>
-              </div>
+        <section id="sec-1-2">
+          <h2>循环一定要完整执行到条件变假吗？</h2>
+          <div class="grid3">
+            <div class="card">
+              <h3>while</h3>
+              <p class="small">由条件控制是否继续。</p>
             </div>
-          </section>
-          <section id="sec-2-2">
-            <h2>脉搏数据流：跳过还是结束？</h2>
-            <div class="data-strip">
-              <span class="data-token">72</span><span class="data-token skip">0</span
-              ><span class="data-token">75</span><span class="data-token skip">999</span
-              ><span class="data-token">70</span><span class="data-token stop">STOP</span
-              ><span class="data-token">68</span>
+            <div class="card">
+              <h3>do-while</h3>
+              <p class="small">至少执行一次，再判断是否继续。</p>
             </div>
-            <div class="grid2">
-              <div class="card">
-                <h3>无效记录</h3>
-                <p class="small">
-                  <code>0</code>、<code>999</code>：不参与统计，但后续数据仍要继续处理。
-                </p>
-              </div>
-              <div class="card soft">
-                <h3>结束标志</h3>
-                <p class="small"><code>STOP</code>：本次采集结束，后续数据不再读取。</p>
-              </div>
+            <div class="card soft">
+              <h3>新问题</h3>
+              <p class="small">循环中途遇到特殊情况，能否提前离开或跳过本轮？</p>
             </div>
-          </section>
-          <section id="sec-2-3">
-            <h2><code>continue</code> 与 <code>break</code> 的区别</h2>
-            <div class="path-grid">
-              <div class="path continue">
-                <h3><code>continue</code></h3>
-                <p>跳过本轮循环体中后面的语句，进入下一次循环判断。</p>
-                <p class="bigq center">本条不要，后面还要。</p>
-              </div>
-              <div class="path break">
-                <h3><code>break</code></h3>
-                <p>立即终止当前循环，执行循环之后的语句。</p>
-                <p class="bigq center">后面都不要了。</p>
-              </div>
+          </div>
+        </section>
+        <section id="sec-1-3">
+          <h2>第3课时学习目标</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>知识目标</h3>
+              <ul>
+                <li>理解 <code>break</code> 终止当前循环</li>
+                <li>理解 <code>continue</code> 跳过本轮剩余语句</li>
+                <li>理解循环多出口与标志变量</li>
+              </ul>
             </div>
-          </section>
-          <section id="sec-2-4">
-            <h2>脉搏数据质控：代码骨架</h2>
-            <pre><code class="language-c" data-line-numbers="1|3-5|7-9|11-12" data-trim="">while (1) {
+            <div class="card soft">
+              <h3>能力目标</h3>
+              <ul>
+                <li>能判断特殊情况应该退出还是跳过</li>
+                <li>能用 <code>break</code> 优化素数判断</li>
+                <li>能分析 <code>continue</code> 在 <code>for</code> 与 <code>while</code> 中的差异</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </section>
+      <section id="sec-2-0">
+        <section class="module-cover-slide" id="sec-2-1">
+          <div class="modulecover">
+            <div class="cover-kicker">4.3 / break 与 continue</div>
+            <div class="cover-title">有些数据要跳过，<br>有些情况要终止</div>
+            <div class="cover-subtitle">脉搏数据质控：无效值跳过，结束标志退出。</div>
+            <div class="cover-tags"><span class="pill">continue</span><span class="pill">break</span><span
+                class="pill">控制流</span></div>
+          </div>
+        </section>
+        <section id="sec-2-2">
+          <h2>脉搏数据流：跳过还是结束？</h2>
+          <div class="data-strip"><span class="data-token">72</span><span class="data-token skip">0</span><span
+              class="data-token">75</span><span class="data-token skip">999</span><span
+              class="data-token">70</span><span class="data-token stop">STOP</span><span class="data-token">68</span>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <h3>无效记录</h3>
+              <p class="small"><code>0</code>、<code>999</code>：不参与统计，但后续数据仍要继续处理。</p>
+            </div>
+            <div class="card soft">
+              <h3>结束标志</h3>
+              <p class="small"><code>STOP</code>：本次采集结束，后续数据不再读取。</p>
+            </div>
+          </div>
+        </section>
+        <section id="sec-2-3">
+          <h2><code>continue</code> 与 <code>break</code> 的区别</h2>
+          <div class="path-grid">
+            <div class="path continue">
+              <h3><code>continue</code></h3>
+              <p>跳过本轮循环体中后面的语句，进入下一次循环判断。</p>
+              <p class="bigq center">本条不要，后面还要。</p>
+            </div>
+            <div class="path break">
+              <h3><code>break</code></h3>
+              <p>立即终止当前循环，执行循环之后的语句。</p>
+              <p class="bigq center">后面都不要了。</p>
+            </div>
+          </div>
+        </section>
+        <section id="sec-2-4">
+          <h2>脉搏数据质控：代码骨架</h2>
+          <pre><code class="language-c" data-line-numbers="1|3-5|7-9|11-12" data-trim="">while (1) {
     scanf("%d", &amp;pulse);
 
     if (pulse == -1)
@@ -723,109 +706,91 @@
     count++;
 }
 </code></pre>
-            <aside class="notes">
-              <p class="center small muted">课堂提醒：这里只是程序设计示例，不作为医学判断依据。</p>
-            </aside>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🤖 AI 协作互动：死循环陷阱排查</h3>
-              <div class="prompt">
-                在 while 循环处理数据时，如果我在 if 条件满足时执行
-                continue，但把改变循环变量的语句放在了 continue
-                后面，程序会陷入死循环吗？请帮我画出正确的语句顺序。
-              </div>
-              <p class="small muted" style="margin-top: 8px">
-                💡 <b>课堂互动：</b>向 AI 提问 for 循环与 while 循环中 continue 跳过表达式的区别。
-              </p>
+          <aside class="notes">
+            <p class="center small muted">课堂提醒：这里只是程序设计示例，不作为医学判断依据。</p>
+          </aside>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：死循环陷阱排查</h3>
+            <div class="prompt">
+              在 while 循环处理数据时，如果我在 if 条件满足时执行 continue，但把改变循环变量的语句放在了 continue 后面，程序会陷入死循环吗？请帮我画出正确的语句顺序。
             </div>
-          </section>
-          <section id="sec-2-5">
-            <h2><code>break</code> 与 <code>continue</code> 路径比较</h2>
-            <div class="center">
-              <img
-                alt="break与continue路径比较"
-                src="./images/chap04/4-3.png"
-                style="
-                  max-height: 720px;
-                  border-radius: 12px;
-                  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-                "
-              />
-            </div>
-          </section>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>向 AI 提问 for 循环与 while 循环中 continue 跳过表达式的区别。
+            </p>
+          </div>
         </section>
-        <section id="sec-3-0">
-          <section class="module-cover-slide" id="sec-3-1">
-            <div class="modulecover">
-              <div class="cover-kicker">教材例4-5</div>
-              <div class="cover-title">判断素数：<br />找到一个反例就可以停止</div>
-              <div class="cover-subtitle">素数判断是理解 <code>break</code> 的经典例题。</div>
-              <div class="cover-tags">
-                <span class="pill">素数</span><span class="pill">因子</span
-                ><span class="pill">break</span>
-              </div>
+        <section id="sec-2-5">
+          <h2><code>break</code> 与 <code>continue</code> 路径比较</h2>
+          <div class="center">
+            <img alt="break与continue路径比较" src="./images/chap04/4-3.png"
+              style="max-height: 720px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08);" />
+          </div>
+        </section>
+      </section>
+      <section id="sec-3-0">
+        <section class="module-cover-slide" id="sec-3-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例4-5</div>
+            <div class="cover-title">判断素数：<br>找到一个反例就可以停止</div>
+            <div class="cover-subtitle">素数判断是理解 <code>break</code> 的经典例题。</div>
+            <div class="cover-tags"><span class="pill">素数</span><span class="pill">因子</span><span
+                class="pill">break</span></div>
+          </div>
+        </section>
+        <section id="sec-3-1a">
+          <h2>教材例4-5 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              输入一个正整数 \(m\)，判断它是否为素数。<br>
+              <span class="muted small" style="font-size:24px; display:inline-block; margin-top:16px;">（注：素数指的是只能被 1
+                和自身整除的正整数，1 不是素数，2 是素数）</span>
+            </p>
+          </div>
+        </section>
+        <section id="sec-3-2">
+          <h2>判断一个整数是否为素数</h2>
+          <div class="bluebox">素数：只能被1和自身整除的正整数。1不是素数，2是素数。</div>
+          <table class="compare">
+            <tr>
+              <th>情况</th>
+              <th>判断</th>
+              <th>循环动作</th>
+            </tr>
+            <tr>
+              <td>找到一个 <code>i</code> 使 <code>m % i == 0</code></td>
+              <td><code>m</code> 不是素数</td>
+              <td>立即 <code>break</code></td>
+            </tr>
+            <tr>
+              <td>所有候选 <code>i</code> 都试完</td>
+              <td><code>m</code> 是素数</td>
+              <td>自然结束</td>
+            </tr>
+          </table>
+        </section>
+        <section id="sec-3-3">
+          <h2>需要检查到哪里？</h2>
+          <div class="grid3">
+            <div class="card">
+              <h3>最直观</h3>
+              <p><code>2 ~ m-1</code></p>
+              <p class="small">容易理解，但检查次数多。</p>
             </div>
-          </section>
-          <section id="sec-3-1a">
-            <h2>教材例4-5 题面描述</h2>
-            <div
-              class="card blue"
-              style="margin-top: 24px; padding: 32px 40px; border-radius: 16px"
-            >
-              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px">📋 题目要求</h3>
-              <p style="font-size: 30px; line-height: 1.6; color: #1f2937">
-                输入一个正整数 \(m\)，判断它是否为素数。<br />
-                <span
-                  class="muted small"
-                  style="font-size: 24px; display: inline-block; margin-top: 16px"
-                  >（注：素数指的是只能被 1 和自身整除的正整数，1 不是素数，2 是素数）</span
-                >
-              </p>
+            <div class="card">
+              <h3>改进</h3>
+              <p><code>2 ~ m/2</code></p>
+              <p class="small">大于 <code>m/2</code> 的整数不可能整除 <code>m</code>。</p>
             </div>
-          </section>
-          <section id="sec-3-2">
-            <h2>判断一个整数是否为素数</h2>
-            <div class="bluebox">素数：只能被1和自身整除的正整数。1不是素数，2是素数。</div>
-            <table class="compare">
-              <tr>
-                <th>情况</th>
-                <th>判断</th>
-                <th>循环动作</th>
-              </tr>
-              <tr>
-                <td>找到一个 <code>i</code> 使 <code>m % i == 0</code></td>
-                <td><code>m</code> 不是素数</td>
-                <td>立即 <code>break</code></td>
-              </tr>
-              <tr>
-                <td>所有候选 <code>i</code> 都试完</td>
-                <td><code>m</code> 是素数</td>
-                <td>自然结束</td>
-              </tr>
-            </table>
-          </section>
-          <section id="sec-3-3">
-            <h2>需要检查到哪里？</h2>
-            <div class="grid3">
-              <div class="card">
-                <h3>最直观</h3>
-                <p><code>2 ~ m-1</code></p>
-                <p class="small">容易理解，但检查次数多。</p>
-              </div>
-              <div class="card">
-                <h3>改进</h3>
-                <p><code>2 ~ m/2</code></p>
-                <p class="small">大于 <code>m/2</code> 的整数不可能整除 <code>m</code>。</p>
-              </div>
-              <div class="card soft">
-                <h3>常用</h3>
-                <p><code>2 ~ sqrt(m)</code></p>
-                <p class="small">若有因子，一定有一个不超过平方根。</p>
-              </div>
+            <div class="card soft">
+              <h3>常用</h3>
+              <p><code>2 ~ sqrt(m)</code></p>
+              <p class="small">若有因子，一定有一个不超过平方根。</p>
             </div>
-          </section>
-          <section id="sec-3-4">
-            <h2>素数判断：代码框架</h2>
-            <pre><code class="language-c" data-line-numbers="1-2|4-8|10-13" data-trim="">flag = 1;
+          </div>
+        </section>
+        <section id="sec-3-4">
+          <h2>素数判断：代码框架</h2>
+          <pre><code class="language-c" data-line-numbers="1-2|4-8|10-13" data-trim="">flag = 1;
 limit = sqrt(m);
 
 for (i = 2; i &lt;= limit; i++) {
@@ -840,130 +805,121 @@ if (flag == 1)
 else
     printf("no\n");
 </code></pre>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🤖 AI 协作互动：算法效率对比</h3>
-              <div class="prompt">
-                在用循环判断正整数 n 是否为素数时，遇到能整除的数就执行 break
-                提前退出。请帮我推演：当 n = 1000000（合数）和 n = 997（素数）时，有 break 和无
-                break 的循环次数相差多少倍？
-              </div>
-              <p class="small muted" style="margin-top: 8px">
-                💡 <b>课堂互动：</b>通过 AI 的计算数据，直观感受提前退出对程序执行效率的巨大提升。
-              </p>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：算法效率对比</h3>
+            <div class="prompt">
+              在用循环判断正整数 n 是否为素数时，遇到能整除的数就执行 break 提前退出。请帮我推演：当 n = 1000000（合数）和 n = 997（素数）时，有 break 和无 break
+              的循环次数相差多少倍？
             </div>
-          </section>
-          <section id="sec-3-5">
-            <h2>以 <code>m = 9</code> 和 <code>m = 11</code> 为例</h2>
-            <table class="compare">
-              <tr>
-                <th>m</th>
-                <th>检查过程</th>
-                <th>何时结束</th>
-                <th>结果</th>
-              </tr>
-              <tr>
-                <td>9</td>
-                <td><code>9 % 2 != 0</code>，<code>9 % 3 == 0</code></td>
-                <td>找到因子3，<code>break</code></td>
-                <td>不是素数</td>
-              </tr>
-              <tr>
-                <td>11</td>
-                <td><code>11 % 2 != 0</code>，<code>11 % 3 != 0</code></td>
-                <td>候选因子试完</td>
-                <td>是素数</td>
-              </tr>
-            </table>
-            <div class="quote">循环是否提前结束，本身也携带了重要信息。</div>
-          </section>
-          <section id="sec-3-6">
-            <h2>常见错误：把“局部判断”当成“最终结论”</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>错误倾向</h3>
-                <pre><code class="language-c" data-trim="">for (i = 2; i &lt;= limit; i++) {
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>通过 AI 的计算数据，直观感受提前退出对程序执行效率的巨大提升。</p>
+          </div>
+        </section>
+        <section id="sec-3-5">
+          <h2>以 <code>m = 9</code> 和 <code>m = 11</code> 为例</h2>
+          <table class="compare">
+            <tr>
+              <th>m</th>
+              <th>检查过程</th>
+              <th>何时结束</th>
+              <th>结果</th>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><code>9 % 2 != 0</code>，<code>9 % 3 == 0</code></td>
+              <td>找到因子3，<code>break</code></td>
+              <td>不是素数</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><code>11 % 2 != 0</code>，<code>11 % 3 != 0</code></td>
+              <td>候选因子试完</td>
+              <td>是素数</td>
+            </tr>
+          </table>
+          <div class="quote">循环是否提前结束，本身也携带了重要信息。</div>
+        </section>
+        <section id="sec-3-6">
+          <h2>常见错误：把“局部判断”当成“最终结论”</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>错误倾向</h3>
+              <pre><code class="language-c" data-trim="">for (i = 2; i &lt;= limit; i++) {
     if (m % i == 0)
         printf("no\n");
     else
         printf("yes\n");
 }</code></pre>
-              </div>
-              <div class="card soft">
-                <h3>为什么错？</h3>
-                <ul>
-                  <li>一次不能整除，只能说明当前 <code>i</code> 不是因子</li>
-                  <li>不能说明所有 <code>i</code> 都不是因子</li>
-                  <li>最终结论必须等循环结束后再输出</li>
-                </ul>
-              </div>
             </div>
-          </section>
+            <div class="card soft">
+              <h3>为什么错？</h3>
+              <ul>
+                <li>一次不能整除，只能说明当前 <code>i</code> 不是因子</li>
+                <li>不能说明所有 <code>i</code> 都不是因子</li>
+                <li>最终结论必须等循环结束后再输出</li>
+              </ul>
+            </div>
+          </div>
         </section>
-        <section id="sec-4-0">
-          <section class="module-cover-slide" id="sec-4-1">
-            <div class="modulecover">
-              <div class="cover-kicker">4.3.2 / continue</div>
-              <div class="cover-title">不是结束循环，<br />而是跳过本轮后续操作</div>
-              <div class="cover-subtitle">
-                continue在for和while中的影响不同，尤其要注意状态更新。
-              </div>
-              <div class="cover-tags">
-                <span class="pill">跳过本轮</span><span class="pill">下一次判断</span
-                ><span class="pill">防止死循环</span>
-              </div>
-            </div>
-          </section>
-          <section id="sec-4-2">
-            <h2><code>continue</code>：跳过本轮剩余语句</h2>
-            <div class="grid2">
-              <div>
-                <pre><code class="language-c" data-trim="">while (条件) {
+      </section>
+      <section id="sec-4-0">
+        <section class="module-cover-slide" id="sec-4-1">
+          <div class="modulecover">
+            <div class="cover-kicker">4.3.2 / continue</div>
+            <div class="cover-title">不是结束循环，<br>而是跳过本轮后续操作</div>
+            <div class="cover-subtitle">continue在for和while中的影响不同，尤其要注意状态更新。</div>
+            <div class="cover-tags"><span class="pill">跳过本轮</span><span class="pill">下一次判断</span><span
+                class="pill">防止死循环</span></div>
+          </div>
+        </section>
+        <section id="sec-4-2">
+          <h2><code>continue</code>：跳过本轮剩余语句</h2>
+          <div class="grid2">
+            <div>
+              <pre><code class="language-c" data-trim="">while (条件) {
     语句1;
     if (特殊情况)
         continue;
     语句2;
 }</code></pre>
-              </div>
-              <div class="card">
-                <h3>执行效果</h3>
-                <ul>
-                  <li>执行到 <code>continue</code> 时</li>
-                  <li>本轮后续语句不执行</li>
-                  <li>直接进入下一次循环判断</li>
-                </ul>
-              </div>
             </div>
-          </section>
-          <section id="sec-4-3">
-            <h2><code>continue</code> 在 <code>for</code> 与 <code>while</code> 中的差异</h2>
-            <div class="grid2">
-              <div class="card">
-                <h3>for循环</h3>
-                <pre><code class="language-c" data-trim="">for (i = 100; i &lt;= 200; i++) {
+            <div class="card">
+              <h3>执行效果</h3>
+              <ul>
+                <li>执行到 <code>continue</code> 时</li>
+                <li>本轮后续语句不执行</li>
+                <li>直接进入下一次循环判断</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section id="sec-4-3">
+          <h2><code>continue</code> 在 <code>for</code> 与 <code>while</code> 中的差异</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>for循环</h3>
+              <pre><code class="language-c" data-trim="">for (i = 100; i &lt;= 200; i++) {
     if (i % 3 != 0)
         continue;
     printf("%d ", i);
 }</code></pre>
-                <p class="small">执行 <code>continue</code> 后仍会执行 <code>i++</code>。</p>
-              </div>
-              <div class="card soft">
-                <h3>while循环</h3>
-                <pre><code class="language-c" data-trim="">i = 100;
+              <p class="small">执行 <code>continue</code> 后仍会执行 <code>i++</code>。</p>
+            </div>
+            <div class="card soft">
+              <h3>while循环</h3>
+              <pre><code class="language-c" data-trim="">i = 100;
 while (i &lt;= 200) {
     if (i % 3 != 0)
         continue;
     printf("%d ", i);
     i++;
 }</code></pre>
-                <p class="small danger">
-                  如果 <code>continue</code> 前没有更新 <code>i</code>，可能死循环。
-                </p>
-              </div>
+              <p class="small danger">如果 <code>continue</code> 前没有更新 <code>i</code>，可能死循环。</p>
             </div>
-          </section>
-          <section id="sec-4-4">
-            <h2>如何修正 <code>while</code> 中的 <code>continue</code>？</h2>
-            <pre><code class="language-c" data-line-numbers="1|3|4-7|8-9" data-trim="">i = 100;
+          </div>
+        </section>
+        <section id="sec-4-4">
+          <h2>如何修正 <code>while</code> 中的 <code>continue</code>？</h2>
+          <pre><code class="language-c" data-line-numbers="1|3|4-7|8-9" data-trim="">i = 100;
 while (i &lt;= 200) {
     if (i % 3 != 0) {
         i++;
@@ -972,67 +928,58 @@ while (i &lt;= 200) {
     printf("%d ", i);
     i++;
 }</code></pre>
-            <div class="quote">使用 <code>continue</code> 前，要确认循环变量仍然能够更新。</div>
-          </section>
+          <div class="quote">使用 <code>continue</code> 前，要确认循环变量仍然能够更新。</div>
         </section>
-        <section id="sec-5-0">
-          <section class="module-cover-slide" id="sec-5-1">
-            <div class="modulecover">
-              <div class="cover-kicker">教材例4-6</div>
-              <div class="cover-title">猜数游戏：<br />循环有多个出口</div>
-              <div class="cover-subtitle">最多猜7次；猜中时提前结束；超过次数则游戏结束。</div>
-              <div class="cover-tags">
-                <span class="pill">计数控制</span><span class="pill">提前结束</span
-                ><span class="pill">flag</span>
-              </div>
-            </div>
-          </section>
-          <section id="sec-5-1a">
-            <h2>教材例4-6 题面描述</h2>
-            <div
-              class="card blue"
-              style="margin-top: 24px; padding: 32px 40px; border-radius: 16px"
-            >
-              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px">📋 题目要求</h3>
-              <p style="font-size: 30px; line-height: 1.6; color: #1f2937">
-                改写猜数游戏：输入你所猜的整数（规定为
-                1~100），与计算机产生的被猜数比较，若相等，显示猜中；若不等，显示与被猜数的大小关系，最多允许猜
-                7 次。
-              </p>
-            </div>
-          </section>
-          <section id="sec-5-2">
-            <h2>猜数游戏：两个结束原因</h2>
-            <table class="compare">
-              <tr>
-                <th>结束原因</th>
-                <th>程序表现</th>
-                <th>对应结构</th>
-              </tr>
-              <tr>
-                <td>猜中</td>
-                <td>立即停止</td>
-                <td><code>break</code></td>
-              </tr>
-              <tr>
-                <td>猜满7次</td>
-                <td>自然结束</td>
-                <td><code>while (count &lt; 7)</code></td>
-              </tr>
-              <tr>
-                <td>结束后要区分原因</td>
-                <td>输出不同提示</td>
-                <td><code>flag</code></td>
-              </tr>
-            </table>
-          </section>
-          <section id="sec-5-3">
-            <h2>猜数游戏：代码框架</h2>
-            <div class="grid2" style="align-items: start">
-              <div>
-                <pre
-                  style="margin: 0 auto 12px"
-                ><code class="language-c" data-line-numbers="1-3|5|6|7-11|12-16|19-20" data-trim="">count = 0;
+      </section>
+      <section id="sec-5-0">
+        <section class="module-cover-slide" id="sec-5-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例4-6</div>
+            <div class="cover-title">猜数游戏：<br>循环有多个出口</div>
+            <div class="cover-subtitle">最多猜7次；猜中时提前结束；超过次数则游戏结束。</div>
+            <div class="cover-tags"><span class="pill">计数控制</span><span class="pill">提前结束</span><span
+                class="pill">flag</span></div>
+          </div>
+        </section>
+        <section id="sec-5-1a">
+          <h2>教材例4-6 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              改写猜数游戏：输入你所猜的整数（规定为 1~100），与计算机产生的被猜数比较，若相等，显示猜中；若不等，显示与被猜数的大小关系，最多允许猜 7 次。
+            </p>
+          </div>
+        </section>
+        <section id="sec-5-2">
+          <h2>猜数游戏：两个结束原因</h2>
+          <table class="compare">
+            <tr>
+              <th>结束原因</th>
+              <th>程序表现</th>
+              <th>对应结构</th>
+            </tr>
+            <tr>
+              <td>猜中</td>
+              <td>立即停止</td>
+              <td><code>break</code></td>
+            </tr>
+            <tr>
+              <td>猜满7次</td>
+              <td>自然结束</td>
+              <td><code>while (count &lt; 7)</code></td>
+            </tr>
+            <tr>
+              <td>结束后要区分原因</td>
+              <td>输出不同提示</td>
+              <td><code>flag</code></td>
+            </tr>
+          </table>
+        </section>
+        <section id="sec-5-3">
+          <h2>猜数游戏：代码框架</h2>
+          <div class="grid2" style="align-items: start;">
+            <div>
+              <pre style="margin: 0 auto 12px;"><code class="language-c" data-line-numbers="1-3|5|6|7-11|12-16|19-20" data-trim="">count = 0;
 flag = 0;
 mynumber = 38;
 
@@ -1053,265 +1000,170 @@ while (count &lt; 7) {
 
 if (flag == 0)
     printf("Game Over!\n");</code></pre>
-              </div>
-              <div class="card blue" style="height: auto">
-                <h3>🤖 AI 协作互动：双重出口逻辑审计</h3>
-                <div class="prompt">
-                  在猜数字游戏中，需要满足『最多猜 7 次』或『中途猜对即 break
-                  退出』。请帮我检查我的双重出口控制逻辑，并提示如何根据循环结束后的状态区分是“成功猜中”还是“次数耗尽”？
-                </div>
-                <p class="small muted" style="margin-top: 12px">
-                  💡 <b>课堂互动：</b>尝试用 AI 建议的 isFound 标记或 count &lt;= 7
-                  判定区分两种结局。
-                </p>
-              </div>
             </div>
-          </section>
-          <section id="sec-5-4">
-            <h2>交互演示：break 与 continue 路径模拟器</h2>
-            <div class="card blue" style="margin-top: 16px">
-              <h3>🛑 D04-02 · break 与 continue 路径模拟器</h3>
-              <p>
-                本演示工具用于直观动态演练 C 语言中 <code>break</code> 与
-                <code>continue</code> 改变循环控制流的执行过程：
-              </p>
-              <ul>
-                <li>
-                  <b>数据队列单步跟踪：</b>队列包含
-                  <code>72</code
-                  >、<code>0</code>、<code>75</code>、<code>999</code>、<code>70</code>、<code>STOP</code>、<code>68</code>，点击“下一步”高亮当前数据。
-                </li>
-                <li>
-                  <b>动作与流程同步：</b>实时显示本轮动作（正常处理、<code>continue</code>
-                  跳过、<code>break</code> 退出），并高亮右侧对应 C 语言代码行。
-                </li>
-                <li>
-                  <b>状态变量实时监视：</b>底端同步更新 <code>sum</code>、<code>count</code>
-                  与循环状态说明。
-                </li>
-              </ul>
-              <div class="center" style="margin-top: 24px; margin-bottom: 8px">
-                <a
-                  class="pill"
-                  href="./demos/break-continue-paths.html"
-                  style="
-                    font-size: 24px !important;
-                    padding: 12px 28px;
-                    background: #2056a8;
-                    color: #fff;
-                    text-decoration: none;
-                    font-weight: bold;
-                    border-radius: 12px;
-                    display: inline-block;
-                    box-shadow: 0 4px 12px rgba(32, 86, 168, 0.25);
-                  "
-                  target="_blank"
-                >
-                  在新窗口打开交互演示 Demo
-                </a>
+            <div class="card blue" style="height: auto;">
+              <h3>🤖 AI 协作互动：双重出口逻辑审计</h3>
+              <div class="prompt">
+                在猜数字游戏中，需要满足『最多猜 7 次』或『中途猜对即 break 退出』。请帮我检查我的双重出口控制逻辑，并提示如何根据循环结束后的状态区分是“成功猜中”还是“次数耗尽”？
               </div>
+              <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>尝试用 AI 建议的 isFound 标记或 count &lt;= 7
+                判定区分两种结局。</p>
             </div>
-          </section>
-          <section id="sec-5-5">
-            <h2>本课总结：循环流程的三种结束/跳转</h2>
-            <div class="grid3">
-              <div class="card">
-                <h3>自然结束</h3>
-                <p class="small">循环条件变假。</p>
-              </div>
-              <div class="card">
-                <h3><code>break</code></h3>
-                <p class="small">当前循环立即结束。</p>
-              </div>
-              <div class="card soft">
-                <h3><code>continue</code></h3>
-                <p class="small">本轮后续语句跳过，进入下一轮。</p>
-              </div>
-            </div>
-            <div class="quote">
-              先判断特殊情况属于“跳过本轮”还是“结束整体循环”，再决定使用 <code>continue</code> 或
-              <code>break</code>。
-            </div>
-          </section>
-          <section id="sec-5-6">
-            <h2>下次课预告：一个循环不够怎么办？</h2>
-            <p class="lead center">当问题中存在“两层重复关系”，就需要多重循环。</p>
-            <div class="flow">
-              <div class="step">多名受试者</div>
-              <div class="arrow">→</div>
-              <div class="step">每人多次测量</div>
-              <div class="arrow">→</div>
-              <div class="step">外层循环</div>
-              <div class="arrow">→</div>
-              <div class="step">内层循环</div>
-            </div>
-          </section>
+          </div>
         </section>
-      </div>
+        <section id="sec-5-4">
+          <h2>交互演示：break 与 continue 路径模拟器</h2>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🛑 D04-02 · break 与 continue 路径模拟器</h3>
+            <p>本演示工具用于直观动态演练 C 语言中 <code>break</code> 与 <code>continue</code> 改变循环控制流的执行过程：</p>
+            <ul>
+              <li><b>数据队列单步跟踪：</b>队列包含
+                <code>72</code>、<code>0</code>、<code>75</code>、<code>999</code>、<code>70</code>、<code>STOP</code>、<code>68</code>，点击“下一步”高亮当前数据。
+              </li>
+              <li><b>动作与流程同步：</b>实时显示本轮动作（正常处理、<code>continue</code> 跳过、<code>break</code> 退出），并高亮右侧对应 C 语言代码行。</li>
+              <li><b>状态变量实时监视：</b>底端同步更新 <code>sum</code>、<code>count</code> 与循环状态说明。</li>
+            </ul>
+            <div class="center" style="margin-top: 24px; margin-bottom: 8px;">
+              <a class="pill" href="./demos/break-continue-paths.html"
+                style="font-size: 24px !important; padding: 12px 28px; background: #2056a8; color: #fff; text-decoration: none; font-weight: bold; border-radius: 12px; display: inline-block; box-shadow: 0 4px 12px rgba(32,86,168,0.25);"
+                target="_blank">
+                在新窗口打开交互演示 Demo
+              </a>
+            </div>
+          </div>
+        </section>
+        <section id="sec-5-5">
+          <h2>本课总结：循环流程的三种结束/跳转</h2>
+          <div class="grid3">
+            <div class="card">
+              <h3>自然结束</h3>
+              <p class="small">循环条件变假。</p>
+            </div>
+            <div class="card">
+              <h3><code>break</code></h3>
+              <p class="small">当前循环立即结束。</p>
+            </div>
+            <div class="card soft">
+              <h3><code>continue</code></h3>
+              <p class="small">本轮后续语句跳过，进入下一轮。</p>
+            </div>
+          </div>
+          <div class="quote">先判断特殊情况属于“跳过本轮”还是“结束整体循环”，再决定使用 <code>continue</code> 或 <code>break</code>。</div>
+        </section>
+        <section id="sec-5-6">
+          <h2>下次课预告：一个循环不够怎么办？</h2>
+          <p class="lead center">当问题中存在“两层重复关系”，就需要多重循环。</p>
+          <div class="flow">
+            <div class="step">多名受试者</div>
+            <div class="arrow">→</div>
+            <div class="step">每人多次测量</div>
+            <div class="arrow">→</div>
+            <div class="step">外层循环</div>
+            <div class="arrow">→</div>
+            <div class="step">内层循环</div>
+          </div>
+        </section>
+      </section>
     </div>
-    <script src="/vendor/reveal/reveal.js"></script>
-    <script src="/vendor/reveal/zoom/zoom.js"></script>
-    <script src="/vendor/reveal/notes/notes.js"></script>
-    <script src="/vendor/reveal/search/search.js"></script>
-    <script src="/vendor/reveal/markdown/markdown.js"></script>
-    <script src="/vendor/reveal/math/math.js"></script>
-    <script src="/vendor/reveal/highlight/highlight.js"></script>
-    <script>
-      /* 为每个实际展示页加上可定位标签。 */
-      document.querySelectorAll('.slides section').forEach((slide, idx) => {
-        if (slide.querySelector(':scope > section')) return;
-        if (!slide.id) slide.id = `slide-${idx + 1}`;
-        if (!slide.querySelector(':scope > .slide-label')) {
-          const label = document.createElement('div');
-          label.className = 'slide-label';
-          label.setAttribute('data-static', '');
-          label.textContent = `§ ${slide.id}`;
-          slide.prepend(label);
+  </div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
         }
       });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
 
-      /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
-      document.querySelectorAll('.slides section').forEach((slide) => {
-        if (slide.querySelector(':scope > section')) return;
-
-        const candidates = slide.querySelectorAll(
-          [
-            ':scope#sec-1-1 > *:not(script)',
-            ':scope > .card',
-            ':scope > .grid2 > .card',
-            ':scope > .grid3 > .card',
-            ':scope > .grid4 > .card',
-            ':scope > .grid2 > div:not(.card)',
-            ':scope > .grid3 > div:not(.card)',
-            ':scope > .bluebox',
-            ':scope > .quote',
-            ':scope > .bigq',
-            ':scope > .rule',
-            ':scope > ul > li',
-            ':scope > ol > li',
-            ':scope > table.compare tr:not(:first-child)',
-            ':scope > .timeline > *',
-            ':scope > .pulsebar > *',
-            ':scope > .scoreline > *',
-            ':scope > .menu',
-            ':scope > .switch-map > *',
-            ':scope > .placeholder',
-            ':scope > .prompt',
-            ':scope > .data-strip > .data-token',
-            ':scope > .path-grid > .path',
-            ':scope > .binary-line',
-            ':scope > pre',
-            ':scope > .compare-code > *',
-            ':scope > .modulecover > *:not(aside.notes)',
-            ':scope > img',
-          ].join(','),
-        );
-
-        candidates.forEach((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          if (
-            !el.hasAttribute('data-static') &&
-            !parentFragment &&
-            !el.querySelector('.fragment')
-          ) {
-            el.classList.add('fragment', 'fade-up');
-          }
-        });
-        slide.querySelectorAll('.fragment').forEach((el) => el.classList.add('fade-up'));
-
-        /* 流程图的箭头与它右侧的步骤同步出现。 */
-        slide.querySelectorAll('.flow').forEach((flow) => {
-          flow.querySelectorAll('.step,.node').forEach((step) => {
-            step.classList.add('fragment', 'fade-up');
-            const arrow = step.previousElementSibling;
-            if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
-          });
-        });
-
-        /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
-        const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter((el) => {
-          const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
-          return !parentFragment || !slide.contains(parentFragment);
-        });
-        const handled = new Set();
-        let order = 0;
-        topLevelFragments.forEach((el) => {
-          if (handled.has(el)) return;
-          const parent = el.parentElement;
-          const isFlow = parent && parent.classList.contains('flow');
-          const isTimeline = parent && parent.classList.contains('timeline');
-
-          if (el.hasAttribute('data-fragment-index')) {
-            return;
-          }
-          if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else if (isTimeline && el.nextElementSibling) {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-            if (!el.nextElementSibling.hasAttribute('data-fragment-index'))
-              el.nextElementSibling.setAttribute('data-fragment-index', order);
-            handled.add(el.nextElementSibling);
-          } else {
-            if (!el.hasAttribute('data-fragment-index'))
-              el.setAttribute('data-fragment-index', order);
-          }
-          order += 1;
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
         });
       });
 
-      Reveal.initialize({
-        width: 1600,
-        height: 900,
-        margin: 0.035,
-        minScale: 0.2,
-        maxScale: 1.5,
-        controls: true,
-        progress: true,
-        defaultTiming: 120,
-        slideNumber: true,
-        history: false,
-        keyboard: true,
-        overview: true,
-        center: true,
-        touch: true,
-        loop: false,
-        rtl: false,
-        shuffle: false,
-        fragment: true,
-        embedded: false,
-        help: true,
-        showNotes: false,
-        autoPlayMedia: null,
-        autoSlide: 0,
-        autoSlideStoppable: true,
-        autoSlideMethod: Reveal.navigateNext,
-        mouseWheel: false,
-        hideAddressBar: true,
-        previewLinks: false,
-        transition: 'slide',
-        transitionSpeed: 'default',
-        backgroundTransition: 'fade',
-        viewDistance: 3,
-        display: 'block',
-        pdfMaxPagesPerSlide: 1,
-        math: {
-          mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
-          config: 'TeX-AMS_HTML-full',
-        },
-        plugins: [
-          RevealZoom,
-          RevealNotes,
-          RevealSearch,
-          RevealMarkdown,
-          RevealHighlight,
-          RevealMath,
-        ],
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
       });
-    </script>
-  </body>
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
+
 </html>
