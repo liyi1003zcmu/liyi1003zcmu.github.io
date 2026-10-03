@@ -1,0 +1,1115 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>计算机图形学 · 第3章 交互与动画 —— 动画循环显微镜</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                '"Inter"',
+                '"PingFang SC"',
+                '"Hiragino Sans GB"',
+                '"Microsoft YaHei"',
+                'sans-serif',
+              ],
+              mono: ['"JetBrains Mono"', '"Fira Code"', 'Consolas', 'monospace'],
+            },
+            colors: {
+              brand: {
+                navy: '#0f172a',
+                slate: '#1e293b',
+                accent: '#0284c7',
+                cyan: '#06b6d4',
+                emerald: '#10b981',
+                warn: '#f59e0b',
+                surface: '#ffffff',
+                bg: '#f8fafc',
+                border: '#e2e8f0',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* 保证投影清晰度与抗锯齿 */
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        user-select: none;
+      }
+      /* 16:9 比例锁定展示容器 */
+      .aspect-16-9-frame {
+        width: 100%;
+        max-width: 1440px;
+        aspect-ratio: 16 / 9;
+        max-height: 94vh;
+      }
+      /* 循环流动指示线 */
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          opacity: 0.4;
+          transform: scale(0.98);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.02);
+        }
+      }
+      .active-node-ring {
+        box-shadow:
+          0 0 0 3px rgba(2, 132, 199, 0.25),
+          0 8px 16px -2px rgba(2, 132, 199, 0.15);
+      }
+      /* 自定义滑块 */
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 9999px;
+        background: #0284c7;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-2 md:p-4 bg-slate-100">
+    <!-- 16:9 主画幅教学容器 -->
+    <main
+      class="aspect-16-9-frame bg-white rounded-2xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden text-slate-800"
+    >
+      <!-- 顶部教学标题栏 (适合80人大教室投影) -->
+      <header
+        class="h-[10.5%] border-b border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-950 px-6 py-2.5 flex items-center justify-between text-white shadow-sm shrink-0"
+      >
+        <div class="flex items-center gap-4">
+          <!-- 章节与状态标牌 -->
+          <div class="flex items-center gap-2">
+            <span
+              class="bg-sky-500/20 text-sky-300 border border-sky-400/30 text-xs font-semibold px-2.5 py-0.5 rounded-full tracking-wide"
+            >
+              计算机图形学 · 第3章
+            </span>
+            <span
+              class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1.5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              交互与动画演示
+            </span>
+          </div>
+          <div class="h-4 w-px bg-slate-600 hidden sm:block"></div>
+          <!-- 主标题与副标题 -->
+          <div>
+            <h1
+              class="text-lg lg:text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
+            >
+              动画循环显微镜
+              <span
+                class="text-xs font-normal text-slate-300 bg-slate-700/60 px-2 py-0.5 rounded border border-slate-600"
+              >
+                The Animation Loop Microscope
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <p class="text-xs lg:text-sm text-sky-200 font-medium hidden md:block">
+            观察机制：<span
+              class="text-white font-semibold underline decoration-sky-400 underline-offset-4"
+              >状态更新 (Update) → 着色重绘 (Render) → 下一帧请求 (rAF)</span
+            >
+          </p>
+          <span
+            class="text-xs font-mono bg-sky-900/60 border border-sky-500/40 text-sky-200 px-2.5 py-1 rounded-md"
+          >
+            v3.2 Demo
+          </span>
+        </div>
+      </header>
+
+      <!-- 主体三大核心区 (从左到右：画布区 / 循环流程区 / 状态监视区) -->
+      <div class="flex-1 grid grid-cols-12 gap-3 p-3.5 bg-slate-50/70 overflow-hidden">
+        <!-- ==================== 左侧：动画画布区域 (3.8 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm overflow-hidden"
+        >
+          <!-- 窗口顶条 -->
+          <div
+            class="bg-slate-100/90 border-b border-slate-200 px-3.5 py-2 flex items-center justify-between shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="flex gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+              </span>
+              <span
+                class="text-xs font-bold text-slate-700 tracking-wide uppercase ml-1 flex items-center gap-1.5"
+              >
+                <svg
+                  class="w-3.5 h-3.5 text-sky-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  />
+                </svg>
+                动画画布 / Scene (WebGL)
+              </span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span
+                class="text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium"
+              >
+                60.0 FPS
+              </span>
+            </div>
+          </div>
+
+          <!-- 真实交互 Canvas 视图容器 -->
+          <div
+            class="relative flex-1 bg-slate-950 flex items-center justify-center overflow-hidden"
+          >
+            <canvas id="glCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+            <!-- 课堂教学叠加标签 (Overlay Annotations) -->
+            <div
+              class="absolute top-2.5 left-2.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded space-y-0.5 pointer-events-none font-mono"
+            >
+              <div class="text-sky-400 font-semibold flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span> 顶点缓冲 (VBO):
+                <span class="text-slate-300">固定不变</span>
+              </div>
+              <div class="text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Uniform (u_theta):
+                <span id="overlayTheta" class="text-emerald-300 font-bold">1.84 rad</span>
+              </div>
+            </div>
+
+            <!-- 原点提示 -->
+            <div
+              class="absolute bottom-2.5 left-2.5 text-[10px] text-slate-400 font-mono bg-slate-900/80 px-2 py-1 rounded border border-slate-800"
+            >
+              原点 (0, 0) | 坐标空间 [-1.0, 1.0]
+            </div>
+
+            <!-- 右下角视觉强调标签 -->
+            <div
+              class="absolute bottom-2.5 right-2.5 bg-sky-950/85 border border-sky-500/50 text-sky-200 text-[11px] px-2.5 py-1 rounded flex items-center gap-1 font-sans"
+            >
+              <span class="inline-block w-2 h-2 rounded-full bg-sky-400"></span>
+              当前物体：旋转几何四边形
+            </div>
+          </div>
+
+          <!-- 画布底部教学解析条 -->
+          <div
+            class="bg-sky-50/70 border-t border-sky-100 p-2 text-xs text-sky-900 flex items-center justify-between"
+          >
+            <span class="font-medium text-slate-700">变换机制：</span>
+            <span
+              class="font-mono text-sky-800 text-[11px] bg-white px-2 py-0.5 rounded border border-sky-200"
+            >
+              x' = x·cosθ - y·sinθ
+            </span>
+            <span
+              class="font-mono text-sky-800 text-[11px] bg-white px-2 py-0.5 rounded border border-sky-200"
+            >
+              y' = x·sinθ + y·cosθ
+            </span>
+          </div>
+        </section>
+
+        <!-- ==================== 中间：动画循环流程区 (4.4 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm p-3.5 relative overflow-hidden"
+        >
+          <!-- 区域标题 -->
+          <div
+            class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="p-1 rounded bg-sky-100 text-sky-700">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </span>
+              <h2 class="text-sm font-bold text-slate-800 tracking-tight">
+                动画循环流程 (Animation Loop)
+              </h2>
+            </div>
+            <span
+              class="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200"
+            >
+              每秒 60 次回环
+            </span>
+          </div>
+
+          <!-- 流程图教学主体卡片 (4个关键节点串联) -->
+          <div class="flex-1 flex flex-col justify-between py-1 relative">
+            <!-- 回环背景大箭头线 (暗喻持续驱动) -->
+            <div
+              class="absolute right-3 top-6 bottom-6 w-8 border-r-2 border-dashed border-sky-300 rounded-r-2xl pointer-events-none hidden sm:block"
+            >
+              <div class="absolute -bottom-1 -right-1.5 text-sky-500 text-xs font-bold">▲</div>
+              <div class="absolute -top-1 -right-1.5 text-sky-500 text-xs font-bold">●</div>
+              <span
+                class="absolute top-1/2 -right-6 -translate-y-1/2 [writing-mode:vertical-lr] text-[10px] text-sky-500 font-semibold tracking-widest bg-white py-1"
+              >
+                驱动持续回环
+              </span>
+            </div>
+
+            <!-- 节点 1: State -->
+            <div
+              id="nodeState"
+              class="relative group bg-slate-50 border border-slate-200 hover:border-sky-300 p-2.5 rounded-lg transition-all duration-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-7 h-7 rounded-md bg-slate-800 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0 shadow-sm"
+                >
+                  01
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    State
+                    <span class="text-[10px] font-medium text-slate-500">（程序内存状态）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600 mt-0.5">
+                    保存当前物理/逻辑变量：<code class="text-sky-700 font-mono font-semibold"
+                      >theta, direction, speed</code
+                    >
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[11px] font-mono font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200"
+              >
+                数据源
+              </span>
+            </div>
+
+            <!-- 箭头 1 -->
+            <div class="flex justify-center -my-1 text-sky-500">
+              <svg
+                class="w-4 h-4 animate-bounce"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 节点 2: Update -->
+            <div
+              id="nodeUpdate"
+              class="relative group bg-slate-50 border border-slate-200 hover:border-sky-300 p-2.5 rounded-lg transition-all duration-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-7 h-7 rounded-md bg-sky-700 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0 shadow-sm"
+                >
+                  02
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    Update
+                    <span class="text-[10px] font-medium text-sky-700 font-semibold"
+                      >（计算下一时刻状态）</span
+                    >
+                  </div>
+                  <div class="text-[11px] text-slate-600 mt-0.5">
+                    按时间步长递增：<code class="text-sky-700 font-mono font-semibold"
+                      >theta += speed * dt</code
+                    >
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+              >
+                CPU计算
+              </span>
+            </div>
+
+            <!-- 箭头 2 -->
+            <div class="flex justify-center -my-1 text-sky-500">
+              <svg
+                class="w-4 h-4 animate-bounce"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 节点 3: Render -->
+            <div
+              id="nodeRender"
+              class="relative group bg-slate-50 border border-slate-200 hover:border-sky-300 p-2.5 rounded-lg transition-all duration-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-7 h-7 rounded-md bg-indigo-700 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0 shadow-sm"
+                >
+                  03
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    Render
+                    <span class="text-[10px] font-medium text-indigo-700 font-semibold"
+                      >（提交着色器重绘）</span
+                    >
+                  </div>
+                  <div class="text-[11px] text-slate-600 mt-0.5">
+                    更新 Uniform 并执行绘制：<code class="text-indigo-800 font-mono font-semibold"
+                      >gl.drawArrays(...)</code
+                    >
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[11px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200"
+              >
+                GPU渲染
+              </span>
+            </div>
+
+            <!-- 箭头 3 -->
+            <div class="flex justify-center -my-1 text-sky-500">
+              <svg
+                class="w-4 h-4 animate-bounce"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 节点 4: requestAnimationFrame -->
+            <div
+              id="nodeRaf"
+              class="relative group bg-sky-50 border border-sky-300 p-2.5 rounded-lg transition-all duration-200 flex items-center justify-between shadow-sm"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-7 h-7 rounded-md bg-cyan-600 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0 shadow-sm"
+                >
+                  04
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                    requestAnimationFrame
+                    <span class="text-[10px] font-semibold text-cyan-700">（浏览器同步）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-700 mt-0.5">
+                    对齐显示器刷新率（V-Sync），注册下一帧回调
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[11px] font-mono font-bold text-sky-800 bg-white px-2 py-0.5 rounded border border-sky-300"
+              >
+                精准调步
+              </span>
+            </div>
+          </div>
+
+          <!-- 教学警示小结条 -->
+          <div
+            class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500"
+          >
+            <span class="font-medium text-slate-700">核心洞察：</span>
+            <span class="text-sky-700 font-medium">动画并非不可控跳跃，而是每秒60次的因果闭环</span>
+          </div>
+        </section>
+
+        <!-- ==================== 右侧：状态监视面板 (3.8 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm p-3.5 overflow-hidden"
+        >
+          <!-- 区域标题 -->
+          <div
+            class="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="p-1 rounded bg-emerald-100 text-emerald-700">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+              </span>
+              <h2 class="text-sm font-bold text-slate-800 tracking-tight">
+                状态监视 (State Inspector)
+              </h2>
+            </div>
+            <span
+              class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              运行正常
+            </span>
+          </div>
+
+          <!-- 显微镜监控列表 (卡片化字段) -->
+          <div class="flex-1 flex flex-col justify-between py-0.5 space-y-2">
+            <!-- 指标 1 & 2: 帧计数与旋转角 -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5">
+                <div
+                  class="text-[11px] text-slate-500 font-medium flex items-center justify-between"
+                >
+                  <span>累计帧数 (Frame)</span>
+                  <span class="text-slate-400">#</span>
+                </div>
+                <div id="statFrame" class="text-lg font-bold font-mono text-slate-900 mt-0.5">
+                  328
+                </div>
+              </div>
+              <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5">
+                <div
+                  class="text-[11px] text-slate-500 font-medium flex items-center justify-between"
+                >
+                  <span>当前角度 (theta)</span>
+                  <span class="text-sky-600 font-mono">θ</span>
+                </div>
+                <div id="statTheta" class="text-lg font-bold font-mono text-sky-700 mt-0.5">
+                  1.84 rad
+                </div>
+              </div>
+            </div>
+
+            <!-- 指标 3 & 4: 帧间隔与运行状态 -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5">
+                <div
+                  class="text-[11px] text-slate-500 font-medium flex items-center justify-between"
+                >
+                  <span>帧间隔 (Delta time)</span>
+                  <span class="text-slate-400">Δt</span>
+                </div>
+                <div id="statDelta" class="text-base font-bold font-mono text-slate-800 mt-0.5">
+                  16.7 ms
+                </div>
+              </div>
+              <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-2.5">
+                <div
+                  class="text-[11px] text-slate-500 font-medium flex items-center justify-between"
+                >
+                  <span>循环状态 (Status)</span>
+                  <span class="text-emerald-500 font-bold">●</span>
+                </div>
+                <div
+                  id="statStatus"
+                  class="text-base font-bold font-mono text-emerald-600 mt-0.5 flex items-center gap-1.5"
+                >
+                  running
+                </div>
+              </div>
+            </div>
+
+            <!-- 核心教学对比重点卡片 (Buffer vs Uniform) -->
+            <div
+              class="border-2 border-emerald-400/40 bg-gradient-to-r from-emerald-50/70 to-teal-50/70 rounded-lg p-2.5 shadow-sm"
+            >
+              <div
+                class="text-[11px] font-bold text-emerald-950 flex items-center justify-between mb-1.5"
+              >
+                <span class="flex items-center gap-1">
+                  <svg
+                    class="w-3.5 h-3.5 text-emerald-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  显微镜洞察：图形管线通信特征
+                </span>
+                <span
+                  class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded font-semibold"
+                  >教学重点</span
+                >
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div
+                  class="bg-white/90 border border-slate-200 rounded p-2 flex flex-col justify-between"
+                >
+                  <span class="text-[11px] text-slate-500 font-medium">顶点缓冲区 (VBO)</span>
+                  <span
+                    class="text-sm font-bold font-mono text-slate-700 flex items-center gap-1 mt-0.5"
+                  >
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    unchanged
+                  </span>
+                  <span class="text-[10px] text-slate-400 mt-0.5">显存无重复上传</span>
+                </div>
+
+                <div
+                  class="bg-white/90 border border-emerald-300 rounded p-2 flex flex-col justify-between shadow-xs"
+                >
+                  <span class="text-[11px] text-emerald-800 font-semibold">Uniform 变量</span>
+                  <span
+                    class="text-sm font-bold font-mono text-emerald-600 flex items-center gap-1 mt-0.5"
+                  >
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    updated
+                  </span>
+                  <span class="text-[10px] text-emerald-700 mt-0.5">每帧极轻量传递</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 辅助提示框 -->
+            <div
+              class="bg-slate-100/90 rounded-lg p-2 text-[11px] text-slate-600 border border-slate-200"
+            >
+              <span class="font-bold text-slate-700">为什么高效？</span>
+              顶点数据停留在 GPU，CPU 仅传输微小的浮点标量
+              <code class="font-mono text-sky-700">theta</code>，开销极低。
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== 底部：局部交互控件面板 ==================== -->
+      <footer
+        class="h-[14%] bg-slate-900 border-t border-slate-800 px-6 py-2.5 flex items-center justify-between text-white shrink-0"
+      >
+        <!-- 左组：运行控制按键 -->
+        <div class="flex items-center gap-2.5">
+          <button
+            id="btnPlayPause"
+            class="px-4 py-2 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center gap-2"
+          >
+            <svg id="playIcon" class="w-3.5 h-3.5 hidden" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <svg id="pauseIcon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span id="playText">暂停循环</span>
+          </button>
+
+          <button
+            id="btnStep"
+            class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-500 font-medium text-xs rounded-lg transition-all flex items-center gap-1.5"
+            title="在暂停时单步观察一次 Update 与 Render"
+          >
+            <svg
+              class="w-3.5 h-3.5 text-sky-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
+            </svg>
+            单步执行 (Step)
+          </button>
+
+          <button
+            id="btnReverse"
+            class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs rounded-lg transition-all flex items-center gap-1.5"
+          >
+            <svg
+              class="w-3.5 h-3.5 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            方向切换
+          </button>
+        </div>
+
+        <!-- 中组：速度滑块调节 -->
+        <div
+          class="flex items-center gap-3 bg-slate-800/80 px-4 py-1.5 rounded-lg border border-slate-700"
+        >
+          <label for="speedSlider" class="text-xs text-slate-300 font-medium whitespace-nowrap">
+            角速度 (Speed):
+          </label>
+          <input
+            id="speedSlider"
+            type="range"
+            min="0.2"
+            max="3.0"
+            step="0.1"
+            value="1.0"
+            class="w-28 md:w-36 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <span id="speedValue" class="text-xs font-mono font-bold text-sky-400 w-10">1.0x</span>
+        </div>
+
+        <!-- 右组：显示开关与模式下拉菜单 -->
+        <div class="flex items-center gap-3">
+          <!-- 切换开关组 -->
+          <div class="hidden lg:flex items-center gap-2.5 text-xs text-slate-300">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="chkAxes"
+                checked
+                class="rounded border-slate-600 text-sky-600 focus:ring-0"
+              />
+              <span>坐标轴</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="chkAngleArc"
+                checked
+                class="rounded border-slate-600 text-sky-600 focus:ring-0"
+              />
+              <span>角度弧</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="chkTrail"
+                checked
+                class="rounded border-slate-600 text-sky-600 focus:ring-0"
+              />
+              <span>运动拖尾</span>
+            </label>
+          </div>
+
+          <div class="h-4 w-px bg-slate-700 hidden lg:block"></div>
+
+          <!-- 动画模式选择 -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 hidden sm:inline">动画模式:</span>
+            <select
+              id="selectMode"
+              class="bg-slate-800 text-sky-300 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-sky-500 font-medium"
+            >
+              <option value="uniform">Uniform 着色器驱动（推荐教学）</option>
+              <option value="cpu">CPU 顶权重建（对比低效模式）</option>
+            </select>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ==================== 交互与动画渲染逻辑脚本 ==================== -->
+    <script>
+      // 状态管理
+      const state = {
+        isRunning: true,
+        frame: 328,
+        theta: 1.84,
+        direction: 1,
+        speed: 1.0,
+        baseSpeed: 0.018,
+        lastTime: performance.now(),
+        deltaTime: 16.7,
+        showAxes: true,
+        showAngleArc: true,
+        showTrail: true,
+        mode: 'uniform',
+      };
+
+      // DOM 元素缓存
+      const canvas = document.getElementById('glCanvas');
+      const ctx = canvas.getContext('2d');
+      const statFrame = document.getElementById('statFrame');
+      const statTheta = document.getElementById('statTheta');
+      const statDelta = document.getElementById('statDelta');
+      const statStatus = document.getElementById('statStatus');
+      const overlayTheta = document.getElementById('overlayTheta');
+      const btnPlayPause = document.getElementById('btnPlayPause');
+      const playIcon = document.getElementById('playIcon');
+      const pauseIcon = document.getElementById('pauseIcon');
+      const playText = document.getElementById('playText');
+      const btnStep = document.getElementById('btnStep');
+      const btnReverse = document.getElementById('btnReverse');
+      const speedSlider = document.getElementById('speedSlider');
+      const speedValue = document.getElementById('speedValue');
+      const chkAxes = document.getElementById('chkAxes');
+      const chkAngleArc = document.getElementById('chkAngleArc');
+      const chkTrail = document.getElementById('chkTrail');
+      const selectMode = document.getElementById('selectMode');
+
+      // 流程节点高亮缓存
+      const nodeState = document.getElementById('nodeState');
+      const nodeUpdate = document.getElementById('nodeUpdate');
+      const nodeRender = document.getElementById('nodeRender');
+      const nodeRaf = document.getElementById('nodeRaf');
+
+      // 响应式画布分辨率适配
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // 历史拖尾轨迹
+      const trailHistory = [];
+      const maxTrail = 18;
+
+      // 核心绘制逻辑 (模拟 WebGL 视口环境与学术标注)
+      function renderScene() {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const unit = Math.min(w, h) * 0.38;
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+
+        // 1. 深色极简网格背景
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.lineWidth = 1;
+        const step = unit / 4;
+        for (let x = cx % step; x < w; x += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        for (let y = cy % step; y < h; y += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+
+        // 2. 坐标轴 (x, y)
+        if (state.showAxes) {
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+          ctx.lineWidth = 1.5;
+          // X 轴
+          ctx.beginPath();
+          ctx.moveTo(cx - unit * 1.25, cy);
+          ctx.lineTo(cx + unit * 1.25, cy);
+          ctx.stroke();
+          // X 轴箭头
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+          ctx.beginPath();
+          ctx.moveTo(cx + unit * 1.25 + 6, cy);
+          ctx.lineTo(cx + unit * 1.25 - 4, cy - 4);
+          ctx.lineTo(cx + unit * 1.25 - 4, cy + 4);
+          ctx.fill();
+
+          // Y 轴
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + unit * 1.25);
+          ctx.lineTo(cx, cy - unit * 1.25);
+          ctx.stroke();
+          // Y 轴箭头
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - unit * 1.25 - 6);
+          ctx.lineTo(cx - 4, cy - unit * 1.25 + 4);
+          ctx.lineTo(cx + 4, cy - unit * 1.25 + 4);
+          ctx.fill();
+
+          // 轴文字标注
+          ctx.font = '11px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.85)';
+          ctx.fillText('+X (1.0)', cx + unit * 1.05, cy + 16);
+          ctx.fillText('+Y (1.0)', cx + 10, cy - unit * 1.15);
+          ctx.fillText('(0,0)', cx - 28, cy + 14);
+        }
+
+        // 3. 拖尾效果
+        if (state.showTrail && trailHistory.length > 0) {
+          for (let i = 0; i < trailHistory.length; i++) {
+            const tAngle = trailHistory[i];
+            const alpha = (i / trailHistory.length) * 0.18;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(tAngle);
+            ctx.fillStyle = `rgba(14, 165, 233, ${alpha})`;
+            const halfS = unit * 0.55;
+            ctx.fillRect(-halfS, -halfS, halfS * 2, halfS * 2);
+            ctx.restore();
+          }
+        }
+
+        // 4. 旋转角度指示弧 (Angle Arc)
+        if (state.showAngleArc) {
+          ctx.save();
+          ctx.beginPath();
+          const arcRadius = unit * 0.45;
+          const normAngle = state.theta % (Math.PI * 2);
+          ctx.arc(cx, cy, arcRadius, 0, normAngle, false);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 弧度文本标注
+          const midAngle = normAngle / 2;
+          const textDist = arcRadius + 14;
+          const tx = cx + Math.cos(midAngle) * textDist;
+          const ty = cy + Math.sin(midAngle) * textDist;
+          ctx.font = 'bold 11px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillText(`θ=${normAngle.toFixed(2)}`, tx - 14, ty + 4);
+          ctx.restore();
+        }
+
+        // 5. 核心正方形对象 (WebGL 图元模拟)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(state.theta);
+
+        const size = unit * 0.55;
+        // 渐变半透明填充
+        const grad = ctx.createLinearGradient(-size, -size, size, size);
+        grad.addColorStop(0, 'rgba(2, 132, 199, 0.45)');
+        grad.addColorStop(1, 'rgba(6, 182, 212, 0.2)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(-size, -size, size * 2, size * 2);
+
+        // 青蓝色高亮边框
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(-size, -size, size * 2, size * 2);
+
+        // 顶点指示圆点与标签
+        const vertices = [
+          { x: -size, y: -size, label: 'v0' },
+          { x: size, y: -size, label: 'v1' },
+          { x: size, y: size, label: 'v2' },
+          { x: -size, y: size, label: 'v3' },
+        ];
+
+        vertices.forEach((v) => {
+          ctx.beginPath();
+          ctx.arc(v.x, v.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#f8fafc';
+          ctx.fill();
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#e2e8f0';
+          const offX = v.x > 0 ? 6 : -20;
+          const offY = v.y > 0 ? 12 : -6;
+          ctx.fillText(v.label, v.x + offX, v.y + offY);
+        });
+
+        // 中心十字线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(10, 0);
+        ctx.moveTo(0, -10);
+        ctx.lineTo(0, 10);
+        ctx.stroke();
+
+        ctx.restore();
+        ctx.restore();
+      }
+
+      // 单步物理及状态更新逻辑
+      function updateState(dt) {
+        state.frame++;
+        const deltaRad = state.baseSpeed * state.speed * state.direction;
+        state.theta += deltaRad;
+        if (state.theta > Math.PI * 2000) state.theta %= Math.PI * 2;
+        if (state.theta < -Math.PI * 2000) state.theta %= Math.PI * 2;
+
+        // 保存轨迹
+        trailHistory.push(state.theta);
+        if (trailHistory.length > maxTrail) {
+          trailHistory.shift();
+        }
+
+        // 更新界面指标数字
+        statFrame.textContent = state.frame;
+        const currentThetaStr = `${state.theta.toFixed(2)} rad`;
+        statTheta.textContent = currentThetaStr;
+        overlayTheta.textContent = currentThetaStr;
+        statDelta.textContent = `${dt.toFixed(1)} ms`;
+      }
+
+      // 流程卡片动态微高亮 (给讲课提供直观反馈)
+      function highlightNode(node) {
+        [nodeState, nodeUpdate, nodeRender, nodeRaf].forEach((n) => {
+          n.classList.remove('active-node-ring', 'border-sky-500', 'bg-sky-50/50');
+        });
+        node.classList.add('active-node-ring', 'border-sky-500', 'bg-sky-50/50');
+      }
+
+      // 核心主动画循环
+      let cyclePhase = 0;
+      function animationLoop(timestamp) {
+        if (state.isRunning) {
+          const dt = timestamp - state.lastTime;
+          state.lastTime = timestamp;
+          state.deltaTime = dt > 0 && dt < 100 ? dt : 16.7;
+
+          // 依次推进状态与渲染
+          updateState(state.deltaTime);
+          renderScene();
+
+          // 演示循环流动的高亮
+          cyclePhase = (cyclePhase + 1) % 40;
+          if (cyclePhase < 10) highlightNode(nodeState);
+          else if (cyclePhase < 20) highlightNode(nodeUpdate);
+          else if (cyclePhase < 30) highlightNode(nodeRender);
+          else highlightNode(nodeRaf);
+
+          requestAnimationFrame(animationLoop);
+        }
+      }
+
+      // 交互事件监听绑定
+      function togglePlay(play) {
+        state.isRunning = typeof play === 'boolean' ? play : !state.isRunning;
+        if (state.isRunning) {
+          state.lastTime = performance.now();
+          playIcon.classList.add('hidden');
+          pauseIcon.classList.remove('hidden');
+          playText.textContent = '暂停循环';
+          btnPlayPause.classList.replace('bg-emerald-600', 'bg-sky-600');
+          btnPlayPause.classList.replace('hover:bg-emerald-500', 'hover:bg-sky-500');
+          statStatus.textContent = 'running';
+          statStatus.className = 'text-base font-bold font-mono text-emerald-600 mt-0.5';
+          requestAnimationFrame(animationLoop);
+        } else {
+          playIcon.classList.remove('hidden');
+          pauseIcon.classList.add('hidden');
+          playText.textContent = '恢复运行';
+          btnPlayPause.classList.replace('bg-sky-600', 'bg-emerald-600');
+          btnPlayPause.classList.replace('hover:bg-sky-500', 'hover:bg-emerald-500');
+          statStatus.textContent = 'paused';
+          statStatus.className = 'text-base font-bold font-mono text-amber-500 mt-0.5';
+        }
+      }
+
+      btnPlayPause.addEventListener('click', () => togglePlay());
+
+      // 单步调试
+      btnStep.addEventListener('click', () => {
+        if (state.isRunning) {
+          togglePlay(false);
+        }
+        updateState(16.7);
+        renderScene();
+        highlightNode(nodeUpdate);
+        setTimeout(() => highlightNode(nodeRender), 120);
+      });
+
+      // 转向
+      btnReverse.addEventListener('click', () => {
+        state.direction *= -1;
+      });
+
+      // 速度滑块
+      speedSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        state.speed = val;
+        speedValue.textContent = `${val.toFixed(1)}x`;
+      });
+
+      // 开关绑定
+      chkAxes.addEventListener('change', (e) => {
+        state.showAxes = e.target.checked;
+        renderScene();
+      });
+      chkAngleArc.addEventListener('change', (e) => {
+        state.showAngleArc = e.target.checked;
+        renderScene();
+      });
+      chkTrail.addEventListener('change', (e) => {
+        state.showTrail = e.target.checked;
+        if (!e.target.checked) trailHistory.length = 0;
+        renderScene();
+      });
+
+      selectMode.addEventListener('change', (e) => {
+        state.mode = e.target.value;
+      });
+
+      // 初始启动
+      window.onload = function () {
+        resizeCanvas();
+        renderScene();
+        requestAnimationFrame(animationLoop);
+      };
+    </script>
+  </body>
+</html>

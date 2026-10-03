@@ -1,0 +1,2243 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D03-03 两次点击生成矩形 - 计算机图形学教学 Demo</title>
+    <style>
+      /* ==========================================================
+       1. 全局设计规范：大学图形学标准学术浅色风格（与D03-01/D03-02统一）
+       ========================================================== */
+      :root {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --border-color: #cbd5e1;
+        --border-light: #e2e8f0;
+        --text-main: #0f172a; /* 深蓝墨色 */
+        --text-muted: #475569; /* 蓝灰 */
+        --text-sub: #64748b; /* 浅蓝灰 */
+        --brand-blue: #0284c7; /* 青蓝强调 */
+        --brand-blue-hover: #0369a1;
+        --brand-blue-light: #e0f2fe;
+        --brand-green: #0d9488; /* 适度饱和正向绿/翡翠 */
+        --brand-green-bg: #ccfbf1;
+        --brand-amber: #d97706; /* 琥珀预警/等待P2 */
+        --brand-amber-bg: #fef3c7;
+        --brand-red: #e11d48; /* 错误/告警 */
+        --brand-red-bg: #ffe4e6;
+        --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+        --font-stack:
+          'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, -apple-system,
+          sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: var(--font-stack);
+        line-height: 1.4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 8px 10px;
+        user-select: none;
+      }
+
+      /* 16:9 比例大屏主容器 */
+      .app-frame {
+        width: 100%;
+        max-width: 1600px;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* 顶部标题栏 */
+      header {
+        padding: 10px 20px;
+        background: #f1f5f9;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .badge-id {
+        background: #0f172a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+        font-family: var(--font-mono);
+      }
+
+      .header-titles h1 {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .header-titles h1 span {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+
+      .header-subtitle {
+        font-size: 12px;
+        color: var(--text-sub);
+        margin-top: 1px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pill-tag {
+        background: var(--brand-blue-light);
+        color: var(--brand-blue);
+        border: 1px solid #bae6fd;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+      }
+
+      .pill-tag-alt {
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+      }
+
+      /* 三栏主体布局 (44% / 26% / 30%) */
+      .main-body {
+        display: grid;
+        grid-template-columns: 44% 26% 30%;
+        min-height: 590px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      @media (max-width: 1200px) {
+        .main-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-light);
+        overflow-y: auto;
+        max-height: 740px;
+      }
+
+      .panel:last-child {
+        border-right: none;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .panel-title {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* 左侧 Canvas 视口区域 */
+      .canvas-viewport-card {
+        position: relative;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+      }
+
+      #webglCanvas {
+        display: block;
+        width: 100%;
+        height: 440px;
+        background-color: #fafbfc;
+        cursor: crosshair;
+      }
+
+      /* Canvas 内部覆盖教学提示 */
+      .canvas-overlay-banner {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .canvas-status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #94a3b8;
+      }
+
+      .canvas-status-indicator.amber {
+        background: var(--brand-amber);
+        box-shadow: 0 0 6px rgba(217, 119, 6, 0.6);
+      }
+
+      .canvas-status-indicator.green {
+        background: var(--brand-green);
+        box-shadow: 0 0 6px rgba(13, 148, 136, 0.6);
+      }
+
+      .canvas-coords-tag {
+        position: absolute;
+        bottom: 8px;
+        right: 10px;
+        background: rgba(15, 23, 42, 0.75);
+        color: #f8fafc;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        pointer-events: none;
+      }
+
+      /* 消息浮动吐司 (替代 alert) */
+      .toast-msg {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0f172a;
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        opacity: 0;
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .toast-msg.show {
+        opacity: 0.96;
+        transform: translateX(-50%) translateY(-4px);
+      }
+
+      /* 中间：状态机与推导区 */
+      .state-machine-box {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .state-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 7px;
+        padding: 7px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+        font-size: 12px;
+      }
+
+      .state-card.active {
+        border-color: var(--brand-blue);
+        background: #f0f9ff;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+      }
+
+      .state-card.amber-active {
+        border-color: var(--brand-amber);
+        background: var(--brand-amber-bg);
+        box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+      }
+
+      .state-card.green-active {
+        border-color: var(--brand-green);
+        background: var(--brand-green-bg);
+        box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.25);
+      }
+
+      .state-code-var {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+
+      /* 几何推导显微镜卡片 */
+      .derivation-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 9px 11px;
+        margin-bottom: 10px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .derivation-header {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .derivation-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        font-size: 11px;
+        font-family: var(--font-mono);
+      }
+
+      .derivation-item {
+        background: #f8fafc;
+        padding: 5px 7px;
+        border-radius: 5px;
+        border: 1px solid var(--border-light);
+      }
+
+      .derivation-item.derived {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1e40af;
+      }
+
+      .derivation-flow-note {
+        font-size: 10.5px;
+        color: var(--text-sub);
+        margin-top: 6px;
+        line-height: 1.35;
+        background: #f1f5f9;
+        padding: 4px 6px;
+        border-radius: 4px;
+      }
+
+      /* 事件日志 */
+      .event-log-container {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 7px;
+        padding: 6px 8px;
+        flex: 1;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .log-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-sub);
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .log-list {
+        list-style: none;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        overflow-y: auto;
+        max-height: 130px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .log-item {
+        padding: 2px 5px;
+        border-radius: 3px;
+        background: #f8fafc;
+        color: var(--text-muted);
+        border-left: 3px solid var(--border-color);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      .log-item.latest {
+        border-left-color: var(--brand-blue);
+        background: var(--brand-blue-light);
+        color: #0369a1;
+        font-weight: 600;
+      }
+
+      /* 右侧：几何监视与 GPU Buffer */
+      .monitor-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .monitor-table th,
+      .monitor-table td {
+        padding: 4px 7px;
+        border-bottom: 1px solid var(--border-light);
+        text-align: left;
+      }
+
+      .monitor-table th {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 10.5px;
+      }
+
+      .monitor-table td.mono {
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+
+      .source-badge {
+        display: inline-block;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-family: var(--font-mono);
+      }
+
+      .source-mouse {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+
+      .source-calc {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      /* GPU Buffer 监视卡片 */
+      .buffer-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 7px;
+        padding: 8px;
+        margin-bottom: 8px;
+        transition:
+          background 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .buffer-card.flash {
+        background: #ecfdf5;
+        border-color: #34d399;
+      }
+
+      .buffer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        font-size: 11.5px;
+        font-weight: 700;
+      }
+
+      .buffer-preview-code {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        background: #f8fafc;
+        padding: 5px;
+        border-radius: 4px;
+        border: 1px solid var(--border-light);
+        line-height: 1.35;
+        color: #334155;
+        max-height: 85px;
+        overflow-y: auto;
+      }
+
+      /* 数据流管道 */
+      .pipeline-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 3px;
+        background: #f1f5f9;
+        padding: 4px 6px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border: 1px solid var(--border-light);
+      }
+
+      .pipe-node {
+        font-size: 9.5px;
+        font-weight: 600;
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: #ffffff;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        transition: all 0.25s ease;
+        white-space: nowrap;
+      }
+
+      .pipe-node.active {
+        background: var(--brand-blue);
+        color: #ffffff;
+        border-color: var(--brand-blue);
+        box-shadow: 0 0 6px rgba(2, 132, 199, 0.4);
+      }
+
+      .pipe-node.render-active {
+        background: var(--brand-green);
+        color: #ffffff;
+        border-color: var(--brand-green);
+      }
+
+      /* 坐标转换折叠区 */
+      .coord-collapse-box {
+        border: 1px dashed var(--border-color);
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 11px;
+        background: #fafafa;
+      }
+
+      /* 底部控制面板 */
+      footer {
+        background: #ffffff;
+        padding: 10px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .ctrl-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-light);
+      }
+
+      .ctrl-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+
+      .btn {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 4px 9px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .btn:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+
+      .btn-primary {
+        background: var(--brand-blue);
+        color: #fff;
+        border-color: var(--brand-blue);
+      }
+
+      .btn-primary:hover {
+        background: var(--brand-blue-hover);
+      }
+
+      .btn-active {
+        background: var(--brand-blue-light);
+        color: var(--brand-blue);
+        border-color: var(--brand-blue);
+      }
+
+      .btn-color {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+
+      .btn-color:hover {
+        transform: scale(1.15);
+      }
+
+      .btn-color.selected {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 1px #ffffff;
+      }
+
+      .checkbox-label {
+        font-size: 11.5px;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+      }
+
+      /* 概念条与课堂提问 */
+      .concept-bar {
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        border-left: 4px solid var(--brand-blue);
+      }
+
+      .concept-text {
+        color: var(--text-main);
+        font-weight: 500;
+      }
+
+      .concept-text b {
+        color: var(--brand-blue);
+      }
+
+      .question-box {
+        font-size: 11.5px;
+        color: #4338ca;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        padding: 4px 9px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+
+      .question-box:hover {
+        background: #e0e7ff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ==================== 主容器 (16:9 比例大屏架构) ==================== -->
+    <main class="app-frame">
+      <!-- ==================== 顶部教学标题栏 ==================== -->
+      <header>
+        <div class="header-left">
+          <span class="badge-id">D03-03</span>
+          <div class="header-titles">
+            <h1>两次点击生成矩形 <span>Two-Click Rectangle Builder</span></h1>
+            <p class="header-subtitle">
+              核心问题：“交互程序怎样记住第一次点击，并在第二次点击时生成完整几何？”
+            </p>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="pill-tag">WebGL 2.0 (ES 3.00)</span>
+          <span class="pill-tag-alt">大学计算机图形学 · 第3章 交互与动画</span>
+        </div>
+      </header>
+
+      <!-- ==================== 主体三栏核心区 ==================== -->
+      <div class="main-body">
+        <!-- ================= 左栏：WebGL 交互建模画布 (~44%) ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+              交互建模画布 (Interactive Canvas)
+            </div>
+            <span style="font-size: 11px; color: var(--text-sub)">
+              点击第1次选P1，移动预览，点击第2次固定矩形
+            </span>
+          </div>
+
+          <div class="canvas-viewport-card" id="canvasViewportWrapper">
+            <!-- 画布内教学浮层 -->
+            <div class="canvas-overlay-banner">
+              <span class="canvas-status-indicator" id="canvasStatusDot"></span>
+              <span id="canvasBannerText">等待第一次点击 (Waiting for P1)</span>
+            </div>
+
+            <!-- WebGL 2.0 真实渲染 Canvas -->
+            <canvas id="webglCanvas" width="800" height="600"></canvas>
+
+            <!-- 坐标跟踪指示器 -->
+            <div class="canvas-coords-tag" id="canvasCoordsTag">NDC: (0.000, 0.000)</div>
+
+            <!-- 轻量操作反馈 Toast (无弹窗) -->
+            <div class="toast-msg" id="toastMsg">矩形生成成功</div>
+          </div>
+
+          <!-- 画布底部状态小计 -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 6px;
+              font-size: 11.5px;
+              color: var(--text-sub);
+            "
+          >
+            <span
+              >绘制模式：<b style="color: var(--text-main)">gl.TRIANGLE_FAN</b> (4 Vertices /
+              Rect)</span
+            >
+            <span
+              id="clickTotalCountTag"
+              style="font-family: var(--font-mono); color: var(--brand-blue)"
+              >总点击数: 0</span
+            >
+          </div>
+        </section>
+
+        <!-- ================= 中栏：事件与状态显微镜 (~26%) ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              事件与状态显微镜 (State Machine)
+            </div>
+            <span class="state-code-var" id="firstVarTag">first = true</span>
+          </div>
+
+          <!-- 状态机三级卡片 -->
+          <div class="state-machine-box">
+            <div class="state-card active" id="stateCard0">
+              <div>
+                <div style="font-weight: 700; color: #0f172a">STATE 0: WAIT_FIRST_POINT</div>
+                <div style="font-size: 10.5px; color: var(--text-sub)">
+                  等待第 1 次点击，Canvas 无未定顶点
+                </div>
+              </div>
+              <span class="state-code-var">P1 = null</span>
+            </div>
+
+            <div style="text-align: center; color: #94a3b8; font-size: 10px; margin: -3px 0">
+              ↓ click #1 (记录角点 P1)
+            </div>
+
+            <div class="state-card" id="stateCard1">
+              <div>
+                <div style="font-weight: 700; color: #0f172a">STATE 1: WAIT_SECOND_POINT</div>
+                <div style="font-size: 10.5px; color: var(--text-sub)">
+                  已保存 P1，鼠标移动实时预览
+                </div>
+              </div>
+              <span class="state-code-var" id="p1StorePreviewTag">P1 锁定</span>
+            </div>
+
+            <div style="text-align: center; color: #94a3b8; font-size: 10px; margin: -3px 0">
+              ↓ click #2 (生成几何并提交 Buffer)
+            </div>
+
+            <div class="state-card" id="stateCard2">
+              <div>
+                <div style="font-weight: 700; color: #0f172a">STATE 2: RECT_COMMITTED</div>
+                <div style="font-size: 10.5px; color: var(--text-sub)">
+                  4 顶点写入 GPU Buffer，重置为 STATE 0
+                </div>
+              </div>
+              <span class="state-code-var">Rendered</span>
+            </div>
+          </div>
+
+          <!-- 几何推导显微镜卡片 -->
+          <div class="derivation-card">
+            <div class="derivation-header">
+              <span>📐 几何推导：2 点 → 4 顶点</span>
+              <span
+                id="predictBadge"
+                style="font-size: 10px; color: var(--brand-amber); display: none"
+                >[预测模式启用]</span
+              >
+            </div>
+            <div class="derivation-grid">
+              <div class="derivation-item">
+                <b>P1 (输入1):</b><br />
+                <span id="derP1">(--, --)</span>
+              </div>
+              <div class="derivation-item">
+                <b>P2 (输入2):</b><br />
+                <span id="derP2">(--, --)</span>
+              </div>
+              <div class="derivation-item derived">
+                <b>P3 (推导点):</b><br />
+                <span id="derP3">(--, --)</span>
+              </div>
+              <div class="derivation-item derived">
+                <b>P4 (推导点):</b><br />
+                <span id="derP4">(--, --)</span>
+              </div>
+            </div>
+            <div class="derivation-flow-note">
+              💡 <b>坐标组合原理：</b><br />
+              P3.x = P1.x, P3.y = P2.y ； P4.x = P2.x, P4.y = P1.y<br />
+              <i>只需 2 个点击角点，其余 2 点全部由数学关系推导！</i>
+            </div>
+          </div>
+
+          <!-- 事件日志 (Event Log) -->
+          <div class="event-log-container">
+            <div class="log-title">
+              <span>事件轨迹 (EVENT LOG)</span>
+              <span style="font-size: 10px; color: #94a3b8">最近 8 条</span>
+            </div>
+            <ul class="log-list" id="logList">
+              <li class="log-item latest">#00 system ready, waiting for input</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ================= 右栏：几何 / GPU Buffer 监视器 (~30%) ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              几何与 GPU 监视器 (Geometry & GPU)
+            </div>
+            <span class="source-badge source-mouse" id="activeRectTag">Rect #0</span>
+          </div>
+
+          <!-- 数据流点亮管道 -->
+          <div class="pipeline-bar" id="pipelineBar">
+            <div class="pipe-node" id="pipeEvents">Events</div>
+            <span style="color: #cbd5e1; font-size: 9px">→</span>
+            <div class="pipe-node" id="pipeState">State</div>
+            <span style="color: #cbd5e1; font-size: 9px">→</span>
+            <div class="pipe-node" id="pipeGeometry">Geometry</div>
+            <span style="color: #cbd5e1; font-size: 9px">→</span>
+            <div class="pipe-node" id="pipeBuffer">Buffer</div>
+            <span style="color: #cbd5e1; font-size: 9px">→</span>
+            <div class="pipe-node" id="pipeRender">Render</div>
+          </div>
+
+          <!-- 几何监视表 (Geometry Monitor) -->
+          <table class="monitor-table">
+            <thead>
+              <tr>
+                <th>顶点</th>
+                <th>X (NDC)</th>
+                <th>Y (NDC)</th>
+                <th>数据来源 (Source)</th>
+              </tr>
+            </thead>
+            <tbody id="geoTableBody">
+              <tr>
+                <td class="mono">P1</td>
+                <td class="mono" id="cellP1X">--</td>
+                <td class="mono" id="cellP1Y">--</td>
+                <td><span class="source-badge source-mouse">Mouse click #1</span></td>
+              </tr>
+              <tr>
+                <td class="mono">P3</td>
+                <td class="mono" id="cellP3X">--</td>
+                <td class="mono" id="cellP3Y">--</td>
+                <td><span class="source-badge source-calc">Derived (x1, y2)</span></td>
+              </tr>
+              <tr>
+                <td class="mono">P2</td>
+                <td class="mono" id="cellP2X">--</td>
+                <td class="mono" id="cellP2Y">--</td>
+                <td><span class="source-badge source-mouse">Mouse click #2</span></td>
+              </tr>
+              <tr>
+                <td class="mono">P4</td>
+                <td class="mono" id="cellP4X">--</td>
+                <td class="mono" id="cellP4Y">--</td>
+                <td><span class="source-badge source-calc">Derived (x2, y1)</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- GPU Buffer 监视卡片 -->
+          <div class="buffer-card" id="gpuBufferCard">
+            <div class="buffer-header">
+              <span>GPU Vertex Buffer (ARRAY_BUFFER)</span>
+              <span
+                id="bufferStatusTag"
+                style="font-size: 10px; color: var(--brand-blue); font-family: var(--font-mono)"
+                >Static</span
+              >
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+                margin-bottom: 4px;
+                color: var(--text-sub);
+              "
+            >
+              <span
+                >已存顶点: <b id="bufUsedVerts" style="color: var(--text-main)">0</b> / 400</span
+              >
+              <span
+                >占用显存: <b id="bufUsedBytes" style="color: var(--text-main)">0</b> B / 3.2
+                KB</span
+              >
+            </div>
+            <div class="buffer-preview-code" id="bufPreviewCode">
+              // gl.bufferSubData 待提交数据预览<br />
+              [等待第二次点击以组装 4 顶点浮点数据...]
+            </div>
+          </div>
+
+          <!-- 坐标转换回顾折叠卡片 (与 D03-02 承接) -->
+          <div class="coord-collapse-box">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+              "
+              id="toggleCoordCard"
+            >
+              <span style="font-weight: 700; color: #475569">🔍 坐标转换简报 (承接 D03-02)</span>
+              <span id="coordArrowTag" style="font-size: 10px; color: #94a3b8">展开 ▼</span>
+            </div>
+            <div
+              id="coordDetailContent"
+              style="
+                display: none;
+                margin-top: 6px;
+                font-family: var(--font-mono);
+                font-size: 10px;
+                line-height: 1.4;
+                color: #334155;
+              "
+            >
+              <div>Browser: (<span id="cClientVal">--, --</span>) px</div>
+              <div>CanvasCSS: (<span id="cCssVal">--, --</span>) px</div>
+              <div style="color: var(--brand-blue); font-weight: 600">
+                WebGL NDC: (<span id="cNdcVal">--, --</span>)
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== 底部：实验控制面板 ==================== -->
+      <footer>
+        <!-- 控制行 1：操作按钮组与单步模式 -->
+        <div class="control-row">
+          <!-- 动作操作组 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">操作:</span>
+            <button class="btn" id="btnUndo" title="撤销最近生成的矩形">↩ 撤销上一个</button>
+            <button class="btn" id="btnResetCurrent" title="仅取消当前的 P1 等待状态，保留历史矩形">
+              重置当前构造
+            </button>
+            <button class="btn" id="btnClearAll" title="清空全部已绘制矩形">清空全部</button>
+          </div>
+
+          <!-- 教学特色模式 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">教学模式:</span>
+            <button class="btn btn-primary" id="btnLectureFlow">▶ 课堂演示引导</button>
+            <button class="btn" id="btnStepMode">单步显微镜</button>
+            <button
+              class="btn"
+              id="btnNextStep"
+              style="display: none; background: #e0f2fe; color: #0284c7; border-color: #bae6fd"
+            >
+              下一步 (Step) →
+            </button>
+            <button class="btn" id="btnPredictMode">预测模式: 关</button>
+            <button
+              class="btn"
+              id="btnRevealAnswer"
+              style="display: none; background: #fef3c7; color: #b45309; border-color: #fde68a"
+            >
+              显示答案
+            </button>
+          </div>
+
+          <!-- 填充颜色预设选择器 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">矩形颜色:</span>
+            <button
+              class="btn-color selected"
+              id="colCyan"
+              style="background: #0284c7"
+              title="青蓝 (默认)"
+            ></button>
+            <button
+              class="btn-color"
+              id="colBlue"
+              style="background: #3b82f6"
+              title="群青"
+            ></button>
+            <button
+              class="btn-color"
+              id="colGreen"
+              style="background: #0d9488"
+              title="翡翠绿"
+            ></button>
+            <button
+              class="btn-color"
+              id="colAmber"
+              style="background: #d97706"
+              title="琥珀黄"
+            ></button>
+          </div>
+        </div>
+
+        <!-- 控制行 2：图层显示开关与数据统计 -->
+        <div class="control-row">
+          <!-- 显示图层开关 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">显示选项:</span>
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkGrid" checked /> 辅助网格</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkAxes" checked /> NDC 坐标轴</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkPreview" checked /> 移动预览</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkLabels" checked /> 顶点文字标签</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkLog" checked /> 事件日志</label
+            >
+          </div>
+
+          <!-- 实时统计微卡片 -->
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              font-size: 11px;
+              color: var(--text-muted);
+              font-family: var(--font-mono);
+            "
+          >
+            <span
+              style="
+                background: #f1f5f9;
+                padding: 3px 8px;
+                border-radius: 4px;
+                border: 1px solid var(--border-light);
+              "
+            >
+              已存矩形: <b id="statRects" style="color: #0f172a">0</b>
+            </span>
+            <span
+              style="
+                background: #f1f5f9;
+                padding: 3px 8px;
+                border-radius: 4px;
+                border: 1px solid var(--border-light);
+              "
+            >
+              顶点总数: <b id="statVerts" style="color: #0f172a">0</b>
+            </span>
+            <span
+              style="
+                background: #f1f5f9;
+                padding: 3px 8px;
+                border-radius: 4px;
+                border: 1px solid var(--border-light);
+              "
+            >
+              显存使用: <b id="statBufferPct" style="color: #0284c7">0.0%</b>
+            </span>
+          </div>
+        </div>
+
+        <!-- 核心教学结论与启发式提问条 -->
+        <div class="concept-bar">
+          <div class="concept-text" id="conceptBarText">
+            <b>核心认知：</b>交互式建模不是直接在屏幕上修改像素，而是：<b
+              >Event → State → Geometry → Buffer → Render</b
+            >！
+          </div>
+          <div class="question-box" id="questionBox" title="点击轮换课堂提问">
+            💭 <b>课堂提问 (点击切换)：</b
+            ><span id="questionText">第一次点击后，程序怎样把状态留存到下一次点击到来？</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ==================== WebGL 2.0 渲染与交互核心脚本 ==================== -->
+    <script>
+      /* ==========================================================
+       2. WebGL 2.0 Shader 源码 (严谨符合 #version 300 es 现代规范)
+       ========================================================== */
+      const VS_SOURCE = `#version 300 es
+      in vec2 aPosition;
+      uniform float uPointSize;
+      void main() {
+        gl_Position = vec4(aPosition, 0.0, 1.0);
+        gl_PointSize = uPointSize;
+      }
+    `;
+
+      const FS_SOURCE = `#version 300 es
+      precision highp float;
+      uniform vec4 uColor;
+      uniform bool uIsPoint;
+      out vec4 fragColor;
+      void main() {
+        if (uIsPoint) {
+          // 圆形抗锯齿顶点打点
+          vec2 coord = gl_PointCoord - vec2(0.5);
+          float dist = length(coord);
+          if (dist > 0.5) discard;
+          float alpha = smoothstep(0.5, 0.4, dist);
+          fragColor = vec4(uColor.rgb, uColor.a * alpha);
+        } else {
+          fragColor = uColor;
+        }
+      }
+    `;
+
+      /* ==========================================================
+       3. 核心应用状态管理模型
+       ========================================================== */
+      const MAX_RECTANGLES = 100;
+      const VERTICES_PER_RECT = 4;
+      const FLOATS_PER_VERTEX = 2;
+      const BUFFER_CAPACITY_BYTES = MAX_RECTANGLES * VERTICES_PER_RECT * FLOATS_PER_VERTEX * 4;
+
+      const APP_STATE = {
+        WAIT_FIRST_POINT: 'WAIT_FIRST_POINT',
+        WAIT_SECOND_POINT: 'WAIT_SECOND_POINT',
+        RECT_COMMITTED: 'RECT_COMMITTED',
+      };
+
+      const state = {
+        // 状态机
+        currentState: APP_STATE.WAIT_FIRST_POINT,
+        first: true, // 教材对应布尔标志
+
+        // 交互点
+        p1: null, // { x: number, y: number, clientX, clientY }
+        p2: null,
+        mouseNdc: { x: 0, y: 0 },
+        mouseClient: { x: 0, y: 0 },
+        mouseCss: { x: 0, y: 0 },
+        isMouseInCanvas: false,
+
+        // 选中的矩形颜色 RGBA
+        currentColor: [0.01, 0.52, 0.78, 0.35], // 浅青蓝半透明填充
+        currentBorderColor: [0.01, 0.52, 0.78, 0.95],
+
+        // 已提交的几何对象列表 (CPU端场景状态)
+        rectangles: [],
+        totalClicks: 0,
+
+        // 单步显微镜状态
+        isStepMode: false,
+        stepPhase: 0, // 0: Idle, 1: Got P2, 2: Derived P3/P4, 3: Formed 4-Verts, 4: BufferSubData, 5: Draw Call
+        pendingStepData: null,
+
+        // 预测模式状态
+        isPredictMode: false,
+        isAnswerRevealed: false,
+        predictP2: null,
+
+        // 图层显示控制
+        showGrid: true,
+        showAxes: true,
+        showPreview: true,
+        showLabels: true,
+        showLog: true,
+
+        // 提问列表
+        questionIdx: 0,
+      };
+
+      const questions = [
+        '第一次点击后，程序怎样把状态留存到下一次点击到来？（答：通过全局/组件级状态变量保存 P1，等待后续事件）',
+        '两个对角点为什么能够完全确定一个轴对齐矩形？（答：轴对齐矩形各边平行于坐标轴，两点即限定了宽和高）',
+        'P3 和 P4 是来自用户的鼠标输入还是程序计算？（答：完全由程序根据 P1、P2 坐标重组推导而来）',
+        '第二次点击后，真正送入 GPU 顶点缓冲区的有几个顶点？（答：4 个顶点，按 TRIANGLE_FAN 环绕顺序排列）',
+        '如果不使用 bufferSubData 增量更新，频繁重新 createBuffer 会有什么问题？（答：严重浪费显存重分配开销与引起帧率卡顿）',
+        '用户在屏幕上看到的是‘两次点击’，GPU 最终接收并执行的到底是什么？（答：顶点缓冲区字节流与 gl.drawArrays 绘制调用）',
+      ];
+
+      /* ==========================================================
+       4. DOM 元素缓存
+       ========================================================== */
+      const canvas = document.getElementById('webglCanvas');
+      const canvasStatusDot = document.getElementById('canvasStatusDot');
+      const canvasBannerText = document.getElementById('canvasBannerText');
+      const canvasCoordsTag = document.getElementById('canvasCoordsTag');
+      const toastMsg = document.getElementById('toastMsg');
+      const clickTotalCountTag = document.getElementById('clickTotalCountTag');
+
+      const firstVarTag = document.getElementById('firstVarTag');
+      const stateCard0 = document.getElementById('stateCard0');
+      const stateCard1 = document.getElementById('stateCard1');
+      const stateCard2 = document.getElementById('stateCard2');
+      const p1StorePreviewTag = document.getElementById('p1StorePreviewTag');
+
+      const derP1 = document.getElementById('derP1');
+      const derP2 = document.getElementById('derP2');
+      const derP3 = document.getElementById('derP3');
+      const derP4 = document.getElementById('derP4');
+      const predictBadge = document.getElementById('predictBadge');
+
+      const logList = document.getElementById('logList');
+      const activeRectTag = document.getElementById('activeRectTag');
+
+      const pipeEvents = document.getElementById('pipeEvents');
+      const pipeState = document.getElementById('pipeState');
+      const pipeGeometry = document.getElementById('pipeGeometry');
+      const pipeBuffer = document.getElementById('pipeBuffer');
+      const pipeRender = document.getElementById('pipeRender');
+
+      const cellP1X = document.getElementById('cellP1X');
+      const cellP1Y = document.getElementById('cellP1Y');
+      const cellP2X = document.getElementById('cellP2X');
+      const cellP2Y = document.getElementById('cellP2Y');
+      const cellP3X = document.getElementById('cellP3X');
+      const cellP3Y = document.getElementById('cellP3Y');
+      const cellP4X = document.getElementById('cellP4X');
+      const cellP4Y = document.getElementById('cellP4Y');
+
+      const gpuBufferCard = document.getElementById('gpuBufferCard');
+      const bufferStatusTag = document.getElementById('bufferStatusTag');
+      const bufUsedVerts = document.getElementById('bufUsedVerts');
+      const bufUsedBytes = document.getElementById('bufUsedBytes');
+      const bufPreviewCode = document.getElementById('bufPreviewCode');
+
+      const toggleCoordCard = document.getElementById('toggleCoordCard');
+      const coordDetailContent = document.getElementById('coordDetailContent');
+      const coordArrowTag = document.getElementById('coordArrowTag');
+      const cClientVal = document.getElementById('cClientVal');
+      const cCssVal = document.getElementById('cCssVal');
+      const cNdcVal = document.getElementById('cNdcVal');
+
+      const btnUndo = document.getElementById('btnUndo');
+      const btnResetCurrent = document.getElementById('btnResetCurrent');
+      const btnClearAll = document.getElementById('btnClearAll');
+      const btnLectureFlow = document.getElementById('btnLectureFlow');
+      const btnStepMode = document.getElementById('btnStepMode');
+      const btnNextStep = document.getElementById('btnNextStep');
+      const btnPredictMode = document.getElementById('btnPredictMode');
+      const btnRevealAnswer = document.getElementById('btnRevealAnswer');
+
+      const colCyan = document.getElementById('colCyan');
+      const colBlue = document.getElementById('colBlue');
+      const colGreen = document.getElementById('colGreen');
+      const colAmber = document.getElementById('colAmber');
+
+      const chkGrid = document.getElementById('chkGrid');
+      const chkAxes = document.getElementById('chkAxes');
+      const chkPreview = document.getElementById('chkPreview');
+      const chkLabels = document.getElementById('chkLabels');
+      const chkLog = document.getElementById('chkLog');
+
+      const statRects = document.getElementById('statRects');
+      const statVerts = document.getElementById('statVerts');
+      const statBufferPct = document.getElementById('statBufferPct');
+      const questionBox = document.getElementById('questionBox');
+      const questionText = document.getElementById('questionText');
+      const conceptBarText = document.getElementById('conceptBarText');
+
+      /* ==========================================================
+       5. WebGL 2.0 上下文与图形管线初始化
+       ========================================================== */
+      let gl = null;
+      let program = null;
+      let aPositionLoc = -1;
+      let uPointSizeLoc = null;
+      let uColorLoc = null;
+      let uIsPointLoc = null;
+
+      // 两个核心 Buffer：一个用于批量历史矩形，一个用于动态辅助线/预览
+      let rectVertexBuffer = null;
+      let dynamicAuxBuffer = null;
+
+      function initWebGL() {
+        gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+        if (!gl) {
+          showToast('浏览器不支持 WebGL 2.0，请使用现代浏览器运行本实验！');
+          return false;
+        }
+
+        function compileShader(type, source) {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, source);
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(s));
+            gl.deleteShader(s);
+            return null;
+          }
+          return s;
+        }
+
+        const vs = compileShader(gl.VERTEX_SHADER, VS_SOURCE);
+        const fs = compileShader(gl.FRAGMENT_SHADER, FS_SOURCE);
+        program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(program));
+          return false;
+        }
+
+        gl.useProgram(program);
+        aPositionLoc = gl.getAttribLocation(program, 'aPosition');
+        uPointSizeLoc = gl.getUniformLocation(program, 'uPointSize');
+        uColorLoc = gl.getUniformLocation(program, 'uColor');
+        uIsPointLoc = gl.getUniformLocation(program, 'uIsPoint');
+
+        // 1. 初始化大容量预分配矩形 Vertex Buffer (满足 DYNAMIC_DRAW 教学要求)
+        rectVertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, rectVertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, BUFFER_CAPACITY_BYTES, gl.DYNAMIC_DRAW);
+
+        // 2. 初始化辅助元素动态缓冲 (网格、轴线、十字线、P1辅助线、预览框)
+        dynamicAuxBuffer = gl.createBuffer();
+
+        // 启用半透明混合
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        addEventLog('WebGL 2.0 initialized (Buffer 3.2KB allocated)');
+        return true;
+      }
+
+      /* ==========================================================
+       6. 严谨坐标转换逻辑 (遵循 D03-02 显微镜规范)
+       ========================================================== */
+      function screenToNDC(e) {
+        const rect = canvas.getBoundingClientRect();
+        const styleW = rect.width;
+        const styleH = rect.height;
+
+        // 1. Canvas 局部 CSS 坐标
+        const xCss = e.clientX - rect.left;
+        const yCss = e.clientY - rect.top;
+
+        // 2. 映射至 Buffer 像素坐标
+        const scaleX = canvas.width / styleW;
+        const scaleY = canvas.height / styleH;
+        const xBuf = xCss * scaleX;
+        const yBuf = yCss * scaleY;
+
+        // 3. WebGL NDC 归一化设备坐标 [-1, 1]，翻转 Y 轴
+        const xNdc = (2.0 * xBuf) / canvas.width - 1.0;
+        const yNdc = 1.0 - (2.0 * yBuf) / canvas.height;
+
+        return {
+          x: xNdc,
+          y: yNdc,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          cssX: xCss,
+          cssY: yCss,
+        };
+      }
+
+      /* ==========================================================
+       7. 几何推导核心函数：由 P1(x1,y1) 与 P2(x2,y2) 计算出 4 个顶点
+       ========================================================== */
+      function buildRectangle(p1, p2) {
+        // 按照 TRIANGLE_FAN 的连贯环绕顺序排列顶点：
+        // P1 (输入1) -> P3 (推导点) -> P2 (输入2) -> P4 (推导点)
+        // 几何关系：
+        // P1: (x1, y1)
+        // P3: (x1, y2)
+        // P2: (x2, y2)
+        // P4: (x2, y1)
+        const p3 = { x: p1.x, y: p2.y };
+        const p4 = { x: p2.x, y: p1.y };
+
+        // 扁平化为 WebGL Float32Array 格式 (8 个浮点数)
+        const vertexArray = new Float32Array([p1.x, p1.y, p3.x, p3.y, p2.x, p2.y, p4.x, p4.y]);
+
+        return {
+          p1,
+          p2,
+          p3,
+          p4,
+          vertexArray,
+          width: Math.abs(p2.x - p1.x),
+          height: Math.abs(p2.y - p1.y),
+        };
+      }
+
+      /* ==========================================================
+       8. 交互事件处理：点击与移动响应
+       ========================================================== */
+      function handlePointerMove(e) {
+        const coord = screenToNDC(e);
+        state.mouseNdc = { x: coord.x, y: coord.y };
+        state.mouseClient = { x: coord.clientX, y: coord.clientY };
+        state.mouseCss = { x: coord.cssX, y: coord.cssY };
+
+        // 检查鼠标是否在画布内部
+        const rect = canvas.getBoundingClientRect();
+        state.isMouseInCanvas =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+
+        // 更新坐标提示
+        canvasCoordsTag.textContent = `NDC: (${coord.x.toFixed(3)}, ${coord.y.toFixed(3)})`;
+        cClientVal.textContent = `${coord.clientX}, ${coord.clientY}`;
+        cCssVal.textContent = `${coord.cssX.toFixed(1)}, ${coord.cssY.toFixed(1)}`;
+        cNdcVal.textContent = `${coord.x.toFixed(3)}, ${coord.y.toFixed(3)}`;
+
+        // 若处于 WAIT_SECOND_POINT 且启用了预览，实时刷新重绘
+        if (
+          state.currentState === APP_STATE.WAIT_SECOND_POINT &&
+          state.showPreview &&
+          !state.isStepMode
+        ) {
+          updateDerivationUI(state.p1, state.mouseNdc);
+        }
+
+        drawScene();
+      }
+
+      function handlePointerClick(e) {
+        state.totalClicks++;
+        clickTotalCountTag.textContent = `总点击数: ${state.totalClicks}`;
+        const clickedPt = screenToNDC(e);
+
+        // 状态机流转分支
+        if (state.currentState === APP_STATE.WAIT_FIRST_POINT) {
+          handleFirstClick(clickedPt);
+        } else if (state.currentState === APP_STATE.WAIT_SECOND_POINT) {
+          handleSecondClick(clickedPt);
+        }
+      }
+
+      function handleFirstClick(pt) {
+        state.p1 = pt;
+        state.currentState = APP_STATE.WAIT_SECOND_POINT;
+        state.first = false;
+
+        addEventLog(
+          `#${state.totalClicks} click #1 → P1 锁定 (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)})`,
+        );
+        triggerPipelineHighlight(['pipeEvents', 'pipeState']);
+
+        updateUI();
+        drawScene();
+      }
+
+      function handleSecondClick(pt) {
+        // 边界检查：防止点击距离过近导致零面积或过小矩形
+        const dx = Math.abs(pt.x - state.p1.x);
+        const dy = Math.abs(pt.y - state.p1.y);
+        if (dx < 0.02 || dy < 0.02) {
+          showToast('⚠️ 两点距离过近或共线，请选择更明显的角点！');
+          addEventLog(`click ignored: size too small (dx:${dx.toFixed(2)})`);
+          return;
+        }
+
+        if (state.rectangles.length >= MAX_RECTANGLES) {
+          showToast('⚠️ 已达到 GPU Buffer 预留的最大矩形数 (100个)！');
+          return;
+        }
+
+        state.p2 = pt;
+
+        // 若开启了“预测模式”，先挂起提交并提示学生预测
+        if (state.isPredictMode && !state.isAnswerRevealed) {
+          state.predictP2 = pt;
+          btnRevealAnswer.style.display = 'inline-flex';
+          showToast('已记录 P2！请预测 P3、P4 位于何处，然后点击“显示答案”');
+          addEventLog('Predict mode: paused before commit');
+          drawScene();
+          return;
+        }
+
+        // 若开启了“单步显微镜”，启动分步推进流程
+        if (state.isStepMode) {
+          startStepWorkflow(state.p1, state.p2);
+          return;
+        }
+
+        // 常规模式：立即执行完整的几何构造与 GPU Buffer 提交
+        commitRectangleDirect(state.p1, state.p2);
+      }
+
+      /* 直接提交矩形到 GPU Buffer */
+      function commitRectangleDirect(p1, p2) {
+        const rectObj = buildRectangle(p1, p2);
+        const rectIndex = state.rectangles.length;
+        const vertexOffset = rectIndex * VERTICES_PER_RECT;
+
+        // 核心要求：使用 gl.bufferSubData 追加写入 GPU Vertex Buffer，绝不重复 createBuffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, rectVertexBuffer);
+        const byteOffset = vertexOffset * FLOATS_PER_VERTEX * 4;
+        gl.bufferSubData(gl.ARRAY_BUFFER, byteOffset, rectObj.vertexArray);
+
+        // 保存至 CPU 端的场景模型列表
+        state.rectangles.push({
+          id: rectIndex + 1,
+          p1: p1,
+          p2: p2,
+          p3: rectObj.p3,
+          p4: rectObj.p4,
+          vertexArray: rectObj.vertexArray,
+          vertexStart: vertexOffset,
+          vertexCount: VERTICES_PER_RECT,
+          color: [...state.currentColor],
+          borderColor: [...state.currentBorderColor],
+        });
+
+        addEventLog(
+          `#${state.totalClicks} click #2 → Rect #${state.rectangles.length} committed to Buffer`,
+        );
+        showToast(`矩形 #${state.rectangles.length} 生成完毕并写入显存`);
+
+        // 触发数据流从左到右点亮动效 (约 1.2 秒完成)
+        triggerFullPipelineSequence();
+
+        // 重置当前单次构造状态，准备迎接下一个矩形
+        resetCurrentConstruction(false);
+        updateUI();
+        drawScene();
+      }
+
+      /* ==========================================================
+       9. 单步显微镜教学工作流
+       ========================================================== */
+      function startStepWorkflow(p1, p2) {
+        state.stepPhase = 1;
+        state.pendingStepData = { p1, p2 };
+        btnNextStep.style.display = 'inline-flex';
+        btnNextStep.textContent = '下一步 (Step 2: 计算推导) →';
+        showToast('【单步模式】Step 1: 已捕获 P2，点击下一步执行推导');
+        addEventLog('Step 1/5: P2 received');
+        triggerPipelineHighlight(['pipeEvents', 'pipeState']);
+        updateStepCardHighlight(1);
+        drawScene();
+      }
+
+      function advanceNextStep() {
+        if (!state.pendingStepData) return;
+        const { p1, p2 } = state.pendingStepData;
+
+        state.stepPhase++;
+        if (state.stepPhase === 2) {
+          // Step 2: 几何推导计算 P3, P4
+          const rectObj = buildRectangle(p1, p2);
+          state.pendingStepData.rectObj = rectObj;
+          updateDerivationUI(p1, p2);
+          btnNextStep.textContent = '下一步 (Step 3: 4顶点数组) →';
+          showToast('【单步模式】Step 2: 数学推导 P3(x1,y2) 与 P4(x2,y1) 完成');
+          addEventLog('Step 2/5: Derived P3 & P4');
+          triggerPipelineHighlight(['pipeGeometry']);
+          updateStepCardHighlight(2);
+        } else if (state.stepPhase === 3) {
+          // Step 3: 组装成 Float32Array
+          btnNextStep.textContent = '下一步 (Step 4: bufferSubData) →';
+          showToast('【单步模式】Step 3: 组装 4 顶点浮点数据 (32 字节)');
+          addEventLog('Step 3/5: Formed Float32Array');
+          triggerPipelineHighlight(['pipeGeometry']);
+        } else if (state.stepPhase === 4) {
+          // Step 4: 写入 GPU Buffer
+          const { rectObj } = state.pendingStepData;
+          const rectIndex = state.rectangles.length;
+          const vertexOffset = rectIndex * VERTICES_PER_RECT;
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, rectVertexBuffer);
+          const byteOffset = vertexOffset * FLOATS_PER_VERTEX * 4;
+          gl.bufferSubData(gl.ARRAY_BUFFER, byteOffset, rectObj.vertexArray);
+
+          btnNextStep.textContent = '下一步 (Step 5: drawArrays) →';
+          showToast('【单步模式】Step 4: gl.bufferSubData 写入 GPU 显存');
+          addEventLog('Step 4/5: gl.bufferSubData executed');
+          triggerPipelineHighlight(['pipeBuffer']);
+          flashGpuBufferCard();
+        } else if (state.stepPhase === 5) {
+          // Step 5: 执行绘制调用并呈现
+          const { rectObj } = state.pendingStepData;
+          const rectIndex = state.rectangles.length;
+          state.rectangles.push({
+            id: rectIndex + 1,
+            p1: p1,
+            p2: p2,
+            p3: rectObj.p3,
+            p4: rectObj.p4,
+            vertexArray: rectObj.vertexArray,
+            vertexStart: rectIndex * VERTICES_PER_RECT,
+            vertexCount: VERTICES_PER_RECT,
+            color: [...state.currentColor],
+            borderColor: [...state.currentBorderColor],
+          });
+
+          btnNextStep.style.display = 'none';
+          state.pendingStepData = null;
+          state.stepPhase = 0;
+          showToast('【单步模式】Step 5: gl.drawArrays 绘制完成！');
+          addEventLog('Step 5/5: gl.drawArrays completed');
+          triggerPipelineHighlight(['pipeRender']);
+
+          resetCurrentConstruction(false);
+          updateUI();
+        }
+        drawScene();
+      }
+
+      /* ==========================================================
+       10. 重置、清空与撤销
+       ========================================================== */
+      function resetCurrentConstruction(manualTrigger = true) {
+        state.p1 = null;
+        state.p2 = null;
+        state.predictP2 = null;
+        state.isAnswerRevealed = false;
+        state.stepPhase = 0;
+        state.pendingStepData = null;
+        btnRevealAnswer.style.display = 'none';
+        if (state.isStepMode) btnNextStep.style.display = 'none';
+
+        state.currentState = APP_STATE.WAIT_FIRST_POINT;
+        state.first = true;
+
+        if (manualTrigger) {
+          addEventLog('Current construction reset');
+          showToast('已取消当前构造，等待下一次点击');
+        }
+        updateUI();
+        drawScene();
+      }
+
+      function undoLastRectangle() {
+        if (state.rectangles.length === 0) {
+          showToast('没有可撤销的矩形');
+          return;
+        }
+        const removed = state.rectangles.pop();
+        addEventLog(`Undo Rect #${removed.id}`);
+        showToast(`已撤销矩形 #${removed.id}`);
+        updateUI();
+        drawScene();
+      }
+
+      function clearAllRectangles() {
+        if (state.rectangles.length === 0 && !state.p1) {
+          showToast('画布已是空的');
+          return;
+        }
+        state.rectangles = [];
+        resetCurrentConstruction(false);
+        addEventLog('All rectangles cleared');
+        showToast('已清空全部矩形数据');
+        updateUI();
+        drawScene();
+      }
+
+      /* ==========================================================
+       11. UI 面板与数据表格同步更新
+       ========================================================== */
+      function updateUI() {
+        // 1. 状态机卡片高亮与标志
+        firstVarTag.textContent = state.first ? 'first = true' : 'first = false';
+
+        stateCard0.className =
+          'state-card' + (state.currentState === APP_STATE.WAIT_FIRST_POINT ? ' active' : '');
+        stateCard1.className =
+          'state-card' +
+          (state.currentState === APP_STATE.WAIT_SECOND_POINT ? ' amber-active' : '');
+        stateCard2.className =
+          'state-card' + (state.currentState === APP_STATE.RECT_COMMITTED ? ' green-active' : '');
+
+        // 画布浮动状态指示器
+        if (state.currentState === APP_STATE.WAIT_FIRST_POINT) {
+          canvasStatusDot.className = 'canvas-status-indicator';
+          canvasBannerText.textContent = '等待第一次点击 (Waiting for P1)';
+          p1StorePreviewTag.textContent = 'P1 = null';
+        } else if (state.currentState === APP_STATE.WAIT_SECOND_POINT) {
+          canvasStatusDot.className = 'canvas-status-indicator amber';
+          canvasBannerText.textContent = '已固定 P1，等待第二次点击 P2 (移动可预览)';
+          p1StorePreviewTag.textContent = `P1 (${state.p1.x.toFixed(2)}, ${state.p1.y.toFixed(2)})`;
+        }
+
+        // 2. 统计卡片
+        statRects.textContent = state.rectangles.length;
+        statVerts.textContent = state.rectangles.length * VERTICES_PER_RECT;
+        const usedPct =
+          ((state.rectangles.length * VERTICES_PER_RECT) / (MAX_RECTANGLES * VERTICES_PER_RECT)) *
+          100;
+        statBufferPct.textContent = `${usedPct.toFixed(1)}%`;
+
+        bufUsedVerts.textContent = state.rectangles.length * VERTICES_PER_RECT;
+        bufUsedBytes.textContent =
+          state.rectangles.length * VERTICES_PER_RECT * FLOATS_PER_VERTEX * 4;
+
+        activeRectTag.textContent = `Rect #${state.rectangles.length + (state.currentState === APP_STATE.WAIT_SECOND_POINT ? 1 : 0)}`;
+
+        // 3. 几何推导与监视表格更新
+        if (state.rectangles.length > 0 && state.currentState === APP_STATE.WAIT_FIRST_POINT) {
+          const last = state.rectangles[state.rectangles.length - 1];
+          updateDerivationUI(last.p1, last.p2);
+          updateTableUI(last.p1, last.p2, last.p3, last.p4);
+          renderBufferCodeSnippet(last.vertexArray);
+        } else if (state.currentState === APP_STATE.WAIT_SECOND_POINT) {
+          const tempP2 = state.mouseNdc;
+          updateDerivationUI(state.p1, tempP2);
+          const tempP3 = { x: state.p1.x, y: tempP2.y };
+          const tempP4 = { x: tempP2.x, y: state.p1.y };
+          updateTableUI(state.p1, tempP2, tempP3, tempP4);
+          const tempObj = buildRectangle(state.p1, tempP2);
+          renderBufferCodeSnippet(tempObj.vertexArray, true);
+        } else {
+          clearTableUI();
+        }
+      }
+
+      function updateDerivationUI(p1, p2) {
+        if (!p1 || !p2) return;
+        derP1.textContent = `(${p1.x.toFixed(2)}, ${p1.y.toFixed(2)})`;
+        derP2.textContent = `(${p2.x.toFixed(2)}, ${p2.y.toFixed(2)})`;
+        derP3.textContent = `(${p1.x.toFixed(2)}, ${p2.y.toFixed(2)})`;
+        derP4.textContent = `(${p2.x.toFixed(2)}, ${p1.y.toFixed(2)})`;
+      }
+
+      function updateTableUI(p1, p2, p3, p4) {
+        cellP1X.textContent = p1.x.toFixed(3);
+        cellP1Y.textContent = p1.y.toFixed(3);
+        cellP2X.textContent = p2.x.toFixed(3);
+        cellP2Y.textContent = p2.y.toFixed(3);
+        cellP3X.textContent = p3.x.toFixed(3);
+        cellP3Y.textContent = p3.y.toFixed(3);
+        cellP4X.textContent = p4.x.toFixed(3);
+        cellP4Y.textContent = p4.y.toFixed(3);
+      }
+
+      function clearTableUI() {
+        cellP1X.textContent = '--';
+        cellP1Y.textContent = '--';
+        cellP2X.textContent = '--';
+        cellP2Y.textContent = '--';
+        cellP3X.textContent = '--';
+        cellP3Y.textContent = '--';
+        cellP4X.textContent = '--';
+        cellP4Y.textContent = '--';
+        derP1.textContent = '(--, --)';
+        derP2.textContent = '(--, --)';
+        derP3.textContent = '(--, --)';
+        derP4.textContent = '(--, --)';
+        bufPreviewCode.innerHTML = `// gl.bufferSubData 待提交数据预览<br>[等待第二次点击以组装 4 顶点浮点数据...]`;
+      }
+
+      function renderBufferCodeSnippet(arr, isPending = false) {
+        const prefix = isPending
+          ? '// 预览数据 (待提交到 GPU):'
+          : '// 最新已提交到 GPU 的顶点数据:';
+        bufPreviewCode.innerHTML = `
+        ${prefix}<br>
+        0: [${arr[0].toFixed(2)}, ${arr[1].toFixed(2)}] (P1)<br>
+        1: [${arr[2].toFixed(2)}, ${arr[3].toFixed(2)}] (P3 = P1.x, P2.y)<br>
+        2: [${arr[4].toFixed(2)}, ${arr[5].toFixed(2)}] (P2)<br>
+        3: [${arr[6].toFixed(2)}, ${arr[7].toFixed(2)}] (P4 = P2.x, P1.y)
+      `;
+      }
+
+      function flashGpuBufferCard() {
+        gpuBufferCard.classList.add('flash');
+        bufferStatusTag.textContent = 'Updating...';
+        setTimeout(() => {
+          gpuBufferCard.classList.remove('flash');
+          bufferStatusTag.textContent = 'Static';
+        }, 400);
+      }
+
+      function updateStepCardHighlight(stepNum) {
+        // 供单步调试提示
+      }
+
+      /* ==========================================================
+       12. 数据流点亮动效与事件日志
+       ========================================================== */
+      function triggerPipelineHighlight(nodeIds) {
+        ['pipeEvents', 'pipeState', 'pipeGeometry', 'pipeBuffer', 'pipeRender'].forEach((id) => {
+          document.getElementById(id).className = 'pipe-node';
+        });
+        nodeIds.forEach((id) => {
+          document.getElementById(id).classList.add('active');
+        });
+      }
+
+      function triggerFullPipelineSequence() {
+        const nodes = [pipeEvents, pipeState, pipeGeometry, pipeBuffer, pipeRender];
+        nodes.forEach((n, idx) => {
+          setTimeout(() => {
+            nodes.forEach((m) => (m.className = 'pipe-node'));
+            n.className = idx === 4 ? 'pipe-node render-active' : 'pipe-node active';
+            if (idx === 4) {
+              conceptBarText.innerHTML = `<b>交互完成：</b>数据已通过 <b>gl.bufferSubData</b> 提交，GPU 顺利完成 <b>gl.drawArrays</b> 重绘！`;
+            }
+          }, idx * 240);
+        });
+        flashGpuBufferCard();
+      }
+
+      function addEventLog(msg) {
+        if (!state.showLog) return;
+        const li = document.createElement('li');
+        li.className = 'log-item latest';
+        li.textContent = msg;
+
+        // 取消上一条最新高亮
+        if (logList.firstChild) {
+          logList.firstChild.className = 'log-item';
+        }
+        logList.insertBefore(li, logList.firstChild);
+
+        // 仅保留最近 8 条
+        while (logList.children.length > 8) {
+          logList.removeChild(logList.lastChild);
+        }
+      }
+
+      function showToast(msg) {
+        toastMsg.textContent = msg;
+        toastMsg.classList.add('show');
+        clearTimeout(toastMsg._timer);
+        toastMsg._timer = setTimeout(() => {
+          toastMsg.classList.remove('show');
+        }, 2000);
+      }
+
+      /* ==========================================================
+       13. WebGL 2.0 实际图元绘制核心函数
+       ========================================================== */
+      function drawScene() {
+        if (!gl) return;
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clearColor(0.98, 0.985, 0.99, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // 1. 绘制辅助网格 (Grid)
+        if (state.showGrid) {
+          const gridLines = [];
+          const steps = 10;
+          for (let i = -steps; i <= steps; i++) {
+            if (i === 0) continue;
+            const pos = i / steps;
+            gridLines.push(pos, -1.0, pos, 1.0);
+            gridLines.push(-1.0, pos, 1.0, pos);
+          }
+          gl.bindBuffer(gl.ARRAY_BUFFER, dynamicAuxBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridLines), gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+          gl.enableVertexAttribArray(aPositionLoc);
+
+          gl.uniform4f(uColorLoc, 0.88, 0.91, 0.94, 1.0);
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, gridLines.length / 2);
+        }
+
+        // 2. 绘制 NDC 坐标主轴线 (X/Y) 与外围边界
+        if (state.showAxes) {
+          const axesLines = [-1.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 1.0];
+          gl.bindBuffer(gl.ARRAY_BUFFER, dynamicAuxBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axesLines), gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+
+          gl.uniform4f(uColorLoc, 0.42, 0.51, 0.62, 1.0); // 蓝灰色坐标轴
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, 4);
+
+          // 外围边界 [-1, 1]
+          const borderLines = [
+            -0.998, -0.998, 0.998, -0.998, 0.998, -0.998, 0.998, 0.998, 0.998, 0.998, -0.998, 0.998,
+            -0.998, 0.998, -0.998, -0.998,
+          ];
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(borderLines), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.78, 0.82, 0.88, 0.6);
+          gl.drawArrays(gl.LINES, 0, 8);
+        }
+
+        // 3. 绘制已提交的历史矩形 (直接从 rectVertexBuffer 中批量绘制，每个矩形 gl.TRIANGLE_FAN 4顶点)
+        if (state.rectangles.length > 0) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, rectVertexBuffer);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+          gl.enableVertexAttribArray(aPositionLoc);
+          gl.uniform1i(uIsPointLoc, 0);
+
+          state.rectangles.forEach((r) => {
+            // A. 填充半透明多边形
+            gl.uniform4fv(uColorLoc, r.color);
+            gl.drawArrays(gl.TRIANGLE_FAN, r.vertexStart, r.vertexCount);
+
+            // B. 线框描边
+            gl.uniform4fv(uColorLoc, r.borderColor);
+            gl.drawArrays(gl.LINE_LOOP, r.vertexStart, r.vertexCount);
+          });
+
+          // 绘制矩形角点与标记点
+          state.rectangles.forEach((r) => {
+            gl.uniform4fv(uColorLoc, r.borderColor);
+            gl.uniform1f(uPointSizeLoc, 8.0);
+            gl.uniform1i(uIsPointLoc, 1);
+            gl.drawArrays(gl.POINTS, r.vertexStart, r.vertexCount);
+          });
+        }
+
+        // 4. 绘制当前正在构造的 P1 点及其投影参考虚线
+        if (state.p1) {
+          const p1Lines = [
+            state.p1.x,
+            -1.0,
+            state.p1.x,
+            1.0, // X 垂直投影线
+            -1.0,
+            state.p1.y,
+            1.0,
+            state.p1.y, // Y 水平投影线
+          ];
+          gl.bindBuffer(gl.ARRAY_BUFFER, dynamicAuxBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(p1Lines), gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+          gl.uniform4f(uColorLoc, 0.02, 0.52, 0.78, 0.3);
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, 4);
+
+          // 绘制 P1 显眼实心圆点
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([state.p1.x, state.p1.y]),
+            gl.DYNAMIC_DRAW,
+          );
+          gl.uniform4f(uColorLoc, 0.01, 0.52, 0.78, 1.0); // 鲜亮青蓝
+          gl.uniform1f(uPointSizeLoc, 16.0);
+          gl.uniform1i(uIsPointLoc, 1);
+          gl.drawArrays(gl.POINTS, 0, 1);
+        }
+
+        // 5. 绘制移动预览矩形 (Preview: 未提交状态)
+        if (
+          state.currentState === APP_STATE.WAIT_SECOND_POINT &&
+          state.showPreview &&
+          !state.isStepMode
+        ) {
+          const targetP2 = state.predictP2 || state.mouseNdc;
+          const preview = buildRectangle(state.p1, targetP2);
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, dynamicAuxBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, preview.vertexArray, gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+
+          // 浅色透明填充
+          gl.uniform4f(
+            uColorLoc,
+            state.currentColor[0],
+            state.currentColor[1],
+            state.currentColor[2],
+            0.18,
+          );
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+          // 虚线感边框
+          gl.uniform4f(
+            uColorLoc,
+            state.currentBorderColor[0],
+            state.currentBorderColor[1],
+            state.currentBorderColor[2],
+            0.75,
+          );
+          gl.drawArrays(gl.LINE_LOOP, 0, 4);
+
+          // 若不是预测模式中，绘制推导出的 P3, P4 辅助点
+          if (!state.isPredictMode || state.isAnswerRevealed) {
+            const cornerPts = [preview.p3.x, preview.p3.y, preview.p4.x, preview.p4.y];
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cornerPts), gl.DYNAMIC_DRAW);
+            gl.uniform4f(uColorLoc, 0.85, 0.47, 0.02, 0.9); // 琥珀黄色推导标记点
+            gl.uniform1f(uPointSizeLoc, 11.0);
+            gl.uniform1i(uIsPointLoc, 1);
+            gl.drawArrays(gl.POINTS, 0, 2);
+          }
+        }
+
+        // 6. 绘制当前鼠标十字光标 (仅当在 Canvas 内且非单步暂停)
+        if (state.isMouseInCanvas) {
+          const mx = state.mouseNdc.x;
+          const my = state.mouseNdc.y;
+          const crosshair = [mx - 0.04, my, mx + 0.04, my, mx, my - 0.04, mx, my + 0.04];
+          gl.bindBuffer(gl.ARRAY_BUFFER, dynamicAuxBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(crosshair), gl.DYNAMIC_DRAW);
+          gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+
+          gl.uniform4f(uColorLoc, 0.01, 0.52, 0.78, 0.85);
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, 4);
+        }
+      }
+
+      /* ==========================================================
+       14. 控件交互逻辑与预设场景支持
+       ========================================================== */
+      // 调色板事件
+      const paletteButtons = [
+        { btn: colCyan, fill: [0.01, 0.52, 0.78, 0.35], border: [0.01, 0.52, 0.78, 0.95] },
+        { btn: colBlue, fill: [0.23, 0.51, 0.96, 0.35], border: [0.23, 0.51, 0.96, 0.95] },
+        { btn: colGreen, fill: [0.05, 0.58, 0.53, 0.35], border: [0.05, 0.58, 0.53, 0.95] },
+        { btn: colAmber, fill: [0.85, 0.47, 0.02, 0.35], border: [0.85, 0.47, 0.02, 0.95] },
+      ];
+
+      paletteButtons.forEach((item) => {
+        item.btn.addEventListener('click', () => {
+          paletteButtons.forEach((p) => p.btn.classList.remove('selected'));
+          item.btn.classList.add('selected');
+          state.currentColor = item.fill;
+          state.currentBorderColor = item.border;
+          drawScene();
+        });
+      });
+
+      // 撤销、清空、重置
+      btnUndo.addEventListener('click', undoLastRectangle);
+      btnResetCurrent.addEventListener('click', () => resetCurrentConstruction(true));
+      btnClearAll.addEventListener('click', clearAllRectangles);
+
+      // 单步显微镜开关
+      btnStepMode.addEventListener('click', () => {
+        state.isStepMode = !state.isStepMode;
+        if (state.isStepMode) {
+          btnStepMode.classList.add('btn-active');
+          btnStepMode.textContent = '退出单步';
+          showToast('已开启【单步显微镜】：下一次点击 P2 将分步观察推导与显存写入');
+          addEventLog('Step mode activated');
+        } else {
+          btnStepMode.classList.remove('btn-active');
+          btnStepMode.textContent = '单步显微镜';
+          btnNextStep.style.display = 'none';
+          state.stepPhase = 0;
+          showToast('已恢复常规连续建模模式');
+        }
+      });
+      btnNextStep.addEventListener('click', advanceNextStep);
+
+      // 预测模式开关
+      btnPredictMode.addEventListener('click', () => {
+        state.isPredictMode = !state.isPredictMode;
+        if (state.isPredictMode) {
+          btnPredictMode.classList.add('btn-active');
+          btnPredictMode.textContent = '预测模式: 开';
+          predictBadge.style.display = 'inline';
+          showToast('【预测模式】：点击 P2 后将先隐藏推导点，供学生思考');
+        } else {
+          btnPredictMode.classList.remove('btn-active');
+          btnPredictMode.textContent = '预测模式: 关';
+          predictBadge.style.display = 'none';
+          btnRevealAnswer.style.display = 'none';
+          state.isAnswerRevealed = false;
+        }
+      });
+
+      btnRevealAnswer.addEventListener('click', () => {
+        state.isAnswerRevealed = true;
+        btnRevealAnswer.style.display = 'none';
+        showToast('答案公布：另外两点为 P3(x1, y2) 与 P4(x2, y1)');
+        addEventLog('Prediction revealed');
+        if (state.predictP2) {
+          commitRectangleDirect(state.p1, state.predictP2);
+        }
+      });
+
+      // 图层复选框
+      chkGrid.addEventListener('change', (e) => {
+        state.showGrid = e.target.checked;
+        drawScene();
+      });
+      chkAxes.addEventListener('change', (e) => {
+        state.showAxes = e.target.checked;
+        drawScene();
+      });
+      chkPreview.addEventListener('change', (e) => {
+        state.showPreview = e.target.checked;
+        drawScene();
+      });
+      chkLabels.addEventListener('change', (e) => {
+        state.showLabels = e.target.checked;
+        drawScene();
+      });
+      chkLog.addEventListener('change', (e) => {
+        state.showLog = e.target.checked;
+        document.querySelector('.event-log-container').style.display = state.showLog
+          ? 'flex'
+          : 'none';
+      });
+
+      // 坐标转换卡片折叠
+      toggleCoordCard.addEventListener('click', () => {
+        const isHidden = coordDetailContent.style.display === 'none';
+        coordDetailContent.style.display = isHidden ? 'block' : 'none';
+        coordArrowTag.textContent = isHidden ? '收起 ▲' : '展开 ▼';
+      });
+
+      // 课堂思考提问轮换
+      questionBox.addEventListener('click', () => {
+        state.questionIdx = (state.questionIdx + 1) % questions.length;
+        questionText.textContent = questions[state.questionIdx];
+      });
+
+      // 课堂演示引导模式
+      btnLectureFlow.addEventListener('click', () => {
+        alert(
+          '【教师 5 分钟课堂演示步骤建议】：\n\n' +
+            '1. 第一次点击画布左上方：\n' +
+            '   - 引导观察：状态变为 WAIT_SECOND_POINT，P1 存储锁定，此时矩形尚未生成！\n\n' +
+            '2. 移动鼠标观察虚线预览：\n' +
+            '   - 提问学生：“为什么没有第二次点击，我们就能看到矩形预览？”\n\n' +
+            '3. 点击【预测模式: 开】，再次点击画布右下方确定 P2：\n' +
+            '   - 提问学生：“P3 和 P4 的坐标分别是什么？它们是鼠标点的还是算出来的？”\n' +
+            '   - 点击【显示答案】揭晓几何推导结果。\n\n' +
+            '4. 点击【单步显微镜】，创建下一个矩形：\n' +
+            '   - 观察 Step 1~5 依次流转：P2 捕获 → 几何推导 → 组装 4 顶点 → gl.bufferSubData 写入 → gl.drawArrays 重新绘制。\n\n' +
+            '5. 总结：交互建模本质是 Event → State → Geometry → Buffer → Render！',
+        );
+      });
+
+      // 绑定鼠标事件
+      canvas.addEventListener('mousemove', handlePointerMove);
+      canvas.addEventListener('click', handlePointerClick);
+      canvas.addEventListener('mouseleave', () => {
+        state.isMouseInCanvas = false;
+        drawScene();
+      });
+
+      // 窗口尺寸自适应
+      window.addEventListener('resize', () => {
+        drawScene();
+      });
+
+      /* ==========================================================
+       15. 系统就绪与首帧渲染
+       ========================================================== */
+      window.onload = function () {
+        if (initWebGL()) {
+          updateUI();
+          drawScene();
+        }
+      };
+    </script>
+  </body>
+</html>

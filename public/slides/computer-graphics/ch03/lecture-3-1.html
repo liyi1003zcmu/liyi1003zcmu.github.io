@@ -1,0 +1,1851 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>计算机图形学 第3章 3-1 让图形动起来</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1450px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #sec-1,
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #sec-1::after,
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link href="../shared/classroom-large.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="eyebrow">Computer Graphics · Chapter 3 · 01</div>
+          <h1>第3章 交互和动画</h1>
+          <h2>3-1 让图形动起来</h2>
+          <p class="subtitle fragment fade-up">
+            核心问题：一个静态 WebGL 程序，怎样持续生成新的画面并响应用户？
+          </p>
+        </section>
+
+        <section id="sec-2">
+          <section id="sec-2-1">
+            <span class="slide-no">#sec-2-1</span>
+            <h2>本课主线：静态程序如何“活起来”？</h2>
+            <p class="lead fragment fade-up">
+              第2章的WebGL程序通常只完成一次绘制。本课要把它改造成持续变化、可以被用户控制的图形程序。
+            </p>
+            <div class="state-diagram">
+              <div class="node fragment fade-up">
+                State<br /><span class="large">程序状态</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                Update<br /><span class="large">状态更新</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                Render<br /><span class="large">重新绘制</span>
+              </div>
+            </div>
+            <div class="flow fragment fade-up">
+              <span class="node green">requestAnimationFrame</span>
+              <span class="arrow">↺</span>
+              <span class="node accent">Event / Callback</span>
+              <span class="arrow">→</span>
+              <span class="node">State</span>
+            </div>
+            <div class="activity fragment fade-up">
+              <h3>课前预测</h3>
+              <p>如果要让一个正方形每秒旋转60次，是否必须每一帧都重新计算并上传4个顶点？</p>
+            </div>
+          </section>
+
+          <section id="sec-2-2">
+            <span class="slide-no">#sec-2-2</span>
+            <h2>从静态绘制开始</h2>
+            <p class="lead fragment fade-up">
+              一个最小WebGL程序通常按照“准备数据 → 绘制一次 → 停止”的方式运行。
+            </p>
+            <div class="pipeline">
+              <div class="node fragment fade-up">Canvas / Context</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Shader Program</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Buffer</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Draw</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Canvas Image</div>
+            </div>
+            <div class="quote fragment fade-up">
+              问题不是“如何再画一次”，而是：<span class="accent">每一帧到底应该改变什么？</span>
+            </div>
+          </section>
+
+          <section id="sec-2-3">
+            <span class="slide-no">#sec-2-3</span>
+            <h2>动画的关键：不是所有数据都要变</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>方案A：CPU重算顶点</h3>
+                <ul>
+                  <li>每一帧重新计算4个顶点</li>
+                  <li>每一帧重新上传Buffer</li>
+                  <li>对象复杂时，CPU→GPU传输会变重</li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>方案B：更新一个参数</h3>
+                <ul>
+                  <li>顶点数据保持不变</li>
+                  <li>每一帧只更新 <strong class="accent">uTheta</strong></li>
+                  <li>旋转计算交给Vertex Shader</li>
+                </ul>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <h3>预测</h3>
+              <p>如果模型有100万个顶点，哪种方案更符合现代GPU编程思想？为什么？</p>
+            </div>
+          </section>
+
+          <section id="sec-2-4">
+            <span class="slide-no">#sec-2-4</span>
+            <h2>随堂测验 1：动画中每帧最适合改变什么？</h2>
+            <div class="activity fragment fade-up">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p>
+                已有一个复杂模型的顶点数据保存在 GPU Buffer
+                中，现在只希望它持续绕原点旋转。更合理的做法是：
+              </p>
+            </div>
+            <div class="grid2" style="margin-top: 22px">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>每一帧重新生成全部顶点并重新上传 Buffer
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>每一帧更新旋转角度的
+                <code data-line-numbers="">uniform</code>，然后重新绘制
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>C</strong>每一帧重新创建 Canvas 和 WebGL Context
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>D</strong>只调用 <code data-line-numbers="">gl.clear</code>，不再执行 Draw
+                Call
+              </div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：B。</strong>顶点数据可以保持在 GPU 中，跨帧变化的是程序状态
+              <code data-line-numbers="">theta</code>；通过
+              <code data-line-numbers="">uniform</code> 把状态传给 Shader，再执行绘制。
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-3">
+          <section id="sec-3-1">
+            <span class="slide-no">#sec-3-1</span>
+            <h2>案例：单位圆上的旋转正方形</h2>
+            <p class="lead fragment fade-up">
+              在单位圆构造正方形：随着角度
+              <strong class="accent">θ</strong> 改变，顶点位置发生旋转。<br />
+              核心启示：<strong class="accent">角度 θ 是可以跨帧改变的程序状态</strong>。
+            </p>
+            <div class="grid2" style="margin-top: 16px">
+              <div class="card fragment fade-up" style="padding: 16px 20px; text-align: center">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.95em">静态单位圆与顶点坐标</h3>
+                  <span class="pill">θ = 30° 几何分布</span>
+                </div>
+                <canvas
+                  id="canvas-static-square"
+                  width="600"
+                  height="380"
+                  style="
+                    width: 100%;
+                    height: auto;
+                    background: #ffffff;
+                    border-radius: 14px;
+                    border: 1px solid var(--line);
+                  "
+                ></canvas>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 20px; text-align: center">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.95em">动态逆时针旋转演示</h3>
+                  <span
+                    class="pill"
+                    style="
+                      background: rgba(30, 138, 100, 0.1);
+                      border-color: rgba(30, 138, 100, 0.25);
+                      color: var(--green);
+                    "
+                    >rAF 循环动画 ↺</span
+                  >
+                </div>
+                <canvas
+                  id="canvas-anim-square"
+                  width="600"
+                  height="380"
+                  style="
+                    width: 100%;
+                    height: auto;
+                    background: #ffffff;
+                    border-radius: 14px;
+                    border: 1px solid var(--line);
+                  "
+                ></canvas>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-3-2">
+            <span class="slide-no">#sec-3-2</span>
+            <h2>把变化量交给 Shader</h2>
+            <p class="lead fragment fade-up">
+              顶点属性 <strong>attribute / in</strong> 描述每个顶点不同的数据；<br /><strong
+                class="accent"
+                >uniform</strong
+              >
+              描述一次绘制中所有顶点共享的数据。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>固定数据</h3>
+                <p>四个原始顶点</p>
+                <span class="pill">Buffer</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>变化状态</h3>
+                <p>当前旋转角度</p>
+                <span class="pill">uTheta</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>计算位置</h3>
+                <p>顶点着色器输出旋转后位置</p>
+                <span class="pill">gl_Position</span>
+              </div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-glsl" data-line-numbers="">#version 300 es
+in vec4 aPosition;
+uniform float uTheta;
+
+void main() {
+    gl_Position.x = -sin(uTheta) * aPosition.y + cos(uTheta) * aPosition.x;
+    gl_Position.y =  sin(uTheta) * aPosition.x + cos(uTheta) * aPosition.y;
+    gl_Position.z = 0.0;
+    gl_Position.w = 1.0;
+}</code></pre>
+          </section>
+
+          <section id="sec-3-3">
+            <span class="slide-no">#sec-3-3</span>
+            <h2>Uniform更新的两步</h2>
+            <div class="flow">
+              <div class="node fragment fade-up">
+                查找位置<br /><span class="large">getUniformLocation</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                每帧赋值<br /><span class="large">uniform1f</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                绘制<br /><span class="large">drawArrays</span>
+              </div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">let theta = 0.0;
+const thetaLoc = gl.getUniformLocation(program, "uTheta");
+
+function render() {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    theta += 0.03;
+    gl.uniform1f(thetaLoc, theta);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}</code></pre>
+            <div class="activity fragment fade-up">
+              <h3>课堂检查</h3>
+              <p>
+                这段代码如果只调用一次
+                <code data-line-numbers="">render()</code>，会得到动画吗？为什么？
+              </p>
+            </div>
+          </section>
+
+          <section id="sec-3-4">
+            <span class="slide-no">#sec-3-4</span>
+            <h2>Demo：动画循环显微镜</h2>
+            <div class="grid2">
+              <div
+                class="card fragment fade-up"
+                style="display: flex; flex-direction: column; justify-content: space-between"
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Interactive Demo · D03-01</div>
+                  <h3 style="margin-top: 0">动画循环显微镜</h3>
+                  <p class="muted" style="font-size: 0.72em; line-height: 1.45; margin-top: 0.4em">
+                    观察动画循环的内部运作机制：左侧绘制旋转图形，右侧实时监控 Frame、θ 角度、Δt
+                    帧间隔、Buffer 状态与 Uniform 更新状态。
+                  </p>
+                </div>
+                <div style="margin-top: 20px">
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap3/D01_动画循环显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="width: 100%; min-height: 52px; font-size: 0.7em"
+                  >
+                    ▶ 打开课堂 Demo：动画循环显微镜
+                  </a>
+                </div>
+              </div>
+
+              <div class="activity fragment fade-up" style="margin-top: 0; padding: 22px 26px">
+                <span class="tag">思考与验证</span>
+                <span class="timer">2 min</span>
+                <h3 style="margin: 0.3em 0 0.5em; font-size: 1.05em; color: #14345e">观察任务</h3>
+                <ol class="step-list" style="margin-top: 0.4em">
+                  <li><strong>单步调试：</strong>暂停动画循环，尝试单步执行一帧。</li>
+                  <li><strong>观察 Buffer：</strong>顶点数据 VBO 在跨帧时是否发生改变？</li>
+                  <li><strong>观察状态：</strong>每一帧真正被 JavaScript 修改的是哪个变量？</li>
+                  <li><strong>原理解释：</strong>顶点位置没变，为什么 GPU 能画出不同位置？</li>
+                </ol>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-4">
+          <section id="sec-4-1">
+            <span class="slide-no">#sec-4-1</span>
+            <h2>为什么不能直接递归调用 render？</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>错误模型</h3>
+                <pre><code class="language-javascript" data-line-numbers="">function render() {
+    update();
+    draw();
+    render();
+}</code></pre>
+                <p>同步递归：当前函数尚未返回，就继续调用自身。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>调用栈会不断增长</h3>
+                <div class="stack">
+                  <span class="node">render</span><span class="arrow">↓</span
+                  ><span class="node">render</span><span class="arrow">↓</span
+                  ><span class="node">render</span><span class="arrow">↓</span
+                  ><span class="node red">...</span>
+                </div>
+                <p>这不是动画循环，而是失控的函数调用。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              动画循环的关键：<span class="accent"
+                >让本次绘制结束，再把下一次绘制交还给浏览器调度。</span
+              >
+            </div>
+          </section>
+
+          <section id="sec-4-2">
+            <span class="slide-no">#sec-4-2</span>
+            <h2>requestAnimationFrame：把下一帧交给浏览器</h2>
+            <p class="lead fragment fade-up">
+              它不是立即再次执行
+              <code data-line-numbers="">render()</code>，而是请求浏览器在下一次适合重绘时回调。
+            </p>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">function render(time) {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    theta += 0.03;
+    gl.uniform1f(thetaLoc, theta);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    requestAnimationFrame(render);
+}
+requestAnimationFrame(render);</code></pre>
+            <div class="pipeline fragment fade-up">
+              <span class="node">Callback</span><span class="arrow">→</span
+              ><span class="node">Update</span><span class="arrow">→</span
+              ><span class="node">Draw</span><span class="arrow">→</span
+              ><span class="node green">Return</span><span class="arrow">→</span
+              ><span class="node accent">Next frame</span>
+            </div>
+          </section>
+
+          <section id="sec-4-3">
+            <span class="slide-no">#sec-4-3</span>
+            <h2>Timer 和 rAF：都能动，但含义不同</h2>
+            <table class="fragment fade-up">
+              <thead>
+                <tr>
+                  <th>方式</th>
+                  <th>特点</th>
+                  <th>课堂结论</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code data-line-numbers="">setInterval(render, 16)</code></td>
+                  <td>按时间间隔尝试调用</td>
+                  <td>与浏览器绘制节奏不一定对齐</td>
+                </tr>
+                <tr>
+                  <td><code data-line-numbers="">setTimeout(...)</code></td>
+                  <td>可人为降低帧率</td>
+                  <td>适合控制节奏，但不等于显示同步</td>
+                </tr>
+                <tr>
+                  <td><code data-line-numbers="">requestAnimationFrame</code></td>
+                  <td>由浏览器在下一帧前回调</td>
+                  <td>动画绘制首选</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="activity fragment fade-up" style="margin-top: 22px; padding: 22px 28px">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <h3 style="margin: 0; font-size: 1.05em; color: #14345e">排序活动</h3>
+                <span class="tag">思考与排序 · 2 min</span>
+              </div>
+              <p style="margin: 0.4em 0 0.8em; font-size: 0.72em; color: var(--muted)">
+                请按<strong>一帧动画从触发到渲染完成的正确执行顺序</strong>排列以下卡片：
+              </p>
+              <div
+                style="
+                  display: flex;
+                  gap: 14px;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  margin-top: 12px;
+                "
+              >
+                <div class="sort-card"><span class="handle">⠿</span> Clear</div>
+                <div class="sort-card"><span class="handle">⠿</span> Draw</div>
+                <div class="sort-card"><span class="handle">⠿</span> Update State</div>
+                <div class="sort-card"><span class="handle">⠿</span> Browser Callback</div>
+                <div class="sort-card"><span class="handle">⠿</span> requestAnimationFrame</div>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-4-4">
+            <span class="slide-no">#sec-4-4</span>
+            <h2>
+              随堂测验 2：<code data-line-numbers="">requestAnimationFrame</code> 到底做了什么？
+            </h2>
+            <div class="activity fragment fade-up">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p>
+                在动画程序中，<code data-line-numbers="">requestAnimationFrame(render)</code>
+                的作用最接近下面哪一项？
+              </p>
+            </div>
+            <div class="grid2" style="margin-top: 22px">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>立即同步调用
+                <code data-line-numbers="">render()</code>，形成普通递归
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>创建一个新的线程，并保证每秒固定执行 60 次
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>C</strong>请求浏览器在下一次适合重绘时回调
+                <code data-line-numbers="">render</code>
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>D</strong>直接交换前后缓存，不需要再执行绘制代码
+              </div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：C。</strong
+              >它不是立即递归调用，也不保证固定帧率；它把下一帧绘制交回浏览器调度，从而形成更合适的动画循环。
+            </div>
+          </section>
+
+          <section id="sec-4-5" class="compact">
+            <span class="slide-no">#sec-4-5</span>
+            <h2 style="margin-bottom: 0.2em">双缓存：为什么要等“一整帧”准备好？</h2>
+            <p class="lead fragment fade-up" style="margin-bottom: 0.4em">
+              绘制和显示是解耦的。浏览器显示当前完整图像，图形系统在后台绘制下一帧。
+            </p>
+
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 16px 20px">
+                <div class="eyebrow" style="margin-bottom: 0.3em">Display</div>
+                <h3 style="margin-top: 0; font-size: 0.95em">Front Buffer（前台缓存）</h3>
+                <p style="font-size: 0.68em; line-height: 1.4; margin: 0.3em 0">
+                  屏幕读取并显示的完整画面，防止未画完直接暴露导致撕裂。
+                </p>
+                <div
+                  class="node primary"
+                  style="margin-top: 10px; padding: 10px 14px; font-size: 0.62em"
+                >
+                  Screen Display 🖥️
+                </div>
+              </div>
+
+              <div class="card fragment fade-up" style="padding: 16px 20px">
+                <div class="eyebrow" style="margin-bottom: 0.3em">Drawing</div>
+                <h3 style="margin-top: 0; font-size: 0.95em">Back Buffer（后台缓存）</h3>
+                <p style="font-size: 0.68em; line-height: 1.4; margin: 0.3em 0">
+                  GPU 进行光栅化的私有绘制区域，完成后触发 Swap 交换。
+                </p>
+                <div
+                  class="node ai"
+                  style="margin-top: 10px; padding: 10px 14px; font-size: 0.62em"
+                >
+                  GPU Render Loop ⚙️
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 16px 20px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f2f8fc);
+                  border-color: rgba(21, 125, 184, 0.22);
+                "
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.3em">Interactive Demo · D03-02</div>
+                  <h3 style="margin-top: 0; font-size: 0.95em; color: var(--cyan)">
+                    双缓存机制显微镜
+                  </h3>
+                  <p class="muted" style="font-size: 0.65em; line-height: 1.38; margin-top: 0.3em">
+                    观察 Front/Back Buffer 交替 Swap 交换与帧同步机制。
+                  </p>
+                </div>
+                <div style="margin-top: 12px">
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap3/D02_双缓存机制显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="width: 100%; min-height: 44px; padding: 0 16px; font-size: 0.64em"
+                  >
+                    ▶ 打开 Demo：双缓存机制
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="quote fragment fade-up"
+              style="
+                margin-top: 14px;
+                padding: 14px 20px;
+                font-size: 0.86em !important;
+                line-height: 1.35 !important;
+              "
+            >
+              核心结论：<span class="accent"
+                >双缓存解决的是画面完整性与防撕裂（Tearing）问题，不会自动提升复杂场景的绘制速度。</span
+              >
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-5">
+          <section id="sec-5-1">
+            <span class="slide-no">#sec-5-1</span>
+            <h2>从动画到交互：用户改变的是状态</h2>
+            <p class="lead fragment fade-up">
+              正方形已经会转。现在用户点击按钮，希望它反向旋转。这个操作不是直接“改变画面”，而是改变程序状态。
+            </p>
+            <div class="pipeline">
+              <span class="node fragment fade-up">Click</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Event</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Callback</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">direction</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Next Render</span>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">let direction = true;
+
+document.getElementById("DirectionButton")
+  .addEventListener("click", function () {
+      direction = !direction;
+  });
+
+function render() {
+    theta += direction ? 0.03 : -0.03;
+    gl.uniform1f(thetaLoc, theta);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+}</code></pre>
+          </section>
+
+          <section id="sec-5-2">
+            <span class="slide-no">#sec-5-2</span>
+            <h2>不同控件，本质都是改变状态</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>Button</h3>
+                <p>切换方向</p>
+                <span class="pill">direction = !direction</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Slider</h3>
+                <p>调整速度</p>
+                <span class="pill">speed = value</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Keyboard</h3>
+                <p>控制暂停、加速、减速</p>
+                <span class="pill">event.key</span>
+              </div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">document.getElementById("speedSlider").addEventListener("input", function(event) {
+    speed = Number(event.target.value);
+});
+
+window.addEventListener("keydown", function(event) {
+    if (event.key === " ") paused = !paused;
+});</code></pre>
+          </section>
+
+          <section id="sec-5-3">
+            <span class="slide-no">#sec-5-3</span>
+            <h2>AI协作：核验一个关于 rAF 的解释</h2>
+            <div class="quote fragment fade-up">
+              AI回答：<br />“requestAnimationFrame
+              会创建一个新的线程，并保证程序每秒运行60次，所以它比 setInterval 更快。”
+            </div>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>找可能正确的部分</h3>
+                <p>它确实常用于平滑动画。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>找明显错误</h3>
+                <p>不应理解为创建新线程；也不能保证固定60fps。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>如何验证</h3>
+                <p>
+                  记录 <code data-line-numbers="">time</code> 或
+                  <code data-line-numbers="">performance.now()</code>，观察帧间隔。
+                </p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <h3>提示词练习</h3>
+              <p>
+                请AI解释
+                <code data-line-numbers="">requestAnimationFrame</code
+                >，但要求它必须说明“什么由浏览器决定、什么由程序员决定”。
+              </p>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-6">
+          <section id="sec-6-1">
+            <span class="slide-no">#sec-6-1</span>
+            <h2>本课总结：动画程序的基本结构</h2>
+            <div class="state-diagram">
+              <div class="node fragment fade-up">
+                State<br /><span class="small">theta / speed / direction</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                Update<br /><span class="small">时间或事件改变状态</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                Render<br /><span class="small">Uniform / Draw</span>
+              </div>
+            </div>
+            <div class="flow fragment fade-up">
+              <span class="node green">requestAnimationFrame</span>
+              <span class="arrow">↺</span>
+              <span class="node accent">Event Listener</span>
+              <span class="arrow">→</span>
+              <span class="node">State</span>
+            </div>
+            <div class="quote fragment fade-up">
+              今天解决的问题：<span class="accent"
+                >WebGL程序如何持续产生新画面，并让用户输入改变后续画面。</span
+              >
+            </div>
+            <div class="exit-ticket fragment fade-up">
+              <h3>Exit Ticket</h3>
+              <p>动画不是不断重新启动程序，而是不断执行：______ → ______ → ______。</p>
+              <p>用户交互不是直接改变画面，而是事件先改变：______。</p>
+            </div>
+          </section>
+
+          <section id="sec-6-2">
+            <span class="slide-no">#sec-6-2</span>
+            <h2>下一课：用户点击了哪里？点中了谁？</h2>
+            <p class="lead fragment fade-up">
+              下一课将把“事件改变状态”继续推进：从鼠标事件中得到的位置，如何转换成WebGL中的图形坐标？又如何判断它对应哪个对象？
+            </p>
+            <div class="pipeline">
+              <span class="node fragment fade-up">Event</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Position</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Coordinate Mapping</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">GPU Data</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Render / Picking</span>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="../shared/classroom-fragments.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight],
+      });
+    </script>
+    <script>
+      (function () {
+        function drawSquareDiagram(canvasId, theta, isAnimated) {
+          const canvas = document.getElementById(canvasId);
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          const width = canvas.width;
+          const height = canvas.height;
+
+          ctx.clearRect(0, 0, width, height);
+
+          const cx = width / 2;
+          const cy = height / 2 + 10;
+          const R = Math.min(width, height) * 0.28;
+
+          // Axes
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.5;
+
+          // X Axis
+          ctx.beginPath();
+          ctx.moveTo(30, cy);
+          ctx.lineTo(width - 30, cy);
+          ctx.stroke();
+          ctx.fillStyle = '#64748b';
+          ctx.font = 'bold 15px sans-serif';
+          ctx.fillText('x', width - 25, cy + 5);
+
+          // Y Axis
+          ctx.beginPath();
+          ctx.moveTo(cx, height - 20);
+          ctx.lineTo(cx, 25);
+          ctx.stroke();
+          ctx.fillText('y', cx + 8, 22);
+
+          // Origin (0,0)
+          ctx.font = '13px sans-serif';
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText('(0,0)', cx - 30, cy + 18);
+
+          // Unit Circle
+          ctx.beginPath();
+          ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(21, 125, 184, 0.35)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.font = '12px sans-serif';
+          ctx.fillStyle = 'rgba(21, 125, 184, 0.7)';
+          ctx.fillText('R = 1 (单位圆)', cx + R * 0.62, cy - R * 0.75);
+
+          // Vertices
+          const angles = [theta, theta + Math.PI / 2, theta + Math.PI, theta + Math.PI * 1.5];
+
+          const vertices = angles.map((a) => {
+            const mx = Math.cos(a);
+            const my = Math.sin(a);
+            return {
+              mx,
+              my,
+              px: cx + mx * R,
+              py: cy - my * R,
+            };
+          });
+
+          // Draw Square
+          ctx.beginPath();
+          ctx.moveTo(vertices[0].px, vertices[0].py);
+          for (let i = 1; i < 4; i++) {
+            ctx.lineTo(vertices[i].px, vertices[i].py);
+          }
+          ctx.closePath();
+
+          ctx.fillStyle = isAnimated ? 'rgba(30, 138, 100, 0.12)' : 'rgba(21, 125, 184, 0.12)';
+          ctx.fill();
+          ctx.strokeStyle = isAnimated ? '#1e8a64' : '#157db8';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          // Radius line to V0
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(vertices[0].px, vertices[0].py);
+          ctx.strokeStyle = '#c74b5a';
+          ctx.lineWidth = 1.8;
+          ctx.stroke();
+
+          // Arc for theta
+          const arcRadius = 38;
+          ctx.beginPath();
+          ctx.arc(cx, cy, arcRadius, 0, -theta, true);
+          ctx.strokeStyle = '#c74b5a';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          const midTheta = theta / 2;
+          const labelArcX = cx + (arcRadius + 14) * Math.cos(midTheta);
+          const labelArcY = cy - (arcRadius + 14) * Math.sin(midTheta);
+          ctx.font = 'bold 15px sans-serif';
+          ctx.fillStyle = '#c74b5a';
+          ctx.fillText('θ', labelArcX - 4, labelArcY + 4);
+
+          // Vertices Dots & Labels
+          const labels = ['(cosθ, sinθ)', '(-sinθ, cosθ)', '(-cosθ, -sinθ)', '(sinθ, -cosθ)'];
+
+          vertices.forEach((v, idx) => {
+            ctx.beginPath();
+            ctx.arc(v.px, v.py, 5, 0, Math.PI * 2);
+            ctx.fillStyle = idx === 0 ? '#c74b5a' : isAnimated ? '#1e8a64' : '#157db8';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillStyle = idx === 0 ? '#c74b5a' : '#203044';
+
+            let offX = 10;
+            let offY = -10;
+            if (!isAnimated) {
+              if (idx === 0) {
+                offX = 10;
+                offY = -10;
+              } else if (idx === 1) {
+                offX = -95;
+                offY = -10;
+              } else if (idx === 2) {
+                offX = -95;
+                offY = 20;
+              } else if (idx === 3) {
+                offX = 10;
+                offY = 20;
+              }
+            } else {
+              const normAngle = ((angles[idx] % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+              const cosA = Math.cos(normAngle);
+              const sinA = Math.sin(normAngle);
+              offX = cosA >= 0 ? 10 : -95;
+              offY = sinA >= 0 ? -12 : 20;
+            }
+
+            ctx.fillText(labels[idx], v.px + offX, v.py + offY);
+          });
+
+          // Overlay readout for dynamic canvas
+          if (isAnimated) {
+            const deg = (((theta * 180) / Math.PI) % 360).toFixed(1);
+            const rad = (theta % (Math.PI * 2)).toFixed(2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.fillRect(15, 15, 175, 48);
+            ctx.strokeStyle = 'rgba(30, 138, 100, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(15, 15, 175, 48);
+
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillStyle = '#1e8a64';
+            ctx.fillText(`θ = ${deg}° (${rad} rad)`, 24, 35);
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#5f7186';
+            ctx.fillText('角速度: ~30°/秒 (逆时针)', 24, 53);
+          }
+        }
+
+        function initCanvasDemos() {
+          drawSquareDiagram('canvas-static-square', Math.PI / 6, false);
+
+          let currentTheta = Math.PI / 6;
+          function animate() {
+            currentTheta += 0.008; // 适中速度 (~27°/秒 逆时针)
+            drawSquareDiagram('canvas-anim-square', currentTheta, true);
+            requestAnimationFrame(animate);
+          }
+          animate();
+        }
+
+        if (typeof Reveal !== 'undefined') {
+          Reveal.on('ready', initCanvasDemos);
+          Reveal.on('slidechanged', initCanvasDemos);
+        }
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          setTimeout(initCanvasDemos, 100);
+        } else {
+          window.addEventListener('DOMContentLoaded', initCanvasDemos);
+        }
+      })();
+    </script>
+  </body>
+</html>

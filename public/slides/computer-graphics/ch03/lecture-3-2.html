@@ -1,0 +1,1720 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>计算机图形学 第3章 3-2 让用户操纵图形</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1450px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #sec-1,
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #sec-1::after,
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link href="../shared/classroom-large.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="eyebrow">Computer Graphics · Chapter 3 · 02</div>
+          <h1>第3章 交互和动画</h1>
+          <h2>3-2 让用户操纵图形</h2>
+          <p class="subtitle fragment fade-up">
+            核心问题：用户在屏幕上的操作，怎样转换成对图形对象的操作？
+          </p>
+        </section>
+
+        <section id="sec-2">
+          <section id="sec-2-1">
+            <span class="slide-no">#sec-2-1</span>
+            <h2>本课主线：从鼠标事件到图形对象</h2>
+            <p class="lead fragment fade-up">
+              鼠标给浏览器的是窗口位置，WebGL需要的是图形空间中的数据；如果还要选中对象，就必须建立屏幕位置与对象之间的关系。
+            </p>
+            <div class="pipeline">
+              <span class="node fragment fade-up">Event</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Position</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Coordinate Mapping</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">State / Buffer</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Render</span>
+            </div>
+            <div class="pipeline fragment fade-up">
+              <span class="node">Screen Position</span><span class="arrow">→</span
+              ><span class="node accent">Picking</span><span class="arrow">→</span
+              ><span class="node green">Object ID</span>
+            </div>
+            <div class="activity fragment fade-up">
+              <h3>开场问题</h3>
+              <p>如果点击Canvas左上角，WebGL中的坐标是左上角吗？为什么？</p>
+            </div>
+          </section>
+
+          <section id="sec-2-2">
+            <span class="slide-no">#sec-2-2</span>
+            <h2>输入设备：物理设备与逻辑角色</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>物理设备</h3>
+                <p>鼠标、键盘、触摸屏、手写板、游戏杆、空间球。</p>
+                <p class="small muted">关注设备本身如何产生信号。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>逻辑设备</h3>
+                <p>定位、拾取、选择、键盘输入、轨迹输入。</p>
+                <p class="small muted">关注应用程序获得了什么语义信息。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              同一个鼠标既可以是定位器，也可以是拾取器，还可以触发菜单选择。
+            </div>
+          </section>
+
+          <section id="sec-2-3">
+            <span class="slide-no">#sec-2-3</span>
+            <h2>请求模式 vs 事件模式</h2>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>请求模式</h3>
+                <p>程序等待指定输入。</p>
+                <pre><code class="language-c" data-line-numbers="">scanf("%d", &x);</code></pre>
+                <p class="small muted">适合程序引导用户输入。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>事件模式</h3>
+                <p>用户随时触发事件，程序通过回调响应。</p>
+                <pre><code class="language-javascript" data-line-numbers="">canvas.addEventListener("click", callback);</code></pre>
+                <p class="small muted">适合交互式图形程序。</p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <h3>判断</h3>
+              <p>飞行模拟、绘图软件、游戏控制更适合哪一种输入模式？为什么？</p>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-3">
+          <section id="sec-3-1">
+            <span class="slide-no">#sec-3-1</span>
+            <h2>事件对象：程序从事件中得到什么？</h2>
+            <p class="lead fragment fade-up">
+              事件不仅告诉我们“发生了点击”，还携带位置、按键、目标元素等测量数据。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>类型</h3>
+                <p>
+                  <code data-line-numbers="">click</code><br /><code data-line-numbers=""
+                    >mousedown</code
+                  ><br /><code data-line-numbers="">keydown</code>
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>目标</h3>
+                <p>
+                  <code data-line-numbers="">canvas</code><br /><code data-line-numbers=""
+                    >button</code
+                  ><br /><code data-line-numbers="">window</code>
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>测量</h3>
+                <p>
+                  <code data-line-numbers="">clientX</code><br /><code data-line-numbers=""
+                    >clientY</code
+                  ><br /><code data-line-numbers="">key</code>
+                </p>
+              </div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">canvas.addEventListener("mousedown", function(event) {
+    console.log(event.clientX, event.clientY);
+});</code></pre>
+          </section>
+
+          <section id="sec-3-2">
+            <span class="slide-no">#sec-3-2</span>
+            <h2>坐标系不一样：不能直接使用鼠标坐标</h2>
+            <p class="lead fragment fade-up">
+              浏览器窗口坐标以左上角为原点（Y轴向下）；WebGL 裁剪空间 (NDC) 以中心为原点，范围映射在
+              [-1, 1] 且 Y轴向上。
+            </p>
+            <div class="grid2" style="margin-top: 14px; align-items: stretch">
+              <div class="media-shell fragment fade-up" style="height: 450px; border-radius: 18px">
+                <img
+                  src="./images/chap03/ch03-postion-transform.png"
+                  alt="窗口坐标到WebGL NDC坐标转换示意图"
+                  data-fallback="窗口坐标到WebGL坐标转换图"
+                />
+              </div>
+              <div
+                class="card fragment fade-up"
+                style="
+                  height: 450px;
+                  padding: 20px 24px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  box-sizing: border-box;
+                "
+              >
+                <h3 style="margin-top: 0; color: var(--cyan); font-size: 0.95em">
+                  坐标映射公式 (Screen → NDC)
+                </h3>
+                <p
+                  style="
+                    font-size: 0.65em;
+                    color: var(--text);
+                    margin-bottom: 12px;
+                    line-height: 1.4;
+                  "
+                >
+                  设 Canvas 宽度为 <code>w</code>，高度为 <code>h</code>，鼠标在 Canvas
+                  内的像素坐标为 <code>(x<sub>w</sub>, y<sub>w</sub>)</code>：
+                </p>
+                <div
+                  class="mathbox fragment fade-up"
+                  style="
+                    font-size: 0.78em;
+                    padding: 10px 16px;
+                    margin: 6px 0;
+                    background: rgba(21, 125, 184, 0.06);
+                    border-left: 5px solid var(--cyan);
+                    border-radius: 10px;
+                  "
+                >
+                  <strong>X 轴映射：</strong> x = -1 + 2 · x<sub>w</sub> / w
+                </div>
+                <div
+                  class="mathbox fragment fade-up"
+                  style="
+                    font-size: 0.78em;
+                    padding: 10px 16px;
+                    margin: 6px 0;
+                    background: rgba(21, 125, 184, 0.06);
+                    border-left: 5px solid var(--cyan);
+                    border-radius: 10px;
+                  "
+                >
+                  <strong>Y 轴映射：</strong> y = -1 + 2 · (h - y<sub>w</sub>) / h
+                </div>
+                <p
+                  class="muted fragment fade-up"
+                  style="font-size: 0.58em; margin-top: 12px; line-height: 1.4"
+                >
+                  核心要点：Y 轴方向反转（<code>h - y<sub>w</sub></code
+                  >）是完成屏幕像素到 GPU 渲染坐标转换的关键。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-3-3">
+            <span class="slide-no">#sec-3-3</span>
+            <h2>随堂测验 1：鼠标坐标怎样变成 WebGL 坐标？</h2>
+            <div class="activity fragment fade-up">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p>
+                如果 Canvas 不在页面左上角，想把鼠标点击位置正确转换为 WebGL 坐标，最稳妥的做法是：
+              </p>
+            </div>
+            <div class="grid2" style="margin-top: 22px">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>直接使用
+                <code data-line-numbers="">event.clientX / canvas.width</code>
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>先用
+                <code data-line-numbers="">getBoundingClientRect()</code> 得到 Canvas 位置，再换算到
+                NDC
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>C</strong>使用 <code data-line-numbers="">event.screenX</code>，因为它就是
+                Canvas 内坐标
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>D</strong>只转换 x 坐标，y 坐标无需翻转
+              </div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：B。</strong
+              ><code data-line-numbers="">clientX/clientY</code> 是浏览器窗口坐标；应先扣除 Canvas
+              在页面中的位置，再映射到 WebGL 的归一化坐标。
+            </div>
+          </section>
+
+          <section id="sec-3-4">
+            <span class="slide-no">#sec-3-4</span>
+            <h2>更稳健的Canvas坐标转换</h2>
+            <p class="lead fragment fade-up">
+              如果Canvas不在页面左上角，直接用
+              <code data-line-numbers="">event.clientX / canvas.width</code> 会产生偏移。
+            </p>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">function pointerToNDC(event, canvas) {
+    const rect = canvas.getBoundingClientRect();
+
+    const xCanvas = (event.clientX - rect.left) * canvas.width / rect.width;
+    const yCanvas = (event.clientY - rect.top) * canvas.height / rect.height;
+
+    const x = 2 * xCanvas / canvas.width - 1;
+    const y = 1 - 2 * yCanvas / canvas.height;
+
+    return [x, y];
+}</code></pre>
+            <div class="activity fragment fade-up">
+              <h3>预测</h3>
+              <p>
+                如果页面左侧有一个200px宽的导航栏，直接使用
+                <code data-line-numbers="">clientX</code> 会让绘制点向哪边偏？
+              </p>
+            </div>
+          </section>
+
+          <section id="sec-3-5">
+            <span class="slide-no">#sec-3-5</span>
+            <h2>Demo：Pointer → GPU 坐标转换实验台</h2>
+            <div class="grid2">
+              <div
+                class="card fragment fade-up"
+                style="display: flex; flex-direction: column; justify-content: space-between"
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Interactive Demo · D03-03</div>
+                  <h3 style="margin-top: 0">坐标转换显微镜</h3>
+                  <p class="muted" style="font-size: 0.72em; line-height: 1.45; margin-top: 0.4em">
+                    实时监控三层坐标变化：浏览器窗口坐标 <code>(clientX, clientY)</code> → Canvas
+                    元素内像素坐标 <code>(x<sub>w</sub>, y<sub>w</sub>)</code> → WebGL
+                    归一化设备坐标 <code>(x<sub>ndc</sub>, y<sub>ndc</sub>)</code>。
+                  </p>
+                </div>
+                <div style="margin-top: 20px">
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap3/D03_坐标转换显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="width: 100%; min-height: 52px; font-size: 0.7em"
+                  >
+                    ▶ 打开课堂 Demo：坐标转换显微镜
+                  </a>
+                </div>
+              </div>
+
+              <div class="activity fragment fade-up" style="margin-top: 0; padding: 22px 26px">
+                <span class="tag">思考与验证</span>
+                <span class="timer">2 min</span>
+                <h3 style="margin: 0.3em 0 0.5em; font-size: 1.05em; color: #14345e">观察任务</h3>
+                <ol class="step-list" style="margin-top: 0.4em">
+                  <li>
+                    <strong>布局变化：</strong>改变 Canvas 在页面中的内边距与位置，观察偏移量。
+                  </li>
+                  <li>
+                    <strong>公式对比：</strong>对比简化公式与使用
+                    <code>getBoundingClientRect()</code> 的稳健公式。
+                  </li>
+                  <li>
+                    <strong>Y轴翻转：</strong>移动鼠标，观察为什么 Y 轴方向需要做
+                    <code>1 - 2y/h</code> 的取反翻转。
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-4">
+          <section id="sec-4-1">
+            <span class="slide-no">#sec-4-1</span>
+            <h2>点击怎样变成GPU中的新顶点？</h2>
+            <p class="lead fragment fade-up">
+              坐标转换之后，得到的是WebGL可用的位置数据。接下来把它写入Buffer，并在下一次绘制中显示出来。
+            </p>
+            <div class="pipeline">
+              <span class="node fragment fade-up">Click</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">NDC vec2</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">bufferSubData</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">index++</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">drawArrays</span>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">let index = 0;
+
+canvas.addEventListener("click", function(event) {
+    const [x, y] = pointerToNDC(event, canvas);
+    const point = new Float32Array([x, y]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 2 * 4 * index, point);
+    index++;
+});
+
+function render() {
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, 0, index);
+    requestAnimationFrame(render);
+}</code></pre>
+          </section>
+
+          <section id="sec-4-2">
+            <span class="slide-no">#sec-4-2</span>
+            <h2>交互式程序必须保存跨事件状态</h2>
+            <p class="lead fragment fade-up">
+              一次点击只能提供一个位置。绘制矩形需要两次点击，因此程序必须记住第一次点击的位置。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>第一次点击</h3>
+                <p>保存P1，不立即形成矩形。</p>
+                <pre><code class="language-javascript" data-line-numbers="">firstPoint = [x, y];
+waitingSecond = true;</code></pre>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>第二次点击</h3>
+                <p>得到P2，计算另外两个顶点，上传4个顶点。</p>
+                <pre><code class="language-javascript" data-line-numbers="">makeRectangle(firstPoint, [x, y]);
+waitingSecond = false;</code></pre>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              交互式建模的本质：<span class="accent"
+                >事件不断到来，程序状态不断积累，绘制结果不断更新。</span
+              >
+            </div>
+          </section>
+
+          <section id="sec-4-3">
+            <span class="slide-no">#sec-4-3</span>
+            <h2>Demo：两次点击生成矩形</h2>
+            <div class="grid2" style="margin-top: 24px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  padding: 28px 32px;
+                "
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Interactive Demo · D03-04</div>
+                  <h3 style="margin-top: 0; font-size: 1.05em; color: var(--cyan)">
+                    交互式矩形建模
+                  </h3>
+                  <p class="muted" style="font-size: 0.75em; line-height: 1.5; margin-top: 0.5em">
+                    通过鼠标在 Canvas 上两次连续点击构建矩形：第一次点击确定矩形角点
+                    P<sub>1</sub>(x<sub>1</sub>, y<sub>1</sub>)，第二次点击确定对角点
+                    P<sub>2</sub>(x<sub>2</sub>, y<sub>2</sub>)，程序自动计算补齐其余两点并上传 GPU
+                    渲染。
+                  </p>
+                </div>
+                <div style="margin-top: 24px">
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap3/D04_两次点击生成矩形.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="width: 100%; min-height: 56px; font-size: 0.72em"
+                  >
+                    ▶ 打开课堂 Demo：两次点击生成矩形
+                  </a>
+                </div>
+              </div>
+
+              <div
+                class="activity fragment fade-up"
+                style="
+                  margin-top: 0;
+                  padding: 28px 32px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <span class="tag">课堂思考</span>
+                  <span class="timer">1 min</span>
+                  <h3 style="margin: 0.4em 0 0.6em; font-size: 1.08em; color: #14345e">课堂提问</h3>
+                  <p style="font-size: 0.75em; line-height: 1.52; color: var(--text)">
+                    如果要在程序中支持<strong>“撤销上一个矩形（Undo）”</strong>或<strong>“删除指定矩形”</strong>，程序需要额外保存什么信息？
+                  </p>
+                </div>
+                <div
+                  class="quote"
+                  style="
+                    margin-top: 16px;
+                    padding: 14px 18px;
+                    font-size: 0.65em !important;
+                    line-height: 1.45 !important;
+                  "
+                >
+                  提示：顶点缓冲区 (VBO) 只保存渲染点，若要实现撤销/选择等对象级交互，必须在
+                  JavaScript 端维护<strong>应用层几何数据结构 (State)</strong>。
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-5">
+          <section id="sec-5-1">
+            <span class="slide-no">#sec-5-1</span>
+            <h2>从“点在哪里”到“点中了谁”</h2>
+            <p class="lead fragment fade-up">
+              位置输入只能告诉程序用户点击了哪个屏幕位置；拾取要回答的是这个位置对应哪个图形对象。
+            </p>
+            <div class="pipeline">
+              <span class="node fragment fade-up">Object</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Transform</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Rasterize</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Pixel</span>
+            </div>
+            <div class="pipeline fragment fade-up">
+              <span class="node red">Pixel</span><span class="arrow">→</span
+              ><span class="node red">Object ?</span>
+            </div>
+            <div class="quote fragment fade-up">
+              图形流水线天然是前向绘制：从对象到像素容易；从像素反推对象需要额外策略。
+            </div>
+          </section>
+
+          <section id="sec-5-2">
+            <span class="slide-no">#sec-5-2</span>
+            <h2>Picking（对象拾取）的三种常见思想</h2>
+            <p class="lead fragment fade-up">
+              前向渲染从对象绘制到像素；反向拾取要从鼠标点击的屏幕像素锁定对应图形对象。
+            </p>
+
+            <div class="grid3" style="margin-top: 20px">
+              <!-- 方法一：包围盒法 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  padding: 22px 24px;
+                  min-height: 340px;
+                "
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Method 01</div>
+                  <h3 style="margin-top: 0; color: var(--cyan); font-size: 1.05em">
+                    包围盒法 (Bounding Box)
+                  </h3>
+                  <p style="font-size: 0.72em; line-height: 1.5; margin: 0.4em 0">
+                    <strong>核心思想：</strong>先用简单的包围矩形/轴对齐包围盒 (AABB)
+                    做碰撞判定。<br />
+                    <strong>特点：</strong>计算速度快、易于实现，适合二维与粗粒度筛选。
+                  </p>
+                </div>
+                <div style="margin-top: 20px">
+                  <a
+                    class="demo-btn"
+                    href="./images/chap03/ch03-picking-bounding-box.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 48px;
+                      padding: 0 14px;
+                      font-size: 0.66em;
+                      background: linear-gradient(135deg, #157db8, #2f64c8);
+                    "
+                  >
+                    🖼️ 查看包围盒法示意图 ↗
+                  </a>
+                </div>
+              </div>
+
+              <!-- 方法二：颜色ID法 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  padding: 22px 24px;
+                  min-height: 340px;
+                "
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Method 02</div>
+                  <h3 style="margin-top: 0; color: var(--cyan); font-size: 1.05em">
+                    颜色 ID 法 (Color-ID Offscreen)
+                  </h3>
+                  <p style="font-size: 0.72em; line-height: 1.5; margin: 0.4em 0">
+                    <strong>核心思想：</strong>在后台帧缓冲给每个对象绘制唯一编码颜色，用
+                    <code>gl.readPixels</code> 读取像素值识别对象。<br />
+                    <strong>特点：</strong>硬件加速、像素级精确，适合复杂几何。
+                  </p>
+                </div>
+                <div style="margin-top: 20px">
+                  <a
+                    class="demo-btn"
+                    href="./images/chap03/ch03-picking-color-picking.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 48px;
+                      padding: 0 14px;
+                      font-size: 0.66em;
+                      background: linear-gradient(135deg, #157db8, #2f64c8);
+                    "
+                  >
+                    🖼️ 查看颜色ID法示意图 ↗
+                  </a>
+                </div>
+              </div>
+
+              <!-- 方法三：射线拾取法 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  padding: 22px 24px;
+                  min-height: 340px;
+                "
+              >
+                <div>
+                  <div class="eyebrow" style="margin-bottom: 0.4em">Method 03</div>
+                  <h3 style="margin-top: 0; color: var(--cyan); font-size: 1.05em">
+                    射线拾取法 (Ray Casting)
+                  </h3>
+                  <p style="font-size: 0.72em; line-height: 1.5; margin: 0.4em 0">
+                    <strong>核心思想：</strong
+                    >从视点经过鼠标点击点穿过屏幕生成一条三维射线，计算射线与场景网格的求交。<br />
+                    <strong>特点：</strong>数学完备，适合三维空间精确选择。
+                  </p>
+                </div>
+                <div style="margin-top: 20px">
+                  <a
+                    class="demo-btn"
+                    href="./images/chap03/ch03-picking-ray-picking.png"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 48px;
+                      padding: 0 14px;
+                      font-size: 0.66em;
+                      background: linear-gradient(135deg, #157db8, #2f64c8);
+                    "
+                  >
+                    🖼️ 查看射线拾取法示意图 ↗
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-5-3">
+            <span class="slide-no">#sec-5-3</span>
+            <h2>拾取思想判断与随堂测验</h2>
+
+            <div class="activity fragment fade-up" style="margin-top: 14px; padding: 16px 22px">
+              <span class="tag">思考与讨论</span>
+              <h3 style="margin: 0.2em 0 0.3em; font-size: 0.95em; color: #14345e">课堂判断</h3>
+              <p style="font-size: 0.7em; line-height: 1.45; margin: 0">
+                1. 二维画图软件选中图形时，优先考虑哪种方法？（包围盒法）<br />
+                2. 三维场景中选中离相机最近的模型，又更像哪种方法？（射线拾取法）
+              </p>
+            </div>
+
+            <div class="activity fragment fade-up" style="margin-top: 14px; padding: 16px 22px">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p style="font-size: 0.72em; margin: 0">
+                如果希望用户点击屏幕后，程序知道“点中了哪个对象”，下列哪种方法最符合颜色ID拾取的思想？
+              </p>
+            </div>
+
+            <div class="grid2" style="margin-top: 14px">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>只读取 <code data-line-numbers="">event.clientX</code> 和
+                <code data-line-numbers="">event.clientY</code>
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>为每个对象赋予唯一ID颜色，离屏绘制后用
+                <code data-line-numbers="">gl.readPixels</code> 读取点击处颜色
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>C</strong>改变
+                <code data-line-numbers="">gl.viewport</code>，让鼠标附近区域变大
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>D</strong>只要对象颜色好看，就能直接判断对象身份
+              </div>
+            </div>
+
+            <div class="quiz-answer fragment fade-up" style="margin-top: 14px">
+              <strong>参考答案：B。</strong
+              >颜色ID拾取把“对象身份”编码进离屏颜色缓存，再通过点击位置处的像素颜色反查对象。
+            </div>
+          </section>
+          <section id="sec-5-4">
+            <span class="slide-no">#sec-5-4</span>
+            <h2>拓展：窗口事件与触摸手势</h2>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>窗口Resize</h3>
+                <p>窗口大小变化时，程序需要重新考虑Canvas大小、视口和宽高比。</p>
+                <span class="pill">gl.viewport</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Touch / Gesture</h3>
+                <p>触摸事件可提供多个触点，进一步组合成轻扫、捏合、旋转等手势。</p>
+                <span class="pill">touchstart / touchmove</span>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              这些内容的核心仍然相同：事件携带测量数据，程序将其转换为状态变化。
+            </div>
+          </section>
+        </section>
+
+        <section id="sec-6">
+          <section id="sec-6-1">
+            <span class="slide-no">#sec-6-1</span>
+            <h2>AI Bug Hunt：为什么点画偏了？</h2>
+            <p class="lead fragment fade-up">现象：鼠标点击Canvas中心附近，但点总是向右下偏移。</p>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-line-numbers="">canvas.addEventListener("click", function(event) {
+    const x = -1 + 2 * event.clientX / canvas.width;
+    const y = -1 + 2 * (canvas.height - event.clientY) / canvas.height;
+    addPoint(x, y);
+});</code></pre>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>先自己判断</h3>
+                <p>这段代码默认了什么前提？</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>再问AI</h3>
+                <p>要求AI只指出最可能的3个错误位置。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>最后验证</h3>
+                <p>打印 <code data-line-numbers="">getBoundingClientRect()</code> 与NDC结果。</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-6-2">
+            <span class="slide-no">#sec-6-2</span>
+            <h2>本课总结：用户操作如何进入图形流水线</h2>
+            <div class="pipeline">
+              <span class="node fragment fade-up">用户操作</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Event</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Measure</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Mapping</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">State / Buffer</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Render</span>
+            </div>
+            <div class="pipeline fragment fade-up">
+              <span class="node">Screen Position</span><span class="arrow">→</span
+              ><span class="node accent">Picking</span><span class="arrow">→</span
+              ><span class="node green">Object</span><span class="arrow">→</span
+              ><span class="node">Modify / Render</span>
+            </div>
+            <div class="quote fragment fade-up">
+              今天解决的问题：<span class="accent"
+                >鼠标位置如何转成图形数据，以及屏幕位置如何进一步关联到对象。</span
+              >
+            </div>
+            <div class="exit-ticket fragment fade-up">
+              <h3>Exit Ticket</h3>
+              <p>
+                为什么程序不能仅凭
+                <code data-line-numbers="">event.clientX</code>
+                直接知道“点中了哪个对象”？请用一句话回答。
+              </p>
+            </div>
+          </section>
+
+          <section id="sec-6-3">
+            <span class="slide-no">#sec-6-3</span>
+            <h2>第三章整体关系</h2>
+            <p class="lead fragment fade-up">
+              第三章把前两章的静态绘制程序扩展为真正的交互式图形应用。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>第1章</h3>
+                <p>理解图形流水线如何从场景生成图像。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>第2章</h3>
+                <p>学习用数据和Shader驱动GPU绘制。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>第3章</h3>
+                <p>让程序随时间和用户输入持续改变状态。</p>
+              </div>
+            </div>
+            <div class="flow fragment fade-up">
+              <span class="node">Pipeline</span><span class="arrow">→</span
+              ><span class="node">Data + Program</span><span class="arrow">→</span
+              ><span class="node accent">Interaction + Animation</span>
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="../shared/classroom-fragments.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight],
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1918 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D03-02 坐标转换显微镜 - 计算机图形学教学 Demo</title>
+    <style>
+      /* ==========================================================
+       1. 全局设计规范：大学图形学标准学术浅色风格（与前两章及D03-01统一）
+       ========================================================== */
+      :root {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --border-color: #cbd5e1;
+        --border-light: #e2e8f0;
+        --text-main: #0f172a; /* 深蓝墨色 */
+        --text-muted: #475569; /* 蓝灰 */
+        --text-sub: #64748b; /* 浅蓝灰 */
+        --brand-blue: #0284c7; /* 青蓝强调 */
+        --brand-blue-hover: #0369a1;
+        --brand-blue-light: #e0f2fe;
+        --brand-green: #0d9488; /* 适度饱和正向绿/翡翠 */
+        --brand-green-bg: #ccfbf1;
+        --brand-amber: #d97706; /* 琥珀预警 */
+        --brand-amber-bg: #fef3c7;
+        --brand-red: #e11d48; /* 错误对比色 */
+        --brand-red-bg: #ffe4e6;
+        --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+        --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+        --font-stack:
+          'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, -apple-system,
+          sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: var(--font-stack);
+        line-height: 1.4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 10px;
+        user-select: none;
+      }
+
+      /* 16:9 比例主容器，满足大阶梯教室 80 人投影清晰度 */
+      .app-frame {
+        width: 100%;
+        max-width: 1600px;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* 顶部标题栏 */
+      header {
+        padding: 10px 20px;
+        background: #f1f5f9;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .badge-id {
+        background: #0f172a;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+        font-family: var(--font-mono);
+      }
+
+      .header-titles h1 {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .header-titles h1 span {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+
+      .header-subtitle {
+        font-size: 12px;
+        color: var(--text-sub);
+        margin-top: 1px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pill-tag {
+        background: var(--brand-blue-light);
+        color: var(--brand-blue);
+        border: 1px solid #bae6fd;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+      }
+
+      .pill-tag-alt {
+        background: #e2e8f0;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+      }
+
+      /* 三栏布局 */
+      .main-body {
+        display: grid;
+        grid-template-columns: 42% 28% 30%;
+        min-height: 580px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      @media (max-width: 1200px) {
+        .main-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-light);
+        overflow-y: auto;
+        max-height: 720px;
+      }
+
+      .panel:last-child {
+        border-right: none;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .panel-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* 左侧交互实验区样式 */
+      .canvas-viewport-wrapper {
+        position: relative;
+        background: #e2e8f0;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        min-height: 420px;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+        padding: 14px;
+      }
+
+      /* 表现浏览器 Viewport 原点 */
+      .viewport-origin-marker {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        color: #64748b;
+        background: rgba(255, 255, 255, 0.92);
+        padding: 2px 5px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+        z-index: 5;
+        pointer-events: none;
+      }
+
+      /* 动态位移包裹器（通过 transform 或 margin 移动，以模拟真实网页布局） */
+      .canvas-shift-container {
+        position: relative;
+        transition:
+          margin 0.15s ease-out,
+          transform 0.15s ease-out;
+        background: #ffffff;
+        border-radius: 6px;
+        box-shadow: var(--shadow-md);
+        border: 1px solid #94a3b8;
+        display: inline-block;
+      }
+
+      /* Canvas 自身真实容器 */
+      #webglCanvas {
+        display: block;
+        background-color: #fafbfc;
+        cursor: crosshair;
+        border-radius: 5px;
+      }
+
+      .canvas-corner-marker {
+        position: absolute;
+        top: -20px;
+        left: 0;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        background: var(--brand-blue-light);
+        color: var(--brand-blue);
+        padding: 1px 6px;
+        border-radius: 4px;
+        border: 1px solid #bae6fd;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      /* 辅助指示线 SVG */
+      .offset-svg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 4;
+      }
+
+      /* 中间流水线卡片 */
+      .pipeline-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .pipe-step-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 7px 10px;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        transition: all 0.2s ease;
+      }
+
+      .pipe-step-card.active-step {
+        border-color: var(--brand-blue);
+        background: #f0f9ff;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+      }
+
+      .pipe-step-card.dimmed-step {
+        opacity: 0.45;
+      }
+
+      .step-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: #0f172a;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 700;
+        margin-right: 6px;
+        font-family: var(--font-mono);
+      }
+
+      .step-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3px;
+      }
+
+      .step-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      .step-subtext {
+        font-size: 11px;
+        color: var(--text-sub);
+      }
+
+      .step-values {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: #0369a1;
+        background: #f8fafc;
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-top: 3px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .step-formula {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: #334155;
+        background: #f1f5f9;
+        padding: 2px 5px;
+        border-radius: 3px;
+        margin-top: 3px;
+        line-height: 1.3;
+      }
+
+      .pipe-arrow {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 11px;
+        line-height: 1;
+        margin: -2px 0;
+      }
+
+      /* 右侧面板：同一点的三种坐标并排大卡片 */
+      .tri-coord-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .tri-coord-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 6px;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .tri-coord-card.active {
+        border-color: var(--brand-blue);
+        background: #f0fdf4;
+      }
+
+      .tri-title {
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+        text-transform: uppercase;
+      }
+
+      .tri-val {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      /* 监视列表 */
+      .monitor-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+
+      .monitor-table th,
+      .monitor-table td {
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--border-light);
+        text-align: left;
+      }
+
+      .monitor-table th {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 11px;
+      }
+
+      .monitor-table td.val {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: #0369a1;
+        text-align: right;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        font-family: var(--font-mono);
+      }
+
+      .status-inside {
+        background: var(--brand-green-bg);
+        color: var(--brand-green);
+        border: 1px solid #99f6e4;
+      }
+
+      .status-outside {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+      }
+
+      /* 错误算法对比框 */
+      .error-diff-card {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        border-radius: 8px;
+        padding: 8px;
+        margin-top: 6px;
+      }
+
+      .error-diff-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--brand-red);
+        font-size: 11.5px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .error-diff-body {
+        font-size: 11px;
+        color: #881337;
+        line-height: 1.35;
+      }
+
+      .error-diff-vals {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 3px 6px;
+        border-radius: 4px;
+        margin-top: 4px;
+        color: var(--brand-red);
+        border: 1px solid #fda4af;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* 底部控制面板 */
+      footer {
+        background: #ffffff;
+        padding: 10px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .ctrl-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-light);
+      }
+
+      .ctrl-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+
+      .btn {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 4px 9px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .btn:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+
+      .btn-primary {
+        background: var(--brand-blue);
+        color: #fff;
+        border-color: var(--brand-blue);
+      }
+
+      .btn-primary:hover {
+        background: var(--brand-blue-hover);
+      }
+
+      .btn-active {
+        background: var(--brand-blue-light);
+        color: var(--brand-blue);
+        border-color: var(--brand-blue);
+      }
+
+      .slider-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      input[type='range'] {
+        width: 80px;
+        cursor: pointer;
+      }
+
+      .checkbox-label {
+        font-size: 11.5px;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+      }
+
+      /* 思考问题与结论栏 */
+      .conclusion-bar {
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        border-left: 4px solid var(--brand-blue);
+      }
+
+      .conclusion-text {
+        color: var(--text-main);
+        font-weight: 500;
+      }
+
+      .conclusion-text b {
+        color: var(--brand-blue);
+      }
+
+      .question-box {
+        font-size: 11.5px;
+        color: #4338ca;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        padding: 4px 8px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+
+      .question-box:hover {
+        background: #e0e7ff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 主容器：16:9 比例优先架构 -->
+    <main class="app-frame">
+      <!-- ==================== 顶部教学标题栏 ==================== -->
+      <header>
+        <div class="header-left">
+          <span class="badge-id">D03-02</span>
+          <div class="header-titles">
+            <h1>坐标转换显微镜 <span>Coordinate Transformation Microscope</span></h1>
+            <p class="header-subtitle">
+              核心问题：“鼠标明明点在 Canvas 这里，为什么 WebGL 绘制出来的点可能跑到别处？”
+            </p>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="pill-tag">WebGL 2.0 (ES 3.00)</span>
+          <span class="pill-tag-alt">大学计算机图形学 · 第3章</span>
+        </div>
+      </header>
+
+      <!-- ==================== 主体三栏核心区 ==================== -->
+      <div class="main-body">
+        <!-- ================= 左栏：交互实验区 (WebGL Canvas) ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+              交互画布 (WebGL Viewport)
+            </div>
+            <span style="font-size: 11px; color: var(--text-sub)">
+              支持移动、点击、拖动位置与缩放
+            </span>
+          </div>
+
+          <!-- 模拟浏览器页面外框：体现 Canvas 在页面中的相对位置与边距 -->
+          <div class="canvas-viewport-wrapper" id="viewportWrapper">
+            <div class="viewport-origin-marker">Browser Viewport Origin (0, 0)</div>
+
+            <!-- 辅助指示连线 SVG -->
+            <svg class="offset-svg-overlay" id="offsetSvg">
+              <defs>
+                <marker
+                  id="arrow"
+                  viewBox="0 0 10 10"
+                  refX="5"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7" />
+                </marker>
+              </defs>
+              <line
+                id="svgLineX"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="0"
+                stroke="#0284c7"
+                stroke-width="1.5"
+                stroke-dasharray="3,3"
+                marker-end="url(#arrow)"
+              />
+              <line
+                id="svgLineY"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="0"
+                stroke="#0284c7"
+                stroke-width="1.5"
+                stroke-dasharray="3,3"
+                marker-end="url(#arrow)"
+              />
+              <text
+                id="svgTextOffset"
+                x="0"
+                y="0"
+                fill="#0284c7"
+                font-size="10"
+                font-family="monospace"
+              ></text>
+            </svg>
+
+            <!-- 动态偏移与缩放容器 -->
+            <div class="canvas-shift-container" id="canvasContainer">
+              <div class="canvas-corner-marker" id="canvasCornerTag">
+                Canvas Rect: (left: 20px, top: 20px)
+              </div>
+              <!-- 真实 WebGL 2.0 Canvas -->
+              <canvas
+                id="webglCanvas"
+                width="800"
+                height="600"
+                style="width: 480px; height: 360px"
+              ></canvas>
+            </div>
+          </div>
+
+          <!-- 画布下方微提示 -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 6px;
+              font-size: 11px;
+              color: var(--text-sub);
+            "
+          >
+            <span>坐标系：中心为 (0,0)，左下 (-1,-1)，右上 (1,1)</span>
+            <span id="clickCountTag" style="font-family: var(--font-mono); color: var(--brand-blue)"
+              >已记录点击: 0</span
+            >
+          </div>
+        </section>
+
+        <!-- ================= 中栏：坐标转换流水线 ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              坐标转换流水线 (Pipeline)
+            </div>
+            <div style="display: flex; gap: 4px">
+              <button
+                class="btn btn-primary"
+                id="btnStepMode"
+                style="padding: 2px 7px; font-size: 10.5px"
+              >
+                逐步观察
+              </button>
+              <button
+                class="btn"
+                id="btnNextStep"
+                style="padding: 2px 6px; font-size: 10.5px; display: none"
+              >
+                下一步 →
+              </button>
+            </div>
+          </div>
+
+          <div class="pipeline-container">
+            <!-- 步骤 1 -->
+            <div class="pipe-step-card" id="stepCard1">
+              <div class="step-header">
+                <span class="step-title"><span class="step-badge">1</span>Mouse Event</span>
+                <span class="step-subtext">视口坐标 (Y向下)</span>
+              </div>
+              <div class="step-values">
+                <span>clientX = <b id="valClientX">--</b> px</span>
+                <span>clientY = <b id="valClientY">--</b> px</span>
+              </div>
+              <div class="step-formula">原点在浏览器视口左上角，y 轴向下增大</div>
+            </div>
+
+            <div class="pipe-arrow">↓ 减去 Canvas 页面相对偏移 (BoundingClientRect)</div>
+
+            <!-- 步骤 2 -->
+            <div class="pipe-step-card" id="stepCard2">
+              <div class="step-header">
+                <span class="step-title"><span class="step-badge">2</span>Canvas CSS 坐标</span>
+                <span class="step-subtext">元素局部坐标</span>
+              </div>
+              <div class="step-values">
+                <span>x_css = <b id="valCssX">--</b> px</span>
+                <span>y_css = <b id="valCssY">--</b> px</span>
+              </div>
+              <div class="step-formula">
+                x_css = clientX - rect.left<br />
+                y_css = clientY - rect.top
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓ 乘以像素密度缩放比 (Buffer / CSS Size)</div>
+
+            <!-- 步骤 3 -->
+            <div class="pipe-step-card" id="stepCard3">
+              <div class="step-header">
+                <span class="step-title"
+                  ><span class="step-badge">3</span>Drawing Buffer 像素坐标</span
+                >
+                <span
+                  id="scaleRatioTag"
+                  class="step-subtext"
+                  style="color: var(--brand-green); font-weight: 700"
+                  >1 : 1</span
+                >
+              </div>
+              <div class="step-values">
+                <span>x_buf = <b id="valBufX">--</b> px</span>
+                <span>y_buf = <b id="valBufY">--</b> px</span>
+              </div>
+              <div class="step-formula">
+                x_buf = x_css × (canvas.width / rect.width)<br />
+                y_buf = y_css × (canvas.height / rect.height)
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓ 映射到 [-1, 1] 并翻转 Y 轴</div>
+
+            <!-- 步骤 4 (核心步骤) -->
+            <div class="pipe-step-card active-step" id="stepCard4">
+              <div class="step-header">
+                <span class="step-title" style="color: var(--brand-blue)"
+                  ><span class="step-badge" style="background: var(--brand-blue)">4</span>WebGL NDC
+                  归一化设备坐标</span
+                >
+                <span class="step-subtext" style="color: var(--brand-blue); font-weight: 700"
+                  >核心映射</span
+                >
+              </div>
+              <div class="step-values" style="background: #e0f2fe; border-color: #bae6fd">
+                <span>x_ndc = <b id="valNdcX" style="color: #0284c7">--</b></span>
+                <span>y_ndc = <b id="valNdcY" style="color: #0284c7">--</b></span>
+              </div>
+              <div class="step-formula" style="font-weight: 600; color: #0f172a">
+                x_ndc = 2.0 × (x_buf / canvas.width) - 1.0<br />
+                y_ndc = 1.0 - 2.0 × (y_buf / canvas.height)
+                <span style="color: var(--brand-amber)">/* Y 轴翻转 */</span>
+              </div>
+            </div>
+
+            <div class="pipe-arrow">↓ 顶点着色器 gl_Position 输出</div>
+
+            <!-- 步骤 5 -->
+            <div class="pipe-step-card" id="stepCard5">
+              <div class="step-header">
+                <span class="step-title"
+                  ><span class="step-badge">5</span>GPU 栅格化绘制 (Draw Point)</span
+                >
+                <span class="step-subtext">精确重合</span>
+              </div>
+              <div class="step-formula" style="color: var(--text-muted)">
+                gl_Position = vec4(x_ndc, y_ndc, 0.0, 1.0);<br />
+                通过视口变换 (Viewport Transform) 栅格化为屏幕像素
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 右栏：实时状态监视器 ================= -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              坐标监视器 (Coordinate Monitor)
+            </div>
+            <span id="canvasStatusBadge" class="status-badge status-outside">Outside Canvas</span>
+          </div>
+
+          <!-- 教学核心：同一个点的三种坐标表达对比卡片 -->
+          <div
+            style="font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 4px"
+          >
+            同一点的三种坐标系统表示：
+          </div>
+          <div class="tri-coord-group">
+            <div class="tri-coord-card">
+              <div class="tri-title">Browser Viewport</div>
+              <div class="tri-val" id="triBrowser">(--, --)</div>
+              <div style="font-size: 9.5px; color: #64748b">(0,0)在视口左上</div>
+            </div>
+            <div class="tri-coord-card">
+              <div class="tri-title">Canvas CSS</div>
+              <div class="tri-val" id="triCanvas">(--, --)</div>
+              <div style="font-size: 9.5px; color: #64748b">(0,0)在元素左上</div>
+            </div>
+            <div class="tri-coord-card active">
+              <div class="tri-title" style="color: var(--brand-blue)">WebGL NDC</div>
+              <div class="tri-val" id="triNdc" style="color: var(--brand-blue)">(--, --)</div>
+              <div style="font-size: 9.5px; color: #0369a1">[-1, 1] 中心原点</div>
+            </div>
+          </div>
+
+          <!-- 详细数据监视表格 -->
+          <table class="monitor-table">
+            <thead>
+              <tr>
+                <th>系统与参数 (Properties)</th>
+                <th style="text-align: right">数值 (Values)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Mouse clientX / clientY</td>
+                <td class="val" id="tabClient">--, --</td>
+              </tr>
+              <tr>
+                <td>Canvas rect.left / rect.top</td>
+                <td class="val" id="tabRectPos">--, --</td>
+              </tr>
+              <tr>
+                <td>Canvas CSS Display Size (W × H)</td>
+                <td class="val" id="tabCssSize">480 × 360 px</td>
+              </tr>
+              <tr>
+                <td>Drawing Buffer Size (W × H)</td>
+                <td class="val" id="tabBufSize">800 × 600 px</td>
+              </tr>
+              <tr>
+                <td>CSS 与 Buffer 缩放比率 (Scale X/Y)</td>
+                <td class="val" id="tabScaleRatio">1.667 / 1.667</td>
+              </tr>
+              <tr>
+                <td>Drawing Buffer 像素 (x_buf, y_buf)</td>
+                <td class="val" id="tabBufPos">--, --</td>
+              </tr>
+              <tr>
+                <td>WebGL NDC 坐标 (x_ndc, y_ndc)</td>
+                <td class="val" id="tabNdcPos" style="color: var(--brand-blue)">--, --</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 错误算法对比教学卡片 -->
+          <div class="error-diff-card" id="errorCard">
+            <div class="error-diff-header">
+              <span>⚠️ 常见错误算法对比</span>
+              <label class="checkbox-label" style="font-size: 11px; color: var(--brand-red)">
+                <input type="checkbox" id="chkShowError" style="accent-color: var(--brand-red)" />
+                启用对比点
+              </label>
+            </div>
+            <div class="error-diff-body">
+              错误写法：直接拿 clientX/clientY 当作 Canvas
+              内部像素除以宽高，忽略页面偏移与尺寸缩放。
+            </div>
+            <div class="error-diff-vals">
+              <span>错误 NDC: <b id="valErrNdc">--</b></span>
+              <span>偏移误差 Δ: <b id="valErrDelta">--</b></span>
+            </div>
+          </div>
+
+          <!-- 实验状态小贴士 -->
+          <div
+            style="
+              margin-top: 8px;
+              font-size: 11px;
+              color: var(--text-muted);
+              background: #f8fafc;
+              padding: 6px;
+              border-radius: 5px;
+              border: 1px dashed var(--border-color);
+            "
+          >
+            💡 <b>教学观察提示</b>：若改变下方“水平偏移”滑块，尽管 clientX 剧烈变化，但只要鼠标指向
+            Canvas 相同的相对位置，NDC 就保持完全不变！
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== 底部：实验控制面板 ==================== -->
+      <footer>
+        <!-- 控制行 1：预设实验场景 & 常用开关 -->
+        <div class="control-row">
+          <!-- 预设实验场景按钮组 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">教学预设:</span>
+            <button class="btn btn-active" id="btnExp1" title="Canvas位于默认偏置，标准比例">
+              实验1: 标准情况
+            </button>
+            <button
+              class="btn"
+              id="btnExp2"
+              title="Canvas产生大偏移，观察直接使用 clientX 的巨大偏差"
+            >
+              实验2: Canvas大偏移
+            </button>
+            <button class="btn" id="btnExp3" title="修改CSS显示尺寸，测试缩放比对NDC的影响">
+              实验3: CSS缩放不匹配
+            </button>
+            <button class="btn" id="btnExp4" title="同时具备位移与缩放，验证完整转换公式的正确性">
+              实验4: 综合复杂场景
+            </button>
+          </div>
+
+          <!-- 算法模式切换 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">算法模式:</span>
+            <label class="checkbox-label">
+              <input type="radio" name="calcMode" value="correct" checked /> 正确完整算法
+            </label>
+            <label class="checkbox-label" style="color: var(--brand-red)">
+              <input type="radio" name="calcMode" value="naive" /> 典型简化错误写法
+            </label>
+          </div>
+
+          <!-- 课堂演示引导按钮 -->
+          <button
+            class="btn"
+            id="btnLectureFlow"
+            style="background: #eef2ff; color: #4338ca; border-color: #c7d2fe"
+          >
+            ▶ 课堂引导模式
+          </button>
+        </div>
+
+        <!-- 控制行 2：细粒度参数滑块与视图开关 -->
+        <div class="control-row">
+          <!-- Canvas 页面布局位移 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">Canvas 布局位移:</span>
+            <div class="slider-item">
+              <span>X偏移</span>
+              <input type="range" id="sliderOffsetX" min="0" max="260" value="20" step="5" />
+              <span id="txtOffsetX" style="font-family: var(--font-mono); width: 40px">20px</span>
+            </div>
+            <div class="slider-item">
+              <span>Y偏移</span>
+              <input type="range" id="sliderOffsetY" min="0" max="100" value="20" step="5" />
+              <span id="txtOffsetY" style="font-family: var(--font-mono); width: 40px">20px</span>
+            </div>
+          </div>
+
+          <!-- CSS 尺寸缩放 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">CSS 显示缩放:</span>
+            <button class="btn" id="btnScale75">75%</button>
+            <button class="btn btn-active" id="btnScale100">100%</button>
+            <button class="btn" id="btnScale125">125%</button>
+          </div>
+
+          <!-- Drawing Buffer 分辨率 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">Buffer 分辨率:</span>
+            <select
+              id="selResolution"
+              style="
+                font-size: 11px;
+                padding: 2px 4px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background: #fff;
+              "
+            >
+              <option value="400x300">400 × 300</option>
+              <option value="800x600" selected>800 × 600 (默认)</option>
+              <option value="1200x900">1200 × 900</option>
+            </select>
+          </div>
+
+          <!-- 显示图层开关 -->
+          <div class="ctrl-group">
+            <span class="ctrl-label">图层开关:</span>
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkGrid" checked /> 网格</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkAxes" checked /> 坐标轴</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkGuides" checked /> 视口辅助线</label
+            >
+            <label class="checkbox-label"
+              ><input type="checkbox" id="chkHistory" /> 保留点击历史</label
+            >
+            <button class="btn" id="btnClearHistory" style="padding: 1px 6px; font-size: 10px">
+              清除
+            </button>
+          </div>
+        </div>
+
+        <!-- 核心教学结论与启发式提问条 -->
+        <div class="conclusion-bar">
+          <div class="conclusion-text" id="conclusionMsg">
+            <b>核心结论：</b>同一个点击位置，在不同坐标系中有不同数值表示。交互输入必须经过
+            <b>Browser → Canvas → Buffer → NDC</b> 严格转换！
+          </div>
+          <div class="question-box" id="questionBox" title="点击轮换课堂提问">
+            💭 <b>课堂提问 (点击切换)：</b
+            ><span id="questionText"
+              >鼠标位于 Canvas 正中心时，它的 WebGL NDC 坐标应该是多少？</span
+            >
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ==================== WebGL 2.0 渲染与交互核心脚本 ==================== -->
+    <script>
+      /* ==========================================================
+       2. WebGL 2.0 着色器源码 (严格遵守 #version 300 es 现代规范)
+       ========================================================== */
+      const VS_SOURCE = `#version 300 es
+      in vec2 aPosition;
+      uniform float uPointSize;
+      void main() {
+        gl_Position = vec4(aPosition, 0.0, 1.0);
+        gl_PointSize = uPointSize;
+      }
+    `;
+
+      const FS_SOURCE = `#version 300 es
+      precision highp float;
+      uniform vec4 uColor;
+      uniform bool uIsPoint;
+      out vec4 fragColor;
+      void main() {
+        if (uIsPoint) {
+          // 渲染高质量抗锯齿圆形点
+          vec2 coord = gl_PointCoord - vec2(0.5);
+          float dist = length(coord);
+          if (dist > 0.5) {
+            discard;
+          }
+          // 边缘柔和过渡
+          float alpha = smoothstep(0.5, 0.45, dist);
+          fragColor = vec4(uColor.rgb, uColor.a * alpha);
+        } else {
+          fragColor = uColor;
+        }
+      }
+    `;
+
+      /* ==========================================================
+       3. 状态管理模型
+       ========================================================== */
+      const state = {
+        // 鼠标原始位置
+        clientX: 0,
+        clientY: 0,
+        isInside: false,
+        hasMoved: false,
+
+        // 坐标转换各级计算结果
+        xCss: 0,
+        yCss: 0,
+        xBuf: 0,
+        yBuf: 0,
+        xNdc: 0,
+        yNdc: 0,
+
+        // 错误算法预测结果
+        xErrNdc: 0,
+        yErrNdc: 0,
+        calcMode: 'correct', // 'correct' | 'naive'
+        showErrorVisual: false,
+
+        // Canvas 布局参数
+        offsetX: 20,
+        offsetY: 20,
+        cssScale: 1.0, // 0.75, 1.0, 1.25
+        baseCssWidth: 480,
+        baseCssHeight: 360,
+        bufWidth: 800,
+        bufHeight: 600,
+
+        // 视觉图层控制
+        showGrid: true,
+        showAxes: true,
+        showGuides: true,
+        keepHistory: false,
+
+        // 点击历史记录 [{xNdc, yNdc, label}]
+        historyPoints: [],
+        lastClickPoint: null,
+
+        // 逐步观察模式状态
+        isStepMode: false,
+        currentStep: 4, // 1~5
+
+        // 课堂提问索引
+        questionIndex: 0,
+      };
+
+      const questions = [
+        '鼠标位于 Canvas 正中心时，它的 WebGL NDC 坐标应该是多少？（答：(0.0, 0.0)）',
+        '为什么 clientY 越大，对应映射出的 WebGL yNDC 反而越小？（答：浏览器Y向下，NDC Y向上）',
+        '将 Canvas 整体向右移动 100px，同一个 Canvas 内部位置的 NDC 会改变吗？（答：完全不变）',
+        'CSS 缩放改变后，为什么只除以 canvas.width 还是会产生偏差？（答：需要同时校正 CSS 尺寸比率）',
+        '在对 3D/2D 物体进行射线拾取 (Ray Casting) 前，为什么必须先完成这一步？（答：获取归一化世界射线起始点）',
+      ];
+
+      /* ==========================================================
+       4. DOM 元素缓存
+       ========================================================== */
+      const canvas = document.getElementById('webglCanvas');
+      const canvasContainer = document.getElementById('canvasContainer');
+      const viewportWrapper = document.getElementById('viewportWrapper');
+      const canvasCornerTag = document.getElementById('canvasCornerTag');
+      const canvasStatusBadge = document.getElementById('canvasStatusBadge');
+      const offsetSvg = document.getElementById('offsetSvg');
+      const svgLineX = document.getElementById('svgLineX');
+      const svgLineY = document.getElementById('svgLineY');
+      const svgTextOffset = document.getElementById('svgTextOffset');
+
+      // 流水线数值元素
+      const valClientX = document.getElementById('valClientX');
+      const valClientY = document.getElementById('valClientY');
+      const valCssX = document.getElementById('valCssX');
+      const valCssY = document.getElementById('valCssY');
+      const valBufX = document.getElementById('valBufX');
+      const valBufY = document.getElementById('valBufY');
+      const valNdcX = document.getElementById('valNdcX');
+      const valNdcY = document.getElementById('valNdcY');
+      const scaleRatioTag = document.getElementById('scaleRatioTag');
+
+      // 监控器元素
+      const triBrowser = document.getElementById('triBrowser');
+      const triCanvas = document.getElementById('triCanvas');
+      const triNdc = document.getElementById('triNdc');
+      const tabClient = document.getElementById('tabClient');
+      const tabRectPos = document.getElementById('tabRectPos');
+      const tabCssSize = document.getElementById('tabCssSize');
+      const tabBufSize = document.getElementById('tabBufSize');
+      const tabScaleRatio = document.getElementById('tabScaleRatio');
+      const tabBufPos = document.getElementById('tabBufPos');
+      const tabNdcPos = document.getElementById('tabNdcPos');
+
+      // 错误算法卡片
+      const errorCard = document.getElementById('errorCard');
+      const chkShowError = document.getElementById('chkShowError');
+      const valErrNdc = document.getElementById('valErrNdc');
+      const valErrDelta = document.getElementById('valErrDelta');
+
+      // 控制控件
+      const sliderOffsetX = document.getElementById('sliderOffsetX');
+      const sliderOffsetY = document.getElementById('sliderOffsetY');
+      const txtOffsetX = document.getElementById('txtOffsetX');
+      const txtOffsetY = document.getElementById('txtOffsetY');
+      const btnScale75 = document.getElementById('btnScale75');
+      const btnScale100 = document.getElementById('btnScale100');
+      const btnScale125 = document.getElementById('btnScale125');
+      const selResolution = document.getElementById('selResolution');
+      const chkGrid = document.getElementById('chkGrid');
+      const chkAxes = document.getElementById('chkAxes');
+      const chkGuides = document.getElementById('chkGuides');
+      const chkHistory = document.getElementById('chkHistory');
+      const btnClearHistory = document.getElementById('btnClearHistory');
+      const clickCountTag = document.getElementById('clickCountTag');
+
+      // 预设按钮
+      const btnExp1 = document.getElementById('btnExp1');
+      const btnExp2 = document.getElementById('btnExp2');
+      const btnExp3 = document.getElementById('btnExp3');
+      const btnExp4 = document.getElementById('btnExp4');
+      const btnStepMode = document.getElementById('btnStepMode');
+      const btnNextStep = document.getElementById('btnNextStep');
+      const btnLectureFlow = document.getElementById('btnLectureFlow');
+      const questionBox = document.getElementById('questionBox');
+      const questionText = document.getElementById('questionText');
+      const conclusionMsg = document.getElementById('conclusionMsg');
+
+      const stepCards = [
+        document.getElementById('stepCard1'),
+        document.getElementById('stepCard2'),
+        document.getElementById('stepCard3'),
+        document.getElementById('stepCard4'),
+        document.getElementById('stepCard5'),
+      ];
+
+      /* ==========================================================
+       5. WebGL 2.0 上下文与图形管线初始化
+       ========================================================== */
+      let gl = null;
+      let program = null;
+      let aPositionLoc = -1;
+      let uPointSizeLoc = null;
+      let uColorLoc = null;
+      let uIsPointLoc = null;
+      let positionBuffer = null;
+
+      function initWebGL() {
+        gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+        if (!gl) {
+          alert('您的浏览器不支持 WebGL 2.0，请使用现代浏览器运行本实验！');
+          return false;
+        }
+
+        // 编译 Shader
+        function createShader(type, src) {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src);
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(s));
+            gl.deleteShader(s);
+            return null;
+          }
+          return s;
+        }
+
+        const vs = createShader(gl.VERTEX_SHADER, VS_SOURCE);
+        const fs = createShader(gl.FRAGMENT_SHADER, FS_SOURCE);
+        program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(program));
+          return false;
+        }
+
+        gl.useProgram(program);
+        aPositionLoc = gl.getAttribLocation(program, 'aPosition');
+        uPointSizeLoc = gl.getUniformLocation(program, 'uPointSize');
+        uColorLoc = gl.getUniformLocation(program, 'uColor');
+        uIsPointLoc = gl.getUniformLocation(program, 'uIsPoint');
+
+        positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.enableVertexAttribArray(aPositionLoc);
+        gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+
+        // 启用混合以获得高质量抗锯齿平滑边缘
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        return true;
+      }
+
+      /* ==========================================================
+       6. 核心物理计算：从 Mouse Event 到 WebGL NDC
+       ========================================================== */
+      function updateCoordinateCalculations() {
+        // 1. 获取 Canvas 真实在浏览器视口中的边界矩阵
+        const rect = canvas.getBoundingClientRect();
+        const styleW = rect.width;
+        const styleH = rect.height;
+
+        // 判断当前鼠标是否在 Canvas 内部
+        state.isInside =
+          state.clientX >= rect.left &&
+          state.clientX <= rect.right &&
+          state.clientY >= rect.top &&
+          state.clientY <= rect.bottom;
+
+        // 2. 第一阶段：浏览器视口坐标 -> Canvas CSS 局部坐标
+        state.xCss = state.clientX - rect.left;
+        state.yCss = state.clientY - rect.top;
+
+        // 3. 第二阶段：Canvas CSS 坐标 -> Drawing Buffer 像素坐标
+        // 严谨解决 CSS 显示缩放问题与 DevicePixelRatio
+        const scaleX = canvas.width / styleW;
+        const scaleY = canvas.height / styleH;
+        state.xBuf = state.xCss * scaleX;
+        state.yBuf = state.yCss * scaleY;
+
+        // 4. 第三阶段：Drawing Buffer 像素 -> WebGL NDC 归一化设备坐标 [-1, 1]
+        // 核心：x 向右增大 [-1, 1]，y 向上增大 [-1, 1] (必须翻转 y 轴)
+        state.xNdc = (2.0 * state.xBuf) / canvas.width - 1.0;
+        state.yNdc = 1.0 - (2.0 * state.yBuf) / canvas.height;
+
+        // 5. 常见典型错误算法（不考虑 rect 偏移和 CSS 缩放，直接拿 clientX/Y 计算）
+        state.xErrNdc = -1.0 + 2.0 * (state.clientX / canvas.width);
+        state.yErrNdc = -1.0 + 2.0 * ((canvas.height - state.clientY) / canvas.height);
+
+        // 更新 UI 各板块的数值呈现
+        renderDataToUI(rect, scaleX, scaleY);
+        updateSvgGuides(rect);
+      }
+
+      /* ==========================================================
+       7. 页面 UI 面板数值与状态刷新
+       ========================================================= */
+      function renderDataToUI(rect, scaleX, scaleY) {
+        // 状态标签
+        if (state.isInside) {
+          canvasStatusBadge.className = 'status-badge status-inside';
+          canvasStatusBadge.textContent = 'Inside Canvas (活跃)';
+        } else {
+          canvasStatusBadge.className = 'status-badge status-outside';
+          canvasStatusBadge.textContent = 'Outside Canvas (离开)';
+        }
+
+        // 步骤 1 数值
+        valClientX.textContent = state.clientX.toFixed(0);
+        valClientY.textContent = state.clientY.toFixed(0);
+
+        // 步骤 2 数值
+        valCssX.textContent = state.xCss.toFixed(1);
+        valCssY.textContent = state.yCss.toFixed(1);
+
+        // 步骤 3 数值
+        valBufX.textContent = state.xBuf.toFixed(1);
+        valBufY.textContent = state.yBuf.toFixed(1);
+
+        if (Math.abs(scaleX - 1.0) < 0.02 && Math.abs(scaleY - 1.0) < 0.02) {
+          scaleRatioTag.textContent = '比例 1 : 1 (未缩放)';
+          scaleRatioTag.style.color = 'var(--brand-green)';
+        } else {
+          scaleRatioTag.textContent = `比例 ${scaleX.toFixed(2)} : ${scaleY.toFixed(2)}`;
+          scaleRatioTag.style.color = 'var(--brand-blue)';
+        }
+
+        // 步骤 4 数值 (NDC)
+        valNdcX.textContent = state.xNdc.toFixed(3);
+        valNdcY.textContent = state.yNdc.toFixed(3);
+
+        // 右侧顶部 3 大并排卡片
+        triBrowser.textContent = `(${state.clientX.toFixed(0)}, ${state.clientY.toFixed(0)})`;
+        triCanvas.textContent = `(${state.xCss.toFixed(1)}, ${state.yCss.toFixed(1)})`;
+        triNdc.textContent = `(${state.xNdc.toFixed(3)}, ${state.yNdc.toFixed(3)})`;
+
+        // 详细监视表格
+        tabClient.textContent = `${state.clientX.toFixed(0)}, ${state.clientY.toFixed(0)} px`;
+        tabRectPos.textContent = `${rect.left.toFixed(0)}, ${rect.top.toFixed(0)} px`;
+        tabCssSize.textContent = `${rect.width.toFixed(0)} × ${rect.height.toFixed(0)} px`;
+        tabBufSize.textContent = `${canvas.width} × ${canvas.height} px`;
+        tabScaleRatio.textContent = `${scaleX.toFixed(3)} / ${scaleY.toFixed(3)}`;
+        tabBufPos.textContent = `${state.xBuf.toFixed(1)}, ${state.yBuf.toFixed(1)} px`;
+        tabNdcPos.textContent = `${state.xNdc.toFixed(3)}, ${state.yNdc.toFixed(3)}`;
+
+        // 错误算法对比数据
+        valErrNdc.textContent = `(${state.xErrNdc.toFixed(3)}, ${state.yErrNdc.toFixed(3)})`;
+        const dx = state.xErrNdc - state.xNdc;
+        const dy = state.yErrNdc - state.yNdc;
+        valErrDelta.textContent = `Δx:${dx > 0 ? '+' : ''}${dx.toFixed(2)}, Δy:${dy > 0 ? '+' : ''}${dy.toFixed(2)}`;
+
+        // 更新 Canvas 边角标签
+        canvasCornerTag.textContent = `Canvas Rect: (left: ${rect.left.toFixed(0)}px, top: ${rect.top.toFixed(0)}px)`;
+      }
+
+      /* ==========================================================
+       8. 视口辅助线 SVG 渲染 (直观展示 Browser (0,0) 到 Canvas 偏移)
+       ========================================================== */
+      function updateSvgGuides(rect) {
+        if (!state.showGuides) {
+          offsetSvg.style.display = 'none';
+          return;
+        }
+        offsetSvg.style.display = 'block';
+
+        const wrapperRect = viewportWrapper.getBoundingClientRect();
+        const originX = 14; // Viewport 内部相对原点
+        const originY = 14;
+        const targetX = rect.left - wrapperRect.left;
+        const targetY = rect.top - wrapperRect.top;
+
+        if (targetX > originX + 5) {
+          svgLineX.setAttribute('x1', originX);
+          svgLineX.setAttribute('y1', originY);
+          svgLineX.setAttribute('x2', targetX);
+          svgLineX.setAttribute('y2', originY);
+          svgLineX.style.display = 'block';
+        } else {
+          svgLineX.style.display = 'none';
+        }
+
+        if (targetY > originY + 5) {
+          svgLineY.setAttribute('x1', targetX);
+          svgLineY.setAttribute('y1', originY);
+          svgLineY.setAttribute('x2', targetX);
+          svgLineY.setAttribute('y2', targetY);
+          svgLineY.style.display = 'block';
+        } else {
+          svgLineY.style.display = 'none';
+        }
+
+        svgTextOffset.setAttribute('x', Math.max(originX + 10, targetX / 2 - 20));
+        svgTextOffset.setAttribute('y', originY + 12);
+        svgTextOffset.textContent = `偏移量 dx:${(targetX - originX).toFixed(0)}px, dy:${(targetY - originY).toFixed(0)}px`;
+      }
+
+      /* ==========================================================
+       9. WebGL 2.0 实际图元绘制核心函数
+       ========================================================== */
+      function drawScene() {
+        if (!gl) return;
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        // 清空为非常温和的灰白色
+        gl.clearColor(0.97, 0.98, 0.99, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // 1. 绘制网格线 (Grid)
+        if (state.showGrid) {
+          const gridLines = [];
+          const steps = 10;
+          for (let i = -steps; i <= steps; i++) {
+            if (i === 0) continue; // 原点轴单画
+            const pos = i / steps;
+            // 纵线
+            gridLines.push(pos, -1.0, pos, 1.0);
+            // 横线
+            gridLines.push(-1.0, pos, 1.0, pos);
+          }
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridLines), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.88, 0.91, 0.94, 1.0); // 极淡网格
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, gridLines.length / 2);
+        }
+
+        // 2. 绘制 NDC 坐标主轴线 (X轴 & Y轴)
+        if (state.showAxes) {
+          const axesLines = [
+            -1.0,
+            0.0,
+            1.0,
+            0.0, // X 轴
+            0.0,
+            -1.0,
+            0.0,
+            1.0, // Y 轴
+          ];
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(axesLines), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.4, 0.49, 0.6, 1.0); // 蓝灰色坐标轴
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, 4);
+
+          // 绘制箭头和边界标记
+          const bounds = [
+            -0.99, -0.99, 0.99, -0.99, 0.99, -0.99, 0.99, 0.99, 0.99, 0.99, -0.99, 0.99, -0.99,
+            0.99, -0.99, -0.99,
+          ];
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bounds), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.75, 0.8, 0.86, 0.7);
+          gl.drawArrays(gl.LINES, 0, 8);
+        }
+
+        // 3. 绘制历史点击点 (若启用)
+        if (state.historyPoints.length > 0) {
+          const histData = [];
+          state.historyPoints.forEach((pt) => histData.push(pt.x, pt.y));
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(histData), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.38, 0.65, 0.82, 0.5); // 较淡的历史点
+          gl.uniform1f(uPointSizeLoc, 10.0);
+          gl.uniform1i(uIsPointLoc, 1);
+          gl.drawArrays(gl.POINTS, 0, histData.length / 2);
+        }
+
+        // 4. 绘制最近一次点击锁定的目标点
+        if (state.lastClickPoint) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([state.lastClickPoint.x, state.lastClickPoint.y]),
+            gl.DYNAMIC_DRAW,
+          );
+          gl.uniform4f(uColorLoc, 0.05, 0.58, 0.53, 0.9); // 墨绿翡翠实心点
+          gl.uniform1f(uPointSizeLoc, 18.0);
+          gl.uniform1i(uIsPointLoc, 1);
+          gl.drawArrays(gl.POINTS, 0, 1);
+        }
+
+        // 5. 绘制当前鼠标映射点与十字辅助光标
+        if (state.hasMoved) {
+          const drawX = state.calcMode === 'correct' ? state.xNdc : state.xErrNdc;
+          const drawY = state.calcMode === 'correct' ? state.yNdc : state.yErrNdc;
+
+          // 仅在合法可视范围或适度溢出区绘制十字光标
+          const crossHair = [
+            drawX - 0.05,
+            drawY,
+            drawX + 0.05,
+            drawY,
+            drawX,
+            drawY - 0.05,
+            drawX,
+            drawY + 0.05,
+          ];
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(crossHair), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.01, 0.52, 0.78, 0.85); // 青蓝光标
+          gl.uniform1i(uIsPointLoc, 0);
+          gl.drawArrays(gl.LINES, 0, 4);
+
+          // 绘制当前映射的主焦点圆点
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([drawX, drawY]), gl.DYNAMIC_DRAW);
+          gl.uniform4f(uColorLoc, 0.01, 0.52, 0.78, 1.0);
+          gl.uniform1f(uPointSizeLoc, 14.0);
+          gl.uniform1i(uIsPointLoc, 1);
+          gl.drawArrays(gl.POINTS, 0, 1);
+
+          // 6. 若启用了错误算法对比可视化，绘制错误预测点与连线误差
+          if (state.showErrorVisual) {
+            // 连线
+            const errLine = [state.xNdc, state.yNdc, state.xErrNdc, state.yErrNdc];
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(errLine), gl.DYNAMIC_DRAW);
+            gl.uniform4f(uColorLoc, 0.88, 0.11, 0.28, 0.6); // 红色虚线感
+            gl.uniform1i(uIsPointLoc, 0);
+            gl.drawArrays(gl.LINES, 0, 2);
+
+            // 绘制错误位置的空心/红色圆点
+            gl.bufferData(
+              gl.ARRAY_BUFFER,
+              new Float32Array([state.xErrNdc, state.yErrNdc]),
+              gl.DYNAMIC_DRAW,
+            );
+            gl.uniform4f(uColorLoc, 0.88, 0.11, 0.28, 0.95);
+            gl.uniform1f(uPointSizeLoc, 16.0);
+            gl.uniform1i(uIsPointLoc, 1);
+            gl.drawArrays(gl.POINTS, 0, 1);
+          }
+        }
+      }
+
+      /* ==========================================================
+       10. 交互事件监听与绑定
+       ========================================================== */
+      function onPointerMove(e) {
+        // 严格使用显式 event 对象的 clientX 和 clientY
+        state.clientX = e.clientX;
+        state.clientY = e.clientY;
+        state.hasMoved = true;
+        updateCoordinateCalculations();
+        drawScene();
+      }
+
+      function onPointerClick(e) {
+        state.clientX = e.clientX;
+        state.clientY = e.clientY;
+        updateCoordinateCalculations();
+
+        const point = {
+          x: state.calcMode === 'correct' ? state.xNdc : state.xErrNdc,
+          y: state.calcMode === 'correct' ? state.yNdc : state.yErrNdc,
+        };
+
+        state.lastClickPoint = point;
+
+        if (state.keepHistory) {
+          state.historyPoints.push(point);
+        } else {
+          state.historyPoints = [];
+        }
+
+        clickCountTag.textContent = `已记录点击: ${state.historyPoints.length + (state.lastClickPoint ? 1 : 0)}`;
+        drawScene();
+      }
+
+      // 全局与局部监听
+      window.addEventListener('mousemove', onPointerMove);
+      canvas.addEventListener('click', onPointerClick);
+
+      // 窗口尺寸自适应 Resize
+      window.addEventListener('resize', () => {
+        updateCoordinateCalculations();
+        drawScene();
+      });
+
+      /* ==========================================================
+       11. 控件交互逻辑与预设场景支持
+       ========================================================== */
+      function applyCanvasTransforms() {
+        canvasContainer.style.margin = `${state.offsetY}px 0 0 ${state.offsetX}px`;
+        canvas.style.width = `${state.baseCssWidth * state.cssScale}px`;
+        canvas.style.height = `${state.baseCssHeight * state.cssScale}px`;
+        txtOffsetX.textContent = `${state.offsetX}px`;
+        txtOffsetY.textContent = `${state.offsetY}px`;
+        updateCoordinateCalculations();
+        drawScene();
+      }
+
+      // 偏移滑块
+      sliderOffsetX.addEventListener('input', (e) => {
+        state.offsetX = parseInt(e.target.value);
+        applyCanvasTransforms();
+      });
+
+      sliderOffsetY.addEventListener('input', (e) => {
+        state.offsetY = parseInt(e.target.value);
+        applyCanvasTransforms();
+      });
+
+      // CSS 缩放比例
+      function setCssScale(scale, activeBtn) {
+        state.cssScale = scale;
+        [btnScale75, btnScale100, btnScale125].forEach((b) => b.classList.remove('btn-active'));
+        activeBtn.classList.add('btn-active');
+        applyCanvasTransforms();
+      }
+
+      btnScale75.addEventListener('click', () => setCssScale(0.75, btnScale75));
+      btnScale100.addEventListener('click', () => setCssScale(1.0, btnScale100));
+      btnScale125.addEventListener('click', () => setCssScale(1.25, btnScale125));
+
+      // Drawing Buffer 分辨率切换
+      selResolution.addEventListener('change', (e) => {
+        const [w, h] = e.target.value.split('x').map(Number);
+        canvas.width = w;
+        canvas.height = h;
+        updateCoordinateCalculations();
+        drawScene();
+      });
+
+      // 算法模式单选
+      document.querySelectorAll('input[name="calcMode"]').forEach((radio) => {
+        radio.addEventListener('change', (e) => {
+          state.calcMode = e.target.value;
+          if (state.calcMode === 'naive') {
+            conclusionMsg.innerHTML = `<b style="color:var(--brand-red);">当前使用错误算法：</b>直接套用 clientX/Y，导致绘制点严重漂移！`;
+          } else {
+            conclusionMsg.innerHTML = `<b>核心结论：</b>同一个点击位置，在不同坐标系中有不同数值表示。交互输入必须经过 <b>Browser → Canvas → Buffer → NDC</b> 严格转换！`;
+          }
+          drawScene();
+        });
+      });
+
+      // 错误算法连线对比勾选
+      chkShowError.addEventListener('change', (e) => {
+        state.showErrorVisual = e.target.checked;
+        drawScene();
+      });
+
+      // 图层显示开关
+      chkGrid.addEventListener('change', (e) => {
+        state.showGrid = e.target.checked;
+        drawScene();
+      });
+      chkAxes.addEventListener('change', (e) => {
+        state.showAxes = e.target.checked;
+        drawScene();
+      });
+      chkGuides.addEventListener('change', (e) => {
+        state.showGuides = e.target.checked;
+        updateCoordinateCalculations();
+        drawScene();
+      });
+      chkHistory.addEventListener('change', (e) => {
+        state.keepHistory = e.target.checked;
+        if (!state.keepHistory) state.historyPoints = [];
+        drawScene();
+      });
+      btnClearHistory.addEventListener('click', () => {
+        state.historyPoints = [];
+        state.lastClickPoint = null;
+        clickCountTag.textContent = '已记录点击: 0';
+        drawScene();
+      });
+
+      /* ==========================================================
+       12. 四大推荐课堂预设场景
+       ========================================================== */
+      function clearPresetButtons() {
+        [btnExp1, btnExp2, btnExp3, btnExp4].forEach((b) => b.classList.remove('btn-active'));
+      }
+
+      btnExp1.addEventListener('click', () => {
+        clearPresetButtons();
+        btnExp1.classList.add('btn-active');
+        state.offsetX = 0;
+        state.offsetY = 0;
+        sliderOffsetX.value = 0;
+        sliderOffsetY.value = 0;
+        setCssScale(1.0, btnScale100);
+        chkShowError.checked = false;
+        state.showErrorVisual = false;
+        document.querySelector('input[name="calcMode"][value="correct"]').checked = true;
+        state.calcMode = 'correct';
+        conclusionMsg.innerHTML = `<b>实验 1 (标准理想情况)：</b>Canvas 位于视口原点且无缩放，此时变换最为简单，但实际工程中极罕见。`;
+        applyCanvasTransforms();
+      });
+
+      btnExp2.addEventListener('click', () => {
+        clearPresetButtons();
+        btnExp2.classList.add('btn-active');
+        state.offsetX = 160;
+        state.offsetY = 60;
+        sliderOffsetX.value = 160;
+        sliderOffsetY.value = 60;
+        setCssScale(1.0, btnScale100);
+        chkShowError.checked = true;
+        state.showErrorVisual = true;
+        document.querySelector('input[name="calcMode"][value="correct"]').checked = true;
+        state.calcMode = 'correct';
+        conclusionMsg.innerHTML = `<b style="color:var(--brand-amber);">实验 2 (Canvas 大偏移)：</b>红色对比点显示直接使用 clientX/Y 将产生严重偏移！必须减去 getBoundingClientRect()。`;
+        applyCanvasTransforms();
+      });
+
+      btnExp3.addEventListener('click', () => {
+        clearPresetButtons();
+        btnExp3.classList.add('btn-active');
+        state.offsetX = 30;
+        state.offsetY = 20;
+        sliderOffsetX.value = 30;
+        sliderOffsetY.value = 20;
+        setCssScale(1.25, btnScale125);
+        chkShowError.checked = true;
+        state.showErrorVisual = true;
+        conclusionMsg.innerHTML = `<b>实验 3 (CSS 尺寸不匹配)：</b>CSS 显示大小变为 125%，若不乘以 Buffer/CSS 比率，点击越靠近边缘误差越大！`;
+        applyCanvasTransforms();
+      });
+
+      btnExp4.addEventListener('click', () => {
+        clearPresetButtons();
+        btnExp4.classList.add('btn-active');
+        state.offsetX = 120;
+        state.offsetY = 50;
+        sliderOffsetX.value = 120;
+        sliderOffsetY.value = 50;
+        setCssScale(0.75, btnScale75);
+        chkShowError.checked = true;
+        state.showErrorVisual = true;
+        conclusionMsg.innerHTML = `<b>实验 4 (综合复杂场景)：</b>同时存在页面偏移与 CSS 缩小，只有遵循现代规范 4 步管线，点才能 100% 精确重合。`;
+        applyCanvasTransforms();
+      });
+
+      // 课堂引导模式
+      btnLectureFlow.addEventListener('click', () => {
+        alert(
+          '【教师课堂 5 分钟极速演示建议】：\n\n' +
+            '1. 先把鼠标移至 Canvas 正中心，提问学生：“中心点在 WebGL NDC 是多少？”（验证 0, 0）\n' +
+            '2. 拖动下方【X偏移】滑块，让 Canvas 右移 150px。再次点击中心，引导观察：“clientX 改变了，但 NDC 还是 (0,0)！”\n' +
+            '3. 勾选【启用对比点】，观察红色错误点偏离有多远，解析常见教材简化代码的局限性；\n' +
+            '4. 点击【CSS 缩放 125%】，展示为什么现代图形学交互必须考虑 rect.width 尺寸修正；\n' +
+            '5. 总结流水线：Browser → Canvas → Buffer → NDC → GPU。',
+        );
+      });
+
+      // 逐步观察转换显微镜模式
+      btnStepMode.addEventListener('click', () => {
+        state.isStepMode = !state.isStepMode;
+        if (state.isStepMode) {
+          btnStepMode.textContent = '退出逐步';
+          btnStepMode.classList.remove('btn-primary');
+          btnStepMode.classList.add('btn-active');
+          btnNextStep.style.display = 'inline-flex';
+          setHighlightStep(0);
+        } else {
+          btnStepMode.textContent = '逐步观察';
+          btnStepMode.classList.add('btn-primary');
+          btnStepMode.classList.remove('btn-active');
+          btnNextStep.style.display = 'none';
+          stepCards.forEach((c) => {
+            c.classList.remove('dimmed-step', 'active-step');
+          });
+          stepCards[3].classList.add('active-step'); // 恢复高亮核心步骤4
+        }
+      });
+
+      function setHighlightStep(idx) {
+        state.currentStep = idx;
+        stepCards.forEach((card, i) => {
+          if (i === idx) {
+            card.classList.add('active-step');
+            card.classList.remove('dimmed-step');
+          } else {
+            card.classList.remove('active-step');
+            card.classList.add('dimmed-step');
+          }
+        });
+      }
+
+      btnNextStep.addEventListener('click', () => {
+        let next = (state.currentStep + 1) % 5;
+        setHighlightStep(next);
+      });
+
+      // 课堂提问轮换
+      questionBox.addEventListener('click', () => {
+        state.questionIndex = (state.questionIndex + 1) % questions.length;
+        questionText.textContent = questions[state.questionIndex];
+      });
+
+      /* ==========================================================
+       13. 系统就绪与首帧渲染
+       ========================================================== */
+      window.onload = function () {
+        if (initWebGL()) {
+          applyCanvasTransforms();
+          // 初始放置在 Canvas 中心便于课堂首屏展示
+          const rect = canvas.getBoundingClientRect();
+          state.clientX = rect.left + rect.width / 2;
+          state.clientY = rect.top + rect.height / 2;
+          state.hasMoved = true;
+          updateCoordinateCalculations();
+          drawScene();
+        }
+      };
+    </script>
+  </body>
+</html>

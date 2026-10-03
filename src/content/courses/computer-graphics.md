@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-09-25
+updatedDate: 2026-10-03
 ---
 
 ## 课程简介
@@ -72,6 +72,8 @@ updatedDate: 2026-09-25
    - [第二讲：数据如何进入 GPU，Shader 如何处理它](/slides/computer-graphics/ch02/lecture-2-2.html)
    - [第三讲：一个完整的 WebGL 程序如何运行](/slides/computer-graphics/ch02/lecture-2-3.html)
 3. **交互和动画**：事件驱动输入、动画渲染循环与对象拾取
+   - [第一讲：让图形动起来](/slides/computer-graphics/ch03/lecture-3-1.html)
+   - [第二讲：让用户操纵图形](/slides/computer-graphics/ch03/lecture-3-2.html)
 4. **几何对象和变换**：坐标系、仿射变换、齐次坐标、变换级联与四元数
 5. **观察**：相机定位、观察矩阵、平行与透视投影、规范化视见体
 6. **光照和着色**：Phong 光照模型、材质、光源、法向量与片元着色
@@ -82,7 +84,39 @@ updatedDate: 2026-09-25
 
 ## 课件资源
 
-第〇章课程概述、第一章和第二章课件均已发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
+第〇章课程概述以及第一至第三章课件均已发布，可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
+
+## Demo 与配套代码
+
+以下示例均可直接在浏览器中运行；“源码”链接指向示例使用的主 JavaScript 文件。公共依赖也可在线查看：[WebGL 工具](/slides/computer-graphics/code-demos/js/common/webgl-utils.js)、[着色器初始化](/slides/computer-graphics/code-demos/js/common/initShaders.js)和[向量矩阵工具](/slides/computer-graphics/code-demos/js/common/MVnew.js)。
+
+### 第一章：基础图元与颜色
+
+- 三角形：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/triangle.js)
+- 正方形：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/square.js)
+- 三角形与正方形：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/trisquare.js)
+- 彩色三角形：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/trianglecolor.js)
+- 非连续三角形与正方形：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/trisquarenc.js)
+- 非连续图元（WebGL 2 版本）：[运行 Demo](/slides/computer-graphics/code-demos/chap1/chap1-demo-6.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch01/trisquarencv2.js)
+
+### 第二章：Sierpinski 镂垫与细分
+
+- 随机点生成二维镂垫：[运行 Demo](/slides/computer-graphics/code-demos/chap2/chap2-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch02/gasket-point.js)
+- 三角形细分生成二维镂垫：[运行 Demo](/slides/computer-graphics/code-demos/chap2/chap2-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch02/gasket-triangles.js)
+- 彩色二维镂垫：[运行 Demo](/slides/computer-graphics/code-demos/chap2/chap2-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch02/gasket-point-color.js)
+- 三维镂垫：[运行 Demo](/slides/computer-graphics/code-demos/chap2/chap2-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch02/gasket-3d.js)
+- 三角形细分：[运行 Demo](/slides/computer-graphics/code-demos/chap2/chap2-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch02/triangle-tessa.js)
+
+### 第三章：动画与交互
+
+- 自动旋转正方形：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/rotatingSquare1.js)
+- 用按钮、菜单和键盘控制旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/rotatingSquare2.js)
+- 用滑块控制旋转速度：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/rotatingSquare3.js)
+- 单击绘制彩色点：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/square.js)
+- 拖动绘制彩色点：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/squarem.js)
+- 单击绘制三角带：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-6.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/triangle.js)
+- 两次点击绘制矩形：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-7.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/cad1.js)
+- 交互绘制多边形：[运行 Demo](/slides/computer-graphics/code-demos/chap3/chap3-demo-8.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch03/cad2.js)
 
 ## 实验任务
 
@@ -106,6 +140,7 @@ updatedDate: 2026-09-25
 
 ## 更新记录
 
+- 2026-10-03：发布第三章两份在线课件及课件内互动示例，新增按章节整理的第一至第三章 Demo 与配套代码。
 - 2026-09-25：发布第二章三份在线课件及配套 WebGL 示例。
 - 2026-09-19：发布实验提交规范和课程设计指南，完善课程主页相关说明。
 - 2026-09-19：同步 2026 秋季课程结构，发布第〇章课程概述和第一章三份在线课件。

@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>计算机图形学 · 第3章 交互与动画 —— 双缓存机制显微镜</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                '"Inter"',
+                '"PingFang SC"',
+                '"Hiragino Sans GB"',
+                '"Microsoft YaHei"',
+                'sans-serif',
+              ],
+              mono: ['"JetBrains Mono"', '"Fira Code"', 'Consolas', 'monospace'],
+            },
+            colors: {
+              brand: {
+                navy: '#0f172a',
+                slate: '#1e293b',
+                accent: '#0284c7',
+                cyan: '#06b6d4',
+                emerald: '#10b981',
+                warn: '#f59e0b',
+                surface: '#ffffff',
+                bg: '#f8fafc',
+                border: '#e2e8f0',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* 保证大教室投影高清与文字边缘锐度 */
+      * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        user-select: none;
+      }
+      /* 严格维持 16:9 标准画幅容器 */
+      .aspect-16-9-frame {
+        width: 100%;
+        max-width: 1440px;
+        aspect-ratio: 16 / 9;
+        max-height: 94vh;
+      }
+      /* 自定义滑块轨道及手柄 */
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 15px;
+        width: 15px;
+        border-radius: 9999px;
+        background: #0284c7;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      /* 动态流动高亮指示 */
+      .step-active {
+        box-shadow:
+          0 0 0 2px #0284c7,
+          0 4px 12px -2px rgba(2, 132, 199, 0.25);
+        border-color: #0284c7 !important;
+        background-color: #f0f9ff !important;
+      }
+      @keyframes bufferSwapPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.03);
+          filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
+        }
+      }
+      .swapping-animate {
+        animation: bufferSwapPulse 0.4s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen p-2 md:p-3.5 bg-slate-100">
+    <!-- 16:9 主画幅教学容器 -->
+    <main
+      class="aspect-16-9-frame bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden text-slate-800"
+    >
+      <!-- ==================== 顶部教学标题栏 (80人大教室投影高辨识度) ==================== -->
+      <header
+        class="h-[10.5%] border-b border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-sky-950 px-6 py-2 flex items-center justify-between text-white shadow-sm shrink-0"
+      >
+        <div class="flex items-center gap-4">
+          <!-- 章节与状态标牌 -->
+          <div class="flex items-center gap-2">
+            <span
+              class="bg-sky-500/20 text-sky-300 border border-sky-400/30 text-xs font-semibold px-2.5 py-0.5 rounded-full tracking-wide"
+            >
+              计算机图形学 · 第3章
+            </span>
+            <span
+              class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1.5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              交互与动画机制
+            </span>
+          </div>
+          <div class="h-4 w-px bg-slate-600 hidden sm:block"></div>
+          <!-- 主标题与副标题 -->
+          <div>
+            <h1
+              class="text-lg lg:text-xl font-extrabold tracking-tight text-white flex items-center gap-2"
+            >
+              双缓存机制显微镜
+              <span
+                class="text-xs font-normal text-slate-300 bg-slate-700/60 px-2 py-0.5 rounded border border-slate-600"
+              >
+                Double Buffering Microscope
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <p class="text-xs lg:text-sm text-sky-200 font-medium hidden md:block">
+            核心认知：<span
+              class="text-white font-semibold underline decoration-sky-400 underline-offset-4"
+              >显示当前帧 (Front) 的同时，后台悄悄准备下一帧 (Back)</span
+            >
+          </p>
+          <span
+            class="text-xs font-mono bg-sky-900/60 border border-sky-500/40 text-sky-200 px-2.5 py-1 rounded-md"
+          >
+            v3.3 Pipeline
+          </span>
+        </div>
+      </header>
+
+      <!-- ==================== 主体三栏核心视窗 ==================== -->
+      <div class="flex-1 grid grid-cols-12 gap-3 p-3 bg-slate-50/80 overflow-hidden">
+        <!-- ==================== 左侧：显示器 / 屏幕输出 (3.8 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm overflow-hidden"
+        >
+          <!-- 窗口顶条 -->
+          <div
+            class="bg-slate-100/90 border-b border-slate-200 px-3.5 py-1.5 flex items-center justify-between shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="flex gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+              </span>
+              <span
+                class="text-xs font-bold text-slate-700 tracking-wide uppercase ml-1 flex items-center gap-1.5"
+              >
+                <svg
+                  class="w-3.5 h-3.5 text-sky-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                当前屏幕显示 (Display Output)
+              </span>
+            </div>
+            <span
+              class="text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-medium flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 60Hz 稳定显示
+            </span>
+          </div>
+
+          <!-- 模拟监视器屏幕主体 -->
+          <div
+            class="relative flex-1 bg-slate-950 flex items-center justify-center overflow-hidden"
+          >
+            <canvas id="screenCanvas" class="w-full h-full block"></canvas>
+
+            <!-- 屏幕教学状态叠层 -->
+            <div
+              class="absolute top-2.5 left-2.5 bg-slate-900/85 backdrop-blur-sm border border-slate-700 text-slate-200 text-[11px] px-2.5 py-1.5 rounded space-y-0.5 pointer-events-none font-mono"
+            >
+              <div class="text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 映射源：<span
+                  class="text-white font-bold"
+                  >Front Buffer</span
+                >
+              </div>
+              <div class="text-sky-300 flex items-center gap-1.5">
+                <span>画面帧号：</span
+                ><span id="screenFrameTag" class="text-emerald-300 font-bold">Frame #124</span>
+              </div>
+              <div class="text-slate-400 flex items-center gap-1.5">
+                <span>状态标识：</span><span class="text-white">完整画面 (Complete)</span>
+              </div>
+            </div>
+
+            <!-- 屏幕物理边框标牌 -->
+            <div
+              class="absolute bottom-2.5 left-2.5 text-[10px] text-slate-400 font-mono bg-slate-900/80 px-2 py-1 rounded border border-slate-800"
+            >
+              用户视觉体验：<span class="text-emerald-400 font-bold">0 闪烁 · 0 撕裂</span>
+            </div>
+
+            <!-- 右下角动态状态提示 -->
+            <div
+              id="screenModeTag"
+              class="absolute bottom-2.5 right-2.5 bg-sky-950/90 border border-sky-500/60 text-sky-200 text-[11px] px-2.5 py-1 rounded font-medium"
+            >
+              双缓存保护生效中
+            </div>
+          </div>
+
+          <!-- 屏幕底部总结栏 -->
+          <div
+            class="bg-sky-50/70 border-t border-sky-100 p-2 text-xs text-sky-900 flex items-center justify-between"
+          >
+            <span class="font-medium text-slate-700">显存读取：</span>
+            <span
+              class="font-mono text-emerald-800 text-[11px] bg-white px-2 py-0.5 rounded border border-emerald-200 font-semibold"
+            >
+              DAC/Display Scanout 仅读取 Front
+            </span>
+            <span class="text-slate-500 text-[11px]">后台绘制绝不外显</span>
+          </div>
+        </section>
+
+        <!-- ==================== 中间：双缓存流程主线 (4.2 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm p-3 relative overflow-hidden"
+        >
+          <!-- 区域标题 -->
+          <div
+            class="flex items-center justify-between mb-1.5 pb-1.5 border-b border-slate-100 shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="p-1 rounded bg-sky-100 text-sky-700">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </span>
+              <h2 class="text-sm font-bold text-slate-800 tracking-tight">
+                双缓存工作循环 (Pipeline Loop)
+              </h2>
+            </div>
+            <span
+              class="text-[11px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200"
+            >
+              阶段流水线
+            </span>
+          </div>
+
+          <!-- 流程图教学主体卡片 (5大核心步骤) -->
+          <div class="flex-1 flex flex-col justify-between py-0.5 relative">
+            <!-- 持续回环虚线指示 -->
+            <div
+              class="absolute right-2 top-4 bottom-4 w-7 border-r-2 border-dashed border-sky-300 rounded-r-2xl pointer-events-none hidden sm:block"
+            >
+              <div class="absolute -bottom-1 -right-1.5 text-sky-500 text-xs font-bold">▲</div>
+              <div class="absolute -top-1 -right-1.5 text-sky-500 text-xs font-bold">●</div>
+              <span
+                class="absolute top-1/2 -right-6 -translate-y-1/2 [writing-mode:vertical-lr] text-[10px] text-sky-500 font-semibold tracking-widest bg-white py-1"
+              >
+                每帧自动闭环
+              </span>
+            </div>
+
+            <!-- 步骤 1: Front Buffer 扫描显示 -->
+            <div
+              id="flowStep1"
+              class="relative bg-slate-50 border border-slate-200 p-2 rounded-lg transition-all flex items-center justify-between"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-6 h-6 rounded bg-slate-800 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0"
+                >
+                  01
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    Front Buffer 显示中
+                    <span class="text-[10px] font-medium text-emerald-700">（当前画面）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600">
+                    视频控制器（DAC）正逐行将 Front Buffer 数据发往显示屏
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200"
+              >
+                可见
+              </span>
+            </div>
+
+            <!-- 连接箭头 -->
+            <div class="flex justify-center -my-1 text-sky-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 步骤 2: Back Buffer 并行离屏绘制 -->
+            <div
+              id="flowStep2"
+              class="relative bg-slate-50 border border-slate-200 p-2 rounded-lg transition-all flex items-center justify-between"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-6 h-6 rounded bg-sky-700 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0"
+                >
+                  02
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    Back Buffer 离屏着色
+                    <span class="text-[10px] font-medium text-sky-700">（后台绘制）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600">
+                    GPU 渲染管线将下一帧图元直接栅格化到 Back Buffer 内存
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[10px] font-mono font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200"
+              >
+                后台不可见
+              </span>
+            </div>
+
+            <!-- 连接箭头 -->
+            <div class="flex justify-center -my-1 text-sky-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 步骤 3: 渲染完成等待 V-Blank 垂直消隐 -->
+            <div
+              id="flowStep3"
+              class="relative bg-slate-50 border border-slate-200 p-2 rounded-lg transition-all flex items-center justify-between"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-6 h-6 rounded bg-amber-600 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0"
+                >
+                  03
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    下一帧准备就绪 (Ready)
+                    <span class="text-[10px] font-medium text-amber-600">（对齐时钟）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600">
+                    Back 完整生成，等待显示器垂直消隐期 (V-Sync) 避免画面撕裂
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200"
+              >
+                就绪
+              </span>
+            </div>
+
+            <!-- 连接箭头 -->
+            <div class="flex justify-center -my-1 text-sky-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 步骤 4: 交换缓存 Swap Buffers (核心教学焦点) -->
+            <div
+              id="flowStep4"
+              class="relative bg-sky-50 border-2 border-sky-400 p-2 rounded-lg transition-all flex items-center justify-between shadow-sm"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-6 h-6 rounded bg-cyan-600 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0"
+                >
+                  04
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                    Swap Buffers 交换指针
+                    <span class="text-[10px] font-semibold text-cyan-700">（瞬间切换）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-700">
+                    本质仅交换显存地址指针，耗时极短，绝不发生大量像素复制
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[10px] font-mono font-bold text-sky-800 bg-white px-2 py-0.5 rounded border border-sky-300"
+              >
+                指针交换
+              </span>
+            </div>
+
+            <!-- 连接箭头 -->
+            <div class="flex justify-center -my-1 text-sky-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+
+            <!-- 步骤 5: 角色互换进入新循环 -->
+            <div
+              id="flowStep5"
+              class="relative bg-slate-50 border border-slate-200 p-2 rounded-lg transition-all flex items-center justify-between"
+            >
+              <div class="flex items-center gap-2.5">
+                <span
+                  class="w-6 h-6 rounded bg-indigo-700 text-white font-bold font-mono text-xs flex items-center justify-center shrink-0"
+                >
+                  05
+                </span>
+                <div>
+                  <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    旧 Front 转为新 Back
+                    <span class="text-[10px] font-medium text-indigo-700">（角色对调）</span>
+                  </div>
+                  <div class="text-[11px] text-slate-600">
+                    原 Front Buffer 被清空并开始承接下一时刻 (Frame 126) 的绘制
+                  </div>
+                </div>
+              </div>
+              <span
+                class="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200"
+              >
+                循环再起
+              </span>
+            </div>
+          </div>
+
+          <!-- 核心结论注脚 -->
+          <div
+            class="mt-1 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]"
+          >
+            <span class="font-bold text-slate-700">核心设计哲学：</span>
+            <span class="text-sky-700 font-semibold">“永远不要把画了一半的未成品递给用户看”</span>
+          </div>
+        </section>
+
+        <!-- ==================== 右侧：显存双缓存内部状态透视 (4.0 列) ==================== -->
+        <section
+          class="col-span-12 md:col-span-4 lg:col-span-4 flex flex-col bg-white rounded-xl border border-slate-200/90 shadow-sm p-3 overflow-hidden"
+        >
+          <!-- 区域标题 -->
+          <div
+            class="flex items-center justify-between mb-1 pb-1.5 border-b border-slate-100 shrink-0"
+          >
+            <div class="flex items-center gap-2">
+              <span class="p-1 rounded bg-emerald-100 text-emerald-700">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+              </span>
+              <h2 class="text-sm font-bold text-slate-800 tracking-tight">
+                显存状态透视 (VRAM Buffers)
+              </h2>
+            </div>
+            <span
+              class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              双缓存同步中
+            </span>
+          </div>
+
+          <!-- 显存双槽位对比容器 (Front Buffer & Back Buffer) -->
+          <div class="flex-1 flex flex-col justify-between py-0.5 space-y-2">
+            <!-- 上槽位：Front Buffer 内存块 -->
+            <div
+              id="frontBufferCard"
+              class="bg-slate-900 border-2 border-emerald-500/80 rounded-lg p-2.5 relative flex items-center justify-between text-white shadow-xs"
+            >
+              <div class="w-[58%]">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-emerald-400 font-mono"
+                    >Front Buffer (前台)</span
+                  >
+                  <span
+                    class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-1.5 rounded font-mono"
+                    >VISIBLE</span
+                  >
+                </div>
+                <div class="text-[11px] text-slate-300 mt-1 space-y-0.5">
+                  <div>
+                    持有画面：<span id="frontFrameText" class="font-bold text-white font-mono"
+                      >Frame 124</span
+                    >
+                  </div>
+                  <div>
+                    绘制状态：<span class="text-emerald-400 font-semibold">100% 完整绘制</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">只读提供给屏幕扫描线扫描</div>
+                </div>
+              </div>
+              <!-- 微型 Canvas 预览 -->
+              <div
+                class="w-[38%] h-16 bg-slate-950 rounded border border-slate-700 overflow-hidden relative flex items-center justify-center"
+              >
+                <canvas id="frontMiniCanvas" class="w-full h-full block"></canvas>
+                <span
+                  class="absolute bottom-0.5 right-1 text-[9px] font-mono text-emerald-300 bg-slate-900/90 px-1 rounded"
+                  >Front</span
+                >
+              </div>
+            </div>
+
+            <!-- 中间：交换指针微型视觉指示条 -->
+            <div
+              id="swapIndicatorBar"
+              class="bg-sky-50 border border-sky-200 rounded py-1 px-3 flex items-center justify-between text-[11px]"
+            >
+              <span class="text-sky-800 font-medium flex items-center gap-1.5">
+                <svg
+                  class="w-3.5 h-3.5 text-sky-600 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span
+                  >交换操作：<b class="font-mono text-sky-900"
+                    >glXSwapBuffers / requestAnimationFrame</b
+                  ></span
+                >
+              </span>
+              <span
+                id="swapStatusBadge"
+                class="font-mono text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold"
+              >
+                SWAP READY
+              </span>
+            </div>
+
+            <!-- 下槽位：Back Buffer 内存块 -->
+            <div
+              id="backBufferCard"
+              class="bg-slate-900 border-2 border-sky-400/80 rounded-lg p-2.5 relative flex items-center justify-between text-white shadow-xs"
+            >
+              <div class="w-[58%]">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-sky-400 font-mono">Back Buffer (后台)</span>
+                  <span
+                    class="text-[10px] bg-sky-500/20 text-sky-300 border border-sky-400/40 px-1.5 rounded font-mono"
+                    >RENDERING</span
+                  >
+                </div>
+                <div class="text-[11px] text-slate-300 mt-1 space-y-0.5">
+                  <div>
+                    正在着色：<span id="backFrameText" class="font-bold text-white font-mono"
+                      >Frame 125</span
+                    >
+                  </div>
+                  <div>
+                    进度阶段：<span
+                      id="backProgressText"
+                      class="text-sky-300 font-mono font-semibold"
+                      >栅格化中 (92%)</span
+                    >
+                  </div>
+                  <div class="text-[10px] text-slate-400">对外隐藏，禁止屏幕直接读取</div>
+                </div>
+              </div>
+              <!-- 微型 Canvas 预览 -->
+              <div
+                class="w-[38%] h-16 bg-slate-950 rounded border border-slate-700 overflow-hidden relative flex items-center justify-center"
+              >
+                <canvas id="backMiniCanvas" class="w-full h-full block"></canvas>
+                <!-- 模拟绘制中的栅格化扫描线 -->
+                <div class="absolute inset-0 bg-sky-500/10 pointer-events-none"></div>
+                <span
+                  class="absolute bottom-0.5 right-1 text-[9px] font-mono text-sky-300 bg-slate-900/90 px-1 rounded"
+                  >Back (下一帧)</span
+                >
+              </div>
+            </div>
+
+            <!-- 课堂对比教学小卡片：为什么不用单缓存？ -->
+            <div
+              class="bg-amber-50/90 border border-amber-200/90 rounded-lg p-2 text-xs flex items-center justify-between"
+            >
+              <div class="flex items-center gap-1.5 text-amber-950 font-medium">
+                <span class="text-amber-600 font-bold">● 对比洞察:</span>
+                <span class="text-[11px] text-amber-900"
+                  >若单缓存(Single)，边画边被扫描读出 $\to$
+                  <span class="font-bold text-rose-700 underline">剧烈闪烁/撕裂</span></span
+                >
+              </div>
+              <span
+                class="text-[10px] bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold"
+                >重要考点</span
+              >
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== 底部：控制面板与状态监视栏 ==================== -->
+      <footer
+        class="h-[14%] bg-slate-900 border-t border-slate-800 px-6 py-2 flex items-center justify-between text-white shrink-0"
+      >
+        <!-- 控制组 1：播放与单步交换 -->
+        <div class="flex items-center gap-2">
+          <button
+            id="btnPlayPause"
+            class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-xs rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+          >
+            <svg id="playIcon" class="w-3.5 h-3.5 hidden" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <svg id="pauseIcon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span id="playText">暂停流动</span>
+          </button>
+
+          <!-- 单步阶段步进按钮 (01 -> 02 -> 03 -> 04 -> 05) -->
+          <button
+            id="btnStepPhase"
+            class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 hover:border-sky-400 font-bold text-xs rounded-lg transition-all flex items-center gap-1.5"
+            title="单步推进到下一个工作循环阶段 (01->02->03->04->05)"
+          >
+            <svg
+              class="w-3.5 h-3.5 text-sky-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
+            </svg>
+            阶段步进 (Step Phase)
+          </button>
+
+          <button
+            id="btnSwapStep"
+            class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 font-bold text-xs rounded-lg transition-all flex items-center gap-1.5"
+            title="手动触发一次 Back Buffer 与 Front Buffer 的指针交换"
+          >
+            <svg
+              class="w-3.5 h-3.5 text-cyan-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            单步交换 (Swap Buffers)
+          </button>
+
+          <button
+            id="btnReset"
+            class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-xs rounded-lg transition-all"
+          >
+            重置
+          </button>
+        </div>
+
+        <!-- 控制组 2：速度调节滑块 -->
+        <div
+          class="flex items-center gap-2.5 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700"
+        >
+          <label for="speedSlider" class="text-xs text-slate-300 font-medium whitespace-nowrap">
+            帧演进速度:
+          </label>
+          <input
+            id="speedSlider"
+            type="range"
+            min="0.2"
+            max="2.0"
+            step="0.1"
+            value="0.8"
+            class="w-24 md:w-32 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <span id="speedValue" class="text-xs font-mono font-bold text-sky-400 w-9">0.8x</span>
+        </div>
+
+        <!-- 控制组 3：模式切换与模拟单缓存闪烁 -->
+        <div class="flex items-center gap-2">
+          <label
+            class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700"
+          >
+            <input
+              type="checkbox"
+              id="chkSimulateSingle"
+              class="rounded border-slate-600 text-rose-600 focus:ring-0"
+            />
+            <span class="text-slate-200">模拟单缓存闪烁</span>
+          </label>
+
+          <div class="h-4 w-px bg-slate-700 hidden sm:block"></div>
+
+          <!-- 显微镜实时状态数据栏 -->
+          <div
+            class="hidden xl:flex items-center gap-3 text-[11px] font-mono bg-slate-950 px-3 py-1 rounded-lg border border-slate-800"
+          >
+            <span class="text-slate-400"
+              >Current:
+              <span id="monitorCurFrame" class="text-emerald-400 font-bold">#124</span></span
+            >
+            <span class="text-slate-400"
+              >Next: <span id="monitorNextFrame" class="text-sky-400 font-bold">#125</span></span
+            >
+            <span class="text-slate-400"
+              >Swap:
+              <span id="monitorSwapStatus" class="text-emerald-400 font-bold">Ready</span></span
+            >
+            <span class="text-slate-400"
+              >Tear Risk:
+              <span id="monitorTearRisk" class="text-emerald-400 font-bold">None</span></span
+            >
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ==================== 真实双缓存模拟引擎脚本 ==================== -->
+    <script>
+      // 系统状态模型
+      const state = {
+        isRunning: true,
+        currentFrame: 124,
+        frontAngle: 1.45,
+        backAngle: 1.55,
+        angleStep: 0.022,
+        speed: 0.4, // 默认降至 0.4x 舒适慢速，方便大课堂投影讲解
+        lastSwapTime: performance.now(),
+        swapIntervalMs: 3200, // 将单个工作循环基准时长拉长到约 3.2 秒（每个步骤约0.6秒）
+        renderProgress: 0.85,
+        isSimulatingSingle: false,
+        flowStepIndex: 0,
+      };
+
+      // DOM 元素引用
+      const screenCanvas = document.getElementById('screenCanvas');
+      const screenCtx = screenCanvas.getContext('2d');
+      const frontMiniCanvas = document.getElementById('frontMiniCanvas');
+      const frontMiniCtx = frontMiniCanvas.getContext('2d');
+      const backMiniCanvas = document.getElementById('backMiniCanvas');
+      const backMiniCtx = backMiniCanvas.getContext('2d');
+
+      const screenFrameTag = document.getElementById('screenFrameTag');
+      const screenModeTag = document.getElementById('screenModeTag');
+      const frontFrameText = document.getElementById('frontFrameText');
+      const backFrameText = document.getElementById('backFrameText');
+      const backProgressText = document.getElementById('backProgressText');
+      const swapStatusBadge = document.getElementById('swapStatusBadge');
+      const swapIndicatorBar = document.getElementById('swapIndicatorBar');
+
+      const monitorCurFrame = document.getElementById('monitorCurFrame');
+      const monitorNextFrame = document.getElementById('monitorNextFrame');
+      const monitorSwapStatus = document.getElementById('monitorSwapStatus');
+      const monitorTearRisk = document.getElementById('monitorTearRisk');
+
+      const btnPlayPause = document.getElementById('btnPlayPause');
+      const playIcon = document.getElementById('playIcon');
+      const pauseIcon = document.getElementById('pauseIcon');
+      const playText = document.getElementById('playText');
+      const btnStepPhase = document.getElementById('btnStepPhase');
+      const btnSwapStep = document.getElementById('btnSwapStep');
+      const btnReset = document.getElementById('btnReset');
+      const speedSlider = document.getElementById('speedSlider');
+      const speedValue = document.getElementById('speedValue');
+      const chkSimulateSingle = document.getElementById('chkSimulateSingle');
+
+      const flowSteps = [
+        document.getElementById('flowStep1'),
+        document.getElementById('flowStep2'),
+        document.getElementById('flowStep3'),
+        document.getElementById('flowStep4'),
+        document.getElementById('flowStep5'),
+      ];
+
+      // 自适应重置所有画布
+      function resizeCanvases() {
+        const dpr = window.devicePixelRatio || 1;
+
+        // 主屏幕画布
+        const sRect = screenCanvas.getBoundingClientRect();
+        screenCanvas.width = sRect.width * dpr;
+        screenCanvas.height = sRect.height * dpr;
+        screenCtx.scale(dpr, dpr);
+
+        // 前台小预览
+        const fRect = frontMiniCanvas.getBoundingClientRect();
+        frontMiniCanvas.width = fRect.width * dpr;
+        frontMiniCanvas.height = fRect.height * dpr;
+        frontMiniCtx.scale(dpr, dpr);
+
+        // 后台小预览
+        const bRect = backMiniCanvas.getBoundingClientRect();
+        backMiniCanvas.width = bRect.width * dpr;
+        backMiniCanvas.height = bRect.height * dpr;
+        backMiniCtx.scale(dpr, dpr);
+      }
+      window.addEventListener('resize', resizeCanvases);
+      resizeCanvases();
+
+      // 绘制几何旋转体通用函数
+      function drawGeometry(ctx, w, h, angle, isPartial, partialRatio, styleType) {
+        ctx.clearRect(0, 0, w, h);
+        const cx = w / 2;
+        const cy = h / 2;
+        const unit = Math.min(w, h) * 0.36;
+
+        // 极轻微网格
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        const step = 20;
+        for (let x = 0; x < w; x += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        for (let y = 0; y < h; y += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+
+        // 坐标轴
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - unit * 1.3, cy);
+        ctx.lineTo(cx + unit * 1.3, cy);
+        ctx.moveTo(cx, cy - unit * 1.3);
+        ctx.lineTo(cx, cy + unit * 1.3);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+
+        const size = unit * 0.72;
+
+        // 如果模拟部分绘制中 (Partial Render)
+        if (isPartial) {
+          ctx.save();
+          ctx.beginPath();
+          // 沿Y轴剪裁表现绘制未完工
+          ctx.rect(-size - 10, -size - 10, (size * 2 + 20) * partialRatio, size * 2 + 20);
+          ctx.clip();
+        }
+
+        // 正方形填充
+        if (styleType === 'front') {
+          const grad = ctx.createLinearGradient(-size, -size, size, size);
+          grad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+          grad.addColorStop(1, 'rgba(2, 132, 199, 0.25)');
+          ctx.fillStyle = grad;
+          ctx.strokeStyle = '#34d399';
+        } else {
+          const grad = ctx.createLinearGradient(-size, -size, size, size);
+          grad.addColorStop(0, 'rgba(2, 132, 199, 0.4)');
+          grad.addColorStop(1, 'rgba(6, 182, 212, 0.25)');
+          ctx.fillStyle = grad;
+          ctx.strokeStyle = '#38bdf8';
+        }
+
+        ctx.fillRect(-size, -size, size * 2, size * 2);
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(-size, -size, size * 2, size * 2);
+
+        // 顶点圆点
+        const pts = [
+          { x: -size, y: -size },
+          { x: size, y: -size },
+          { x: size, y: size },
+          { x: -size, y: size },
+        ];
+        pts.forEach((p) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+
+        if (isPartial) {
+          ctx.restore();
+          // 绘制正在扫描的光线
+          const scanX = -size + size * 2 * partialRatio;
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([3, 2]);
+          ctx.beginPath();
+          ctx.moveTo(scanX, -size - 6);
+          ctx.lineTo(scanX, size + 6);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        ctx.restore();
+      }
+
+      // 执行交换操作 (Swap Buffers)
+      function executeSwap() {
+        // 触发高亮动画
+        swapIndicatorBar.classList.add('swapping-animate');
+        setTimeout(() => swapIndicatorBar.classList.remove('swapping-animate'), 350);
+
+        // 真实指针交换
+        state.currentFrame++;
+        state.frontAngle = state.backAngle;
+        state.backAngle += state.angleStep * 1.5;
+
+        // 更新界面标签
+        const curStr = `Frame #${state.currentFrame}`;
+        const nextStr = `Frame #${state.currentFrame + 1}`;
+
+        screenFrameTag.textContent = curStr;
+        frontFrameText.textContent = `Frame ${state.currentFrame}`;
+        backFrameText.textContent = `Frame ${state.currentFrame + 1}`;
+        monitorCurFrame.textContent = `#${state.currentFrame}`;
+        monitorNextFrame.textContent = `#${state.currentFrame + 1}`;
+      }
+
+      // 暂停动画辅助函数
+      function pauseAnimation() {
+        state.isRunning = false;
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        playText.textContent = '恢复流动';
+        btnPlayPause.classList.replace('bg-sky-600', 'bg-emerald-600');
+      }
+
+      // 恢复流动辅助函数
+      function resumeAnimation() {
+        state.isRunning = true;
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        playText.textContent = '暂停流动';
+        btnPlayPause.classList.replace('bg-emerald-600', 'bg-sky-600');
+        state.lastSwapTime =
+          performance.now() - (state.flowStepIndex / 5) * (state.swapIntervalMs / state.speed);
+      }
+
+      // 更新流程步骤高亮卡片
+      function highlightStep(stepIdx) {
+        state.flowStepIndex = stepIdx;
+        flowSteps.forEach((s, idx) => {
+          if (idx === stepIdx) {
+            s.classList.add('step-active');
+          } else {
+            s.classList.remove('step-active');
+          }
+        });
+      }
+
+      // 核心渲染与状态更新循环
+      let lastTime = performance.now();
+      function tick(now) {
+        const delta = now - lastTime;
+        const effectiveCycle = state.swapIntervalMs / state.speed;
+
+        if (state.isRunning) {
+          // 计算当前周期内的耗时占比
+          const elapsed = now - state.lastSwapTime;
+          const cycleProgress = (elapsed % effectiveCycle) / effectiveCycle;
+
+          // 根据步骤阶段设定后台绘制进度
+          state.renderProgress = Math.min(1.0, 0.15 + cycleProgress * 0.95);
+
+          if (state.renderProgress >= 0.9) {
+            swapStatusBadge.textContent = 'SWAP READY';
+            swapStatusBadge.className =
+              'font-mono text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold';
+            monitorSwapStatus.textContent = 'Ready';
+          } else {
+            swapStatusBadge.textContent = 'RENDERING';
+            swapStatusBadge.className =
+              'font-mono text-[10px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-bold';
+            monitorSwapStatus.textContent = 'Pending';
+          }
+
+          backProgressText.textContent = `栅格化中 (${Math.floor(state.renderProgress * 100)}%)`;
+
+          // 阶段节点映射 (0~4 步)
+          const currentPhase = Math.min(4, Math.floor(cycleProgress * 5));
+          highlightStep(currentPhase);
+
+          // 到达完整周期时执行指针交换
+          if (elapsed >= effectiveCycle) {
+            executeSwap();
+            state.lastSwapTime = now;
+          }
+        }
+
+        // 获取画布真实尺寸并绘制
+        const sRect = screenCanvas.getBoundingClientRect();
+        const fRect = frontMiniCanvas.getBoundingClientRect();
+        const bRect = backMiniCanvas.getBoundingClientRect();
+
+        // 1. 绘制屏幕输出 (主Canvas)
+        if (state.isSimulatingSingle) {
+          drawGeometry(
+            screenCtx,
+            sRect.width,
+            sRect.height,
+            state.backAngle,
+            true,
+            state.renderProgress,
+            'front',
+          );
+        } else {
+          drawGeometry(screenCtx, sRect.width, sRect.height, state.frontAngle, false, 1.0, 'front');
+        }
+
+        // 2. 绘制 Front Buffer 显存小窗口
+        drawGeometry(
+          frontMiniCtx,
+          fRect.width,
+          fRect.height,
+          state.frontAngle,
+          false,
+          1.0,
+          'front',
+        );
+
+        // 3. 绘制 Back Buffer 显存小窗口
+        drawGeometry(
+          backMiniCtx,
+          bRect.width,
+          bRect.height,
+          state.backAngle,
+          true,
+          state.renderProgress,
+          'back',
+        );
+
+        lastTime = now;
+        requestAnimationFrame(tick);
+      }
+
+      // 交互控件绑定
+      btnPlayPause.addEventListener('click', () => {
+        if (state.isRunning) {
+          pauseAnimation();
+        } else {
+          resumeAnimation();
+        }
+      });
+
+      // 单步前进一步 (Next Phase：1 -> 2 -> 3 -> 4 -> 5 -> 1)
+      if (btnStepPhase) {
+        btnStepPhase.addEventListener('click', () => {
+          pauseAnimation();
+          let nextPhase = (state.flowStepIndex + 1) % 5;
+
+          // 对应各个步骤的物理渲染状态
+          if (nextPhase === 0) {
+            // 角色对调并进入新帧的步骤1
+            executeSwap();
+            state.renderProgress = 0.2;
+          } else if (nextPhase === 1) {
+            state.renderProgress = 0.55;
+          } else if (nextPhase === 2) {
+            state.renderProgress = 0.95;
+          } else if (nextPhase === 3) {
+            state.renderProgress = 1.0;
+            swapIndicatorBar.classList.add('swapping-animate');
+            setTimeout(() => swapIndicatorBar.classList.remove('swapping-animate'), 350);
+          } else if (nextPhase === 4) {
+            state.renderProgress = 1.0;
+          }
+
+          backProgressText.textContent = `栅格化中 (${Math.floor(state.renderProgress * 100)}%)`;
+          highlightStep(nextPhase);
+        });
+      }
+
+      // 点击流程卡片直接定格在具体步骤细讲
+      flowSteps.forEach((stepCard, idx) => {
+        stepCard.addEventListener('click', () => {
+          pauseAnimation();
+          highlightStep(idx);
+
+          if (idx === 0) {
+            state.renderProgress = 0.25;
+          } else if (idx === 1) {
+            state.renderProgress = 0.65;
+          } else if (idx === 2) {
+            state.renderProgress = 0.98;
+          } else if (idx === 3) {
+            state.renderProgress = 1.0;
+            swapIndicatorBar.classList.add('swapping-animate');
+            setTimeout(() => swapIndicatorBar.classList.remove('swapping-animate'), 350);
+          } else if (idx === 4) {
+            state.renderProgress = 1.0;
+          }
+          backProgressText.textContent = `栅格化中 (${Math.floor(state.renderProgress * 100)}%)`;
+        });
+      });
+
+      btnSwapStep.addEventListener('click', () => {
+        pauseAnimation();
+        executeSwap();
+        state.renderProgress = 1.0;
+        highlightStep(3); // 停在 Swap Buffers 步骤
+      });
+
+      btnReset.addEventListener('click', () => {
+        state.currentFrame = 124;
+        state.frontAngle = 1.45;
+        state.backAngle = 1.55;
+        state.renderProgress = 0.85;
+        highlightStep(0);
+        executeSwap();
+      });
+
+      speedSlider.addEventListener('input', (e) => {
+        state.speed = parseFloat(e.target.value);
+        speedValue.textContent = `${state.speed.toFixed(2)}x`;
+      });
+
+      chkSimulateSingle.addEventListener('change', (e) => {
+        state.isSimulatingSingle = e.target.checked;
+        if (state.isSimulatingSingle) {
+          screenModeTag.textContent = '⚠️ 单缓存模式 (边画边显示，剧烈闪烁)';
+          screenModeTag.className =
+            'absolute bottom-2.5 right-2.5 bg-rose-950/90 border border-rose-500/80 text-rose-200 text-[11px] px-2.5 py-1 rounded font-medium animate-pulse';
+          monitorTearRisk.textContent = 'High (Severe)';
+          monitorTearRisk.className = 'text-rose-400 font-bold';
+        } else {
+          screenModeTag.textContent = '双缓存保护生效中';
+          screenModeTag.className =
+            'absolute bottom-2.5 right-2.5 bg-sky-950/90 border border-sky-500/60 text-sky-200 text-[11px] px-2.5 py-1 rounded font-medium';
+          monitorTearRisk.textContent = 'None';
+          monitorTearRisk.className = 'text-emerald-400 font-bold';
+        }
+      });
+
+      // 初始化启动
+      window.onload = function () {
+        resizeCanvases();
+        requestAnimationFrame(tick);
+      };
+    </script>
+  </body>
+</html>
