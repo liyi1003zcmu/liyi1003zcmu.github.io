@@ -122,8 +122,13 @@ updatedDate: 2026-10-16
 
 ### 第四章：几何对象和变换
 
-- 标架与齐次坐标显微镜：[运行 Demo](/slides/computer-graphics/ch04/demos/frame-homogeneous-coordinates.html)
-- 基本变换矩阵实验台：[运行 Demo](/slides/computer-graphics/ch04/demos/basic-transform-matrix.html)
+- 欧拉角旋转立方体：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcube.js)
+- 索引绘制旋转立方体：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubev.js)
+- 四元数旋转立方体：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubeq.js)
+- 跟踪球矩阵旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubetrack.js)
+- 跟踪球四元数旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubetrackq.js)
+
+课件内的“标架与齐次坐标显微镜”和“基本变换矩阵实验台”保留在对应课件中直接启动，不再作为独立 Demo 重复列出。
 
 ## 实验任务
 
@@ -147,7 +152,7 @@ updatedDate: 2026-10-16
 
 ## 更新记录
 
-- 2026-10-16：发布第四章前两讲及标架、齐次坐标与基本变换交互 Demo。
+- 2026-10-16：发布第四章前两讲及 5 个 WebGL 2 几何变换 Demo；课件内教学仪器改为仅从对应课件启动。
 - 2026-10-03：发布第三章两份在线课件及课件内互动示例，新增按章节整理的第一至第三章 Demo 与配套代码。
 - 2026-09-25：发布第二章三份在线课件及配套 WebGL 示例。
 - 2026-09-19：发布实验提交规范和课程设计指南，完善课程主页相关说明。
