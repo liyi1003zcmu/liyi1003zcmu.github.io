@@ -1,0 +1,3085 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 4-1 几何对象与表示</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1450px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261016" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 4 · 01</div>
+            <h1>从医学影像到几何表示：网格、标架与齐次坐标</h1>
+            <p class="lead fragment fade-up">医学网格 · 点与向量 · 参考标架 · 齐次坐标与升维</p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 42px">
+              <div class="node fragment fade-up">Medical Image</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Triangle Mesh</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Points & Vectors</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Coordinate Frame</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Homogeneous Coords</div>
+            </div>
+            <aside class="notes">
+              <p class="title-mark fragment fade-up">
+                40 min · 医学模型溯源 + 几何拓扑解耦 + 标架变换 + 齐次矩阵构建
+              </p>
+            </aside>
+          </div>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Problem</div>
+            <h2>医工问题：GPU认识“骨骼”吗？</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              CT/MRI重建后，屏幕上出现了三维骨骼或器官模型。问题是：<strong
+                >计算机究竟保存了什么？</strong
+              >
+            </p>
+            <div class="media-shell fragment fade-up" data-fragment-index="2">
+              <img
+                src="./images/chap04/ch04-R04-01.png"
+                alt="从医学影像到三维模型"
+                data-fallback="从医学影像到三维模型"
+                data-prompt="生成一张16:9横向白底大学计算机图形学教学信息图，主题为“医学影像中的三维对象是怎样进入计算机图形系统的？”。"
+              />
+            </div>
+            <aside class="notes">
+              R04-01 · 从医学影像到三维模型
+              生成一张16:9横向白底大学计算机图形学教学信息图，主题为“医学影像中的三维对象是怎样进入计算机图形系统的？”。
+              整体风格极简、正式、学术化，适合大学课堂PPT投影；纯白或极浅灰背景；深蓝、蓝灰、青蓝配色，少量绿色表示最终形成的三维模型。不要真实患者照片，不要血腥内容，不要诊断文字，不要卡通风，不要宣传海报风，不要复杂医学术语。
+              画面从左向右仅保留三个阶段：CT/MRI切片 → 三维重建 →
+              简化的三维骨骼或器官表面模型。第三阶段医学模型表面要能看到三角形网格和少量顶点圆点。
+              顶部标题：“屏幕上的三维医学模型，计算机究竟保存了什么？”底部问题：“模型？表面？三角形？顶点？”
+            </aside>
+          </section>
+          <section id="sec-2-2">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Abstraction</div>
+            <h2>从复杂医学模型到简单几何表示</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              复杂医学表面通常要转化成<strong>三角形网格</strong>，GPU最终处理的是顶点和属性。
+            </p>
+            <div class="media-shell fragment fade-up" data-fragment-index="2">
+              <img
+                src="./images/chap04/ch04-R04-02.png"
+                alt="医学模型到Mesh"
+                data-fallback="医学模型到Mesh"
+                data-prompt="16:9横向白底大学计算机图形学教学信息图，主题“从复杂医学模型到简单几何表示”。左侧为低细节、非照片风格的三维股骨或器官表面模型；中间放大局部区域，显示清晰三角网格；右侧进一步放大一个三角形，显示三个顶点P0、P1、P2。底部流程：Medical Model → Triangle Mesh → Vertices。深蓝、蓝灰、青蓝；不要复杂医学解剖标注。"
+              />
+            </div>
+            <aside class="notes">
+              R04-02 · 医学模型到Mesh
+              16:9横向白底大学计算机图形学教学信息图，主题“从复杂医学模型到简单几何表示”。左侧为低细节、非照片风格的三维股骨或器官表面模型；中间放大局部区域，显示清晰三角网格；右侧进一步放大一个三角形，显示三个顶点P0、P1、P2。底部流程：Medical
+              Model → Triangle Mesh → Vertices。深蓝、蓝灰、青蓝；不要复杂医学解剖标注。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Concept</div>
+            <h2 style="margin-bottom: 0.25em">点、向量、标量：先分清几何类型</h2>
+            <div class="grid3" style="margin-top: 12px; gap: 14px">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="1"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.75em; color: var(--cyan)">Point</h4>
+                <p style="margin: 0; font-size: 0.58em; line-height: 1.45">
+                  表示空间中的<strong>位置</strong>。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.75em; color: var(--cyan)">Vector</h4>
+                <p style="margin: 0; font-size: 0.58em; line-height: 1.45">
+                  表示<strong>方向 + 大小</strong>，没有固定位置（例如：速度、力、位移）。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.75em; color: var(--cyan)">Scalar</h4>
+                <p style="margin: 0; font-size: 0.58em; line-height: 1.45">
+                  普通数值，用来描述长度、比例和参数（例如：时间、温度、质量）。
+                </p>
+              </div>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              data-fragment-index="4"
+              style="margin-top: 16px; height: 410px"
+            >
+              <img
+                src="./images/chap04/ch04-R04-03.png"
+                alt="点和向量的区别"
+                data-fallback="点和向量的区别"
+                data-prompt="生成一张16:9横向白底计算机图形学教学示意图，主题“点和向量不是同一种几何对象”。左侧两个空间点P、Q，用实心圆表示，旁边写“点：位置”。中间从Q指向P的一支箭头v=P-Q，写“向量：大小 + 方向”。右侧把同一支向量平移到另一个位置，方向和长度完全相同，并在两支箭头之间标注“同一个向量”。底部只给两条关系：P - Q = v；Q + v = P。使用深蓝、蓝灰、青蓝，点用深蓝，向量用青蓝箭头。"
+              />
+            </div>
+            <aside class="notes">
+              R04-03 · 点和向量的区别
+              生成一张16:9横向白底计算机图形学教学示意图，主题“点和向量不是同一种几何对象”。左侧两个空间点P、Q，用实心圆表示，旁边写“点：位置”。中间从Q指向P的一支箭头v=P-Q，写“向量：大小
+              +
+              方向”。右侧把同一支向量平移到另一个位置，方向和长度完全相同，并在两支箭头之间标注“同一个向量”。底部只给两条关系：P
+              - Q = v；Q + v = P。使用深蓝、蓝灰、青蓝，点用深蓝，向量用青蓝箭头。
+            </aside>
+          </section>
+          <section id="sec-3-2">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Concept</div>
+            <h2>标量：控制长度、比例和参数的“数”</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              标量不是空间中的位置，也不是方向；它是用来描述<strong>数量、比例、权重和参数</strong>的数值。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h3>长度 / 距离</h3>
+                <p>医学模型中两点间距离、器械前进深度、网格边长等都用标量描述。</p>
+                <span class="pill">distance</span>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h3>比例 / 缩放</h3>
+                <p>模型归一化、单位换算、植入物模板尺寸调整，本质上都需要标量因子。</p>
+                <span class="pill">scale factor</span>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="4">
+                <h3>参数 / 权重</h3>
+                <p>线段插值、三角形内部点、颜色或属性插值，都通过参数控制位置或权重。</p>
+                <span class="pill">parameter</span>
+              </div>
+            </div>
+            <div class="quote fragment fade-up" data-fragment-index="5">
+              一句话：<span class="accent"
+                >标量回答“多少”，点回答“在哪里”，向量回答“往哪里、多少长”。</span
+              >
+            </div>
+          </section>
+          <section id="sec-3-3">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Geometry Operations</div>
+            <h2>点、向量、标量之间能做哪些运算？</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              很多图形错误并不是代码语法错，而是把不同几何类型混在一起使用。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h3>有明确几何意义</h3>
+                <ul>
+                  <li><code>P - Q</code>：两个点之差得到一个向量</li>
+                  <li><code>Q + v</code>：点沿向量移动得到新点</li>
+                  <li><code>u + v</code>：两个向量相加得到新方向/位移</li>
+                  <li><code>αv</code>：用标量改变向量长度</li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h3>需要警惕</h3>
+                <ul>
+                  <li><code>P + Q</code>：两个点通常不能直接相加</li>
+                  <li><code>αP</code>：单独用标量乘点通常没有几何意义</li>
+                  <li><code>vec3</code>：只是存储形式，不自动说明几何类型</li>
+                </ul>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" data-fragment-index="4">
+              <span class="tag">课堂追问</span><span class="timer">60 s</span>
+              <p>
+                如果两个医学标志点 <code>A</code> 和 <code>B</code> 已知，<code>B-A</code>
+                在几何上代表什么？它可以用于描述器械方向吗？
+              </p>
+            </div>
+          </section>
+          <section id="sec-3-4">
+            <span class="slide-no">#sec-3-4</span>
+            <div class="eyebrow">Affine Space</div>
+            <h2>仿射空间：把点、向量和标量组织起来</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              前面的运算规则可以统一理解为：我们在一个<strong>仿射空间</strong>中处理几何对象。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h3>仿射空间包含什么？</h3>
+                <ul>
+                  <li><strong>点 Point</strong>：表示位置</li>
+                  <li><strong>向量 Vector</strong>：表示位移、方向和大小</li>
+                  <li><strong>标量 Scalar</strong>：表示比例、参数和权重</li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h3>允许哪些基本操作？</h3>
+                <ul>
+                  <li>两点相减：\(P-Q=\mathbf{v}\)</li>
+                  <li>点加向量：\(Q+\mathbf{v}=P\)</li>
+                  <li>向量线性组合：\(\alpha\mathbf{u}+\beta\mathbf{v}\)</li>
+                </ul>
+              </div>
+            </div>
+            <div class="mathbox fragment fade-up" data-fragment-index="4">
+              \(P(\alpha)=P_0+\alpha\mathbf{d}\)
+            </div>
+            <p class="fragment fade-up sublead" data-fragment-index="4">
+              这就是用“一个点 + 一个方向向量 + 一个标量参数”描述直线、射线和线段的基本方式。
+            </p>
+            <div class="activity fragment fade-up" data-fragment-index="5">
+              <span class="tag">课堂互动</span><span class="timer">60 s</span>
+              <p>
+                在医学模型中，若 \(P_0\) 是器械入口点，\(\mathbf{d}\) 是器械方向，\(\alpha\)
+                可以表示什么？
+              </p>
+            </div>
+          </section>
+          <section id="sec-3-5">
+            <span class="slide-no">#sec-3-5</span>
+            <div class="eyebrow">Affine Sum</div>
+            <h2 style="margin-bottom: 0.25em">仿射和：为什么“点的加权和”有时是合法的？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              虽然两个点通常不能随意相加，但当权重之和为1时，点的组合可以表示仍在仿射空间中的一个点。
+            </p>
+            <div class="grid2" style="margin-top: 10px; gap: 16px">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.85em; color: var(--cyan)">
+                  两点之间的仿射和
+                </h3>
+                <div
+                  class="mathbox"
+                  style="margin: 8px 0; padding: 10px 14px; font-size: 0.75em; border-radius: 12px"
+                >
+                  \(P(\alpha)=(1-\alpha)P_0+\alpha P_1\)
+                </div>
+                <p
+                  style="
+                    margin: 4px 0 0 0;
+                    font-size: 0.58em;
+                    line-height: 1.45;
+                    color: var(--text);
+                  "
+                >
+                  当 \(0\le \alpha\le1\) 时，\(P(\alpha)\) 位于线段 \(P_0P_1\) 上。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.85em; color: var(--cyan)">一般形式</h3>
+                <div
+                  class="mathbox"
+                  style="margin: 8px 0; padding: 10px 14px; font-size: 0.75em; border-radius: 12px"
+                >
+                  \(P=\sum_i \alpha_i P_i,\quad \sum_i\alpha_i=1\)
+                </div>
+                <p
+                  style="
+                    margin: 4px 0 0 0;
+                    font-size: 0.58em;
+                    line-height: 1.45;
+                    color: var(--text);
+                  "
+                >
+                  权重之和为1，是仿射和成立的关键条件。
+                </p>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="4"
+              style="
+                margin-top: 14px;
+                padding: 12px 20px;
+                font-size: 0.68em !important;
+                line-height: 1.42 !important;
+                border-radius: 0 14px 14px 0;
+              "
+            >
+              为什么重要：<span class="accent"
+                >线段插值、三角形内部点、重心坐标、颜色插值、表面采样</span
+              >都离不开仿射和。
+            </div>
+            <div
+              class="activity fragment fade-up"
+              data-fragment-index="5"
+              style="margin-top: 14px; padding: 12px 20px; border-radius: 14px"
+            >
+              <span class="tag">快速判断</span><span class="timer">45 s</span>
+              <p style="margin: 4px 0 0 0; font-size: 0.58em; line-height: 1.45">
+                若 \(P=0.2P_0+0.3P_1+0.5P_2\)，它为什么可以表示三角形内部或边界上的一个点？
+              </p>
+            </div>
+          </section>
+          <section id="sec-3-6">
+            <span class="slide-no">#sec-3-6</span>
+            <div class="eyebrow">Plane / Face</div>
+            <h2 style="margin-bottom: 0.25em">面的表示：一个点和两个方向</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              在三维图形中，“面”是构成医学表面网格和三角形模型的基础对象。
+            </p>
+            <div class="grid2" style="margin-top: 10px; gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">
+                  方式一：一个点 + 两个向量
+                </h3>
+                <div
+                  class="mathbox"
+                  style="margin: 6px 0; padding: 6px 12px; font-size: 0.72em; border-radius: 10px"
+                >
+                  \(P(s,t)=P_0+s\mathbf{u}+t\mathbf{v}\)
+                </div>
+                <p style="margin: 0; font-size: 0.56em; line-height: 1.45">
+                  其中 \(P_0\) 是面上的一个点，\(\mathbf{u}\)、\(\mathbf{v}\) 是面内两个不共线方向。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">
+                  方式二：三个不共线点
+                </h3>
+                <div
+                  class="mathbox"
+                  style="margin: 6px 0; padding: 6px 12px; font-size: 0.72em; border-radius: 10px"
+                >
+                  \(\mathbf{u}=P_1-P_0,\quad \mathbf{v}=P_2-P_0\)
+                </div>
+                <p style="margin: 0; font-size: 0.56em; line-height: 1.45">
+                  三个不共线点 \(P_0,P_1,P_2\) 可以确定一个平面，也可以确定一个三角形面片。
+                </p>
+              </div>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              data-fragment-index="4"
+              style="height: 380px; margin-top: 14px; border-radius: 18px"
+            >
+              <img
+                src="./images/chap04/ch04-R04-04.png"
+                alt="面的两种表示"
+                data-fallback="面的两种表示"
+              />
+            </div>
+            <aside class="notes">
+              R04-04 · 面的两种表示 一个点和两个向量，或三个不共线点，都可以确定一个面。
+            </aside>
+          </section>
+          <section id="sec-3-7">
+            <span class="slide-no">#sec-3-7</span>
+            <div class="eyebrow">Triangle / Convex Hull</div>
+            <h2 style="margin-bottom: 0.25em">三角形与凸包：面片内部的点怎样表示？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              三角形是GPU最常用的表面基本单元；其内部点可以用三个顶点的仿射和表示。
+            </p>
+            <div class="grid2" style="margin-top: 10px; gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">三角形面片</h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.56em; line-height: 1.45">
+                  三个不共线点 \(P_0,P_1,P_2\)
+                  不仅确定一个平面，也确定该平面上的一个有限区域：三角形。
+                </p>
+                <div
+                  class="mathbox"
+                  style="
+                    margin: 6px 0 0 0;
+                    padding: 6px 12px;
+                    font-size: 0.72em;
+                    border-radius: 10px;
+                  "
+                >
+                  \(\triangle P_0P_1P_2\)
+                </div>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">
+                  凸包 / 重心形式
+                </h3>
+                <div
+                  class="mathbox"
+                  style="margin: 4px 0; padding: 4px 10px; font-size: 0.68em; border-radius: 8px"
+                >
+                  \(P=\alpha_0P_0+\alpha_1P_1+\alpha_2P_2\)
+                </div>
+                <div
+                  class="mathbox"
+                  style="margin: 4px 0; padding: 4px 10px; font-size: 0.68em; border-radius: 8px"
+                >
+                  \(\alpha_0+\alpha_1+\alpha_2=1,\quad \alpha_i\ge 0\)
+                </div>
+                <p style="margin: 4px 0 0 0; font-size: 0.56em; line-height: 1.45">
+                  满足这些条件时，点 \(P\) 位于三角形内部或边界上。
+                </p>
+              </div>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              data-fragment-index="4"
+              style="height: 380px; margin-top: 14px; border-radius: 18px"
+            >
+              <img
+                src="./images/chap04/ch04-R04-05.png"
+                alt="三角形与凸包"
+                data-fallback="三角形与凸包"
+              />
+            </div>
+            <aside class="notes">
+              R04-05 · 三角形与凸包 三角形内部点可由三个顶点的仿射和/重心坐标表示。
+            </aside>
+          </section>
+          <section id="sec-3-8">
+            <span class="slide-no">#sec-3-8</span>
+            <div class="eyebrow">Normal Vector</div>
+            <h2 style="margin-bottom: 0.25em">面的法线向量：表面“朝向哪里”？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              法线向量描述面的朝向，是后续光照、可见性判断、表面方向分析的重要基础。
+            </p>
+            <div class="grid2" style="margin-top: 10px; gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">
+                  由两个面内向量得到
+                </h3>
+                <div
+                  class="mathbox"
+                  style="margin: 4px 0; padding: 4px 10px; font-size: 0.68em; border-radius: 8px"
+                >
+                  \(\mathbf{n}=\mathbf{u}\times\mathbf{v}\)
+                </div>
+                <p style="margin: 2px 0; font-size: 0.54em; line-height: 1.4">
+                  若 \(\mathbf{u}=P_1-P_0\)，\(\mathbf{v}=P_2-P_0\)，则：
+                </p>
+                <div
+                  class="mathbox"
+                  style="margin: 4px 0; padding: 4px 10px; font-size: 0.68em; border-radius: 8px"
+                >
+                  \(\mathbf{n}=(P_1-P_0)\times(P_2-P_0)\)
+                </div>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 12px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.85em; color: var(--cyan)">
+                  为什么顺序重要？
+                </h3>
+                <p style="margin: 2px 0; font-size: 0.56em; line-height: 1.45">
+                  交换顶点顺序会改变叉积方向，进而改变法线朝向。
+                </p>
+                <p class="muted" style="margin: 2px 0; font-size: 0.52em; line-height: 1.4">
+                  这会影响背面剔除、光照明暗和医学表面方向判断。
+                </p>
+                <span class="pill" style="margin-top: 4px; font-size: 0.38em">orientation</span>
+              </div>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              data-fragment-index="4"
+              style="height: 380px; margin-top: 14px; border-radius: 18px"
+            >
+              <img
+                src="./images/chap04/ch04-R04-06.png"
+                alt="面的法线向量"
+                data-fallback="面的法线向量"
+              />
+            </div>
+            <aside class="notes">
+              R04-06 · 面的法线向量 法线由两个面内向量的叉积得到，顶点顺序决定朝向。
+            </aside>
+          </section>
+          <section id="sec-3-9">
+            <span class="slide-no">#sec-3-9</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>随堂测试：哪些表达式有几何意义？</h2>
+            <div class="question fragment fade-up" data-fragment-index="1">
+              <div class="q">单选 / 多选</div>
+              <p>设 P、Q 是点，v、u 是向量。以下哪些表达式具有明确几何意义？</p>
+            </div>
+            <div class="grid4">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h4>A</h4>
+                <p>\(P-Q\)</p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h4>B</h4>
+                <p>\(P+v\)</p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="4">
+                <h4>C</h4>
+                <p>\(u+v\)</p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="5">
+                <h4>D</h4>
+                <p>\(P+Q\)</p>
+              </div>
+            </div>
+            <p class="fragment fade-up sublead" data-fragment-index="6">
+              讨论后再给结论：A、B、C 有明确几何意义；D通常没有。
+            </p>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Representation</div>
+            <h2>坐标不是对象本身</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              同一个医学模型中的同一个点，换一个参考系后，<strong>坐标数值可能变化</strong>，但几何对象本身并没有改变。
+            </p>
+            <div class="media-shell fragment fade-up" data-fragment-index="2">
+              <img
+                src="./images/chap04/ch04-R04-07.png"
+                alt="同一对象，不同坐标"
+                data-fallback="同一对象，不同坐标"
+                data-prompt="生成一张16:9横向大学计算机图形学教学图，主题“对象没有变，坐标表示变了”。画面左右各一个二维坐标系，两个坐标系中放置完全相同的蓝色正方形，正方形绝对位置与形状保持一致。左侧坐标系原点O和x、y轴采用标准方向，并标出正方形一个顶点P的坐标如P=(2,1)。右侧改变坐标系原点位置和坐标轴方向，再标出同一个空间点P，但给出另一组不同坐标表示。中央用箭头连接：“同一个几何点P”“不同坐标表示”。底部结论：“坐标依赖参考系，对象本身不依赖坐标系。”"
+              />
+            </div>
+            <aside class="notes">
+              R04-07 · 同一对象，不同坐标
+              生成一张16:9横向大学计算机图形学教学图，主题“对象没有变，坐标表示变了”。画面左右各一个二维坐标系，两个坐标系中放置完全相同的蓝色正方形，正方形绝对位置与形状保持一致。左侧坐标系原点O和x、y轴采用标准方向，并标出正方形一个顶点P的坐标如P=(2,1)。右侧改变坐标系原点位置和坐标轴方向，再标出同一个空间点P，但给出另一组不同坐标表示。中央用箭头连接：“同一个几何点P”“不同坐标表示”。底部结论：“坐标依赖参考系，对象本身不依赖坐标系。”
+            </aside>
+          </section>
+          <section id="sec-4-2">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Coordinate-free Thinking</div>
+            <h2>先有几何对象，再有坐标表示</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              一个表面点、一个方向、一个三角形，在选择坐标系之前就已经存在；坐标只是我们把它们交给程序处理时采用的表示。
+            </p>
+            <div class="flow">
+              <span class="node fragment fade-up" data-fragment-index="2"
+                >几何对象<br /><span class="small">Point / Vector / Triangle</span></span
+              >
+              <span class="arrow fragment fade-up" data-fragment-index="3">→</span>
+              <span class="node fragment fade-up" data-fragment-index="4"
+                >选择参考系<br /><span class="small">Origin + Basis</span></span
+              >
+              <span class="arrow fragment fade-up" data-fragment-index="5">→</span>
+              <span class="node fragment fade-up" data-fragment-index="6"
+                >得到坐标数值<br /><span class="small">\(x, y, z\)</span></span
+              >
+            </div>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="7">
+                <h3>几何关系可保持</h3>
+                <p>距离、角度、连接关系等可以不依赖某一个具体坐标系来理解。</p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="8">
+                <h3>程序必须使用表示</h3>
+                <p>WebGL最终需要的是数值数组，因此必须明确这些数值属于哪个Frame。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up" data-fragment-index="9">
+              学习本章的关键：<span class="accent">不要把“对象本身”和“对象的坐标”混为一谈。</span>
+            </div>
+          </section>
+          <section id="sec-4-3">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Frame</div>
+            <h2>从坐标系到标架 Frame</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              坐标系只给出基向量；要描述点的位置，还需要<strong>原点</strong>。原点 +
+              基向量构成标架。
+            </p>
+            <div class="media-shell fragment fade-up" data-fragment-index="2">
+              <img
+                src="./images/chap04/ch04-R04-08.png"
+                alt="从坐标系到标架"
+                data-fallback="从坐标系到标架"
+                data-prompt="生成一张16:9白底大学计算机图形学极简概念图，主题“从坐标系到标架”。左侧：三个相互独立的基向量v1、v2、v3，从同一点画出，标题“Coordinate System”，下面小字“基向量 → 描述方向”。中间加号“+ 原点 P0”。右侧：同样三个基向量固定到空间中的原点P0，标题“Frame”，下面小字“原点 + 基向量 → 描述点与向量”。只展示这三个元素，不增加矩阵推导。"
+              />
+            </div>
+            <aside class="notes">
+              R04-08 · 从坐标系到标架
+              生成一张16:9白底大学计算机图形学极简概念图，主题“从坐标系到标架”。左侧：三个相互独立的基向量v1、v2、v3，从同一点画出，标题“Coordinate
+              System”，下面小字“基向量 → 描述方向”。中间加号“+ 原点
+              P0”。右侧：同样三个基向量固定到空间中的原点P0，标题“Frame”，下面小字“原点 + 基向量 →
+              描述点与向量”。只展示这三个元素，不增加矩阵推导。
+            </aside>
+          </section>
+          <section id="sec-4-4">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">Basis</div>
+            <h2>基向量：坐标其实是“组合系数”</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              在一个坐标系中，向量不是孤立的三个数，而是由一组基向量按比例组合得到。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h3>向量的表示</h3>
+                <div class="mathbox">\(v = \alpha_1 e_1 + \alpha_2 e_2 + \alpha_3 e_3\)</div>
+                <p class="muted">
+                  坐标 \((\alpha_1, \alpha_2, \alpha_3)\) 是向量在基 \((e_1, e_2, e_3)\) 下的表示。
+                </p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h3>点的表示还需要原点</h3>
+                <div class="mathbox">\(P = P_0 + x e_1 + y e_2 + z e_3\)</div>
+                <p class="muted">没有原点 \(P_0\)，仅靠基向量无法确定一个点的位置。</p>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" data-fragment-index="4">
+              <span class="tag">概念检查</span><span class="timer">45 s</span>
+              <p>只改变基向量方向，不改变几何向量本身，它的坐标数值可能改变吗？为什么？</p>
+            </div>
+          </section>
+          <section id="sec-4-5">
+            <span class="slide-no">#sec-4-5</span>
+            <div class="eyebrow">Medical Frames</div>
+            <h2>医工场景中常见的三个标架</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              三维医学可视化中，同一个对象常常需要在多个标架之间被解释和转换。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <h3>Model Frame</h3>
+                <p>模型坐标系：顶点通常在重建或建模时定义在这里。</p>
+                <span class="pill">local object</span>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <h3>World Frame</h3>
+                <p>世界坐标系：把模型放回具体医学空间。</p>
+                <span class="pill">anatomy space</span>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="4">
+                <h3>View Frame</h3>
+                <p>观察/相机坐标系：决定从哪个角度看见三维对象。</p>
+                <span class="pill">camera view</span>
+              </div>
+            </div>
+            <div class="quote fragment fade-up" data-fragment-index="5">
+              本课先解决 <span class="accent">“对象如何表示”</span>；后续课程会继续解决
+              <span class="accent">“Frame之间如何变换”</span>。
+            </div>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Homogeneous Coordinates Introduction</div>
+            <h2>标架中的点与向量：齐次坐标从何而来？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              在三维参考标架中，实际几何对象包括<strong>点（位置）</strong>与<strong>向量（方向）</strong>。但在代数表达与计算机中，它们都写成三个数——计算机该如何区分？
+            </p>
+            <div class="grid3" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--cyan)">
+                  ① 实际对象与数学表示
+                </h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  •
+                  <strong>点 \(P\)</strong
+                  >：如骨骼表面顶点，表示空间绝对位置，严格依赖标架原点。<br />
+                  •
+                  <strong>向量 \(\mathbf{v}\)</strong
+                  >：如表面法向或位移，表示方向与大小，独立于原点。
+                </p>
+                <div class="mathbox" style="margin: 6px 0 0 0; padding: 6px 8px; font-size: 0.66em">
+                  \(P = \begin{bmatrix} x \\ y \\ z \end{bmatrix},\quad \mathbf{v} = \begin{bmatrix}
+                  \alpha \\ \beta \\ \gamma \end{bmatrix}\)
+                </div>
+                <p style="margin: 4px 0 0 0; font-size: 0.48em; color: var(--muted)">
+                  代码中均为 <code>vec3(x, y, z)</code>
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--cyan)">
+                  ② 如何区分？核心困境
+                </h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  若标架原点平移或对物体施加平移：<br />
+                  • 点的坐标数值<strong>必须改变</strong>；<br />
+                  • 向量的数值<strong>绝不能改变</strong>！
+                </p>
+                <div
+                  style="
+                    background: #fff1f2;
+                    border: 1px solid #fecdd3;
+                    border-radius: 10px;
+                    padding: 6px 10px;
+                    margin-top: 6px;
+                  "
+                >
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.45; color: #9f1239">
+                    <strong>逻辑灾难</strong>：仅靠 3
+                    个数，公式与硬件无法获知其几何属性，平移必然导致法向量被错误位移！
+                  </p>
+                </div>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="4"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--cyan)">
+                  ③ 标架展开引出齐次坐标
+                </h3>
+                <p style="margin: 0 0 4px 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  将标架原点 \(P_0\) 作为广义基底：<br />
+                  • 点需原点：\(P = P_0 + xe_1 + ye_2 + ze_3\)<br />
+                  • 向量无需原点：\(\mathbf{v} = 0\cdot P_0 + \alpha e_1 + \dots\)
+                </p>
+                <div class="mathbox" style="margin: 6px 0 0 0; padding: 6px 8px; font-size: 0.66em">
+                  \(\mathbf{p} = \begin{bmatrix} x \\ y \\ z \\ \mathbf{1} \end{bmatrix},\quad
+                  \mathbf{v} = \begin{bmatrix} \alpha \\ \beta \\ \gamma \\ \mathbf{0}
+                  \end{bmatrix}\)
+                </div>
+                <p
+                  style="margin: 4px 0 0 0; font-size: 0.48em; color: var(--cyan); font-weight: 700"
+                >
+                  第四分量 \(w\) 编码几何类型！
+                </p>
+              </div>
+            </div>
+            <div class="grid2" style="gap: 14px; margin-top: 10px; align-items: stretch">
+              <div
+                class="fragment fade-up"
+                data-fragment-index="5"
+                style="
+                  background: linear-gradient(135deg, #ffffff, #f0fdf4);
+                  border: 1px solid rgba(34, 197, 94, 0.3);
+                  border-radius: 12px;
+                  padding: 8px 14px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 0.5em;
+                    font-weight: 800;
+                    color: #15803d;
+                    text-transform: uppercase;
+                  "
+                  >共同点</span
+                >
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.45; color: #334155">
+                  均在同一参考标架下度量；均由标架基底与原点展开生成；均统一存储为四维列向量并参与矩阵乘法。
+                </p>
+              </div>
+              <div
+                class="fragment fade-up"
+                data-fragment-index="6"
+                style="
+                  background: linear-gradient(135deg, #ffffff, #eff6ff);
+                  border: 1px solid rgba(59, 130, 246, 0.3);
+                  border-radius: 12px;
+                  padding: 8px 14px;
+                "
+              >
+                <span
+                  style="
+                    font-size: 0.5em;
+                    font-weight: 800;
+                    color: #1d4ed8;
+                    text-transform: uppercase;
+                  "
+                  >不同点</span
+                >
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.45; color: #334155">
+                  <strong>点（\(w=1\)）</strong
+                  >表示空间固定位置，与原点强绑定，受平移影响；<strong>向量（\(w=0\)）</strong>表示方向与尺度，与原点解耦，具有平移不变性。
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-5-2">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Definition & Convention</div>
+            <h2>严格定义与列向量乘法标准</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              现代图形学（OpenGL、WebGL 2.0、DirectX
+              等）严格将三维几何对象定义为四维齐次列向量，并确立矩阵左乘标准。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  严格数学定义
+                </h3>
+                <p style="margin: 0 0 4px 0; font-size: 0.54em; line-height: 1.45">
+                  三维空间中的点 \(P(x,y,z)\) 与自由向量 \(\mathbf{v}(\alpha,\beta,\gamma)\)
+                  对应齐次列向量：
+                </p>
+                <div
+                  class="mathbox"
+                  style="margin: 6px 0; padding: 6px 10px; font-size: 0.68em; border-radius: 10px"
+                >
+                  \[\mathbf{p} = \begin{bmatrix} x \\ y \\ z \\ 1 \end{bmatrix},\quad \mathbf{v} =
+                  \begin{bmatrix} \alpha \\ \beta \\ \gamma \\ 0 \end{bmatrix}\]
+                </div>
+                <p
+                  style="
+                    margin: 2px 0 0 0;
+                    font-size: 0.52em;
+                    line-height: 1.45;
+                    color: var(--muted);
+                  "
+                >
+                  满足 \(w \ne 0\) 时，齐次坐标 \([x, y, z, w]^T\) 对应笛卡尔空间点 \((x/w, y/w,
+                  z/w)\)。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  列向量左乘统一标准
+                </h3>
+                <p style="margin: 0 0 4px 0; font-size: 0.54em; line-height: 1.45">
+                  后续图形学流水线计算中，<strong>均以列向量左乘为唯一标准</strong>：
+                </p>
+                <div
+                  class="mathbox"
+                  style="margin: 6px 0; padding: 6px 10px; font-size: 0.68em; border-radius: 10px"
+                >
+                  \[\mathbf{p}' = \mathbf{M} \cdot \mathbf{p} = \mathbf{M}_n \cdots \mathbf{M}_2
+                  \mathbf{M}_1 \mathbf{p}\]
+                </div>
+                <p
+                  style="
+                    margin: 2px 0 0 0;
+                    font-size: 0.52em;
+                    line-height: 1.45;
+                    color: var(--muted);
+                  "
+                >
+                  变换由右向左依次作用；GLSL 着色器标准写法：<code
+                    >gl_Position = uP * uV * uM * aPos;</code
+                  >
+                </p>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="4"
+              style="
+                margin-top: 14px;
+                padding: 10px 18px;
+                font-size: 0.58em !important;
+                line-height: 1.42 !important;
+                border-radius: 0 14px 14px 0;
+              "
+            >
+              <strong>代数优势</strong
+              >：统一了数据规格，矩阵乘法可预先连乘复合，无需针对点和向量编写两套分支代码。
+            </div>
+          </section>
+          <section id="sec-5-3">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Interactive Check</div>
+            <h2>随堂测试：齐次坐标运算的几何代数规律</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              观察第四分量 \(w\) 的代数加减，齐次坐标天然保证了仿射运算的几何封闭性。
+            </p>
+            <div class="grid4" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--cyan)">
+                  点 − 点 = 向量
+                </h4>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 6px; font-size: 0.62em">
+                  \(1 - 1 = 0\)
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.4">
+                  两点相减，原点抵消，自动退化为方向向量。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--cyan)">
+                  点 + 向量 = 点
+                </h4>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 6px; font-size: 0.62em">
+                  \(1 + 0 = 1\)
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.4">
+                  点沿向量位移，依然引用原点，结果仍为点。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="4"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--cyan)">
+                  向量 + 向量 = 向量
+                </h4>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 6px; font-size: 0.62em">
+                  \(0 + 0 = 0\)
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.4">
+                  自由向量的合成，始终不携带原点。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="5"
+                style="padding: 14px 16px; border-radius: 16px"
+              >
+                <h4 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--amber)">
+                  点 + 点 = ？
+                </h4>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 6px; font-size: 0.62em">
+                  \(1 + 1 = 2\)
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 0.5em; line-height: 1.4">
+                  \(w=2\) 无几何意义！除非是仿射和 \(\sum\alpha_i=1\)。
+                </p>
+              </div>
+            </div>
+            <div
+              class="activity fragment fade-up"
+              data-fragment-index="6"
+              style="margin-top: 14px; padding: 12px 20px; border-radius: 14px"
+            >
+              <span class="tag">思考与回答</span><span class="timer">45 s</span>
+              <p style="margin: 4px 0 0 0; font-size: 0.56em; line-height: 1.45">
+                在三角形重心坐标中，\(P = 0.3P_0 + 0.3P_1 + 0.4P_2\)，为什么它的齐次分量计算后刚好是
+                \(w=1\)？
+              </p>
+            </div>
+          </section>
+          <section id="sec-5-4">
+            <span class="slide-no">#sec-5-4</span>
+            <div class="eyebrow">Homogeneous Matrix & Dimension Rule</div>
+            <h2>齐次矩阵：维度匹配与 (d+1) 维行列构造</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.56em; margin-bottom: 8px; line-height: 1.4"
+            >
+              在 \(d\) 维空间中，齐次坐标为 \(d+1\)
+              维列向量。为了符合矩阵相乘的代数运算法则，变换矩阵相应地由 \(d\times d\) 升维至
+              \((d+1)\times (d+1)\)；以三维图形学为例，即由 \(3\times 3\) 升维为 \(4\times 4\)。
+            </p>
+            <div class="grid2" style="gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="
+                  padding: 12px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    ① 齐次矩阵的分块扩展形式
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 4px 0 6px 0; padding: 6px 10px; font-size: 0.66em"
+                  >
+                    \[ \mathbf{M}_{(d+1)\times (d+1)} = \begin{bmatrix} \mathbf{A}_{d\times d} &
+                    \mathbf{t}_{d\times 1} \\ \mathbf{0}_{1\times d} & 1 \end{bmatrix} \]
+                  </div>
+                  <div
+                    class="mathbox"
+                    style="margin: 0 0 6px 0; padding: 6px 10px; font-size: 0.6em"
+                  >
+                    \[ \xrightarrow{\text{三维空间特例}} \quad \mathbf{M}_{4\times 4} =
+                    \begin{bmatrix} m_{11} & m_{12} & m_{13} & m_{14} \\ m_{21} & m_{22} & m_{23} &
+                    m_{24} \\ m_{31} & m_{32} & m_{33} & m_{34} \\ 0 & 0 & 0 & 1 \end{bmatrix} \]
+                  </div>
+                </div>
+                <p style="margin: 0; font-size: 0.48em; line-height: 1.35; color: var(--muted)">
+                  左上角 \(d\times d\)（三维下为 \(3\times
+                  3\)）保留原线性变换核，用于旋转、缩放与坐标轴变换。
+                </p>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="
+                  padding: 12px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    ② 增补的一行与一列该如何设置？
+                  </h3>
+                  <div
+                    style="
+                      margin-bottom: 8px;
+                      padding: 8px 12px;
+                      background: #f0f9ff;
+                      border: 1px solid rgba(2, 132, 199, 0.25);
+                      border-radius: 10px;
+                    "
+                  >
+                    <h4 style="margin: 0 0 2px 0; font-size: 0.72em; color: #0369a1">
+                      新增第 \(d+1\) 列（最后一列）
+                    </h4>
+                    <p style="margin: 0; font-size: 0.49em; line-height: 1.38; color: #334155">
+                      设置为标架原点 \(P_0\) 的变换映射分量 \(\mathbf{t} = [m_{14}, m_{24},
+                      m_{34}]^T\)，专门承载与原点位置相关的度量。
+                    </p>
+                  </div>
+                  <div
+                    style="
+                      padding: 8px 12px;
+                      background: #f8fafc;
+                      border: 1px solid var(--line);
+                      border-radius: 10px;
+                    "
+                  >
+                    <h4 style="margin: 0 0 2px 0; font-size: 0.72em; color: #0f172a">
+                      新增第 \(d+1\) 行（最后一行）
+                    </h4>
+                    <p style="margin: 0; font-size: 0.49em; line-height: 1.38; color: #334155">
+                      固定设为 \([\mathbf{0}_{1\times d},\ 1] = [0, 0, 0,
+                      1]\)。其作用是在乘法中维持齐次权重，使点变换后仍保持 \(w'=1\)、向量仍保持
+                      \(w'=0\)。
+                    </p>
+                  </div>
+                </div>
+                <p
+                  style="
+                    margin: 6px 0 0 0;
+                    font-size: 0.48em;
+                    line-height: 1.35;
+                    color: var(--muted);
+                  "
+                >
+                  行列设置精髓：最后一列专管“原点在哪里”，最后一行专管“权重是否维持为 1 或 0”。
+                </p>
+              </div>
+            </div>
+            <div
+              class="activity fragment fade-up"
+              data-fragment-index="4"
+              style="margin-top: 8px; padding: 8px 14px; border-radius: 12px"
+            >
+              <span class="tag">思考与伏笔</span>
+              <p style="margin: 3px 0 0 0; font-size: 0.5em; line-height: 1.4">
+                最后一行为什么是 \([0,0,0,1]\)？如果最后一行的分量不全为零（例如包含非零的
+                \(m_{43}\)），乘法后 \(w'\)
+                会发生什么？——这正是后续<strong>透视投影与透视除法</strong>的奥秘所在！
+              </p>
+            </div>
+          </section>
+          <section id="sec-5-5">
+            <span class="slide-no">#sec-5-5</span>
+            <div class="eyebrow">Algebraic Action & Automatic Differentiation</div>
+            <h2>齐次矩阵的作用：点与向量的代数运算与自动区分</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.56em; margin-bottom: 8px; line-height: 1.4"
+            >
+              将构造好的 \((d+1)\times(d+1)\)
+              齐次变换矩阵分别与点（\(w=1\)）和向量（\(w=0\)）相乘，观察代数规则如何天然区分几何属性。
+            </p>
+            <div class="grid2" style="gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="
+                  padding: 12px 16px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--cyan)">
+                    ① 作用于点（\(w = 1\)）：位置吸纳原点分量
+                  </h3>
+                  <div class="mathbox" style="margin: 3px 0; padding: 4px 8px; font-size: 0.6em">
+                    \[ \mathbf{M}\begin{bmatrix} \mathbf{x} \\ 1 \end{bmatrix} = \begin{bmatrix}
+                    \mathbf{A} & \mathbf{t} \\ \mathbf{0} & 1 \end{bmatrix} \begin{bmatrix}
+                    \mathbf{x} \\ 1 \end{bmatrix} = \begin{bmatrix} \mathbf{Ax} + \mathbf{t}\cdot
+                    \mathbf{1} \\ \mathbf{0}\cdot\mathbf{x} + 1\cdot \mathbf{1} \end{bmatrix} =
+                    \begin{bmatrix} \mathbf{Ax} + \mathbf{t} \\ \mathbf{1} \end{bmatrix} \]
+                  </div>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 6px 0; padding: 4px 8px; font-size: 0.52em"
+                  >
+                    \[ \xrightarrow{\text{三维展开}} \begin{bmatrix} m_{11}x + m_{12}y + m_{13}z +
+                    m_{14} \\ m_{21}x + m_{22}y + m_{23}z + m_{24} \\ m_{31}x + m_{32}y + m_{33}z +
+                    m_{34} \\ 1 \end{bmatrix} \]
+                  </div>
+                </div>
+                <ul
+                  style="
+                    margin: 0;
+                    padding-left: 1.2em;
+                    font-size: 0.48em;
+                    line-height: 1.4;
+                    color: #334155;
+                  "
+                >
+                  <li>
+                    最后一列 \(\mathbf{t}\) 与 \(1\)
+                    相乘，直接参与新位置计算（反映原点映射对位置的影响）。
+                  </li>
+                  <li>
+                    最后一行内积为 \(0\cdot x + 0\cdot y + 0\cdot z + 1\cdot 1 =
+                    1\)，严格保证<strong>结果仍然是点</strong>。
+                  </li>
+                </ul>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="
+                  padding: 12px 16px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.78em; color: var(--cyan)">
+                    ② 作用于向量（\(w = 0\)）：方向自动屏蔽原点项
+                  </h3>
+                  <div class="mathbox" style="margin: 3px 0; padding: 4px 8px; font-size: 0.6em">
+                    \[ \mathbf{M}\begin{bmatrix} \mathbf{v} \\ 0 \end{bmatrix} = \begin{bmatrix}
+                    \mathbf{A} & \mathbf{t} \\ \mathbf{0} & 1 \end{bmatrix} \begin{bmatrix}
+                    \mathbf{v} \\ 0 \end{bmatrix} = \begin{bmatrix} \mathbf{Av} + \mathbf{t}\cdot
+                    \mathbf{0} \\ \mathbf{0}\cdot\mathbf{v} + 1\cdot \mathbf{0} \end{bmatrix} =
+                    \begin{bmatrix} \mathbf{Av} \\ \mathbf{0} \end{bmatrix} \]
+                  </div>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 6px 0; padding: 4px 8px; font-size: 0.52em"
+                  >
+                    \[ \xrightarrow{\text{三维展开}} \begin{bmatrix} m_{11}\alpha + m_{12}\beta +
+                    m_{13}\gamma \\ m_{21}\alpha + m_{22}\beta + m_{23}\gamma \\ m_{31}\alpha +
+                    m_{32}\beta + m_{33}\gamma \\ 0 \end{bmatrix} \]
+                  </div>
+                </div>
+                <ul
+                  style="
+                    margin: 0;
+                    padding-left: 1.2em;
+                    font-size: 0.48em;
+                    line-height: 1.4;
+                    color: #334155;
+                  "
+                >
+                  <li>
+                    最后一列 \(\mathbf{t}\) 与 \(0\)
+                    相乘，原点项被完全屏蔽（自由向量与标架原点位置解耦）。
+                  </li>
+                  <li>
+                    最后一行内积为 \(0\cdot\alpha + 0\cdot\beta + 0\cdot\gamma + 1\cdot 0 =
+                    0\)，严格保证<strong>结果仍然是向量</strong>。
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="4"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                font-size: 0.5em !important;
+                line-height: 1.35 !important;
+                border-radius: 0 12px 12px 0;
+              "
+            >
+              机制提炼：无需任何条件分支语句，代数乘法规则天然完成了几何区分——<strong>最后一列用于原点变换，最后一行用于维持齐次权重</strong>。
+            </div>
+          </section>
+          <section id="sec-5-6">
+            <span class="slide-no">#sec-5-6</span>
+            <div class="eyebrow">Interactive Demo</div>
+            <h2 style="margin-bottom: 0.2em">Demo：标架与齐次坐标显微镜</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; line-height: 1.42; margin-bottom: 14px"
+            >
+              观察同一个几何对象在<strong>模型坐标系</strong>与<strong>世界坐标系</strong>下的不同表示，验证齐次坐标
+              \(w\) 分量的作用。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D04-01 · 教学仪器</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >HTML5 Canvas + WebGL</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    标架与齐次坐标显微镜
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 12px 0"
+                  >
+                    直观拖拽几何点与标架原点，实时计算各坐标分量，探究对象几何形态与坐标数值表示的本质关联。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹 <strong>标架交互</strong>：支持自由平移与旋转世界坐标系 (World Frame)
+                      </div>
+                      <div>
+                        🔹 <strong>状态切换</strong>：点 (Point, \(w=1\)) 与向量 (Vector, \(w=0\))
+                        实时对比
+                      </div>
+                      <div>🔹 <strong>监视矩阵</strong>：同步输出局部与全局齐次坐标数值变化</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./demos/frame-homogeneous-coordinates.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 54px;
+                      font-size: 0.66em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：标架与齐次坐标显微镜</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card fragment fade-up"
+                data-fragment-index="3"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">3 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题观察与验证
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.55em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>拖动世界标架原点</strong>：观察表面点 \(P\)
+                      的坐标数值是否改变？点本身在几何空间中的位置是否改变？
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>对比点与向量</strong>：在点 \(P\) 与方向向量 \(\mathbf{v}\)
+                      之间切换，比较第四分量 \(w=1\) 与 \(w=0\) 的几何意义。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>平移验证</strong
+                      >：平移标架原点时，点和向量的齐次坐标分别发生了什么？哪一个分量保持不变？
+                    </li>
+                    <li>
+                      <strong>原理解释</strong>：为什么图形学必须给点加上 \(1\)、给向量加上 \(0\)？
+                    </li>
+                  </ol>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 12px;
+                    padding: 8px 14px;
+                    background: rgba(5, 150, 105, 0.08);
+                    border-radius: 10px;
+                    font-size: 0.5em;
+                    line-height: 1.45;
+                    color: #065f46;
+                  "
+                >
+                  💡 <strong>提示</strong>：重点观察右侧监视器中的 \(P_W\) 与 \(\mathbf{v}_W\)
+                  在原点平移时的数值响应。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">
+              D04-01 · 标架与齐次坐标显微镜 交互观察任务： 1.
+              拖动世界坐标系原点，观察表面点P坐标变化； 2. 切换Point与Vector，对比w=1与w=0的差异；
+              3. 说明几何对象本身没有改变，改变的是在不同参考标架下的数值表示。
+            </aside>
+          </section>
+          <section id="sec-5-7">
+            <span class="slide-no">#sec-5-7</span>
+            <div class="eyebrow">Frame Transformation</div>
+            <h2>标架间的转换关系：矩阵如何连接两个标架？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              从模型坐标系到世界坐标系、世界坐标系到观察/相机坐标系，本质上都是建立两个标架之间的映射矩阵。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  标架映射的几何关系
+                </h3>
+                <p style="margin: 0 0 4px 0; font-size: 0.54em; line-height: 1.45">
+                  设标架 \(A\) 的基底与原点在标架 \(B\) 中的齐次表示分别为：
+                </p>
+                <div class="mathbox" style="margin: 6px 0; padding: 6px 10px; font-size: 0.66em">
+                  \[\mathbf{u}_1^{(B)},\ \mathbf{u}_2^{(B)},\ \mathbf{u}_3^{(B)},\ O_A^{(B)}\]
+                </div>
+                <p style="margin: 2px 0 0 0; font-size: 0.52em; line-height: 1.45; color: #475569">
+                  则连接两个标架的变换矩阵 \(\mathbf{M}_{A \to B}\) 正是以这四个列向量直接拼合而成！
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  标架变换矩阵
+                </h3>
+                <div class="mathbox" style="margin: 6px 0; padding: 8px 10px; font-size: 0.68em">
+                  \[ \mathbf{M}_{A \to B} = \begin{bmatrix} \mathbf{u}_1^{(B)} & \mathbf{u}_2^{(B)}
+                  & \mathbf{u}_3^{(B)} & O_A^{(B)} \end{bmatrix} \]
+                </div>
+                <p style="margin: 4px 0 0 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  任一点或向量在标架 \(B\) 中的坐标满足：\(\mathbf{c}_B = \mathbf{M}_{A \to B} \cdot
+                  \mathbf{c}_A\)
+                </p>
+              </div>
+            </div>
+            <div
+              class="activity fragment fade-up"
+              data-fragment-index="4"
+              style="margin-top: 14px; padding: 10px 18px; border-radius: 14px"
+            >
+              <span class="tag">核心洞见</span>
+              <p style="margin: 4px 0 0 0; font-size: 0.56em; line-height: 1.45">
+                <strong>矩阵的列向量就是新坐标轴方向与原点位置</strong
+                >！求标架转换矩阵，就是确定原标架在目标标架下的表示。
+              </p>
+            </div>
+          </section>
+          <section id="sec-5-8">
+            <span class="slide-no">#sec-5-8</span>
+            <div class="eyebrow">Affine Consistency</div>
+            <h2>仿射变换的一致性与多矩阵复合</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              “变换标架（换参考系）”与“变换物体（主动移动）”在齐次矩阵下具有完全统一的代数结构与极高的计算效率。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  通用的仿射变换矩阵结构
+                </h3>
+                <div class="mathbox" style="margin: 6px 0; padding: 8px 10px; font-size: 0.68em">
+                  \[ \mathbf{M}_{4\times 4} = \begin{bmatrix} \mathbf{R}_{3\times 3} &
+                  \mathbf{t}_{3\times 1} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} \]
+                </div>
+                <ul
+                  style="
+                    margin: 4px 0 0 0;
+                    padding-left: 1.5em;
+                    font-size: 0.52em;
+                    line-height: 1.5;
+                    color: #334155;
+                  "
+                >
+                  <li>左上角 \(3\times 3\)：控制旋转、缩放、错切与坐标系轴向。</li>
+                  <li>右上角 \(3\times 1\)：控制相对平移量与原点位移。</li>
+                </ul>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 20px; border-radius: 18px"
+              >
+                <h3 style="margin: 0 0 6px 0; font-size: 0.86em; color: var(--cyan)">
+                  矩阵预先复合的巨大优势
+                </h3>
+                <div class="mathbox" style="margin: 6px 0; padding: 8px 10px; font-size: 0.68em">
+                  \[\mathbf{M}_{final} = \mathbf{M}_k \cdots \mathbf{M}_2 \cdot \mathbf{M}_1\]
+                </div>
+                <ul
+                  style="
+                    margin: 4px 0 0 0;
+                    padding-left: 1.5em;
+                    font-size: 0.52em;
+                    line-height: 1.5;
+                    color: #334155;
+                  "
+                >
+                  <li>几十次平移、旋转与缩放，可在 CPU 端预先乘成一个单一矩阵。</li>
+                  <li>
+                    GPU 面对百万顶点网格，每个顶点<strong>仅需一次矩阵乘法</strong>：\(\mathbf{p}' =
+                    \mathbf{M}_{final}\mathbf{p}\)。
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="4"
+              style="
+                margin-top: 14px;
+                padding: 10px 18px;
+                font-size: 0.58em !important;
+                line-height: 1.42 !important;
+                border-radius: 0 14px 14px 0;
+              "
+            >
+              <strong>一致性总结</strong>：旋转、平移、标架变换、投影全部纳入 \(4\times 4\)
+              矩阵，是图形硬件能够高度流水线化的数学基石。
+            </div>
+          </section>
+          <section id="sec-5-9">
+            <span class="slide-no">#sec-5-9</span>
+            <div class="eyebrow">Graphics Pipeline</div>
+            <h2>齐次坐标在流水线中的全链条应用</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              从模型装配、场景漫游到透视成像，图形流水线完全建立在齐次变换矩阵的链式传递之上。
+            </p>
+            <div class="grid3" style="gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">
+                  模型变换 Model
+                </h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45">
+                  <strong>模型坐标系 → 世界坐标系</strong>
+                </p>
+                <p style="margin: 0; font-size: 0.5em; line-height: 1.45; color: #475569">
+                  将各个解剖模型缩放、旋转并摆放到统一的三维手术或场景空间中。
+                </p>
+                <span class="pill" style="margin-top: 6px; font-size: 0.38em">Model Matrix</span>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">
+                  观察变换 View
+                </h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45">
+                  <strong>世界坐标系 → 观察/相机坐标系</strong>
+                </p>
+                <p style="margin: 0; font-size: 0.5em; line-height: 1.45; color: #475569">
+                  以虚拟相机为中心和原点，对准观察视线，形成常说的<strong>模型视图矩阵</strong>。
+                </p>
+                <span class="pill" style="margin-top: 6px; font-size: 0.38em">View Matrix</span>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="4"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">
+                  投影变换 Projection
+                </h3>
+                <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45">
+                  <strong>观察/相机坐标系 → 裁剪坐标系</strong>
+                </p>
+                <p style="margin: 0; font-size: 0.5em; line-height: 1.45; color: #475569">
+                  构建视锥体，产生透视近大远小效果；输出
+                  <code>gl_Position</code> 并由硬件执行透视除法。
+                </p>
+                <span class="pill" style="margin-top: 6px; font-size: 0.38em"
+                  >Projection Matrix</span
+                >
+              </div>
+            </div>
+            <div class="flow fragment fade-up" data-fragment-index="5" style="margin: 14px 0 0 0">
+              <div class="node" style="font-size: 0.58em; padding: 8px 14px">
+                模型坐标系<br /><span class="small">Model</span>
+              </div>
+              <div class="arrow" style="font-size: 0.8em">→</div>
+              <div class="node" style="font-size: 0.58em; padding: 8px 14px">
+                世界坐标系<br /><span class="small">World</span>
+              </div>
+              <div class="arrow" style="font-size: 0.8em">→</div>
+              <div class="node primary" style="font-size: 0.58em; padding: 8px 14px">
+                观察/相机坐标系<br /><span class="small">View</span>
+              </div>
+              <div class="arrow" style="font-size: 0.8em">→</div>
+              <div class="node" style="font-size: 0.58em; padding: 8px 14px">
+                裁剪坐标系<br /><span class="small">Clip / NDC</span>
+              </div>
+            </div>
+          </section>
+          <section id="sec-5-10">
+            <span class="slide-no">#sec-5-10</span>
+            <div class="eyebrow">AI Collaboration</div>
+            <h2>AI协作研讨：齐次坐标在流水线中的“深层作用”</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              利用大模型辅助分析：如果只为了平移，齐次坐标值得在全流水线推行吗？深入探究它与透视投影的联系。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <div
+                class="activity ai fragment fade-up"
+                data-fragment-index="2"
+                style="margin-top: 0; padding: 18px 22px; border-radius: 18px"
+              >
+                <span class="tag">AI PROMPT</span>
+                <p style="margin: 6px 0; font-size: 0.58em; line-height: 1.5">
+                  向AI提问：<br /><strong
+                    >“齐次坐标除了让平移能写进 \(4\times 4\) 矩阵外，在透视投影（Perspective
+                    Projection）中扮演了什么不可替代的角色？”</strong
+                  >
+                </p>
+                <p class="muted" style="margin: 4px 0 0 0; font-size: 0.5em; line-height: 1.45">
+                  要求AI必须回答：透视除法中 \(w\) 是如何与物体的景深 \(z\)
+                  关联的，以及为什么非线性除法必须放在硬件流水线中。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 18px 22px; border-radius: 18px"
+              >
+                <h4 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--blue)">
+                  研讨与验证要点
+                </h4>
+                <ol
+                  style="
+                    margin: 0;
+                    padding-left: 1.5em;
+                    font-size: 0.52em;
+                    line-height: 1.55;
+                    color: #334155;
+                  "
+                >
+                  <li>
+                    <strong>平移是第1层优势</strong>：统一仿射变换矩阵，列向量左乘保持代数一致性。
+                  </li>
+                  <li>
+                    <strong>透视是第2层质变</strong>：透视投影中相机空间的 \(z\) 被送入齐次分量
+                    \(w\)；硬件随后执行除法 \((x/w, y/w)\)，瞬间实现“近大远小”。
+                  </li>
+                  <li>
+                    <strong>结论核验</strong
+                    >：齐次坐标是整个图形流水线将<strong>仿射几何与透视投影合二为一</strong>的终极钥匙。
+                  </li>
+                </ol>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="3"
+              style="
+                margin-top: 14px;
+                padding: 10px 18px;
+                font-size: 0.58em !important;
+                line-height: 1.42 !important;
+                border-radius: 0 14px 14px 0;
+              "
+            >
+              方法总结：<strong>概念建模 → 矩阵统一 → 标架变换 → 硬件透视</strong
+              >，齐次坐标贯穿了现代图形学的整个骨架。
+            </div>
+          </section>
+          <section id="sec-5-11">
+            <span class="slide-no">#sec-5-11</span>
+            <div class="eyebrow">Medical Loop & Closure</div>
+            <h2>回到医工问题：医学模型为什么需要齐次坐标？</h2>
+            <p
+              class="lead fragment fade-up"
+              data-fragment-index="1"
+              style="font-size: 0.62em; margin-bottom: 12px; line-height: 1.45"
+            >
+              三维医学模型进入图形系统后，不只是被“看见”，还要被定位、对齐、观察和投影。
+            </p>
+            <div class="grid4" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="2"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">表面顶点</h3>
+                <p style="margin: 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  用 \(w=1\) 表示绝对位置，确保配准移动时跟随解剖实体定位。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="3"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">表面法向量</h3>
+                <p style="margin: 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  用 \(w=0\) 表示方向，平移床位时不改变器官的光照法线。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="4"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">
+                  模型对齐配准
+                </h3>
+                <p style="margin: 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  用 Model Matrix 将 CT 网格精准对齐到手术台患者坐标系。
+                </p>
+              </div>
+              <div
+                class="card fragment fade-up"
+                data-fragment-index="5"
+                style="padding: 16px 18px; border-radius: 16px"
+              >
+                <h3 style="margin: 0 0 4px 0; font-size: 0.82em; color: var(--cyan)">观察与透视</h3>
+                <p style="margin: 0; font-size: 0.52em; line-height: 1.45; color: #334155">
+                  用 View/Proj 矩阵将内窥镜或 AR 眼镜视角呈现到屏幕上。
+                </p>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              data-fragment-index="6"
+              style="
+                margin-top: 14px;
+                padding: 12px 20px;
+                font-size: 0.62em !important;
+                line-height: 1.42 !important;
+                border-radius: 0 14px 14px 0;
+              "
+            >
+              本节核心：齐次坐标绝非凭空制造的“第四个维度”，而是<strong
+                >让几何对象类型区分、标架转换与 GPU 硬件流水线彻底统一的数学基石</strong
+              >。
+            </div>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Mesh</div>
+            <h2>从8个点到一个立方体</h2>
+            <p class="lead fragment fade-up" data-fragment-index="1">
+              医学模型远比立方体复杂，但基本思想一致：<strong>几何位置</strong>和<strong>连接关系</strong>共同定义表面。
+            </p>
+            <div class="media-shell fragment fade-up" data-fragment-index="2">
+              <img
+                src="./images/chap04/ch04-R04-09.png"
+                alt="Geometry vs Topology"
+                data-fallback="Geometry与Topology：位置和连接关系是不同信息"
+                data-prompt="生成一张16:9白底计算机图形学教学图，主题“立方体：几何信息与拓扑信息”。左侧显示8个编号顶点组成的立方体，标题“Geometry”，只写“顶点在哪里？”右侧显示相同立方体，但突出顶点之间的边和三角面连接关系，标题“Topology”，只写“顶点怎样连接？”中央竖向细线分隔。底部：“位置可以改变，连接关系仍可保持不变。”深蓝、蓝灰、青蓝，不展示复杂数据结构和长代码。"
+              />
+            </div>
+            <aside class="notes">
+              R04-09 · Geometry vs Topology
+              生成一张16:9白底计算机图形学教学图，主题“立方体：几何信息与拓扑信息”。左侧显示8个编号顶点组成的立方体，标题“Geometry”，只写“顶点在哪里？”右侧显示相同立方体，但突出顶点之间的边和三角面连接关系，标题“Topology”，只写“顶点怎样连接？”中央竖向细线分隔。底部：“位置可以改变，连接关系仍可保持不变。”深蓝、蓝灰、青蓝，不展示复杂数据结构和长代码。
+            </aside>
+          </section>
+          <section id="sec-6-2">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Closure</div>
+            <h2>回到医工问题：模型到底保存了什么？</h2>
+            <div class="flow">
+              <div class="node fragment fade-up" data-fragment-index="1">医学影像</div>
+              <div class="arrow fragment fade-up" data-fragment-index="2">→</div>
+              <div class="node fragment fade-up" data-fragment-index="3">三维重建</div>
+              <div class="arrow fragment fade-up" data-fragment-index="4">→</div>
+              <div class="node fragment fade-up" data-fragment-index="5">Triangle Mesh</div>
+              <div class="arrow fragment fade-up" data-fragment-index="6">→</div>
+              <div class="node fragment fade-up" data-fragment-index="7">
+                模型坐标系中的顶点<br /><span class="small">Vertices in Model Frame</span>
+              </div>
+            </div>
+            <div class="grid2">
+              <div class="card fragment fade-up" data-fragment-index="8">
+                <h4>不是只保存“骨骼”这个词</h4>
+                <p>计算机需要可计算的点、向量、三角形、属性与连接关系。</p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="9">
+                <h4>坐标必须有语境</h4>
+                <p>
+                  同一个点属于哪个坐标系（模型坐标系 / 世界坐标系 /
+                  观察/相机坐标系），是解释坐标的前提。
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-6-3">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课时小结：三维医学模型如何被表示</h2>
+            <div class="summary-grid" style="margin-top: 24px">
+              <div class="card fragment fade-up" data-fragment-index="1">
+                <div class="kicker">01</div>
+                <h3>几何基本对象</h3>
+                <p>
+                  点表示位置，向量表示方向与大小，标量控制长度与权重；点与向量具有明确的几何运算规则。
+                </p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="2">
+                <div class="kicker">02</div>
+                <h3>面片与法向量</h3>
+                <p>
+                  三角形是GPU渲染基础；面内点由凸包/重心坐标表示；法向量由叉积求得，顶点环绕顺序决定朝向。
+                </p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="3">
+                <div class="kicker">03</div>
+                <h3>三大标架与坐标系</h3>
+                <p>
+                  规范使用<strong>模型坐标系</strong>、<strong>世界坐标系</strong>与<strong>观察/相机坐标系</strong>；对象本身客观存在，坐标数值随参考系而变。
+                </p>
+              </div>
+              <div class="card fragment fade-up" data-fragment-index="4">
+                <div class="kicker">04</div>
+                <h3>齐次坐标与变换</h3>
+                <p>
+                  增加第4分量 \(w\)：\(w=1\)（点，接收平移），\(w=0\)（向量，屏蔽平移），统一为
+                  \(4\times 4\) 仿射变换矩阵。
+                </p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-6-4">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">Exit Ticket</div>
+            <h2>Exit Ticket</h2>
+            <div class="question fragment fade-up" data-fragment-index="1">
+              <div class="q">一句话回答</div>
+              <p>如果模型没有移动，但某个顶点坐标改变了，可能发生了什么？</p>
+            </div>
+            <p class="fragment fade-up sublead" data-fragment-index="2">
+              期望回答：可能更换了参考坐标系（如从模型坐标系变换到世界坐标系或观察/相机坐标系），而不是几何对象本身改变。
+            </p>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2439 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D04-02 · 基本变换矩阵实验台</title>
+    <style>
+      :root {
+        --bg-page: #ffffff;
+        --bg-panel: #f8fafc;
+        --bg-active: #eaf8fa;
+        --color-primary: #173b57;
+        --color-sub: #6f8798;
+        --color-border: #dce6ec;
+        --color-cyan: #16a6b6;
+        --color-cyan-hover: #128896;
+        --color-orig: #b8c5cd;
+        --color-success: #2f8f68;
+        --color-warn: #d47a45;
+        --font-base:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+          sans-serif;
+        --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-page);
+        color: var(--color-primary);
+        font-family: var(--font-base);
+        font-size: 15px;
+        line-height: 1.45;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      .top-header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        padding: 10px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-title-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .demo-badge {
+        background: var(--color-primary);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+        font-family: var(--font-mono);
+      }
+
+      .main-title {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+
+      .core-question {
+        font-size: 14px;
+        color: var(--color-sub);
+        font-weight: 500;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .status-pill {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 12px;
+        background: var(--bg-active);
+        color: var(--color-cyan);
+        border: 1px solid rgba(22, 166, 182, 0.3);
+        font-family: var(--font-mono);
+      }
+
+      .btn-header {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        color: var(--color-primary);
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-header:hover {
+        background: var(--bg-panel);
+        border-color: var(--color-sub);
+      }
+
+      .guidance-bar {
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--color-border);
+        padding: 8px 20px;
+        font-size: 13px;
+        color: var(--color-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .guidance-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .guidance-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--color-cyan);
+      }
+
+      .phase-step-group {
+        display: inline-flex;
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .phase-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        background: transparent;
+        color: var(--color-sub);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .phase-btn.active {
+        background: var(--color-cyan);
+        color: #ffffff;
+      }
+
+      .main-workspace {
+        display: grid;
+        grid-template-columns: 42% 28% 30%;
+        flex: 1;
+        min-height: 0;
+        background: #ffffff;
+      }
+
+      .column-panel {
+        padding: 16px;
+        border-right: 1px solid var(--color-border);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow-y: auto;
+      }
+      .column-panel:last-child {
+        border-right: none;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .panel-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .scene-legend {
+        display: flex;
+        gap: 10px;
+        font-size: 12px;
+        color: var(--color-sub);
+        align-items: center;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .legend-color-line {
+        width: 12px;
+        height: 2px;
+        border-radius: 1px;
+      }
+      .legend-color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .canvas-container {
+        position: relative;
+        width: 100%;
+        height: 380px;
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 10px rgba(220, 230, 236, 0.3);
+      }
+
+      #sceneCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+        touch-action: none;
+      }
+      #sceneCanvas:active {
+        cursor: grabbing;
+      }
+
+      .canvas-overlay-ctrl {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        display: flex;
+        gap: 6px;
+      }
+
+      .canvas-ctrl-btn {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--color-border);
+        padding: 4px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 4px;
+        color: var(--color-primary);
+        cursor: pointer;
+        backdrop-filter: blur(2px);
+      }
+      .canvas-ctrl-btn:hover {
+        background: var(--bg-active);
+        color: var(--color-cyan);
+      }
+
+      .canvas-tip {
+        font-size: 12px;
+        color: var(--color-sub);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .transform-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+        background: var(--bg-panel);
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+      }
+
+      .tf-tab-btn {
+        padding: 8px 4px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--color-sub);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+      }
+      .tf-tab-btn.active {
+        background: var(--color-cyan);
+        color: #ffffff;
+        box-shadow: 0 1px 3px rgba(22, 166, 182, 0.2);
+      }
+
+      .control-card {
+        background: var(--bg-panel);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: 28px 1fr 54px;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+
+      .param-label {
+        color: var(--color-primary);
+      }
+
+      .param-slider {
+        width: 100%;
+        height: 5px;
+        background: var(--color-border);
+        border-radius: 3px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+      }
+      .param-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--color-cyan);
+        cursor: pointer;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      }
+
+      .param-input {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: var(--font-mono);
+        color: var(--color-primary);
+        text-align: right;
+        background: #ffffff;
+      }
+      .param-input:focus {
+        outline: none;
+        border-color: var(--color-cyan);
+      }
+
+      .axis-selector {
+        display: flex;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      .axis-btn {
+        flex: 1;
+        padding: 6px 0;
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .axis-btn.active {
+        background: var(--color-primary);
+        color: #ffffff;
+      }
+
+      .btn-group-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .btn-quick {
+        flex: 1;
+        padding: 4px 0;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        color: var(--color-primary);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn-quick:hover {
+        background: var(--bg-active);
+        color: var(--color-cyan);
+        border-color: var(--color-cyan);
+      }
+
+      .matrix-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .matrix-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+
+      .matrix-bracket-container {
+        position: relative;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: center;
+      }
+      .matrix-bracket-container::before,
+      .matrix-bracket-container::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        bottom: 2px;
+        width: 6px;
+        border: 2px solid var(--color-primary);
+      }
+      .matrix-bracket-container::before {
+        left: 2px;
+        border-right: none;
+        border-radius: 4px 0 0 4px;
+      }
+      .matrix-bracket-container::after {
+        right: 2px;
+        border-left: none;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .matrix-grid-4x4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        width: 100%;
+      }
+
+      .matrix-cell {
+        background: var(--bg-panel);
+        border: 1px solid transparent;
+        border-radius: 4px;
+        padding: 6px 2px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        color: var(--color-primary);
+        transition:
+          background 0.25s,
+          color 0.25s;
+      }
+      .matrix-cell.highlight {
+        background: var(--bg-active);
+        color: var(--color-cyan);
+        font-weight: 700;
+        border-color: rgba(22, 166, 182, 0.4);
+      }
+
+      .switch-point-vector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: var(--bg-panel);
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+      }
+      .pv-btn {
+        padding: 6px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--color-sub);
+        transition: all 0.2s;
+      }
+      .pv-btn.active {
+        background: #ffffff;
+        color: var(--color-primary);
+        border: 1px solid var(--color-border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .mult-relation-card {
+        background: var(--bg-panel);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .formula-header {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .mult-columns-box {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+      }
+
+      .vector-bracket-wrap {
+        position: relative;
+        padding: 6px 8px;
+      }
+      .vector-bracket-wrap::before,
+      .vector-bracket-wrap::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        border: 2px solid var(--color-primary);
+      }
+      .vector-bracket-wrap::before {
+        left: 0;
+        border-right: none;
+        border-radius: 3px 0 0 3px;
+      }
+      .vector-bracket-wrap::after {
+        right: 0;
+        border-left: none;
+        border-radius: 0 3px 3px 0;
+      }
+
+      .vector-vert-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .vector-cell {
+        padding: 2px 4px;
+        border-radius: 3px;
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+      }
+      .vector-cell.result-cell {
+        background: var(--bg-active);
+        color: var(--color-cyan);
+        border-color: rgba(22, 166, 182, 0.4);
+      }
+      .vector-cell.w-special {
+        font-weight: 800;
+        color: var(--color-warn);
+      }
+
+      .orig-p-inputs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-top: 4px;
+      }
+
+      .buffer-status-badge {
+        background: var(--bg-panel);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-primary);
+      }
+      .lock-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--color-cyan);
+        font-family: var(--font-mono);
+      }
+
+      .interactive-feedback-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .prediction-options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .option-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        padding: 6px 10px;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        cursor: pointer;
+        background: #ffffff;
+        transition: background 0.2s;
+      }
+      .option-label:hover {
+        background: var(--bg-panel);
+      }
+      .option-label input[type='radio'] {
+        accent-color: var(--color-cyan);
+      }
+
+      .btn-action-primary {
+        background: var(--color-cyan);
+        color: #ffffff;
+        border: none;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-action-primary:hover {
+        background: var(--color-cyan-hover);
+      }
+
+      .feedback-banner {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        display: none;
+      }
+      .feedback-banner.success {
+        display: block;
+        background: rgba(47, 143, 104, 0.12);
+        color: var(--color-success);
+        border: 1px solid rgba(47, 143, 104, 0.3);
+      }
+      .feedback-banner.warn {
+        display: block;
+        background: rgba(212, 122, 69, 0.12);
+        color: var(--color-warn);
+        border: 1px solid rgba(212, 122, 69, 0.3);
+      }
+
+      .explain-text-box {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--color-primary);
+        padding: 8px 10px;
+        background: var(--bg-active);
+        border: 1px solid rgba(22, 166, 182, 0.25);
+        border-radius: 6px;
+        font-weight: 500;
+      }
+
+      .preset-bar {
+        border-top: 1px solid var(--color-border);
+        background: #ffffff;
+        padding: 10px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .preset-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-sub);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .preset-btns-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .preset-card-btn {
+        flex: 1;
+        min-width: 140px;
+        padding: 8px 12px;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .preset-card-btn:hover {
+        border-color: var(--color-cyan);
+        background: var(--bg-active);
+      }
+      .preset-card-btn.active {
+        border-color: var(--color-cyan);
+        background: var(--bg-active);
+        box-shadow: 0 0 0 1px var(--color-cyan);
+      }
+
+      .preset-num {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--color-cyan);
+        font-family: var(--font-mono);
+      }
+      .preset-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+      .preset-task {
+        font-size: 11px;
+        color: var(--color-sub);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 1024px) {
+        .main-workspace {
+          grid-template-columns: 1fr;
+        }
+        .column-panel {
+          border-right: none;
+          border-bottom: 1px solid var(--color-border);
+        }
+        .canvas-container {
+          height: 320px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top-header">
+      <div class="brand-title-wrap">
+        <span class="demo-badge">D04-02</span>
+        <h1 class="main-title">基本变换矩阵实验台</h1>
+        <span class="core-question">一个矩阵怎样改变一个顶点和整个对象？</span>
+      </div>
+      <div class="header-actions">
+        <span class="status-pill" id="currentExperimentTag">Translation · X</span>
+        <button class="btn-header" id="btnResetAll" aria-label="重置实验">重置实验</button>
+        <button class="btn-header" id="btnHelp" aria-label="帮助提示">?</button>
+      </div>
+    </header>
+
+    <div class="guidance-bar">
+      <div class="guidance-text">
+        <span class="guidance-dot"></span>
+        <span id="guidanceTaskText">选择实验 → 先预测 → 调整参数 → 观察矩阵、顶点和对象</span>
+      </div>
+      <div class="phase-step-group">
+        <button class="phase-btn active" data-phase="predict" id="phaseBtnPredict">
+          1 Prediction
+        </button>
+        <button class="phase-btn" data-phase="observe" id="phaseBtnObserve">2 Observe</button>
+        <button class="phase-btn" data-phase="explain" id="phaseBtnExplain">3 Explain</button>
+      </div>
+    </div>
+
+    <main class="main-workspace">
+      <!-- ================= Column 1: Scene ================= -->
+      <section class="column-panel" aria-label="Scene Panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Scene</span>
+          </div>
+          <div class="scene-legend">
+            <div class="legend-item">
+              <span class="legend-color-line" style="background: var(--color-orig)"></span>
+              <span>Original</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color-line" style="background: var(--color-cyan)"></span>
+              <span>Transformed</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-color-dot" style="background: var(--color-primary)"></span>
+              <span id="observedLegendP">Observed P</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-container" id="canvasBox">
+          <canvas id="sceneCanvas" width="600" height="420" aria-label="三维轴测投影场景"></canvas>
+          <div class="canvas-overlay-ctrl">
+            <button class="canvas-ctrl-btn" id="btnResetView">Reset View</button>
+          </div>
+        </div>
+
+        <div class="canvas-tip">
+          <span>💡 拖动鼠标/手指旋转观察视角 (不改变变换矩阵)</span>
+          <span id="viewAngleText" style="font-family: var(--font-mono)">Yaw: 35° Pitch: 25°</span>
+        </div>
+      </section>
+
+      <!-- ================= Column 2: Transform ================= -->
+      <section class="column-panel" aria-label="Transform Panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Transform</span>
+          </div>
+        </div>
+
+        <!-- Transform Types Selector -->
+        <div class="transform-tabs">
+          <button class="tf-tab-btn active" data-type="translation" id="tabBtnTranslation">
+            Translation
+          </button>
+          <button class="tf-tab-btn" data-type="rotation" id="tabBtnRotation">Rotation</button>
+          <button class="tf-tab-btn" data-type="scaling" id="tabBtnScaling">Scaling</button>
+        </div>
+
+        <!-- Translation Controls -->
+        <div class="control-card" id="cardTranslation">
+          <div class="control-row">
+            <span class="param-label">tx</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderTx"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="1.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numTx"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="1.0"
+            />
+          </div>
+          <div class="control-row">
+            <span class="param-label">ty</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderTy"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="0.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numTy"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="0.0"
+            />
+          </div>
+          <div class="control-row">
+            <span class="param-label">tz</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderTz"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="0.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numTz"
+              min="-3"
+              max="3"
+              step="0.1"
+              value="0.0"
+            />
+          </div>
+          <div class="btn-group-row">
+            <button class="btn-quick" id="btnZeroT">Zero T (0, 0, 0)</button>
+          </div>
+        </div>
+
+        <!-- Rotation Controls (Hidden by default) -->
+        <div class="control-card" id="cardRotation" style="display: none">
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <span style="font-size: 13px; font-weight: 700">Axis</span>
+            <div class="axis-selector" style="width: 150px">
+              <button class="axis-btn" data-axis="x" id="btnRotX">X</button>
+              <button class="axis-btn" data-axis="y" id="btnRotY">Y</button>
+              <button class="axis-btn active" data-axis="z" id="btnRotZ">Z</button>
+            </div>
+          </div>
+          <div class="control-row" style="margin-top: 6px">
+            <span class="param-label">θ°</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderAngle"
+              min="-180"
+              max="180"
+              step="1"
+              value="90"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numAngle"
+              min="-180"
+              max="180"
+              step="1"
+              value="90"
+            />
+          </div>
+          <div class="btn-group-row">
+            <button class="btn-quick" data-deg="0">0°</button>
+            <button class="btn-quick" data-deg="45">45°</button>
+            <button class="btn-quick" data-deg="90">90°</button>
+            <button class="btn-quick" data-deg="180">180°</button>
+          </div>
+        </div>
+
+        <!-- Scaling Controls (Hidden by default) -->
+        <div class="control-card" id="cardScaling" style="display: none">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <label
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+              "
+            >
+              <input
+                type="checkbox"
+                id="chkUniformScale"
+                checked
+                accent-color="var(--color-cyan)"
+              />
+              <span>Uniform S</span>
+            </label>
+            <button class="btn-quick" style="flex: none; padding: 2px 8px" id="btnIdentityS">
+              Identity S
+            </button>
+          </div>
+          <div class="control-row">
+            <span class="param-label">sx</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderSx"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="2.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numSx"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="2.0"
+            />
+          </div>
+          <div class="control-row">
+            <span class="param-label">sy</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderSy"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="1.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numSy"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="1.0"
+            />
+          </div>
+          <div class="control-row">
+            <span class="param-label">sz</span>
+            <input
+              type="range"
+              class="param-slider"
+              id="sliderSz"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="1.0"
+            />
+            <input
+              type="number"
+              class="param-input"
+              id="numSz"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="1.0"
+            />
+          </div>
+        </div>
+
+        <!-- Real-time 4x4 Matrix representation -->
+        <div class="matrix-card">
+          <div class="matrix-title-row">
+            <span>Matrix M</span>
+            <span style="font-size: 11px; font-family: var(--font-mono); color: var(--color-sub)"
+              >Column-Major (P' = MP)</span
+            >
+          </div>
+          <div class="matrix-bracket-container">
+            <div class="matrix-grid-4x4" id="matrixGrid">
+              <!-- 16 elements rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= Column 3: Vertex Monitor ================= -->
+      <section class="column-panel" aria-label="Vertex Monitor Panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Vertex Monitor</span>
+          </div>
+        </div>
+
+        <!-- Point vs Vector switch -->
+        <div class="switch-point-vector">
+          <button class="pv-btn active" id="btnModePoint" data-mode="point">Point · w=1</button>
+          <button class="pv-btn" id="btnModeVector" data-mode="vector">Vector · w=0</button>
+        </div>
+
+        <!-- Multiplication Relation Card -->
+        <div class="mult-relation-card">
+          <div class="formula-header">
+            <span>P' = M · P</span>
+            <span style="font-size: 11px; color: var(--color-sub); font-family: var(--font-mono)"
+              >Original P</span
+            >
+          </div>
+
+          <div class="mult-columns-box">
+            <!-- Result P' -->
+            <div class="vector-bracket-wrap">
+              <div class="vector-vert-stack" id="resultVectorStack">
+                <div class="vector-cell result-cell" id="resX">2.00</div>
+                <div class="vector-cell result-cell" id="resY">1.00</div>
+                <div class="vector-cell result-cell" id="resZ">1.00</div>
+                <div class="vector-cell result-cell w-special" id="resW">1</div>
+              </div>
+              <div
+                style="font-size: 11px; margin-top: 4px; font-weight: 700; color: var(--color-cyan)"
+              >
+                Result P'
+              </div>
+            </div>
+
+            <div style="font-weight: 700; font-size: 14px; color: var(--color-sub)">=</div>
+
+            <!-- Matrix M preview tag -->
+            <div
+              style="
+                font-size: 12px;
+                font-family: var(--font-mono);
+                color: var(--color-sub);
+                padding: 4px;
+                border: 1px dashed var(--color-border);
+                border-radius: 4px;
+                background: #fff;
+              "
+            >
+              [ M ]<br /><span style="font-size: 10px">4×4</span>
+            </div>
+
+            <div style="font-weight: 700; font-size: 14px; color: var(--color-sub)">×</div>
+
+            <!-- Original P -->
+            <div class="vector-bracket-wrap">
+              <div class="vector-vert-stack" id="origVectorStack">
+                <div class="vector-cell" id="origXVal">1.00</div>
+                <div class="vector-cell" id="origYVal">1.00</div>
+                <div class="vector-cell" id="origZVal">1.00</div>
+                <div class="vector-cell w-special" id="origWVal">1</div>
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  margin-top: 4px;
+                  font-weight: 700;
+                  color: var(--color-primary);
+                "
+                id="origEntityTag"
+              >
+                Original P
+              </div>
+            </div>
+          </div>
+
+          <!-- Inputs to modify Original P coordinates -->
+          <div style="margin-top: 6px">
+            <div style="font-size: 11px; color: var(--color-sub); font-weight: 600">
+              Edit Original (x, y, z):
+            </div>
+            <div class="orig-p-inputs">
+              <input
+                type="number"
+                class="param-input"
+                id="inputOrigX"
+                min="-2"
+                max="2"
+                step="0.5"
+                value="1.0"
+              />
+              <input
+                type="number"
+                class="param-input"
+                id="inputOrigY"
+                min="-2"
+                max="2"
+                step="0.5"
+                value="1.0"
+              />
+              <input
+                type="number"
+                class="param-input"
+                id="inputOrigZ"
+                min="-2"
+                max="2"
+                step="0.5"
+                value="1.0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Phase Card (Prediction / Observe / Explain) -->
+        <div class="interactive-feedback-card" id="phaseCard">
+          <!-- 1. Prediction UI -->
+          <div id="sectionPrediction">
+            <div
+              style="font-size: 13px; font-weight: 700; margin-bottom: 6px"
+              id="predictQuestionText"
+            >
+              P' 会向哪个方向移动？
+            </div>
+            <div class="prediction-options" id="predictOptionsContainer">
+              <!-- Populated dynamically based on experiment -->
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px">
+              <button class="btn-action-primary" id="btnCheckPredict" style="flex: 1">
+                Check Prediction
+              </button>
+              <button class="btn-header" id="btnPredictNextPhase">Next →</button>
+            </div>
+            <div class="feedback-banner" id="predictFeedbackBanner" style="margin-top: 8px"></div>
+          </div>
+
+          <!-- 2. Observe UI -->
+          <div id="sectionObserve" style="display: none">
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--color-cyan);
+                margin-bottom: 4px;
+              "
+            >
+              阶段 2 · 实时观察 (Observe)
+            </div>
+            <p style="font-size: 12px; color: var(--color-sub); margin-bottom: 8px">
+              拖动左侧滑块，观察矩阵浅青蓝高亮元素与顶点 P' 的实时变化。
+            </p>
+            <button class="btn-action-primary" id="btnObserveToExplain" style="width: 100%">
+              查看原理解释 (Explain) →
+            </button>
+          </div>
+
+          <!-- 3. Explain UI -->
+          <div id="sectionExplain" style="display: none">
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--color-primary);
+                margin-bottom: 4px;
+              "
+            >
+              阶段 3 · 核心机制解释 (Explain)
+            </div>
+            <div class="explain-text-box" id="explainContentBox">
+              <!-- Populated dynamically -->
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px">
+              <button class="btn-header" id="btnTryAgain" style="flex: 1">Try Again</button>
+              <button class="btn-action-primary" id="btnNextExperiment" style="flex: 1">
+                Next Experiment
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Original Buffer status -->
+        <div class="buffer-status-badge">
+          <div class="lock-tag">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Original Buffer: UNCHANGED</span>
+          </div>
+          <span style="font-size: 11px; color: var(--color-sub)">M 作用于读取值</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="preset-bar">
+      <div class="preset-title">Preset Experiments:</div>
+      <div class="preset-btns-grid">
+        <!-- Preset 01 -->
+        <button class="preset-card-btn active" data-exp="exp1" id="presetBtn1">
+          <span class="preset-num">EXP 01</span>
+          <span class="preset-label">Translate X +1</span>
+          <span class="preset-task">平移矩阵与点</span>
+        </button>
+
+        <!-- Preset 02 -->
+        <button class="preset-card-btn" data-exp="exp2" id="presetBtn2">
+          <span class="preset-num">EXP 02</span>
+          <span class="preset-label">Scale X ×2</span>
+          <span class="preset-task">对角线缩放机制</span>
+        </button>
+
+        <!-- Preset 03 -->
+        <button class="preset-card-btn" data-exp="exp3" id="presetBtn3">
+          <span class="preset-num">EXP 03</span>
+          <span class="preset-label">Rotate Z 90°</span>
+          <span class="preset-task">XY坐标重组与保持</span>
+        </button>
+
+        <!-- Preset 04 -->
+        <button class="preset-card-btn" data-exp="exp4" id="presetBtn4">
+          <span class="preset-num">EXP 04</span>
+          <span class="preset-label">Translate P vs V</span>
+          <span class="preset-task">w=1 与 w=0 平移对比</span>
+        </button>
+
+        <!-- Medical Placement Preset -->
+        <button
+          class="preset-card-btn"
+          data-exp="medical"
+          id="presetBtnMedical"
+          style="border-left: 2px solid var(--color-cyan)"
+        >
+          <span class="preset-num" style="color: var(--color-primary)">APPLIED</span>
+          <span class="preset-label">Medical Placement</span>
+          <span class="preset-task">骨骼与手术器械定位</span>
+        </button>
+      </div>
+    </footer>
+
+    <script>
+      /* =========================================================
+       1. Core Application State
+       ========================================================= */
+      const state = {
+        // Current active experiment: 'exp1', 'exp2', 'exp3', 'exp4', 'medical'
+        experiment: 'exp1',
+        // Current phase: 'predict', 'observe', 'explain'
+        phase: 'predict',
+        // Active transform tab: 'translation', 'rotation', 'scaling'
+        transformType: 'translation',
+
+        // Observation Mode: 'point' (w=1) or 'vector' (w=0)
+        entityMode: 'point',
+
+        // Compare mode for EXP 04 (shows both Point and Vector simultaneously)
+        comparePV: false,
+
+        // Original Vertex/Vector P (x, y, z)
+        origP: { x: 1.0, y: 1.0, z: 1.0 },
+
+        // Transform parameters
+        params: {
+          tx: 1.0,
+          ty: 0.0,
+          tz: 0.0,
+          rotAxis: 'z',
+          rotAngle: 90, // degrees
+          sx: 2.0,
+          sy: 1.0,
+          sz: 1.0,
+          uniformScale: true,
+        },
+
+        // Medical Placement applied composite settings (M = T * R * S)
+        medical: {
+          tx: 0.8,
+          ty: 1.2,
+          tz: 0.5,
+          rotAxis: 'z',
+          rotAngle: 35,
+          scale: 1.0,
+          targetPos: { x: 1.2, y: 1.5, z: 0.5 },
+        },
+
+        // Camera view orientation for Axonometric/Perspective 2D rendering
+        camera: {
+          yaw: (35 * Math.PI) / 180,
+          pitch: (25 * Math.PI) / 180,
+          zoom: 46, // pixels per 3D unit
+          isDragging: false,
+          lastMouseX: 0,
+          lastMouseY: 0,
+        },
+      };
+
+      // Original unit cube vertices (8 points) from (0,0,0) to (1,1,1)
+      const UNIT_CUBE_VERTICES = [
+        [0, 0, 0, 1], // 0
+        [1, 0, 0, 1], // 1
+        [1, 1, 0, 1], // 2
+        [0, 1, 0, 1], // 3
+        [0, 0, 1, 1], // 4
+        [1, 0, 1, 1], // 5
+        [1, 1, 1, 1], // 6
+        [0, 1, 1, 1], // 7
+      ];
+
+      // Cube 12 edges (vertex index pairs)
+      const CUBE_EDGES = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0], // Bottom square
+        [4, 5],
+        [5, 6],
+        [6, 7],
+        [7, 4], // Top square
+        [0, 4],
+        [1, 5],
+        [2, 6],
+        [3, 7], // Vertical pillars
+      ];
+
+      /* =========================================================
+       2. Linear Algebra 4x4 Matrix Utilities (Column-Major)
+       ========================================================= */
+      function createIdentityMatrix() {
+        return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+      }
+
+      function createTranslationMatrix(tx, ty, tz) {
+        return [1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1];
+      }
+
+      function createScaleMatrix(sx, sy, sz) {
+        return [sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1];
+      }
+
+      function createRotationMatrix(axis, angleDeg) {
+        const rad = (angleDeg * Math.PI) / 180;
+        let c = Math.cos(rad);
+        let s = Math.sin(rad);
+
+        // Clean floating point noise for 90, 180, -90, etc.
+        if (Math.abs(c) < 1e-10) c = 0;
+        if (Math.abs(s) < 1e-10) s = 0;
+        if (Math.abs(c - 1) < 1e-10) c = 1;
+        if (Math.abs(c + 1) < 1e-10) c = -1;
+        if (Math.abs(s - 1) < 1e-10) s = 1;
+        if (Math.abs(s + 1) < 1e-10) s = -1;
+
+        if (axis === 'x') {
+          return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
+        } else if (axis === 'y') {
+          return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
+        } else {
+          // 'z'
+          return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        }
+      }
+
+      // Matrix multiplication: C = A * B (4x4)
+      function multiplyMatrices(A, B) {
+        const C = new Array(16).fill(0);
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 4; col++) {
+            let sum = 0;
+            for (let k = 0; k < 4; k++) {
+              sum += A[row * 4 + k] * B[k * 4 + col];
+            }
+            C[row * 4 + col] = Math.abs(sum) < 1e-10 ? 0 : sum;
+          }
+        }
+        return C;
+      }
+
+      // Multiply Matrix M by Vector v: P' = M * P
+      function multiplyMatrixVector(M, v) {
+        const x = v[0],
+          y = v[1],
+          z = v[2],
+          w = v[3];
+        const res = [
+          M[0] * x + M[1] * y + M[2] * z + M[3] * w,
+          M[4] * x + M[5] * y + M[6] * z + M[7] * w,
+          M[8] * x + M[9] * y + M[10] * z + M[11] * w,
+          M[12] * x + M[13] * y + M[14] * z + M[15] * w,
+        ];
+        return res.map((val) => (Math.abs(val) < 1e-10 ? 0 : val));
+      }
+
+      // Compute current 4x4 matrix based on active UI parameters
+      function computeCurrentMatrix() {
+        if (state.experiment === 'medical') {
+          const mScale = createScaleMatrix(
+            state.medical.scale,
+            state.medical.scale,
+            state.medical.scale,
+          );
+          const mRot = createRotationMatrix(state.medical.rotAxis, state.medical.rotAngle);
+          const mTrans = createTranslationMatrix(
+            state.medical.tx,
+            state.medical.ty,
+            state.medical.tz,
+          );
+          // Composite M = T * R * S
+          return multiplyMatrices(mTrans, multiplyMatrices(mRot, mScale));
+        }
+
+        if (state.transformType === 'translation') {
+          return createTranslationMatrix(state.params.tx, state.params.ty, state.params.tz);
+        } else if (state.transformType === 'rotation') {
+          return createRotationMatrix(state.params.rotAxis, state.params.rotAngle);
+        } else if (state.transformType === 'scaling') {
+          return createScaleMatrix(state.params.sx, state.params.sy, state.params.sz);
+        }
+        return createIdentityMatrix();
+      }
+
+      /* =========================================================
+       3. 3D Axonometric Projection & Canvas 2D Renderer
+       ========================================================= */
+      const canvas = document.getElementById('sceneCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Project 3D (x, y, z) into 2D screen coordinates using Yaw and Pitch angles
+      function project3D(x, y, z) {
+        const yaw = state.camera.yaw;
+        const pitch = state.camera.pitch;
+        const zoom = state.camera.zoom;
+
+        // Rotate around Z (Yaw)
+        const x1 = x * Math.cos(yaw) - y * Math.sin(yaw);
+        const y1 = x * Math.sin(yaw) + y * Math.cos(yaw);
+        const z1 = z;
+
+        // Tilt around X (Pitch)
+        const x2 = x1;
+        const y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch);
+        const z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
+
+        // Center in canvas
+        const cx = canvas.width / (2 * (window.devicePixelRatio || 1));
+        const cy = canvas.height / (2 * (window.devicePixelRatio || 1)) + 25;
+
+        return {
+          x: cx + x2 * zoom,
+          y: cy - z2 * zoom, // Invert Y in screen space
+        };
+      }
+
+      function renderScene() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        if (
+          canvas.width !== Math.round(rect.width * dpr) ||
+          canvas.height !== Math.round(rect.height * dpr)
+        ) {
+          canvas.width = Math.round(rect.width * dpr);
+          canvas.height = Math.round(rect.height * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+
+        // Clean bright background
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+
+        // Subtle ground grid
+        drawGroundGrid();
+
+        // XYZ Axes
+        drawAxes();
+
+        const M = computeCurrentMatrix();
+
+        if (state.experiment === 'medical') {
+          drawMedicalScene(M);
+        } else {
+          // Standard Cube Experiment
+          drawUnitCube(createIdentityMatrix(), true); // Original cube (faint gray)
+
+          // Show transformed cube unless hidden in Prediction phase before checking
+          const showTransformed = state.phase !== 'predict' || state.predictSubmitted;
+          if (showTransformed) {
+            drawUnitCube(M, false); // Transformed cube (Cyan)
+          }
+
+          // Draw Observed P or V
+          drawObservedEntities(M, showTransformed);
+        }
+
+        ctx.restore();
+      }
+
+      function drawGroundGrid() {
+        ctx.strokeStyle = '#F1F5F9';
+        ctx.lineWidth = 1;
+        const range = 3;
+        for (let i = -range; i <= range; i++) {
+          const p1 = project3D(i, -range, 0);
+          const p2 = project3D(i, range, 0);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+
+          const p3 = project3D(-range, i, 0);
+          const p4 = project3D(range, i, 0);
+          ctx.beginPath();
+          ctx.moveTo(p3.x, p3.y);
+          ctx.lineTo(p4.x, p4.y);
+          ctx.stroke();
+        }
+      }
+
+      function drawAxes() {
+        const o = project3D(0, 0, 0);
+        const xEnd = project3D(3.2, 0, 0);
+        const yEnd = project3D(0, 3.2, 0);
+        const zEnd = project3D(0, 0, 3.2);
+
+        // X Axis (Dark Blue)
+        drawArrow(o, xEnd, '#173B57', 1.8);
+        // Y Axis (Slate Blue-Gray)
+        drawArrow(o, yEnd, '#6F8798', 1.8);
+        // Z Axis (Cyan Blue)
+        drawArrow(o, zEnd, '#16A6B6', 1.8);
+
+        // Labels
+        ctx.font = 'bold 12px var(--font-mono)';
+        ctx.fillStyle = '#173B57';
+        ctx.fillText('+X', xEnd.x + 4, xEnd.y + 4);
+        ctx.fillStyle = '#6F8798';
+        ctx.fillText('+Y', yEnd.x + 4, yEnd.y + 4);
+        ctx.fillStyle = '#16A6B6';
+        ctx.fillText('+Z', zEnd.x - 12, zEnd.y - 6);
+
+        // Origin
+        ctx.fillStyle = '#173B57';
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText('O', o.x - 12, o.y + 12);
+      }
+
+      function drawArrow(from, to, color, lineWidth = 2) {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const angle = Math.atan2(dy, dx);
+        const headLen = 7;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = lineWidth;
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(to.x, to.y);
+        ctx.lineTo(
+          to.x - headLen * Math.cos(angle - Math.PI / 6),
+          to.y - headLen * Math.sin(angle - Math.PI / 6),
+        );
+        ctx.lineTo(
+          to.x - headLen * Math.cos(angle + Math.PI / 6),
+          to.y - headLen * Math.sin(angle + Math.PI / 6),
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawUnitCube(matrix, isOriginal) {
+        const transformedVerts = UNIT_CUBE_VERTICES.map((v) => {
+          const res = multiplyMatrixVector(matrix, v);
+          return project3D(res[0], res[1], res[2]);
+        });
+
+        ctx.save();
+        if (isOriginal) {
+          ctx.strokeStyle = '#B8C5CD';
+          ctx.lineWidth = 1.2;
+          ctx.setLineDash([3, 3]);
+        } else {
+          ctx.strokeStyle = '#16A6B6';
+          ctx.lineWidth = 2.2;
+          ctx.setLineDash([]);
+          // Light cyan fill on top & front faces to give clean spatial depth
+          ctx.fillStyle = 'rgba(22, 166, 182, 0.08)';
+          ctx.beginPath();
+          // Face 4-5-6-7
+          ctx.moveTo(transformedVerts[4].x, transformedVerts[4].y);
+          ctx.lineTo(transformedVerts[5].x, transformedVerts[5].y);
+          ctx.lineTo(transformedVerts[6].x, transformedVerts[6].y);
+          ctx.lineTo(transformedVerts[7].x, transformedVerts[7].y);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        CUBE_EDGES.forEach((edge) => {
+          const p1 = transformedVerts[edge[0]];
+          const p2 = transformedVerts[edge[1]];
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        });
+
+        ctx.restore();
+      }
+
+      function drawObservedEntities(M, showTransformed) {
+        const isPoint = state.entityMode === 'point';
+        const wVal = isPoint ? 1 : 0;
+        const vOrig = [state.origP.x, state.origP.y, state.origP.z, wVal];
+        const vRes = multiplyMatrixVector(M, vOrig);
+
+        const oProj = project3D(0, 0, 0);
+        const pOrigProj = project3D(vOrig[0], vOrig[1], vOrig[2]);
+        const pResProj = project3D(vRes[0], vRes[1], vRes[2]);
+
+        // 1. Draw Original Point / Vector
+        if (isPoint) {
+          ctx.beginPath();
+          ctx.arc(pOrigProj.x, pOrigProj.y, 5.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#173B57';
+          ctx.fill();
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.font = 'bold 12px var(--font-base)';
+          ctx.fillStyle = '#173B57';
+          ctx.fillText('P (Original)', pOrigProj.x + 8, pOrigProj.y - 6);
+        } else {
+          // Vector: direction arrow from Origin
+          drawArrow(oProj, pOrigProj, '#173B57', 2.5);
+          ctx.font = 'bold 12px var(--font-base)';
+          ctx.fillStyle = '#173B57';
+          ctx.fillText('V (Original, w=0)', pOrigProj.x + 8, pOrigProj.y - 6);
+        }
+
+        // 2. Draw Transformed Point / Vector
+        if (showTransformed) {
+          if (isPoint) {
+            // Dash line connecting P and P'
+            ctx.beginPath();
+            ctx.moveTo(pOrigProj.x, pOrigProj.y);
+            ctx.lineTo(pResProj.x, pResProj.y);
+            ctx.strokeStyle = 'rgba(22, 166, 182, 0.4)';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.beginPath();
+            ctx.arc(pResProj.x, pResProj.y, 6.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#16A6B6';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.font = 'bold 12px var(--font-base)';
+            ctx.fillStyle = '#16A6B6';
+            ctx.fillText("P' (Transformed)", pResProj.x + 8, pResProj.y + 12);
+          } else {
+            // Vector result (From origin O)
+            drawArrow(oProj, pResProj, '#16A6B6', 3.0);
+            ctx.font = 'bold 12px var(--font-base)';
+            ctx.fillStyle = '#16A6B6';
+            ctx.fillText("V' (w=0)", pResProj.x + 8, pResProj.y + 12);
+          }
+
+          // Special Comparison Mode for EXP 04 (Point vs Vector Translation)
+          if (state.comparePV) {
+            const vVecRes = multiplyMatrixVector(M, [
+              state.origP.x,
+              state.origP.y,
+              state.origP.z,
+              0,
+            ]);
+            const pVecProj = project3D(vVecRes[0], vVecRes[1], vVecRes[2]);
+            drawArrow(oProj, pVecProj, '#2F8F68', 2.5);
+            ctx.fillStyle = '#2F8F68';
+            ctx.fillText("V' (w=0, unchanged)", pVecProj.x + 10, pVecProj.y - 8);
+          }
+        }
+      }
+
+      // Medical application schematic drawing
+      function drawMedicalScene(compositeM) {
+        // 1. Fixed anatomical reference: stylized lumbar bone segment in soft slate
+        ctx.save();
+        ctx.strokeStyle = '#DCE6EC';
+        ctx.fillStyle = 'rgba(220, 230, 236, 0.35)';
+        ctx.lineWidth = 2;
+
+        // Draw bone silhouette
+        const bonePoints = [
+          project3D(1.0, 1.2, 0.2),
+          project3D(1.5, 1.3, 0.2),
+          project3D(1.7, 1.7, 0.4),
+          project3D(1.4, 1.9, 0.6),
+          project3D(0.9, 1.7, 0.5),
+          project3D(0.8, 1.3, 0.3),
+        ];
+        ctx.beginPath();
+        ctx.moveTo(bonePoints[0].x, bonePoints[0].y);
+        for (let i = 1; i < bonePoints.length; i++) {
+          ctx.lineTo(bonePoints[i].x, bonePoints[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Surgical Target Point (Dark blue crosshair & circle)
+        const tPos = project3D(
+          state.medical.targetPos.x,
+          state.medical.targetPos.y,
+          state.medical.targetPos.z,
+        );
+        ctx.strokeStyle = '#173B57';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(tPos.x, tPos.y, 8, 0, Math.PI * 2);
+        ctx.moveTo(tPos.x - 12, tPos.y);
+        ctx.lineTo(tPos.x + 12, tPos.y);
+        ctx.moveTo(tPos.x, tPos.y - 12);
+        ctx.lineTo(tPos.x, tPos.y + 12);
+        ctx.stroke();
+        ctx.fillStyle = '#173B57';
+        ctx.font = 'bold 11px var(--font-base)';
+        ctx.fillText('Target (Target Landmark)', tPos.x + 12, tPos.y - 6);
+
+        // 2. Surgical Instrument (Probe / Pointer) transformed by Composite M = T * R * S
+        const probeBase = multiplyMatrixVector(compositeM, [0, 0, 0, 1]);
+        const probeTip = multiplyMatrixVector(compositeM, [0.8, 0, 0, 1]); // Observed Point P at tip
+        const baseProj = project3D(probeBase[0], probeBase[1], probeBase[2]);
+        const tipProj = project3D(probeTip[0], probeTip[1], probeTip[2]);
+
+        // Instrument body
+        ctx.strokeStyle = '#16A6B6';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(baseProj.x, baseProj.y);
+        ctx.lineTo(tipProj.x, tipProj.y);
+        ctx.stroke();
+
+        // Check distance to target
+        const dist = Math.hypot(
+          probeTip[0] - state.medical.targetPos.x,
+          probeTip[1] - state.medical.targetPos.y,
+          probeTip[2] - state.medical.targetPos.z,
+        );
+        const isAligned = dist < 0.25;
+
+        // Probe tip observed point P'
+        ctx.beginPath();
+        ctx.arc(tipProj.x, tipProj.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = isAligned ? '#2F8F68' : '#16A6B6';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = isAligned ? '#2F8F68' : '#16A6B6';
+        ctx.font = 'bold 12px var(--font-base)';
+        ctx.fillText(
+          `Instrument P' ${isAligned ? '(Aligned ✓)' : ''}`,
+          tipProj.x + 10,
+          tipProj.y + 4,
+        );
+
+        ctx.restore();
+      }
+
+      /* =========================================================
+       4. UI Sync & Matrix / Vector Displays
+       ========================================================= */
+      const matrixGrid = document.getElementById('matrixGrid');
+      const resX = document.getElementById('resX');
+      const resY = document.getElementById('resY');
+      const resZ = document.getElementById('resZ');
+      const resW = document.getElementById('resW');
+      const origXVal = document.getElementById('origXVal');
+      const origYVal = document.getElementById('origYVal');
+      const origZVal = document.getElementById('origZVal');
+      const origWVal = document.getElementById('origWVal');
+
+      function syncUI() {
+        const M = computeCurrentMatrix();
+        const isPoint = state.entityMode === 'point';
+        const wVal = isPoint ? 1 : 0;
+        const vOrig = [state.origP.x, state.origP.y, state.origP.z, wVal];
+        const vRes = multiplyMatrixVector(M, vOrig);
+
+        // Render 4x4 Matrix grid cells
+        matrixGrid.innerHTML = '';
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const val = M[r * 4 + c];
+            const cell = document.createElement('div');
+            cell.className = 'matrix-cell';
+            // Determine if this cell is directly affected by current parameters
+            const isAffected = checkMatrixCellHighlight(r, c);
+            if (isAffected) cell.classList.add('highlight');
+
+            cell.textContent = Number.isInteger(val) ? val.toString() : val.toFixed(2);
+            matrixGrid.appendChild(cell);
+          }
+        }
+
+        // Sync Original P stack
+        origXVal.textContent = state.origP.x.toFixed(2);
+        origYVal.textContent = state.origP.y.toFixed(2);
+        origZVal.textContent = state.origP.z.toFixed(2);
+        origWVal.textContent = wVal.toString();
+
+        // Sync Result P'
+        resX.textContent = vRes[0].toFixed(2);
+        resY.textContent = vRes[1].toFixed(2);
+        resZ.textContent = vRes[2].toFixed(2);
+        resW.textContent = Math.round(vRes[3]).toString();
+
+        // Update Header Experiment Tag
+        updateStatusHeaderTag();
+
+        // Re-render Canvas
+        renderScene();
+      }
+
+      function checkMatrixCellHighlight(r, c) {
+        if (state.experiment === 'medical') {
+          return r < 3; // Entire upper 3x4 is actively transformed by composite
+        }
+        if (state.transformType === 'translation') {
+          return c === 3 && r < 3; // Last column (tx, ty, tz)
+        } else if (state.transformType === 'scaling') {
+          return r === c && r < 3; // Diagonal (sx, sy, sz)
+        } else if (state.transformType === 'rotation') {
+          const axis = state.params.rotAxis;
+          if (axis === 'z') return r < 2 && c < 2;
+          if (axis === 'x') return (r === 1 || r === 2) && (c === 1 || c === 2);
+          if (axis === 'y') return (r === 0 || r === 2) && (c === 0 || c === 2);
+        }
+        return false;
+      }
+
+      function updateStatusHeaderTag() {
+        const tag = document.getElementById('currentExperimentTag');
+        if (state.experiment === 'medical') {
+          tag.textContent = 'Medical Placement · Composite M = T·R·S';
+          return;
+        }
+        if (state.transformType === 'translation') {
+          tag.textContent = `Translation · [${state.params.tx.toFixed(1)}, ${state.params.ty.toFixed(1)}, ${state.params.tz.toFixed(1)}]`;
+        } else if (state.transformType === 'rotation') {
+          tag.textContent = `Rotation · ${state.params.rotAxis.toUpperCase()} (${state.params.rotAngle}°)`;
+        } else if (state.transformType === 'scaling') {
+          tag.textContent = `Scaling · [${state.params.sx.toFixed(1)}, ${state.params.sy.toFixed(1)}, ${state.params.sz.toFixed(1)}]`;
+        }
+      }
+
+      /* =========================================================
+       5. Prediction / Observe / Explain Phase State Engine
+       ========================================================= */
+      const PREDICTION_BANK = {
+        exp1: {
+          question: "若平移 tx = +1，点 P' 的哪一个分量会发生改变？",
+          options: [
+            { text: '只有 x 分量增加 1', correct: true },
+            { text: 'x 和 y 分量同时增加 1', correct: false },
+            { text: '所有分量保持完全不变', correct: false },
+          ],
+          explain: "tx 位于矩阵最后一列 (Row 0, Col 3)，仅对 x 分量产生平移偏移 (x' = x + tx)。",
+        },
+        exp2: {
+          question: '若沿 X 轴缩放 sx = 2，立方体和观察点会发生什么？',
+          options: [
+            { text: "沿 X 轴被拉伸为 2 倍，x' 分量变为 2", correct: true },
+            { text: '所有三个轴同时放大两倍', correct: false },
+            { text: '仅整体向右平移 2 个单位', correct: false },
+          ],
+          explain:
+            '对角线上的元素 sx 控制 x 轴分量的线性拉伸；y 与 z 对应对角线数值为 1，保持不变。',
+        },
+        exp3: {
+          question: '绕 Z 轴旋转 90° 时，哪些坐标分量会重新组合？',
+          options: [
+            { text: 'x 与 y 重新计算组合，z 轴数值保持不变', correct: true },
+            { text: 'z 坐标增加 90，x 和 y 不变', correct: false },
+            { text: '三个坐标分量完全随机改变', correct: false },
+          ],
+          explain:
+            '绕 Z 轴旋转由正弦、余弦在左上 2×2 矩阵重组 x 和 y；z 轴基底为 [0, 0, 1]，因此 z 坐标守恒。',
+        },
+        exp4: {
+          question: '执行相同平移矩阵时，点 P (w=1) 与 自由向量 V (w=0) 谁会接收平移？',
+          options: [
+            { text: '只有点 P 会移动；向量 V 保持不动', correct: true },
+            { text: '点和向量都会被整体平移', correct: false },
+            { text: '两者都完全不受平移矩阵影响', correct: false },
+          ],
+          explain:
+            '齐次坐标乘法中，w=0 使得平移列分量与 0 相乘被消去：Vector 仅有方向与模长，不受空间平移影响。',
+        },
+        medical: {
+          question: '在手术器械导航中，同一个变换矩阵同时改变了什么？',
+          options: [
+            { text: "同步控制器械整体模型与观察点 P' 的位置姿态", correct: true },
+            { text: '只能单独改变探针顶端观察点', correct: false },
+          ],
+          explain:
+            '几何变换矩阵的本质是作用于对象网格的所有顶点及标记点，确保器械刚体姿态的一致性。',
+        },
+      };
+
+      function loadExperimentPreset(expKey) {
+        state.experiment = expKey;
+        state.phase = 'predict';
+        state.predictSubmitted = false;
+
+        // Update preset buttons active state
+        document.querySelectorAll('.preset-card-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.exp === expKey);
+        });
+
+        if (expKey === 'exp1') {
+          setTransformTab('translation');
+          state.entityMode = 'point';
+          state.comparePV = false;
+          state.params.tx = 1.0;
+          state.params.ty = 0;
+          state.params.tz = 0;
+          state.origP = { x: 1.0, y: 1.0, z: 1.0 };
+        } else if (expKey === 'exp2') {
+          setTransformTab('scaling');
+          state.entityMode = 'point';
+          state.comparePV = false;
+          state.params.sx = 2.0;
+          state.params.sy = 1.0;
+          state.params.sz = 1.0;
+          state.params.uniformScale = false;
+          document.getElementById('chkUniformScale').checked = false;
+          state.origP = { x: 1.0, y: 1.0, z: 1.0 };
+        } else if (expKey === 'exp3') {
+          setTransformTab('rotation');
+          state.entityMode = 'point';
+          state.comparePV = false;
+          state.params.rotAxis = 'z';
+          state.params.rotAngle = 90;
+          setActiveAxisBtn('z');
+          state.origP = { x: 1.0, y: 1.0, z: 1.0 };
+        } else if (expKey === 'exp4') {
+          setTransformTab('translation');
+          state.entityMode = 'point';
+          state.comparePV = true; // Show both
+          state.params.tx = 1.0;
+          state.params.ty = 0.5;
+          state.params.tz = 0;
+          state.origP = { x: 1.0, y: 1.0, z: 1.0 };
+        } else if (expKey === 'medical') {
+          setTransformTab('translation');
+          state.entityMode = 'point';
+          state.comparePV = false;
+        }
+
+        syncSlidersFromState();
+        updatePhaseView();
+        syncUI();
+      }
+
+      function setPhase(phase) {
+        state.phase = phase;
+        document.querySelectorAll('.phase-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.phase === phase);
+        });
+        updatePhaseView();
+        syncUI();
+      }
+
+      function updatePhaseView() {
+        const pData = PREDICTION_BANK[state.experiment] || PREDICTION_BANK.exp1;
+        const sPredict = document.getElementById('sectionPrediction');
+        const sObserve = document.getElementById('sectionObserve');
+        const sExplain = document.getElementById('sectionExplain');
+
+        sPredict.style.display = state.phase === 'predict' ? 'block' : 'none';
+        sObserve.style.display = state.phase === 'observe' ? 'block' : 'none';
+        sExplain.style.display = state.phase === 'explain' ? 'block' : 'none';
+
+        if (state.phase === 'predict') {
+          document.getElementById('predictQuestionText').textContent = pData.question;
+          const optBox = document.getElementById('predictOptionsContainer');
+          optBox.innerHTML = '';
+          pData.options.forEach((opt, idx) => {
+            const lbl = document.createElement('label');
+            lbl.className = 'option-label';
+            lbl.innerHTML = `
+            <input type="radio" name="predictOpt" value="${idx}">
+            <span>${opt.text}</span>
+          `;
+            optBox.appendChild(lbl);
+          });
+          document.getElementById('predictFeedbackBanner').style.display = 'none';
+          document.getElementById('guidanceTaskText').textContent =
+            `任务：先预测变化结果，再点击 Check 验证。 (步骤 1/3 · Prediction)`;
+        } else if (state.phase === 'observe') {
+          document.getElementById('guidanceTaskText').textContent =
+            `任务：自由调整滑块参数，观察矩阵高亮单元格与场景顶点的实时变化。 (步骤 2/3 · Observe)`;
+        } else if (state.phase === 'explain') {
+          document.getElementById('explainContentBox').textContent = pData.explain;
+          document.getElementById('guidanceTaskText').textContent =
+            `任务：理解矩阵元素与顶点分量的数学对应机制。 (步骤 3/3 · Explain)`;
+        }
+      }
+
+      /* =========================================================
+       6. Event Handlers & Slider Bindings
+       ========================================================= */
+      function setTransformTab(type) {
+        state.transformType = type;
+        document.querySelectorAll('.tf-tab-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.type === type);
+        });
+        document.getElementById('cardTranslation').style.display =
+          type === 'translation' ? 'flex' : 'none';
+        document.getElementById('cardRotation').style.display =
+          type === 'rotation' ? 'flex' : 'none';
+        document.getElementById('cardScaling').style.display = type === 'scaling' ? 'flex' : 'none';
+        syncUI();
+      }
+
+      function setActiveAxisBtn(axis) {
+        state.params.rotAxis = axis;
+        document.querySelectorAll('.axis-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.axis === axis);
+        });
+        syncUI();
+      }
+
+      function syncSlidersFromState() {
+        // Translation
+        document.getElementById('sliderTx').value = state.params.tx;
+        document.getElementById('numTx').value = state.params.tx;
+        document.getElementById('sliderTy').value = state.params.ty;
+        document.getElementById('numTy').value = state.params.ty;
+        document.getElementById('sliderTz').value = state.params.tz;
+        document.getElementById('numTz').value = state.params.tz;
+
+        // Rotation
+        document.getElementById('sliderAngle').value = state.params.rotAngle;
+        document.getElementById('numAngle').value = state.params.rotAngle;
+
+        // Scaling
+        document.getElementById('sliderSx').value = state.params.sx;
+        document.getElementById('numSx').value = state.params.sx;
+        document.getElementById('sliderSy').value = state.params.sy;
+        document.getElementById('numSy').value = state.params.sy;
+        document.getElementById('sliderSz').value = state.params.sz;
+        document.getElementById('numSz').value = state.params.sz;
+
+        // Original P inputs
+        document.getElementById('inputOrigX').value = state.origP.x;
+        document.getElementById('inputOrigY').value = state.origP.y;
+        document.getElementById('inputOrigZ').value = state.origP.z;
+
+        // Entity switch
+        document
+          .getElementById('btnModePoint')
+          .classList.toggle('active', state.entityMode === 'point');
+        document
+          .getElementById('btnModeVector')
+          .classList.toggle('active', state.entityMode === 'vector');
+      }
+
+      // Bidirectional Slider/Input link helper
+      function bindSliderInput(sliderId, inputId, updateFn) {
+        const slider = document.getElementById(sliderId);
+        const input = document.getElementById(inputId);
+
+        slider.addEventListener('input', (e) => {
+          const val = parseFloat(e.target.value);
+          input.value = val;
+          updateFn(val);
+          syncUI();
+        });
+
+        input.addEventListener('change', (e) => {
+          let val = parseFloat(e.target.value);
+          if (isNaN(val)) val = 0;
+          slider.value = val;
+          updateFn(val);
+          syncUI();
+        });
+      }
+
+      // Initialize all UI events
+      function initEvents() {
+        // Top guidance phase buttons
+        document
+          .getElementById('phaseBtnPredict')
+          .addEventListener('click', () => setPhase('predict'));
+        document
+          .getElementById('phaseBtnObserve')
+          .addEventListener('click', () => setPhase('observe'));
+        document
+          .getElementById('phaseBtnExplain')
+          .addEventListener('click', () => setPhase('explain'));
+
+        // Transform tabs
+        document
+          .getElementById('tabBtnTranslation')
+          .addEventListener('click', () => setTransformTab('translation'));
+        document
+          .getElementById('tabBtnRotation')
+          .addEventListener('click', () => setTransformTab('rotation'));
+        document
+          .getElementById('tabBtnScaling')
+          .addEventListener('click', () => setTransformTab('scaling'));
+
+        // Translation params
+        bindSliderInput('sliderTx', 'numTx', (v) => (state.params.tx = v));
+        bindSliderInput('sliderTy', 'numTy', (v) => (state.params.ty = v));
+        bindSliderInput('sliderTz', 'numTz', (v) => (state.params.tz = v));
+        document.getElementById('btnZeroT').addEventListener('click', () => {
+          state.params.tx = 0;
+          state.params.ty = 0;
+          state.params.tz = 0;
+          syncSlidersFromState();
+          syncUI();
+        });
+
+        // Rotation params
+        ['btnRotX', 'btnRotY', 'btnRotZ'].forEach((id) => {
+          document.getElementById(id).addEventListener('click', (e) => {
+            setActiveAxisBtn(e.target.dataset.axis);
+          });
+        });
+        bindSliderInput('sliderAngle', 'numAngle', (v) => (state.params.rotAngle = v));
+        document.querySelectorAll('#cardRotation .btn-quick').forEach((b) => {
+          b.addEventListener('click', (e) => {
+            state.params.rotAngle = parseInt(e.target.dataset.deg, 10);
+            syncSlidersFromState();
+            syncUI();
+          });
+        });
+
+        // Scaling params
+        bindSliderInput('sliderSx', 'numSx', (v) => {
+          state.params.sx = v;
+          if (state.params.uniformScale) {
+            state.params.sy = v;
+            state.params.sz = v;
+            syncSlidersFromState();
+          }
+        });
+        bindSliderInput('sliderSy', 'numSy', (v) => {
+          state.params.sy = v;
+          if (state.params.uniformScale) {
+            state.params.sx = v;
+            state.params.sz = v;
+            syncSlidersFromState();
+          }
+        });
+        bindSliderInput('sliderSz', 'numSz', (v) => {
+          state.params.sz = v;
+          if (state.params.uniformScale) {
+            state.params.sx = v;
+            state.params.sy = v;
+            syncSlidersFromState();
+          }
+        });
+        document.getElementById('chkUniformScale').addEventListener('change', (e) => {
+          state.params.uniformScale = e.target.checked;
+          if (state.params.uniformScale) {
+            state.params.sy = state.params.sx;
+            state.params.sz = state.params.sx;
+            syncSlidersFromState();
+            syncUI();
+          }
+        });
+        document.getElementById('btnIdentityS').addEventListener('click', () => {
+          state.params.sx = 1;
+          state.params.sy = 1;
+          state.params.sz = 1;
+          syncSlidersFromState();
+          syncUI();
+        });
+
+        // Point vs Vector buttons
+        document.getElementById('btnModePoint').addEventListener('click', () => {
+          state.entityMode = 'point';
+          state.comparePV = false;
+          document.getElementById('btnModePoint').classList.add('active');
+          document.getElementById('btnModeVector').classList.remove('active');
+          document.getElementById('origEntityTag').textContent = 'Original P';
+          document.getElementById('observedLegendP').textContent = 'Observed P';
+          syncUI();
+        });
+        document.getElementById('btnModeVector').addEventListener('click', () => {
+          state.entityMode = 'vector';
+          state.comparePV = false;
+          document.getElementById('btnModeVector').classList.add('active');
+          document.getElementById('btnModePoint').classList.remove('active');
+          document.getElementById('origEntityTag').textContent = 'Original V';
+          document.getElementById('observedLegendP').textContent = 'Observed V';
+          syncUI();
+        });
+
+        // Original P coordinates editing
+        ['inputOrigX', 'inputOrigY', 'inputOrigZ'].forEach((id, idx) => {
+          document.getElementById(id).addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            if (idx === 0) state.origP.x = val;
+            if (idx === 1) state.origP.y = val;
+            if (idx === 2) state.origP.z = val;
+            syncUI();
+          });
+        });
+
+        // Preset buttons
+        ['presetBtn1', 'presetBtn2', 'presetBtn3', 'presetBtn4', 'presetBtnMedical'].forEach(
+          (id) => {
+            document.getElementById(id).addEventListener('click', (e) => {
+              const exp = e.currentTarget.dataset.exp;
+              loadExperimentPreset(exp);
+            });
+          },
+        );
+
+        // Prediction checks
+        document.getElementById('btnCheckPredict').addEventListener('click', () => {
+          const checked = document.querySelector('input[name="predictOpt"]:checked');
+          const fb = document.getElementById('predictFeedbackBanner');
+          if (!checked) {
+            fb.className = 'feedback-banner warn';
+            fb.textContent = '请先选择一个预测选项';
+            fb.style.display = 'block';
+            return;
+          }
+          const pData = PREDICTION_BANK[state.experiment] || PREDICTION_BANK.exp1;
+          const isCorrect = pData.options[parseInt(checked.value, 10)].correct;
+          state.predictSubmitted = true;
+          if (isCorrect) {
+            fb.className = 'feedback-banner success';
+            fb.textContent = '✓ 预测一致！变换矩阵与场景已完全呈现。';
+          } else {
+            fb.className = 'feedback-banner warn';
+            fb.textContent = '再看一次结果：请观察场景中实际变换生成的几何状态。';
+          }
+          fb.style.display = 'block';
+          renderScene();
+        });
+
+        document
+          .getElementById('btnPredictNextPhase')
+          .addEventListener('click', () => setPhase('observe'));
+        document
+          .getElementById('btnObserveToExplain')
+          .addEventListener('click', () => setPhase('explain'));
+        document.getElementById('btnTryAgain').addEventListener('click', () => setPhase('predict'));
+        document.getElementById('btnNextExperiment').addEventListener('click', () => {
+          const exps = ['exp1', 'exp2', 'exp3', 'exp4', 'medical'];
+          const nextIdx = (exps.indexOf(state.experiment) + 1) % exps.length;
+          loadExperimentPreset(exps[nextIdx]);
+        });
+
+        // Reset All
+        document.getElementById('btnResetAll').addEventListener('click', () => {
+          loadExperimentPreset('exp1');
+        });
+
+        // Reset View
+        document.getElementById('btnResetView').addEventListener('click', () => {
+          state.camera.yaw = (35 * Math.PI) / 180;
+          state.camera.pitch = (25 * Math.PI) / 180;
+          updateCameraAngleDisplay();
+          renderScene();
+        });
+
+        // Canvas Drag to Rotate Viewport
+        canvas.addEventListener('pointerdown', (e) => {
+          state.camera.isDragging = true;
+          state.camera.lastMouseX = e.clientX;
+          state.camera.lastMouseY = e.clientY;
+          canvas.setPointerCapture(e.pointerId);
+        });
+
+        window.addEventListener('pointermove', (e) => {
+          if (!state.camera.isDragging) return;
+          const dx = e.clientX - state.camera.lastMouseX;
+          const dy = e.clientY - state.camera.lastMouseY;
+          state.camera.lastMouseX = e.clientX;
+          state.camera.lastMouseY = e.clientY;
+
+          state.camera.yaw += dx * 0.008;
+          state.camera.pitch += dy * 0.008;
+
+          // Clamp pitch to avoid inversion
+          state.camera.pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, state.camera.pitch));
+          updateCameraAngleDisplay();
+          renderScene();
+        });
+
+        window.addEventListener('pointerup', (e) => {
+          state.camera.isDragging = false;
+        });
+
+        // Help Modal Alert
+        document.getElementById('btnHelp').addEventListener('click', () => {
+          const msg =
+            '【实验操作提示】\n1. 灰色线框为原始几何对象，青蓝色为变换后结果；\n2. 改变参数只修改变换矩阵，Original Buffer 原始数据永不覆盖；\n3. 拖动画布旋转观察视角，不改变变换矩阵；\n4. w=1 接收平移分量，w=0 保持不受平移影响。';
+          window.alert ? window.alert(msg) : console.log(msg);
+        });
+      }
+
+      function updateCameraAngleDisplay() {
+        const degYaw = Math.round(((state.camera.yaw * 180) / Math.PI) % 360);
+        const degPitch = Math.round((state.camera.pitch * 180) / Math.PI);
+        document.getElementById('viewAngleText').textContent =
+          `Yaw: ${degYaw}° Pitch: ${degPitch}°`;
+      }
+
+      // Window Resize Handling
+      window.addEventListener('resize', () => {
+        renderScene();
+      });
+
+      /* =========================================================
+       7. Initial Boot
+       ========================================================= */
+      window.onload = function () {
+        initEvents();
+        loadExperimentPreset('exp1');
+      };
+    </script>
+  </body>
+</html>

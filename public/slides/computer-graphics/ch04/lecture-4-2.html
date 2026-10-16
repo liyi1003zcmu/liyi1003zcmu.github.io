@@ -1,0 +1,2759 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 4-2 基本几何变换</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261016" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 4 · 02</div>
+            <h1>基本几何变换：平移、旋转与缩放</h1>
+            <p class="lead fragment fade-up">
+              仿射变换 · 刚体变换 · 平移矩阵 · 旋转矩阵 · 缩放矩阵
+            </p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 42px">
+              <div class="node fragment fade-up">Local Mesh</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Translation T</div>
+              <div class="arrow fragment fade-up">+</div>
+              <div class="node primary fragment fade-up">Rotation R</div>
+              <div class="arrow fragment fade-up">+</div>
+              <div class="node fragment fade-up">Scaling S</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">4×4 Affine Matrix</div>
+            </div>
+            <aside class="notes">
+              <p class="title-mark fragment fade-up">
+                40 min · 医工器械定位 + 齐次变换矩阵推导 + 刚体运动学 + 交互验证
+              </p>
+            </aside>
+          </div>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Medical-Engineering Problem</div>
+            <h2>医工问题：虚拟器械如何放到目标位置？</h2>
+            <p class="lead fragment fade-up">
+              在三维医学场景中，虚拟器械或植入物模型通常先定义在自己的局部坐标系中。如何将虚拟模型放置到正确的位置和姿态？
+            </p>
+            <div class="grid2">
+              <div class="media-shell fragment fade-up">
+                <img
+                  src="./images/chap04/ch04-R04-10.png"
+                  alt="医疗器械定位问题"
+                  data-fallback="三维医学场景中的模型定位"
+                  data-prompt="生成一张16:9横向白底大学计算机图形学教学示意图，主题为“三维医学场景中的模型定位”。左侧为简化三维骨骼模型或解剖表面模型。右侧为简化虚拟医疗器械或植入物CAD模型，当前位置明显偏离目标区域，方向不正确，大小略有差异。用三个简洁问号标注：位置？方向？大小？顶部：“怎样把虚拟模型放到正确的位置和姿态？”底部：Position · Orientation · Scale。不要真实手术照片，不要复杂医学术语。深蓝、蓝灰、青蓝、白底教学信息图风格。"
+                />
+              </div>
+              <div class="activity fragment fade-up">
+                <span class="tag">课堂预测</span><span class="timer">60 s</span>
+                <h3>至少要改变哪些量？</h3>
+                <p>如果模型已经加载进程序，但没有对准目标区域，你认为需要调整哪些几何属性？</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-2-2">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Prediction</div>
+            <h2>把医工问题拆成三个几何问题</h2>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>位置</h3>
+                <p>目标点在哪里？</p>
+                <span class="pill">Translation</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>方向</h3>
+                <p>目标轴向如何对齐？</p>
+                <span class="pill">Rotation</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>尺度</h3>
+                <p>模型大小是否匹配？</p>
+                <span class="pill">Scaling</span>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              接下来先把复杂医学对象抽象成简单形体，研究这些变换的共同规律。
+            </div>
+          </section>
+          <section id="sec-2-3">
+            <span class="slide-no">#sec-2-3</span>
+            <div class="eyebrow">Abstraction</div>
+            <h2>为什么先用简单形体？</h2>
+            <p class="lead fragment fade-up">
+              复杂模型由大量顶点构成。只要理解一个点或一个简单形体如何变化，就能推广到整个网格。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">复杂医学器械</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">单位立方体 / 箭头</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">点的变换规律</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up green">回到医学场景</div>
+            </div>
+            <div class="med-strip fragment fade-up">
+              <strong>教学约定：</strong
+              >推导时使用点、箭头、正方形、立方体；应用时回到三维医学模型与器械定位。
+            </div>
+          </section>
+          <section id="sec-2-4">
+            <span class="slide-no">#sec-2-4</span>
+            <div class="eyebrow">Concept</div>
+            <h2>Transformation：从 P 到 P′</h2>
+            <p class="lead fragment fade-up">
+              变换可以看成一个函数：把一个点、一个向量或一组顶点映射到新的位置或状态。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">P</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">T</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">P′</div>
+            </div>
+            <div class="mathbox fragment fade-up">\[P′ = T(P)\]</div>
+            <div class="quote fragment fade-up">在程序中，我们最终希望把这个映射写成矩阵乘法。</div>
+          </section>
+          <section id="sec-2-5">
+            <span class="slide-no">#sec-2-5</span>
+            <div class="eyebrow">Affine Transform</div>
+            <h2>仿射变换：为什么只需要变换顶点？</h2>
+            <p class="lead fragment fade-up">
+              仿射变换的重要性质是：直线仍映射为直线，线段仍映射为线段。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>图形学意义</h3>
+                <p>三角形的三个顶点变换后，三角形内部点可由光栅化阶段继续生成。</p>
+              </div>
+              <div class="media-shell fragment fade-up">
+                <img
+                  src="./images/chap04/ch04-R04-11.png"
+                  alt="仿射变换只处理顶点"
+                  data-fallback="仿射变换只处理顶点"
+                  data-prompt="生成一张16:9白底计算机图形学教学图，主题“为什么仿射变换只需处理顶点”。左侧一个三角形，由三个顶点P0、P1、P2定义。中间三条独立箭头分别把三个顶点送入“Affine Transform”。右侧得到三个新顶点P0'、P1'、P2'，重新构成新三角形。右侧三角形内部用淡色网格表示“内部点由光栅化阶段生成”。底部：“变换顶点 → 边仍为直线 → GPU生成内部片元”。不要证明公式。"
+                />
+              </div>
+            </div>
+            <div class="mathbox fragment fade-up">
+              \[P(\alpha) = (1-\alpha)P_0 + \alpha P_1 \implies T(P(\alpha)) = (1-\alpha)T(P_0) +
+              \alpha T(P_1)\]
+            </div>
+          </section>
+          <section id="sec-2-6">
+            <span class="slide-no">#sec-2-6</span>
+            <div class="eyebrow">Rigid vs Non-Rigid</div>
+            <h2>刚体、刚性变换与非刚性变换</h2>
+            <p class="lead fragment fade-up">
+              说“刚体”时，重点不是对象材质，而是<strong class="accent"
+                >变换前后对象内部的相对几何关系是否保持不变</strong
+              >。
+            </p>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>刚体 / 刚性变换</h3>
+                <p>对象像一个整体被移动或转动。</p>
+                <div class="mathbox">\[d(P_i,P_j)=d(P_i',P_j')\]</div>
+                <p class="small muted">距离、角度、形状、体积保持不变。</p>
+                <span class="pill">Translation + Rotation</span>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>非刚体 / 非刚性变换</h3>
+                <p>对象内部相对几何关系发生改变。</p>
+                <div class="mathbox">\[d(P_i,P_j)\ne d(P_i',P_j')\]</div>
+                <p class="small muted">大小、比例、形状或局部结构可能变化。</p>
+                <span class="pill">Scaling / Shearing / Deformation</span>
+              </div>
+            </div>
+            <div class="med-strip fragment fade-up">
+              <strong>医工联系：</strong
+              >刚性配准常用于“整体姿态调整”；非刚性变换则可能用于组织形变、模型模板适配或非均匀尺度调整。
+            </div>
+          </section>
+          <section id="sec-2-7">
+            <span class="slide-no">#sec-2-7</span>
+            <div class="eyebrow">Interaction · Classification</div>
+            <h2>随堂判断：哪些操作保持“刚体”特征？</h2>
+            <p class="lead fragment fade-up">
+              请判断下列操作属于刚性变换，还是非刚性/一般仿射变换。
+            </p>
+            <div class="grid2">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>把三维骨骼模型整体平移到屏幕中心
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>把虚拟探针绕目标方向旋转30°
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>C</strong>把植入物模板沿X方向拉长1.5倍
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>D</strong>对软组织表面做局部形变匹配
+              </div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考：</strong
+              >A、B保持刚体特征；C、D会改变对象内部相对关系，属于非刚性或更一般的变换。
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Translation · Geometry</div>
+            <h2>平移：把每个点移动同一段位移</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 12px; font-size: 0.58em; line-height: 1.45"
+            >
+              平移由位移向量决定。所有点获得同一个位移，因此对象的位置改变，但方向、大小和形状保持不变。
+            </p>
+            <div class="grid2" style="gap: 16px; align-items: stretch">
+              <div class="card fragment fade-up" style="padding: 14px 18px; border-radius: 16px">
+                <h3 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--cyan)">二维平面</h3>
+                <div class="mathbox" style="margin: 6px 0; padding: 6px 12px; font-size: 0.68em">
+                  \[ \begin{aligned} x' &= x+t_x \\ y' &= y+t_y \end{aligned} \]
+                </div>
+                <p
+                  class="small muted"
+                  style="margin: 4px 0 0 0; font-size: 0.48em; line-height: 1.4"
+                >
+                  位移向量：\(\mathbf{t}=(t_x,t_y)\)。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 14px 18px; border-radius: 16px">
+                <h3 style="margin: 0 0 6px 0; font-size: 0.82em; color: var(--cyan)">三维空间</h3>
+                <div class="mathbox" style="margin: 6px 0; padding: 6px 12px; font-size: 0.68em">
+                  \[ \begin{aligned} x' &= x+t_x \\ y' &= y+t_y \\ z' &= z+t_z \end{aligned} \]
+                </div>
+                <p
+                  class="small muted"
+                  style="margin: 4px 0 0 0; font-size: 0.48em; line-height: 1.4"
+                >
+                  位移向量：\(\mathbf{t}=(t_x,t_y,t_z)\)。
+                </p>
+              </div>
+            </div>
+            <div
+              class="activity fragment fade-up"
+              style="margin-top: 12px; padding: 10px 18px; border-radius: 14px"
+            >
+              <h3 style="margin: 0 0 4px 0; font-size: 0.75em; color: #14345e">课堂提问</h3>
+              <p style="margin: 0; font-size: 0.52em; line-height: 1.45">
+                如果模型中有100万个顶点，平移时每个点获得的位移是否相同？这说明平移是否会改变形状？
+              </p>
+            </div>
+          </section>
+          <section id="sec-3-2">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Translation · Why Homogeneous</div>
+            <h2>为什么普通二维矩阵不能直接表示平移？</h2>
+            <p class="lead fragment fade-up">
+              普通\(2\times2\)线性矩阵只能产生\(x,y\)的线性组合；而平移还需要额外的常数项。
+            </p>
+            <div class="compare">
+              <div class="card fragment fade-up">
+                <h3>普通线性矩阵</h3>
+                <div class="mathbox">
+                  \[ \begin{bmatrix}x'\\y'\end{bmatrix} =
+                  \begin{bmatrix}a&amp;b\\c&amp;d\end{bmatrix} \begin{bmatrix}x\\y\end{bmatrix} =
+                  \begin{bmatrix}ax+by\\cx+dy\end{bmatrix} \]
+                </div>
+                <p class="small muted">没有办法直接产生独立于\(x,y\)的\(t_x,t_y\)。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>平移需要常数项</h3>
+                <div class="mathbox">
+                  \[ \begin{bmatrix}x'\\y'\end{bmatrix} = \begin{bmatrix}x+t_x\\y+t_y\end{bmatrix}
+                  \]
+                </div>
+                <p class="small muted">因此需要增加一个固定分量，让矩阵乘法“带入”常数项。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              这正是齐次坐标的意义：<span class="accent">用增加的分量，把平移也纳入矩阵乘法。</span>
+            </div>
+          </section>
+          <section id="sec-3-3">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Translation · 2D Homogeneous Matrix Derivation</div>
+            <h2>二维齐次平移矩阵的代数推导</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 12px; font-size: 0.58em; line-height: 1.45"
+            >
+              建立目标代数方程，从上到下按行展开，从左到右匹配对应项系数，严格确定 9 个矩阵元素。
+            </p>
+            <div class="grid2" style="gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 14px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    逐行代数匹配方程
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 8px 0; padding: 6px 10px; font-size: 0.62em"
+                  >
+                    \[ \begin{bmatrix} m_{11} & m_{12} & m_{13} \\ m_{21} & m_{22} & m_{23} \\
+                    m_{31} & m_{32} & m_{33} \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+                    = \begin{bmatrix} x + t_x \\ y + t_y \\ 1 \end{bmatrix} \]
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 6px;
+                      font-size: 0.52em;
+                      line-height: 1.45;
+                    "
+                  >
+                    <div
+                      class="fragment fade-up"
+                      style="
+                        padding: 6px 10px;
+                        background: #f0f9ff;
+                        border-radius: 8px;
+                        border-left: 3px solid var(--cyan);
+                      "
+                    >
+                      <strong>第1行 (\(x'\))：</strong>\(m_{11}x + m_{12}y + m_{13}\cdot 1 = x +
+                      t_x\)<br />
+                      对任意 \((x, y)\) 恒成立 \(\implies \mathbf{[m_{11}, m_{12}, m_{13}] = [1, 0,
+                      t_x]}\)
+                    </div>
+                    <div
+                      class="fragment fade-up"
+                      style="
+                        padding: 6px 10px;
+                        background: #f0fdf4;
+                        border-radius: 8px;
+                        border-left: 3px solid var(--green);
+                      "
+                    >
+                      <strong>第2行 (\(y'\))：</strong>\(m_{21}x + m_{22}y + m_{23}\cdot 1 = y +
+                      t_y\)<br />
+                      对任意 \((x, y)\) 恒成立 \(\implies \mathbf{[m_{21}, m_{22}, m_{23}] = [0, 1,
+                      t_y]}\)
+                    </div>
+                    <div
+                      class="fragment fade-up"
+                      style="
+                        padding: 6px 10px;
+                        background: #f8fafc;
+                        border-radius: 8px;
+                        border-left: 3px solid #64748b;
+                      "
+                    >
+                      <strong>第3行 (\(w'\))：</strong>\(m_{31}x + m_{32}y + m_{33}\cdot 1 = 1\)<br />
+                      齐次权重为常数 1 \(\implies \mathbf{[m_{31}, m_{32}, m_{33}] = [0, 0, 1]}\)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 14px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    合成矩阵与代数本质
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 8px 0; padding: 6px 10px; font-size: 0.68em"
+                  >
+                    \[ \mathbf{T}(t_x, t_y) = \begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 &
+                    1 \end{bmatrix} \]
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 6px;
+                      font-size: 0.52em;
+                      line-height: 1.45;
+                    "
+                  >
+                    <div
+                      style="
+                        padding: 6px 10px;
+                        background: #f8fafc;
+                        border-radius: 8px;
+                        border: 1px solid var(--line);
+                      "
+                    >
+                      <strong>左上角 \(2\times 2\) 单位阵：</strong>保持原始 \((x, y)\)
+                      坐标尺度与旋转状态完全不变。
+                    </div>
+                    <div
+                      style="
+                        padding: 6px 10px;
+                        background: #f8fafc;
+                        border-radius: 8px;
+                        border: 1px solid var(--line);
+                      "
+                    >
+                      <strong>第3列 \([t_x, t_y]^T\)：</strong>与齐次项 \(w=1\)
+                      相乘，精准释放出常数位移量。
+                    </div>
+                    <div
+                      style="
+                        padding: 6px 10px;
+                        background: #f8fafc;
+                        border-radius: 8px;
+                        border: 1px solid var(--line);
+                      "
+                    >
+                      <strong>第3行 \([0, 0, 1]\)：</strong>保证变换后的点仍保持 \(w'=1\)
+                      的齐次表示。
+                    </div>
+                  </div>
+                </div>
+                <p
+                  style="margin: 8px 0 0 0; font-size: 0.5em; line-height: 1.4; color: var(--muted)"
+                >
+                  小结：增补的第三维坐标 \(w=1\)
+                  充当了“常数载体”，使非线性的平移巧妙转化为线性矩阵乘法。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="sec-3-4">
+            <span class="slide-no">#sec-3-4</span>
+            <div class="eyebrow">3D Translation · Homogeneous Generalization</div>
+            <h2>从二维到三维：齐次平移推广与分块结构</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 12px; font-size: 0.58em; line-height: 1.45"
+            >
+              沿用逐行系数匹配的逻辑，三维齐次平移自然扩展为 4×4 矩阵，并呈现出优美的分块代数结构。
+            </p>
+            <div class="grid2" style="gap: 16px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 14px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    三维 4×4 齐次平移矩阵
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 8px 0; padding: 6px 10px; font-size: 0.58em"
+                  >
+                    \[ \begin{bmatrix} x' \\ y' \\ z' \\ 1 \end{bmatrix} = \begin{bmatrix} 1 & 0 & 0
+                    & t_x \\ 0 & 1 & 0 & t_y \\ 0 & 0 & 1 & t_z \\ 0 & 0 & 0 & 1 \end{bmatrix}
+                    \begin{bmatrix} x \\ y \\ z \\ 1 \end{bmatrix} = \begin{bmatrix} x + t_x \\ y +
+                    t_y \\ z + t_z \\ 1 \end{bmatrix} \]
+                  </div>
+                  <div style="font-size: 0.52em; line-height: 1.45; color: var(--text)">
+                    <p style="margin: 0 0 4px 0">
+                      • 前 3 行分别独立对 \(x, y, z\) 施加对应的位移分量 \(t_x, t_y, t_z\)。
+                    </p>
+                    <p style="margin: 0">
+                      • 第 4 行保持为 \([0, 0, 0, 1]\)，维系刚体变换后的齐次标度 \(w'=1\)。
+                    </p>
+                  </div>
+                </div>
+                <p
+                  style="margin: 6px 0 0 0; font-size: 0.5em; line-height: 1.4; color: var(--muted)"
+                >
+                  几何意义：无论二维还是三维，平移信息均精确落在增补的最后一列。
+                </p>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 14px 18px;
+                  border-radius: 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 6px 0; font-size: 0.8em; color: var(--cyan)">
+                    优雅的分块矩阵形式 (Block Form)
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 8px 0; padding: 6px 10px; font-size: 0.62em"
+                  >
+                    \[ \mathbf{T}(\mathbf{t}) = \begin{bmatrix} \mathbf{I}_{3\times 3} &
+                    \mathbf{t}_{3\times 1} \\ \mathbf{0}_{1\times 3} & 1 \end{bmatrix} \]
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 5px;
+                      font-size: 0.5em;
+                      line-height: 1.45;
+                    "
+                  >
+                    <div
+                      style="
+                        padding: 4px 8px;
+                        background: #f8fafc;
+                        border-radius: 6px;
+                        border-left: 3px solid var(--cyan);
+                      "
+                    >
+                      \(\mathbf{I}_{3\times 3}\)：三阶单位阵，保持物体的原有姿态与尺寸；
+                    </div>
+                    <div
+                      style="
+                        padding: 4px 8px;
+                        background: #f8fafc;
+                        border-radius: 6px;
+                        border-left: 3px solid var(--green);
+                      "
+                    >
+                      \(\mathbf{t} = [t_x, t_y, t_z]^T\)：最后一列平移向量，注入空间位移；
+                    </div>
+                    <div
+                      style="
+                        padding: 4px 8px;
+                        background: #f8fafc;
+                        border-radius: 6px;
+                        border-left: 3px solid #64748b;
+                      "
+                    >
+                      \(\mathbf{0}_{1\times 3}\) 与 \(1\)：保证矩阵乘法后齐次标度保持为 1。
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    margin-top: 6px;
+                    padding: 6px 10px;
+                    background: #eff6ff;
+                    border-radius: 8px;
+                    font-size: 0.5em;
+                    line-height: 1.4;
+                  "
+                >
+                  <strong>核心结论：</strong>三维变换统一表达为 \(4\times 4\)
+                  矩阵，为后续连续复合变换奠定了代数基础。
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="activity fragment fade-up"
+              style="margin-top: 10px; padding: 8px 16px; border-radius: 12px"
+            >
+              <h3 style="margin: 0 0 2px 0; font-size: 0.72em; color: #14345e">
+                深度思考：方向向量对平移“免疫”
+              </h3>
+              <p style="margin: 0; font-size: 0.5em; line-height: 1.4">
+                若作用于方向向量
+                \(\mathbf{v}=[v_x,v_y,v_z,0]^T\)，由分块乘法：\(\mathbf{T}\mathbf{v} =
+                \begin{bmatrix}\mathbf{I} & \mathbf{t} \\ \mathbf{0} &
+                1\end{bmatrix}\begin{bmatrix}\mathbf{v} \\ 0\end{bmatrix} =
+                \begin{bmatrix}\mathbf{I}\mathbf{v} + \mathbf{t}\cdot 0 \\ 0 + 1\cdot 0\end{bmatrix}
+                = \begin{bmatrix}\mathbf{v} \\ 0\end{bmatrix}\)。自由向量无固定起点，平移零影响！
+              </p>
+            </div>
+          </section>
+
+          <section id="sec-3-5">
+            <span class="slide-no">#sec-3-5</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>随堂测试：平移作用于谁？</h2>
+            <div class="question fragment fade-up">
+              <div class="q">单选</div>
+              <p>同一个平移矩阵 \(\mathbf{T}\) 作用于下面哪一个对象时，会产生位置偏移？</p>
+            </div>
+            <div class="grid2">
+              <div class="quiz-card fragment fade-up">
+                <strong>A</strong>点 \(\mathbf{p} = (x, y, z, 1)^T\)
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>B</strong>方向向量 \(\mathbf{v} = (x, y, z, 0)^T\)
+              </div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：A。</strong>平移影响点 \(\mathbf{p}\) 的位置；自由向量
+              \(\mathbf{v}\) 表示方向和大小，不应额外获得平移分量。
+            </div>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Scaling · Geometry & Fixed Point</div>
+            <h2>缩放：比例改变与不动点</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              缩放不只是“变大/变小”，其本质是改变点相对于缩放中心的距离分量；默认以原点为不动点。
+            </p>
+            <div class="grid2" style="gap: 14px; align-items: stretch">
+              <div
+                class="media-shell fragment fade-up"
+                style="
+                  height: 310px;
+                  min-height: unset;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <img
+                  src="./images/chap04/ch04-R04-12.png"
+                  alt="缩放基本概念与不动点"
+                  data-fallback="缩放的是点相对于原点的距离分量"
+                  data-prompt="生成一张16:9白底计算机图形学教学示意图，主题“缩放的基本概念与不动点”。展示二维直角坐标系中点P(x,y)沿各坐标轴按比例放大到P'(sx*x, sy*y)，原点O标记为缩放中心（不动点）。底部标明：缩放的是点相对于原点的距离分量。"
+                />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 8px;
+                "
+              >
+                <div class="card fragment fade-up" style="padding: 10px 14px">
+                  <h3 style="margin: 0 0 3px 0; font-size: 0.75em; color: var(--cyan)">
+                    几何定义：距离分量缩放
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 4px 0; padding: 3px 8px; font-size: 0.6em"
+                  >
+                    \[ x' = s_x x,\qquad y' = s_y y \]
+                  </div>
+                  <p style="margin: 0; font-size: 0.48em; line-height: 1.42">
+                    每个坐标分量独立乘以缩放因子。原点 \(O(0,0)\) 缩放后依然为
+                    \((0,0)\)，是变换的<strong>不动点</strong>（缩放中心）。
+                  </p>
+                </div>
+                <div class="card fragment fade-up" style="padding: 10px 14px">
+                  <h3 style="margin: 0 0 3px 0; font-size: 0.75em; color: var(--cyan)">
+                    均匀缩放 vs 非均匀缩放
+                  </h3>
+                  <div style="font-size: 0.48em; line-height: 1.42">
+                    <p style="margin: 0 0 3px 0">
+                      •
+                      <strong>均匀缩放 (\(s_x = s_y = s_z\))：</strong
+                      >各向等比，保持几何外形相似，无纵横形变。
+                    </p>
+                    <p style="margin: 0">
+                      •
+                      <strong>非均匀缩放 (\(s_x \ne s_y\))：</strong
+                      >各轴向比例独立，会改变纵横比并导致形状拉伸变形。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">核心注意：</strong
+              >以原点为中心缩放时，物体不仅自身尺寸发生改变，<strong>其到原点的距离也会同比例缩放</strong>。
+            </div>
+          </section>
+          <section id="sec-4-2">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Scaling · Homogeneous Matrix</div>
+            <h2>从二维缩放到三维齐次缩放</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              以原点为不动点时，缩放矩阵为纯对角结构，各主对角元独立控制对应维度的缩放比例。
+            </p>
+            <div class="grid2" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                    二维齐次缩放矩阵 (3×3)
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 6px 0; padding: 5px 8px; font-size: 0.58em"
+                  >
+                    \[ \begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} s_x & 0 & 0 \\
+                    0 & s_y & 0 \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+                    = \begin{bmatrix} s_x x \\ s_y y \\ 1 \end{bmatrix} \]
+                  </div>
+                  <div style="font-size: 0.48em; line-height: 1.42; color: var(--text)">
+                    <p style="margin: 0 0 3px 0">
+                      • 主对角线直接缩放 \(x, y\) 坐标，不产生项间交叉（无旋转拉剪）。
+                    </p>
+                    <p style="margin: 0">
+                      • 最后一列均为 0，无常数平移位移；最后一行维持齐次权重 \(w'=1\)。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                    三维齐次缩放与分块结构 (4×4)
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 6px 0; padding: 5px 8px; font-size: 0.55em"
+                  >
+                    \[ \mathbf{S}(s_x,s_y,s_z) = \begin{bmatrix} s_x & 0 & 0 & 0 \\ 0 & s_y & 0 & 0
+                    \\ 0 & 0 & s_z & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix}
+                    \mathbf{S}_{3\times 3} & \mathbf{0} \\ \mathbf{0} & 1 \end{bmatrix} \]
+                  </div>
+                  <div style="font-size: 0.48em; line-height: 1.42; color: var(--text)">
+                    <p style="margin: 0 0 3px 0">
+                      • <strong>分块对照：</strong>平移矩阵改最后一列，缩放矩阵改主对角块
+                      \(\mathbf{S}_{3\times 3}\)。
+                    </p>
+                    <p style="margin: 0">
+                      • <strong>逆矩阵：</strong>只要 \(s_i \ne 0\)，\(\mathbf{S}^{-1} =
+                      \operatorname{diag}(s_x^{-1}, s_y^{-1}, s_z^{-1}, 1)\)。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">几何特性：</strong
+              >缩放通常属于<strong>非刚性变换</strong>，它会改变点对之间的相对欧氏距离与模型的几何尺度。
+            </div>
+          </section>
+          <section id="sec-4-3">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Scaling · Center</div>
+            <h2>缩放中心不是原点怎么办？</h2>
+            <p class="lead fragment fade-up">
+              如果希望围绕模型中心 \(C\) 缩放，不能直接使用以原点为中心的 \(S\)。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">
+                \(T(-C)\)<br /><span class="small">移到原点</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">
+                \(S\)<br /><span class="small">执行缩放</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                \(T(C)\)<br /><span class="small">移回原处</span>
+              </div>
+            </div>
+            <div class="mathbox fragment fade-up">\[ M = T(C)\,S\,T(-C) \]</div>
+            <div class="activity fragment fade-up">
+              <h3>课堂练习</h3>
+              <p>
+                如果植入物模板以自身中心缩放，而不是以患者坐标原点缩放，为什么必须使用前后两次平移？
+              </p>
+            </div>
+            <div class="med-strip fragment fade-up">
+              <strong>医工联系：</strong
+              >调整植入物模板尺度时，通常希望围绕模型自身中心或指定参考点缩放。
+            </div>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Rotation · 2D Derivation</div>
+            <h2>旋转：从二维平面完整推导一次</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              先研究点 \(P(x,y)\) 绕原点逆时针旋转 \(\theta\)。旋转保持原点距离不变，只改变方向角。
+            </p>
+            <div class="grid2" style="gap: 14px; align-items: stretch">
+              <div
+                class="media-shell fragment fade-up"
+                style="
+                  height: 310px;
+                  min-height: unset;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <img
+                  src="./images/chap04/ch04-R04-13.drawio.png"
+                  alt="二维旋转几何推导"
+                  data-fallback="二维旋转几何推导"
+                  data-prompt="生成一张16:9白底计算机图形学教学示意图，主题“二维旋转矩阵从哪里来”。中央二维坐标系。点P位于第一象限，标记P=(x,y)。从原点O到P画向量，标记长度r和角度α。把P绕原点逆时针旋转θ得到P'，用圆弧标出θ。标注x=r cosα，y=r sinα。P'旁边只写“角度变为α+θ，长度r不变”。右侧公式区：x'=x cosθ-y sinθ；y'=x sinθ+y cosθ。不要复杂背景。"
+                />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 8px;
+                "
+              >
+                <div class="card fragment fade-up" style="padding: 10px 14px">
+                  <h3 style="margin: 0 0 3px 0; font-size: 0.75em; color: var(--cyan)">
+                    初始点极坐标表示
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 4px 0; padding: 3px 8px; font-size: 0.6em"
+                  >
+                    \[ x = r\cos\alpha,\qquad y = r\sin\alpha \]
+                  </div>
+                  <p style="margin: 0; font-size: 0.48em; line-height: 1.42">
+                    点 \(P(x,y)\) 到原点距离为 \(r\)，与 \(X\) 轴正向夹角为 \(\alpha\)。
+                  </p>
+                </div>
+                <div class="card fragment fade-up" style="padding: 10px 14px">
+                  <h3 style="margin: 0 0 3px 0; font-size: 0.75em; color: var(--cyan)">
+                    逆时针旋转 \(\theta\) 后的极坐标
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 4px 0; padding: 3px 8px; font-size: 0.6em"
+                  >
+                    \[ x' = r\cos(\alpha+\theta),\qquad y' = r\sin(\alpha+\theta) \]
+                  </div>
+                  <p style="margin: 0; font-size: 0.48em; line-height: 1.42">
+                    距离 \(r\) 保持恒定不变，角度增至 \(\alpha+\theta\)。目标：展开并消去参数 \(r,
+                    \alpha\)。
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">几何约束：</strong
+              >旋转变换保持点到原点的距离不变（\(\|\mathbf{p}'\|=\|\mathbf{p}\|=r\)），属于保距保角的<strong>刚性变换</strong>。
+            </div>
+          </section>
+          <section id="sec-5-2">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Rotation · 2D Matrix Form</div>
+            <h2>二维旋转矩阵：从代数展开到齐次矩阵</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              利用三角和角公式消去参数 \(r\) 与 \(\alpha\)，得到线性方程并无缝升维为 3×3 齐次形式。
+            </p>
+            <div class="grid2" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                    代数展开与 2×2 线性矩阵
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 4px 0; padding: 4px 6px; font-size: 0.54em"
+                  >
+                    \[ \begin{aligned} x' &amp;= r(\cos\alpha\cos\theta - \sin\alpha\sin\theta) =
+                    x\cos\theta - y\sin\theta \\ y' &amp;= r(\sin\alpha\cos\theta +
+                    \cos\alpha\sin\theta) = x\sin\theta + y\cos\theta \end{aligned} \]
+                  </div>
+                  <div
+                    class="mathbox"
+                    style="margin: 3px 0 6px 0; padding: 4px 6px; font-size: 0.58em"
+                  >
+                    \[ \begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos\theta &amp;
+                    -\sin\theta \\ \sin\theta &amp; \cos\theta \end{bmatrix} \begin{bmatrix} x \\ y
+                    \end{bmatrix} \]
+                  </div>
+                  <div
+                    style="
+                      padding: 4px 8px;
+                      background: #f0fdf4;
+                      border-radius: 6px;
+                      border-left: 3px solid var(--green);
+                      font-size: 0.48em;
+                      line-height: 1.4;
+                    "
+                  >
+                    <strong>90° 特殊值检验：</strong>令
+                    \(\theta=90^\circ\)，\(\mathbf{R}(90^\circ)\begin{bmatrix}1\\0\end{bmatrix} =
+                    \begin{bmatrix}0\\1\end{bmatrix}\)，符合逆时针旋转。
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 12px 16px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                    二维 3×3 齐次旋转矩阵
+                  </h3>
+                  <div
+                    class="mathbox"
+                    style="margin: 2px 0 6px 0; padding: 4px 6px; font-size: 0.58em"
+                  >
+                    \[ \begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta
+                    &amp; -\sin\theta &amp; 0 \\ \sin\theta &amp; \cos\theta &amp; 0 \\ 0 &amp; 0
+                    &amp; 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix} \]
+                  </div>
+                  <div style="font-size: 0.48em; line-height: 1.42; color: var(--text)">
+                    <p style="margin: 0 0 3px 0">
+                      • <strong>结构特征：</strong>左上角承载纯平面旋转；第 3 列为 0，绕原点无位移。
+                    </p>
+                    <p style="margin: 0 0 3px 0">
+                      • <strong>逆变换（正交性）：</strong>旋转 \(-\theta\)
+                      即为逆操作，逆矩阵直接等于转置： \[ \mathbf{R}^{-1}(\theta) =
+                      \mathbf{R}(-\theta) = \mathbf{R}^T(\theta) \]
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">刚体性质：</strong>行列式 \(\det(\mathbf{R}) =
+              \cos^2\theta + \sin^2\theta = 1\)，变换前后图形面积与手性严格守恒。
+            </div>
+          </section>
+          <section id="sec-5-3">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Rotation · 3D Extension</div>
+            <h2>从二维旋转扩展到三维空间</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              二维平面内绕原点旋转，可以看作三维空间中绕 \(Z\) 轴旋转：\(x,y\) 发生旋转，\(z\)
+              坐标严格保持不变。
+            </p>
+            <div class="grid2" style="gap: 14px; align-items: stretch">
+              <div class="card fragment fade-up" style="padding: 12px 16px">
+                <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                  绕 Z 轴旋转的坐标关系
+                </h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 6px 8px; font-size: 0.6em">
+                  \[ \begin{aligned} x' &amp;= x\cos\theta - y\sin\theta\\ y' &amp;= x\sin\theta +
+                  y\cos\theta\\ z' &amp;= z \end{aligned} \]
+                </div>
+                <p
+                  style="
+                    margin: 4px 0 0 0;
+                    font-size: 0.48em;
+                    line-height: 1.42;
+                    color: var(--text);
+                  "
+                >
+                  旋转轴上的坐标 \(z\) 不发生改变，垂直于旋转轴的 \(X\)-\(Y\)
+                  平面内执行标准二维旋转。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 12px 16px">
+                <h3 style="margin: 0 0 4px 0; font-size: 0.76em; color: var(--cyan)">
+                  4×4 齐次旋转矩阵
+                </h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 6px 8px; font-size: 0.55em">
+                  \[ \mathbf{R}_z(\theta)= \begin{bmatrix} \cos\theta &amp; -\sin\theta &amp; 0
+                  &amp; 0\\ \sin\theta &amp; \cos\theta &amp; 0 &amp; 0\\ 0 &amp; 0 &amp; 1 &amp;
+                  0\\ 0 &amp; 0 &amp; 0 &amp; 1 \end{bmatrix} \]
+                </div>
+                <p
+                  style="
+                    margin: 4px 0 0 0;
+                    font-size: 0.48em;
+                    line-height: 1.42;
+                    color: var(--text);
+                  "
+                >
+                  第 3 行与第 3 列为 \([0,0,1,0]\)，精确锁定 \(z\) 分量与齐次标度不变。
+                </p>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">三维旋转核心：</strong
+              >绕哪根轴转，就保留该轴分量不变，并在与其垂直的平面内执行二维标准旋转。
+            </div>
+          </section>
+          <section id="sec-5-4">
+            <span class="slide-no">#sec-5-4</span>
+            <div class="eyebrow">Rotation · Axes</div>
+            <h2>三维空间：绕不同坐标轴的旋转矩阵</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              三维旋转必须明确旋转轴与正方向。不同旋转轴对应不同的不变分量，正旋转角 \(\theta\)
+              由右手定则严格决定。
+            </p>
+            <div class="grid3" style="gap: 14px; align-items: stretch">
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 10px 12px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 2px 0; font-size: 0.75em; color: var(--cyan)">
+                    绕 X 轴 \(\mathbf{R}_x(\theta)\)
+                  </h3>
+                  <div
+                    style="
+                      height: 115px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      background: #ffffff;
+                      border-radius: 8px;
+                      margin: 4px 0 6px 0;
+                      border: 1px solid var(--line);
+                      overflow: hidden;
+                    "
+                  >
+                    <img
+                      src="./images/chap04/ch04-rotxview.png"
+                      alt="绕X轴旋转视图"
+                      style="max-height: 100%; max-width: 100%; object-fit: contain"
+                    />
+                  </div>
+                  <p
+                    class="small muted"
+                    style="margin: 0 0 4px 0; font-size: 0.46em; line-height: 1.35"
+                  >
+                    从 \(+X\) 轴看向原点，由 \(Y\to Z\) 为逆时针正向（\(x\) 保持不变）。
+                  </p>
+                </div>
+                <div
+                  class="mathbox"
+                  style="font-size: 0.44em; padding: 5px 3px; line-height: 1.15; margin: 0"
+                >
+                  \[ \begin{bmatrix} 1 &amp; 0 &amp; 0 &amp; 0\\ 0 &amp; \cos\theta &amp;
+                  -\sin\theta &amp; 0\\ 0 &amp; \sin\theta &amp; \cos\theta &amp; 0\\ 0 &amp; 0
+                  &amp; 0 &amp; 1 \end{bmatrix} \]
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 10px 12px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 2px 0; font-size: 0.75em; color: var(--cyan)">
+                    绕 Y 轴 \(\mathbf{R}_y(\theta)\)
+                  </h3>
+                  <div
+                    style="
+                      height: 115px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      background: #ffffff;
+                      border-radius: 8px;
+                      margin: 4px 0 6px 0;
+                      border: 1px solid var(--line);
+                      overflow: hidden;
+                    "
+                  >
+                    <img
+                      src="./images/chap04/ch04-rotyview.png"
+                      alt="绕Y轴旋转视图"
+                      style="max-height: 100%; max-width: 100%; object-fit: contain"
+                    />
+                  </div>
+                  <p
+                    class="small muted"
+                    style="margin: 0 0 4px 0; font-size: 0.46em; line-height: 1.35"
+                  >
+                    从 \(+Y\) 轴看向原点，由 \(Z\to X\) 为逆时针正向（注意符号翻转！）。
+                  </p>
+                </div>
+                <div
+                  class="mathbox"
+                  style="font-size: 0.44em; padding: 5px 3px; line-height: 1.15; margin: 0"
+                >
+                  \[ \begin{bmatrix} \cos\theta &amp; 0 &amp; \sin\theta &amp; 0\\ 0 &amp; 1 &amp; 0
+                  &amp; 0\\ -\sin\theta &amp; 0 &amp; \cos\theta &amp; 0\\ 0 &amp; 0 &amp; 0 &amp; 1
+                  \end{bmatrix} \]
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 10px 12px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                "
+              >
+                <div>
+                  <h3 style="margin: 0 0 2px 0; font-size: 0.75em; color: var(--cyan)">
+                    绕 Z 轴 \(\mathbf{R}_z(\theta)\)
+                  </h3>
+                  <div
+                    style="
+                      height: 115px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      background: #ffffff;
+                      border-radius: 8px;
+                      margin: 4px 0 6px 0;
+                      border: 1px solid var(--line);
+                      overflow: hidden;
+                    "
+                  >
+                    <img
+                      src="./images/chap04/ch04-rotzview.png"
+                      alt="绕Z轴旋转视图"
+                      style="max-height: 100%; max-width: 100%; object-fit: contain"
+                    />
+                  </div>
+                  <p
+                    class="small muted"
+                    style="margin: 0 0 4px 0; font-size: 0.46em; line-height: 1.35"
+                  >
+                    从 \(+Z\) 轴看向原点，由 \(X\to Y\) 为逆时针正向（与标准二维旋转一致）。
+                  </p>
+                </div>
+                <div
+                  class="mathbox"
+                  style="font-size: 0.44em; padding: 5px 3px; line-height: 1.15; margin: 0"
+                >
+                  \[ \begin{bmatrix} \cos\theta &amp; -\sin\theta &amp; 0 &amp; 0\\ \sin\theta &amp;
+                  \cos\theta &amp; 0 &amp; 0\\ 0 &amp; 0 &amp; 1 &amp; 0\\ 0 &amp; 0 &amp; 0 &amp; 1
+                  \end{bmatrix} \]
+                </div>
+              </div>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">右手定则视角判断：</strong
+              >大拇指指向该坐标轴正向，四指弯曲方向即为正旋转角
+              \(+\theta\)（从正轴沿黑箭头朝原点望去为<strong>逆时针</strong>）。绕 \(Y\)
+              轴时由循环顺序 \(Z\to X\) 决定，导致 \(\sin\theta\) 符号与另外两轴位置互换。
+            </div>
+          </section>
+          <section id="sec-5-5">
+            <span class="slide-no">#sec-5-5</span>
+            <div class="eyebrow">Rotation · Center</div>
+            <h2>旋转中心很重要：绕原点还是绕目标点？</h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin-bottom: 10px; font-size: 0.56em; line-height: 1.4"
+            >
+              很多医工任务不是“绕世界原点旋转”，而是希望器械围绕目标入口点、关节中心或模型中心旋转。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">
+                \(T(-C)\)<br /><span class="small">把中心移到原点</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">
+                \(R(\theta)\)<br /><span class="small">执行已知旋转</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                \(T(C)\)<br /><span class="small">把中心移回原处</span>
+              </div>
+            </div>
+            <div
+              class="mathbox fragment fade-up"
+              style="margin: 8px 0; padding: 6px 12px; font-size: 0.62em"
+            >
+              \[ M = T(C)\,R(\theta)\,T(-C) \]
+            </div>
+            <div class="activity fragment fade-up" style="margin-top: 8px; padding: 8px 14px">
+              <h3 style="margin: 0 0 2px 0; font-size: 0.7em">连接下一课</h3>
+              <p style="margin: 0; font-size: 0.48em; line-height: 1.4">
+                这个公式已经不是单个基本变换，而是多个矩阵的组合。下一课要重点讨论：为什么顺序不能交换？
+              </p>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 8px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">复杂旋转策略：</strong
+              ><span class="accent">“平移中心至原点 → 执行已知旋转 → 沿原向量平移恢复”</span
+              >，复合变换从右向左依次作用。
+            </div>
+          </section>
+          <section id="sec-5-6">
+            <span class="slide-no">#sec-5-6</span>
+            <div class="eyebrow">AI Collaboration</div>
+            <h2>AI协作：旋转矩阵敢直接用吗？</h2>
+            <div class="activity ai fragment fade-up" style="padding: 14px 18px">
+              <h3 style="margin: 0 0 6px 0; font-size: 0.76em">AI协作任务</h3>
+              <p style="margin: 0 0 6px 0; font-size: 0.52em; line-height: 1.45">
+                让AI推导二维点绕原点逆时针旋转 \(\theta\) 的矩阵，并要求它解释 \(\sin\theta\)
+                项的正负号。
+              </p>
+              <ol style="margin: 0; padding-left: 18px; font-size: 0.5em; line-height: 1.5">
+                <li class="fragment fade-up">用特殊值 \(\theta = 90^\circ\) 检查。</li>
+                <li class="fragment fade-up">验证 \((1,0) \to (0,1)\)。</li>
+                <li class="fragment fade-up">再用 D04-02 观察图形结果。</li>
+              </ol>
+            </div>
+            <div
+              class="fragment fade-up"
+              style="
+                margin-top: 10px;
+                padding: 6px 14px;
+                border-radius: 10px;
+                border-left: 4px solid var(--cyan);
+                background: rgba(21, 125, 184, 0.06);
+                font-size: 0.48em;
+                line-height: 1.45;
+              "
+            >
+              <strong style="color: var(--cyan)">工程把关：</strong>AI
+              可以高效推导代数公式，但旋转方向（左右手系）、行优先/列优先乘法约定必须由工程师严格核验。
+            </div>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Interactive Demo</div>
+            <h2 style="margin-bottom: 0.2em">Demo：基本变换矩阵实验台</h2>
+            <p
+              class="lead fragment fade-up"
+              style="font-size: 0.62em; line-height: 1.42; margin-bottom: 14px"
+            >
+              分别调整平移 (T)、旋转 (R)、缩放 (S) 参数，实时观察顶点坐标、\(4\times 4\)
+              齐次矩阵与三维形体姿态响应。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D04-02 · 教学仪器</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >HTML5 Canvas + WebGL 交互实验</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    基本变换矩阵实验台
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 12px 0"
+                  >
+                    直观操控三维几何体，同步观察 \(4\times 4\)
+                    矩阵数值动态变化与顶点变换计算，打通代数矩阵与空间几何直觉。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹 <strong>三维变换调节</strong>：独立调节平移 (\(t_x, t_y, t_z\))、旋转
+                        (轴向与角度 \(\theta\))、缩放 (\(s_x, s_y, s_z\))
+                      </div>
+                      <div>
+                        🔹 <strong>对象属性切换</strong>：几何点 (Point, \(w=1\)) 与方向向量
+                        (Vector, \(w=0\)) 变换差异实时监视
+                      </div>
+                      <div>
+                        🔹 <strong>矩阵实时解算</strong>：同步输出 \(4\times 4\)
+                        矩阵各元素，直观呈现主对角线与最后一列
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./demos/basic-transform-matrix.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 54px;
+                      font-size: 0.66em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：基本变换矩阵实验台</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card fragment fade-up"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">3 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题观察与验证
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.55em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>平移与不动点观察</strong>：调节 \(t_x, t_y, t_z\)，观察点 \(P\)
+                      的坐标变化，原点是否随之发生视觉偏移？
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>点与向量分界验证</strong>：切换 Point (\(w=1\)) 与 Vector
+                      (\(w=0\))，验证方向向量为何对平移完全“免疫”。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>绕轴旋转与正负号</strong>：切换绕 \(X, Y, Z\)
+                      轴旋转，验证右手定则正方向，注意绕 \(Y\) 轴旋转时矩阵符号的对称特征。
+                    </li>
+                    <li>
+                      <strong>缩放中心与比例形变</strong
+                      >：对比均匀缩放与非均匀缩放，观察物体自身尺寸及距原点距离的同步放大。
+                    </li>
+                  </ol>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 12px;
+                    padding: 8px 14px;
+                    background: rgba(5, 150, 105, 0.08);
+                    border-radius: 10px;
+                    font-size: 0.5em;
+                    line-height: 1.45;
+                    color: #065f46;
+                  "
+                >
+                  💡 <strong>提示</strong>：重点观察中间参数面板的 \(4\times 4\)
+                  矩阵数值高亮，建立代数元素与三维图形运动的一一映射。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">D04-02 · 基本变换矩阵实验台：调用本地独立交互Demo。</aside>
+          </section>
+          <section id="sec-6-2">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Closure</div>
+            <h2>从简单形体回到医工场景</h2>
+            <p class="lead fragment fade-up">
+              虚拟器械的定位，本质是给同一组顶点施加不同的变换矩阵。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">Unit Tool</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Scale</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Rotate</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Translate</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node green fragment fade-up">Patient Scene</div>
+            </div>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>位置</h3>
+                <p>Translation决定对象放到哪里。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>方向</h3>
+                <p>Rotation决定轴向如何对齐。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>尺度</h3>
+                <p>Scaling决定模型大小是否匹配。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-6-3">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课时小结：基本变换与齐次矩阵</h2>
+            <p class="lead fragment fade-up">
+              本课从虚拟器械定位问题出发，建立了从概念到矩阵的基本变换框架。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>概念层</h3>
+                <p>变换是点到点、向量到向量的映射；仿射变换保持直线结构。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>性质层</h3>
+                <p>刚性变换保持距离、角度、形状和体积；非刚性变换可能改变大小、比例或形状。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>矩阵层</h3>
+                <p>平移、缩放、旋转都可以在齐次坐标中统一为矩阵乘法。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              核心结论：<span class="accent"
+                >二维公式帮助理解几何意义，三维齐次矩阵帮助进入WebGL实现；中心点和旋转轴决定变换结果。</span
+              >
+            </div>
+          </section>
+          <section id="sec-6-4">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>随堂测试：识别变换类型</h2>
+            <div class="question fragment fade-up">
+              <div class="q">判断</div>
+              <p>将虚拟器械沿目标通道方向对齐，主要对应哪类变换？</p>
+            </div>
+            <div class="grid3">
+              <div class="quiz-card fragment fade-up"><strong>A</strong>Translation</div>
+              <div class="quiz-card fragment fade-up"><strong>B</strong>Rotation</div>
+              <div class="quiz-card fragment fade-up"><strong>C</strong>Scaling</div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：B。</strong
+              >方向对齐主要依赖旋转；若还要放到目标点，则需要继续组合平移。
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>
