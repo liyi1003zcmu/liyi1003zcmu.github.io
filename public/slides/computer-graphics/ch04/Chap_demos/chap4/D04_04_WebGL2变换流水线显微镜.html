@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D04-04 · WebGL2变换流水线显微镜</title>
+    <style>
+      :root {
+        --bg-page: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-panel: #f1f5f9;
+        --color-primary: #173b57;
+        --color-sub: #64748b;
+        --color-border: #cbd5e1;
+        --color-cyan: #0284c7;
+        --color-cyan-light: #e0f2fe;
+        --color-green: #059669;
+        --color-green-light: #d1fae5;
+        --color-amber: #d97706;
+        --color-amber-light: #fef3c7;
+        --color-purple: #7c3aed;
+        --color-red: #ef4444;
+        --font-base:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+          sans-serif;
+        --font-mono: 'SF Mono', Consolas, Menlo, Monaco, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-page);
+        color: var(--color-primary);
+        font-family: var(--font-base);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      header {
+        padding: 12px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        background: #e0f2fe;
+        color: #0369a1;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 6px;
+        border: 1px solid #bae6fd;
+      }
+
+      h1 {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--color-primary);
+      }
+
+      /* Frame Monitor in header */
+      .frame-monitor {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #f8fafc;
+        padding: 4px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+
+      .monitor-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .status-tag {
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+
+      .status-no {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+      }
+
+      .status-yes {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #86efac;
+      }
+
+      .status-warn {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+      }
+
+      /* Pipeline Flow Bar */
+      .pipeline-bar {
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        padding: 8px 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        font-size: 12px;
+      }
+
+      .pipe-node {
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        font-weight: 600;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .pipe-node.active {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #7dd3fc;
+        font-weight: 700;
+      }
+
+      .pipe-node.highlight {
+        background: #dbeafe;
+        color: #1e40af;
+        border-color: #93c5fd;
+      }
+
+      .pipe-arrow {
+        color: #94a3b8;
+        font-weight: 700;
+      }
+
+      /* Main Grid */
+      .main-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr;
+        gap: 16px;
+        padding: 16px 24px;
+        max-width: 1720px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      @media (max-width: 1200px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .col-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      }
+
+      .card-head {
+        padding: 10px 16px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .card-body {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+      }
+
+      /* Column 1: WebGL Canvas */
+      .viewport-box {
+        position: relative;
+        width: 100%;
+        height: 280px;
+        background: radial-gradient(circle at center, #ffffff 40%, #f1f5f9 100%);
+        border-radius: 10px;
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        cursor: grab;
+      }
+
+      .viewport-box:active {
+        cursor: grabbing;
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .viewport-tools {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        gap: 6px;
+      }
+
+      .mini-btn {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #cbd5e1;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .info-strip {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      /* Column 2: Controls & Matrix */
+      .ctrl-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .ctrl-label {
+        font-weight: 600;
+        color: #475569;
+        min-width: 90px;
+      }
+
+      .ctrl-slider {
+        flex: 1;
+      }
+
+      .ctrl-val {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        min-width: 45px;
+        text-align: right;
+        color: #0369a1;
+        font-weight: 700;
+      }
+
+      .matrix-display {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        background: #f8fafc;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .m-cell {
+        padding: 4px 2px;
+        background: #ffffff;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+      }
+
+      .m-cell.highlight {
+        background: #e0f2fe;
+        color: #0369a1;
+        font-weight: 700;
+        border-color: #bae6fd;
+      }
+
+      .code-box {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 1.45;
+        overflow-x: auto;
+      }
+
+      .code-hl {
+        color: #38bdf8;
+        font-weight: 700;
+      }
+
+      /* Strategy Tabs */
+      .strategy-group {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 4px;
+      }
+
+      .strat-btn {
+        flex: 1;
+        padding: 6px 4px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: #f8fafc;
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+      }
+
+      .strat-btn.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        font-weight: 700;
+      }
+
+      .strat-info {
+        background: #f8fafc;
+        border-left: 3px solid var(--color-cyan);
+        padding: 8px 12px;
+        border-radius: 0 8px 8px 0;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      /* Preset Bar */
+      .preset-bar {
+        padding: 10px 24px;
+        background: #ffffff;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        padding: 5px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: #f8fafc;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .preset-btn:hover {
+        background: #e2e8f0;
+      }
+
+      .preset-btn.active {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #7dd3fc;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Header -->
+    <header>
+      <div class="brand-wrap">
+        <span class="badge">D04-04</span>
+        <h1>WebGL2变换流水线显微镜</h1>
+      </div>
+
+      <!-- Live Frame Monitor -->
+      <div class="frame-monitor">
+        <div class="monitor-item">
+          <span>帧序号:</span>
+          <strong id="mon-frame" style="color: var(--color-cyan)">0</strong>
+        </div>
+        <div class="monitor-item">
+          <span>旋转角 θ:</span>
+          <strong id="mon-theta">0.0°</strong>
+        </div>
+        <div class="monitor-item">
+          <span>Vertex Buffer Updated?</span>
+          <span id="mon-buffer-status" class="status-tag status-no">NO (0 B)</span>
+        </div>
+        <div class="monitor-item">
+          <span>uModelMatrix Updated?</span>
+          <span id="mon-uniform-status" class="status-tag status-yes">YES (64 B)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pipeline Flow Bar -->
+    <div class="pipeline-bar">
+      <span style="font-weight: 700; color: #475569">数据流向显微镜：</span>
+      <div class="pipe-node" id="pipe-1">1. JavaScript State</div>
+      <span class="pipe-arrow">→</span>
+      <div class="pipe-node" id="pipe-2">2. CPU Model Matrix</div>
+      <span class="pipe-arrow">→</span>
+      <div class="pipe-node highlight" id="pipe-3">3. gl.uniformMatrix4fv</div>
+      <span class="pipe-arrow">→</span>
+      <div class="pipe-node active" id="pipe-4">4. GPU Uniform (uModelMatrix)</div>
+      <span class="pipe-arrow">→</span>
+      <div class="pipe-node active" id="pipe-5">5. Vertex Shader (P' = M·P)</div>
+      <span class="pipe-arrow">→</span>
+      <div class="pipe-node" id="pipe-6">6. gl_Position</div>
+    </div>
+
+    <!-- Main 3-Column Grid -->
+    <div class="main-grid">
+      <!-- Column 1: Geometry & WebGL2 Viewport -->
+      <div class="col-card">
+        <div class="card-head">
+          <span>三维几何视图 (WebGL2 渲染)</span>
+          <span id="model-mode-badge" style="font-size: 11px; color: #64748b">标准几何体模式</span>
+        </div>
+        <div class="card-body">
+          <div class="viewport-box" id="viewport-box">
+            <canvas id="webgl-canvas"></canvas>
+            <div class="viewport-tools">
+              <button class="mini-btn" id="btn-wireframe">线框 / 实体</button>
+              <button class="mini-btn" id="btn-reset-view">↺ 重置视角</button>
+            </div>
+          </div>
+
+          <div class="info-strip">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px">
+              <strong>GPU 顶点显存状态 (VBO)</strong>
+              <span class="status-tag status-no" style="font-size: 10px"
+                >状态：完全静止 (Static)</span
+              >
+            </div>
+            <div style="font-size: 11px; color: #475569">
+              模型包含 24 个顶点，12 个三角面。<strong
+                >几何数据一次性上传后，每帧旋转无需重写 Buffer！</strong
+              >
+            </div>
+          </div>
+
+          <div class="info-strip">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px">
+              <strong>当前观察顶点 (Inspected Vertex v₀)</strong>
+              <select
+                id="vtx-select"
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 11px;
+                  padding: 2px 6px;
+                  border-radius: 4px;
+                  border: 1px solid #cbd5e1;
+                "
+              >
+                <option value="0">v₀: (1.0, 1.0, 1.0)</option>
+                <option value="1">v₁: (-1.0, 1.0, 1.0)</option>
+                <option value="2">v₂: (-1.0, -1.0, 1.0)</option>
+                <option value="3">v₃: (1.0, -1.0, 1.0)</option>
+              </select>
+            </div>
+            <div
+              style="font-family: var(--font-mono); font-size: 11px; color: #1e293b"
+              id="vtx-raw-coord"
+            >
+              原始 VBO 坐标：aPosition = [1.00, 1.00, 1.00, 1.0]
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: CPU / Application Controller -->
+      <div class="col-card">
+        <div class="card-head">
+          <span>CPU / 应用端状态控制与矩阵解算</span>
+          <button
+            id="btn-play-pause"
+            class="mini-btn"
+            style="background: #0284c7; color: #fff; border-color: #0284c7"
+          >
+            ▶ 自动旋转
+          </button>
+        </div>
+        <div class="card-body">
+          <!-- Controls -->
+          <div class="ctrl-row">
+            <span class="ctrl-label">绕 Y 轴旋转 (θ):</span>
+            <input type="range" class="ctrl-slider" id="slider-ry" min="0" max="360" value="35" />
+            <span class="ctrl-val" id="val-ry">35°</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">绕 X 轴旋转:</span>
+            <input type="range" class="ctrl-slider" id="slider-rx" min="-90" max="90" value="20" />
+            <span class="ctrl-val" id="val-rx">20°</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">平移 (tx, ty):</span>
+            <input
+              type="range"
+              class="ctrl-slider"
+              id="slider-tx"
+              min="-2"
+              max="2"
+              step="0.1"
+              value="0"
+            />
+            <span class="ctrl-val" id="val-tx">0.0</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">缩放 (Scale):</span>
+            <input
+              type="range"
+              class="ctrl-slider"
+              id="slider-scale"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value="1.0"
+            />
+            <span class="ctrl-val" id="val-scale">1.0×</span>
+          </div>
+
+          <!-- 4x4 Matrix Output -->
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #475569;
+                margin-bottom: 4px;
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>CPU 实时计算的模型矩阵 (uModelMatrix)</span>
+              <span style="color: #0369a1">4×4 列优先 (Float32Array)</span>
+            </div>
+            <div class="matrix-display" id="matrix-grid">
+              <!-- 16 cells -->
+            </div>
+          </div>
+
+          <!-- Code Call snippet -->
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px">
+              CPU → GPU 数据传输通道 (API 调用)
+            </div>
+            <div class="code-box">
+              <span style="color: #94a3b8">// 每帧只向 GPU 传输 16 个 float (64 字节)</span><br />
+              <span class="code-hl">gl.uniformMatrix4fv</span>(uModelLoc,
+              <span style="color: #f59e0b">false</span>, modelMatrix);
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: GPU / Vertex Shader Inspector -->
+      <div class="col-card">
+        <div class="card-head">
+          <span>GPU 顶点着色器显微镜 (Per-Vertex)</span>
+          <span style="font-size: 11px; color: #15803d; font-weight: 700">GLSL ES 3.00</span>
+        </div>
+        <div class="card-body">
+          <!-- Vertex Shader Code -->
+          <div class="code-box" style="font-size: 11px">
+            <span style="color: #94a3b8">#version 300 es</span><br />
+            <span style="color: #c084fc">in</span>
+            <span style="color: #67e8f9">vec4</span> aPosition;
+            <span style="color: #64748b">// 从 VBO 读入 (保持不变)</span><br />
+            <span style="color: #c084fc">uniform</span>
+            <span style="color: #67e8f9">mat4</span> uModelMatrix;
+            <span style="color: #64748b">// CPU 传入 (每帧更新)</span><br /><br />
+            <span style="color: #c084fc">void</span> <span style="color: #fbbf24">main</span>() {<br />
+            &nbsp;&nbsp;<span
+              class="code-hl"
+              style="background: rgba(56, 189, 248, 0.15); padding: 2px 4px; border-radius: 3px"
+              >gl_Position = uModelMatrix * aPosition;</span
+            ><br />
+            }
+          </div>
+
+          <!-- Per-Vertex Microscope Calculation -->
+          <div class="info-strip" style="background: #f0fdf4; border-color: #bbf7d0">
+            <div style="font-size: 11px; font-weight: 700; color: #166534; margin-bottom: 4px">
+              🔍 顶点 v₀ 单顶点代数计算输出：
+            </div>
+            <div
+              style="
+                font-family: var(--font-mono);
+                font-size: 11px;
+                color: #1e293b;
+                line-height: 1.6;
+              "
+              id="vtx-calc-result"
+            >
+              P' = M · P<br />
+              gl_Position = [0.82, 1.15, 0.76, 1.00]
+            </div>
+          </div>
+
+          <!-- Strategy Selector -->
+          <div>
+            <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px">
+              架构策略对比 (三种实现方案)：
+            </div>
+            <div class="strategy-group">
+              <button class="strat-btn" id="strat-a">A. CPU顶点重写</button>
+              <button class="strat-btn active" id="strat-b">B. CPU矩阵+GPU变换</button>
+              <button class="strat-btn" id="strat-c">C. GPU构造矩阵</button>
+            </div>
+            <div class="strat-info" id="strat-desc">
+              <strong>方案 B (行业标准推荐)</strong>：CPU 仅计算一次 4×4 矩阵并上传 64 字节，由 GPU
+              对成千上万顶点做高度并行变换。总传输量极低，性能最优。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Presets Bar -->
+    <div class="preset-bar">
+      <strong style="font-size: 12px; color: #475569">课堂教学预设：</strong>
+      <button class="preset-btn active" id="pre-cube">
+        预设 1: 标准三维几何体旋转 (Cube Mesh)
+      </button>
+      <button class="preset-btn" id="pre-medical">
+        预设 2: 医疗器械与患者解剖定位 (Medical Viewer)
+      </button>
+      <button class="preset-btn" id="pre-anim">
+        预设 3: 60 FPS 连续动画状态监控 (Animation Loop)
+      </button>
+    </div>
+
+    <!-- WebGL2 & Logic Scripts -->
+    <script>
+      /* ========================================================
+       WebGL2 & Math Initialization
+       ======================================================== */
+      const canvas = document.getElementById('webgl-canvas');
+      const gl = canvas.getContext('webgl2');
+
+      if (!gl) {
+        alert('您的浏览器不支持 WebGL2！请使用支持 WebGL2 的现代浏览器。');
+      }
+
+      // GLSL ES 3.00 Shaders
+      const vsSource = `#version 300 es
+    in vec4 aPosition;
+    in vec3 aNormal;
+    in vec4 aColor;
+
+    uniform mat4 uModelMatrix;
+    uniform mat4 uViewProjMatrix;
+
+    out vec4 vColor;
+    out vec3 vNormal;
+
+    void main() {
+        gl_Position = uViewProjMatrix * uModelMatrix * aPosition;
+        vColor = aColor;
+        vNormal = mat3(uModelMatrix) * aNormal;
+    }`;
+
+      const fsSource = `#version 300 es
+    precision mediump float;
+
+    in vec4 vColor;
+    in vec3 vNormal;
+    out vec4 outColor;
+
+    void main() {
+        vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
+        float diff = max(dot(normalize(vNormal), lightDir), 0.25);
+        outColor = vec4(vColor.rgb * (diff * 0.75 + 0.25), vColor.a);
+    }`;
+
+      // Shader compilation utility
+      function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(shader));
+          gl.deleteShader(shader);
+          return null;
+        }
+        return shader;
+      }
+
+      const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+      const program = gl.createProgram();
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(program));
+      }
+
+      const aPositionLoc = gl.getAttribLocation(program, 'aPosition');
+      const aNormalLoc = gl.getAttribLocation(program, 'aNormal');
+      const aColorLoc = gl.getAttribLocation(program, 'aColor');
+      const uModelLoc = gl.getUniformLocation(program, 'uModelMatrix');
+      const uViewProjLoc = gl.getUniformLocation(program, 'uViewProjMatrix');
+
+      /* ========================================================
+       Geometry Buffers (Static Cube & Medical Tool)
+       ======================================================== */
+      // Standard Cube
+      const cubeVertices = new Float32Array([
+        // Front
+        -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1,
+        // Back
+        -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1, -1,
+        // Top
+        -1, 1, -1, -1, 1, 1, 1, 1, 1, 1, 1, -1,
+        // Bottom
+        -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1,
+        // Right
+        1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1,
+        // Left
+        -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1,
+      ]);
+
+      const cubeNormals = new Float32Array([
+        0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1,
+        0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+        0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+      ]);
+
+      const cubeColors = new Float32Array([
+        0.15, 0.65, 0.95, 1, 0.15, 0.65, 0.95, 1, 0.15, 0.65, 0.95, 1, 0.15, 0.65, 0.95, 1, 0.95,
+        0.6, 0.15, 1, 0.95, 0.6, 0.15, 1, 0.95, 0.6, 0.15, 1, 0.95, 0.6, 0.15, 1, 0.25, 0.85, 0.55,
+        1, 0.25, 0.85, 0.55, 1, 0.25, 0.85, 0.55, 1, 0.25, 0.85, 0.55, 1, 0.85, 0.25, 0.35, 1, 0.85,
+        0.25, 0.35, 1, 0.85, 0.25, 0.35, 1, 0.85, 0.25, 0.35, 1, 0.65, 0.35, 0.95, 1, 0.65, 0.35,
+        0.95, 1, 0.65, 0.35, 0.95, 1, 0.65, 0.35, 0.95, 1, 0.95, 0.85, 0.25, 1, 0.95, 0.85, 0.25, 1,
+        0.95, 0.85, 0.25, 1, 0.95, 0.85, 0.25, 1,
+      ]);
+
+      const cubeIndices = new Uint16Array([
+        0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18,
+        16, 18, 19, 20, 21, 22, 20, 22, 23,
+      ]);
+
+      // VAO setup
+      const vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
+
+      const posBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, cubeVertices, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(aPositionLoc);
+      gl.vertexAttribPointer(aPositionLoc, 3, gl.FLOAT, false, 0, 0);
+
+      const normBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, cubeNormals, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(aNormalLoc);
+      gl.vertexAttribPointer(aNormalLoc, 3, gl.FLOAT, false, 0, 0);
+
+      const colBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, cubeColors, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(aColorLoc);
+      gl.vertexAttribPointer(aColorLoc, 4, gl.FLOAT, false, 0, 0);
+
+      const idxBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cubeIndices, gl.STATIC_DRAW);
+
+      gl.bindVertexArray(null);
+
+      /* ========================================================
+       Application State & Matrices
+       ======================================================== */
+      const state = {
+        rx: 20,
+        ry: 35,
+        tx: 0,
+        scale: 1.0,
+        isAnimating: false,
+        isWireframe: false,
+        frameCount: 0,
+        strategy: 'B',
+        preset: 'cube',
+        inspectedVtx: [1.0, 1.0, 1.0, 1.0],
+      };
+
+      // Math utilities
+      function mat4Perspective(fovy, aspect, near, far) {
+        const f = 1.0 / Math.tan(fovy / 2);
+        const nf = 1 / (near - far);
+        return [
+          f / aspect,
+          0,
+          0,
+          0,
+          0,
+          f,
+          0,
+          0,
+          0,
+          0,
+          (far + near) * nf,
+          -1,
+          0,
+          0,
+          2 * far * near * nf,
+          0,
+        ];
+      }
+
+      function mat4Multiply(a, b) {
+        const out = new Array(16);
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            let sum = 0;
+            for (let k = 0; k < 4; k++) {
+              sum += a[k * 4 + r] * b[c * 4 + k];
+            }
+            out[c * 4 + r] = sum;
+          }
+        }
+        return out;
+      }
+
+      function computeModelMatrix() {
+        const radX = (state.rx * Math.PI) / 180;
+        const radY = (state.ry * Math.PI) / 180;
+        const s = state.scale;
+        const tx = state.tx;
+
+        const cosX = Math.cos(radX),
+          sinX = Math.sin(radX);
+        const cosY = Math.cos(radY),
+          sinY = Math.sin(radY);
+
+        // Model Matrix = T * Ry * Rx * S (Column-major for WebGL)
+        return new Float32Array([
+          s * cosY,
+          s * sinX * sinY,
+          -s * cosX * sinY,
+          0,
+          0,
+          s * cosX,
+          s * sinX,
+          0,
+          s * sinY,
+          -s * sinX * cosY,
+          s * cosX * cosY,
+          0,
+          tx,
+          0,
+          0,
+          1,
+        ]);
+      }
+
+      /* ========================================================
+       Render Loop & Inspector
+       ======================================================== */
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+          canvas.width = rect.width * dpr;
+          canvas.height = rect.height * dpr;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      function render() {
+        resizeCanvas();
+        state.frameCount++;
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.useProgram(program);
+
+        // Camera View-Proj
+        const aspect = canvas.width / canvas.height;
+        const proj = mat4Perspective((45 * Math.PI) / 180, aspect, 0.1, 100);
+        // View: eye (0, 0, 5), center (0,0,0)
+        const view = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -4.5, 1];
+        const viewProj = mat4Multiply(view, proj);
+        gl.uniformMatrix4fv(uViewProjLoc, false, new Float32Array(viewProj));
+
+        // Model Matrix
+        const modelM = computeModelMatrix();
+        gl.uniformMatrix4fv(uModelLoc, false, modelM);
+
+        // Draw
+        gl.bindVertexArray(vao);
+        const primitive = state.isWireframe ? gl.LINE_LOOP : gl.TRIANGLES;
+        gl.drawElements(primitive, cubeIndices.length, gl.UNSIGNED_SHORT, 0);
+        gl.bindVertexArray(null);
+
+        updateInspector(modelM);
+
+        if (state.isAnimating) {
+          state.ry = (state.ry + 0.8) % 360;
+          document.getElementById('slider-ry').value = Math.round(state.ry);
+          document.getElementById('val-ry').textContent = Math.round(state.ry) + '°';
+          requestAnimationFrame(render);
+        }
+      }
+
+      function updateInspector(m) {
+        document.getElementById('mon-frame').textContent = state.frameCount;
+        document.getElementById('mon-theta').textContent = state.ry.toFixed(1) + '°';
+
+        // Update 4x4 matrix display
+        const grid = document.getElementById('matrix-grid');
+        grid.innerHTML = '';
+        for (let c = 0; c < 4; c++) {
+          for (let r = 0; r < 4; r++) {
+            const val = m[c * 4 + r];
+            const cell = document.createElement('div');
+            cell.className = 'm-cell';
+            cell.textContent = Math.abs(val) < 0.0001 ? '0.00' : val.toFixed(2);
+            if (r !== c && Math.abs(val) > 0.01) cell.classList.add('highlight');
+            if (r === c && Math.abs(val - 1.0) > 0.01) cell.classList.add('highlight');
+            grid.appendChild(cell);
+          }
+        }
+
+        // Compute Per-Vertex Result: P' = M * P
+        const p = state.inspectedVtx;
+        const px = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12] * p[3];
+        const py = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13] * p[3];
+        const pz = m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14] * p[3];
+        const pw = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15] * p[3];
+
+        document.getElementById('vtx-calc-result').innerHTML = `
+        <strong>Vertex Shader 正在执行 (Per-Vertex 计算)：</strong><br>
+        输入 P = [${p[0].toFixed(2)}, ${p[1].toFixed(2)}, ${p[2].toFixed(2)}, 1.0]<br>
+        输出 <span style="color:#0284c7; font-weight:700;">gl_Position = [${px.toFixed(2)}, ${py.toFixed(2)}, ${pz.toFixed(2)}, ${pw.toFixed(2)}]</span>
+      `;
+      }
+
+      /* ========================================================
+       UI Controls & Listeners
+       ======================================================== */
+      const sliderRy = document.getElementById('slider-ry');
+      const sliderRx = document.getElementById('slider-rx');
+      const sliderTx = document.getElementById('slider-tx');
+      const sliderScale = document.getElementById('slider-scale');
+
+      function onControlInput() {
+        state.ry = parseFloat(sliderRy.value);
+        state.rx = parseFloat(sliderRx.value);
+        state.tx = parseFloat(sliderTx.value);
+        state.scale = parseFloat(sliderScale.value);
+
+        document.getElementById('val-ry').textContent = state.ry + '°';
+        document.getElementById('val-rx').textContent = state.rx + '°';
+        document.getElementById('val-tx').textContent = state.tx.toFixed(1);
+        document.getElementById('val-scale').textContent = state.scale.toFixed(1) + '×';
+
+        if (!state.isAnimating) render();
+      }
+
+      [sliderRy, sliderRx, sliderTx, sliderScale].forEach((s) =>
+        s.addEventListener('input', onControlInput),
+      );
+
+      // Play/Pause Animation
+      const btnPlay = document.getElementById('btn-play-pause');
+      btnPlay.addEventListener('click', () => {
+        state.isAnimating = !state.isAnimating;
+        btnPlay.textContent = state.isAnimating ? '⏸ 暂停旋转' : '▶ 自动旋转';
+        btnPlay.style.background = state.isAnimating ? '#e11d48' : '#0284c7';
+        if (state.isAnimating) render();
+      });
+
+      // Wireframe toggle
+      document.getElementById('btn-wireframe').addEventListener('click', () => {
+        state.isWireframe = !state.isWireframe;
+        if (!state.isAnimating) render();
+      });
+
+      // Reset View
+      document.getElementById('btn-reset-view').addEventListener('click', () => {
+        state.rx = 20;
+        state.ry = 35;
+        state.tx = 0;
+        state.scale = 1.0;
+        sliderRx.value = 20;
+        sliderRy.value = 35;
+        sliderTx.value = 0;
+        sliderScale.value = 1.0;
+        onControlInput();
+      });
+
+      // Inspected Vertex change
+      document.getElementById('vtx-select').addEventListener('change', (e) => {
+        const vMap = [
+          [1.0, 1.0, 1.0, 1.0],
+          [-1.0, 1.0, 1.0, 1.0],
+          [-1.0, -1.0, 1.0, 1.0],
+          [1.0, -1.0, 1.0, 1.0],
+        ];
+        state.inspectedVtx = vMap[parseInt(e.target.value)] || vMap[0];
+        document.getElementById('vtx-raw-coord').textContent =
+          `原始 VBO 坐标：aPosition = [${state.inspectedVtx[0].toFixed(2)}, ${state.inspectedVtx[1].toFixed(2)}, ${state.inspectedVtx[2].toFixed(2)}, 1.0]`;
+        if (!state.isAnimating) render();
+      });
+
+      // Strategy Switching
+      function setStrategy(strat) {
+        state.strategy = strat;
+        document.querySelectorAll('.strat-btn').forEach((b) => b.classList.remove('active'));
+        document.getElementById('strat-' + strat.toLowerCase()).classList.add('active');
+
+        const desc = document.getElementById('strat-desc');
+        const bufStatus = document.getElementById('mon-buffer-status');
+        const uniStatus = document.getElementById('mon-uniform-status');
+
+        if (strat === 'A') {
+          desc.innerHTML = `<strong>方案 A (CPU Vertex Update)</strong>：CPU 逐个计算数万个顶点新坐标，每帧通过 <code>gl.bufferSubData</code> 重新上传 VBO。<strong>缺点：PCI-e 带宽爆炸，极易掉帧！</strong>`;
+          bufStatus.textContent = 'YES (重写全部顶点)';
+          bufStatus.className = 'status-tag status-warn';
+          uniStatus.textContent = 'NO (0 B)';
+          uniStatus.className = 'status-tag status-no';
+        } else if (strat === 'B') {
+          desc.innerHTML = `<strong>方案 B (行业标准推荐)</strong>：CPU 仅计算一次 4×4 矩阵并上传 64 字节，由 GPU 对成千上万顶点做高度并行变换。<strong>总传输量极低，性能最优！</strong>`;
+          bufStatus.textContent = 'NO (0 B)';
+          bufStatus.className = 'status-tag status-no';
+          uniStatus.textContent = 'YES (64 B)';
+          uniStatus.className = 'status-tag status-yes';
+        } else {
+          desc.innerHTML = `<strong>方案 C (GPU Matrix Construction)</strong>：CPU 仅上传旋转角 θ (4 字节)，由 Vertex Shader 内部计算 sin/cos 并构造矩阵。<strong>传输极简，但在顶点极多时会重复计算矩阵。</strong>`;
+          bufStatus.textContent = 'NO (0 B)';
+          bufStatus.className = 'status-tag status-no';
+          uniStatus.textContent = 'YES (4 B θ)';
+          uniStatus.className = 'status-tag status-yes';
+        }
+      }
+
+      document.getElementById('strat-a').addEventListener('click', () => setStrategy('A'));
+      document.getElementById('strat-b').addEventListener('click', () => setStrategy('B'));
+      document.getElementById('strat-c').addEventListener('click', () => setStrategy('C'));
+
+      // Presets
+      document.getElementById('pre-cube').addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+        document.getElementById('pre-cube').classList.add('active');
+        document.getElementById('model-mode-badge').textContent = '标准几何体模式 (Cube)';
+        setStrategy('B');
+        state.scale = 1.0;
+        sliderScale.value = 1.0;
+        onControlInput();
+      });
+
+      document.getElementById('pre-medical').addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+        document.getElementById('pre-medical').classList.add('active');
+        document.getElementById('model-mode-badge').textContent =
+          '虚拟医疗器械与解剖定位 (Medical Viewer)';
+        setStrategy('B');
+        state.rx = 15;
+        state.ry = 65;
+        state.tx = 0.4;
+        state.scale = 1.2;
+        sliderRx.value = 15;
+        sliderRy.value = 65;
+        sliderTx.value = 0.4;
+        sliderScale.value = 1.2;
+        onControlInput();
+      });
+
+      document.getElementById('pre-anim').addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+        document.getElementById('pre-anim').classList.add('active');
+        if (!state.isAnimating) {
+          btnPlay.click();
+        }
+      });
+
+      // Start
+      window.addEventListener('resize', () => {
+        if (!state.isAnimating) render();
+      });
+      setStrategy('B');
+      render();
+    </script>
+  </body>
+</html>
