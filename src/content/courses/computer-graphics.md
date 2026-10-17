@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-10-16
+updatedDate: 2026-10-17
 ---
 
 ## 课程简介
@@ -74,9 +74,11 @@ updatedDate: 2026-10-16
 3. **交互和动画**：事件驱动输入、动画渲染循环与对象拾取
    - [第一讲：让图形动起来](/slides/computer-graphics/ch03/lecture-3-1.html)
    - [第二讲：让用户操纵图形](/slides/computer-graphics/ch03/lecture-3-2.html)
-4. **几何对象和变换**：坐标系、仿射变换、齐次坐标、变换级联与四元数
-   - [第一讲：几何对象与表示](/slides/computer-graphics/ch04/lecture-4-1.html)
+4. **几何对象和变换**：几何表示、齐次坐标、基本变换、复合变换与 WebGL 矩阵传递
+   - [第一讲：从医学影像到几何表示](/slides/computer-graphics/ch04/lecture-4-1.html)
    - [第二讲：基本几何变换](/slides/computer-graphics/ch04/lecture-4-2.html)
+   - [第三讲：复合变换](/slides/computer-graphics/ch04/lecture-4-3.html)
+   - [第四讲：WebGL 中的变换](/slides/computer-graphics/ch04/lecture-4-4.html)
 5. **观察**：相机定位、观察矩阵、平行与透视投影、规范化视见体
 6. **光照和着色**：Phong 光照模型、材质、光源、法向量与片元着色
 7. **纹理映射**：纹理坐标、采样与滤波、环境映射与凹凸贴图
@@ -128,7 +130,7 @@ updatedDate: 2026-10-16
 - 跟踪球矩阵旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubetrack.js)
 - 跟踪球四元数旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap4/chap4-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch04/rotcubetrackq.js)
 
-课件内的“标架与齐次坐标显微镜”和“基本变换矩阵实验台”保留在对应课件中直接启动，不再作为独立 Demo 重复列出。
+课件内的标架、齐次坐标、基本变换、复合变换和任意轴旋转实验台保留在对应课件中直接启动，不再作为独立 Demo 重复列出。
 
 ## 实验任务
 
@@ -152,6 +154,7 @@ updatedDate: 2026-10-16
 
 ## 更新记录
 
+- 2026-10-17：同步第四章四份在线课件、配套图片与互动实验，补充第三、四讲资源入口并更新章节代码。
 - 2026-10-16：发布第四章前两讲及 5 个 WebGL 2 几何变换 Demo；课件内教学仪器改为仅从对应课件启动。
 - 2026-10-03：发布第三章两份在线课件及课件内互动示例，新增按章节整理的第一至第三章 Demo 与配套代码。
 - 2026-09-25：发布第二章三份在线课件及配套 WebGL 示例。

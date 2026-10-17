@@ -1,0 +1,1548 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D04-01 标架与齐次坐标显微镜 - 计算机图形学教学 Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --border-color: #cbd5e1;
+        --border-light: #e2e8f0;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --text-sub: #64748b;
+        --brand-blue: #0284c7;
+        --brand-blue-hover: #0369a1;
+        --brand-blue-light: #e0f2fe;
+        --brand-green: #059669;
+        --brand-green-bg: #d1fae5;
+        --brand-amber: #d97706;
+        --brand-amber-bg: #fef3c7;
+        --font-mono: 'JetBrains Mono', Consolas, Menlo, Monaco, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        user-select: none;
+      }
+
+      .app-frame {
+        max-width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        background: var(--bg-card);
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .custom-scroll::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .badge-mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .matrix-bracket {
+        position: relative;
+        padding: 0 6px;
+      }
+      .matrix-bracket::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 4px;
+        border-left: 2px solid #0f172a;
+        border-top: 2px solid #0f172a;
+        border-bottom: 2px solid #0f172a;
+        border-radius: 3px 0 0 3px;
+      }
+      .matrix-bracket::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 4px;
+        border-right: 2px solid #0f172a;
+        border-top: 2px solid #0f172a;
+        border-bottom: 2px solid #0f172a;
+        border-radius: 0 3px 3px 0;
+      }
+
+      .step-active {
+        border-color: #0284c7 !important;
+        background-color: #f0f9ff !important;
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+      }
+
+      canvas {
+        cursor: crosshair;
+      }
+    </style>
+  </head>
+  <body class="p-1 md:p-2 h-screen max-h-screen flex flex-col overflow-hidden bg-slate-100">
+    <main class="app-frame w-full flex-1 min-h-0">
+      <!-- 顶部教学标题栏 -->
+      <header
+        class="px-4 py-2.5 bg-slate-100 border-b border-slate-300 flex flex-wrap justify-between items-center gap-2 shrink-0"
+      >
+        <div class="flex items-center gap-2.5">
+          <span
+            class="bg-slate-900 text-white font-mono text-xs font-bold px-2 py-0.5 rounded tracking-wider"
+            >D04-01</span
+          >
+          <div>
+            <h1
+              class="text-base lg:text-lg font-extrabold text-slate-900 flex items-center gap-2 leading-none"
+            >
+              标架与齐次坐标显微镜
+              <span class="text-xs font-semibold text-slate-500 hidden sm:inline"
+                >Frames & Homogeneous Coordinates Microscope</span
+              >
+            </h1>
+            <p class="text-[11px] text-slate-600 mt-0.5 font-medium line-clamp-1">
+              核心问题：“同一个几何对象，在模型坐标系、世界坐标系和观察/相机坐标系下为什么坐标不同？$w$
+              分量到底起到了什么作用？”
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="bg-sky-100 text-sky-800 border border-sky-300 text-[11px] font-semibold px-2 py-0.5 rounded-full font-mono"
+          >
+            Chapter 4 · 几何变换
+          </span>
+          <span
+            class="bg-slate-200 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-full hidden md:inline"
+          >
+            大学图形学教学仪器
+          </span>
+        </div>
+      </header>
+
+      <div
+        class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 bg-slate-50 border-b border-slate-300 overflow-hidden"
+      >
+        <!-- ================= 左栏：几何空间画布 (~44%) ================= -->
+        <section
+          class="lg:col-span-5 p-2.5 lg:p-3 flex flex-col border-r border-slate-200 bg-white h-full min-h-0"
+        >
+          <div
+            class="flex justify-between items-center mb-1.5 pb-1 border-b border-slate-200 shrink-0"
+          >
+            <div class="text-xs lg:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <svg
+                class="w-4 h-4 text-sky-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
+                />
+              </svg>
+              几何空间 (Geometric Space)
+            </div>
+            <span class="text-[11px] text-slate-500 font-medium">支持鼠标拖动手柄与标架基底</span>
+          </div>
+
+          <!-- 交互画布卡片容器 (浅色背景，适配大教室投影) -->
+          <div
+            class="relative flex-1 min-h-[300px] w-full bg-white rounded-lg border border-slate-300 overflow-hidden shadow-inner"
+            id="canvasContainer"
+          >
+            <canvas id="geoCanvas" class="absolute inset-0 w-full h-full block bg-white"></canvas>
+
+            <!-- 悬浮图例 -->
+            <div
+              class="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-md px-2.5 py-1.5 text-[11px] text-slate-700 space-y-1 pointer-events-none shadow-sm z-10"
+            >
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-3 h-0.5 bg-slate-600"></span>
+                <span>世界坐标系 (World Frame, W)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-3 h-0.5 bg-sky-600"></span>
+                <span id="legendActiveFrameName">模型坐标系 (Model Frame, M)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span id="legendActiveObj">点 P (Point, w=1)</span>
+              </div>
+            </div>
+
+            <!-- 模式浮层状态提示 -->
+            <div
+              class="absolute bottom-2.5 left-2.5 bg-white/95 border border-slate-200 rounded-md px-2.5 py-1 text-xs font-mono text-emerald-700 flex items-center gap-1.5 shadow-sm z-10"
+            >
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="canvasStatusText">空间几何真实不变 · 坐标随标架而变</span>
+            </div>
+
+            <!-- 鼠标光标坐标 -->
+            <div
+              class="absolute bottom-2.5 right-2.5 bg-white/95 text-slate-600 text-[11px] font-mono px-2 py-0.5 rounded-md border border-slate-200 shadow-sm z-10"
+              id="mouseWorldCoords"
+            >
+              Space: (0.00, 0.00)
+            </div>
+          </div>
+
+          <!-- 画布下方提示微栏 -->
+          <div
+            class="mt-2 flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-200 shrink-0"
+          >
+            <div class="flex items-center gap-1 text-[11px]">
+              <span class="text-amber-600 font-bold">💡 提示:</span>
+              <span>拖动黄色手柄改变位置，拖动蓝色箭头顶端旋转局部标架</span>
+            </div>
+            <button
+              id="btnCenterCanvas"
+              class="text-sky-700 hover:text-sky-800 font-semibold underline text-[11px]"
+            >
+              视口重置
+            </button>
+          </div>
+        </section>
+
+        <!-- ================= 中栏：标架参数与操作显微镜 (~33%) ================= -->
+        <section
+          class="lg:col-span-4 p-2.5 lg:p-3 flex flex-col border-r border-slate-200 bg-slate-50 custom-scroll overflow-y-auto h-full min-h-0"
+        >
+          <div
+            class="flex justify-between items-center mb-2 pb-1 border-b border-slate-200 shrink-0"
+          >
+            <div class="text-xs lg:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <svg
+                class="w-4 h-4 text-sky-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 2V4"
+                />
+              </svg>
+              标架定义与教学三步法
+            </div>
+            <span
+              class="text-[11px] bg-slate-200 text-slate-700 font-mono px-2 py-0.5 rounded font-semibold"
+              id="frameControlBadge"
+              >Model Frame</span
+            >
+          </div>
+
+          <!-- 教学引导三步卡片 -->
+          <div class="grid grid-cols-3 gap-1.5 mb-3">
+            <button
+              id="stepBtn1"
+              class="step-card step-active border border-slate-300 bg-white p-2 rounded text-left transition hover:bg-sky-50"
+            >
+              <div class="text-[10px] font-bold text-slate-400">STEP 1</div>
+              <div class="text-xs font-bold text-slate-800 mt-0.5">观察对象</div>
+              <div class="text-[10px] text-slate-500">固定几何空间</div>
+            </button>
+            <button
+              id="stepBtn2"
+              class="step-card border border-slate-300 bg-white p-2 rounded text-left transition hover:bg-sky-50"
+            >
+              <div class="text-[10px] font-bold text-slate-400">STEP 2</div>
+              <div class="text-xs font-bold text-slate-800 mt-0.5">变换标架</div>
+              <div class="text-[10px] text-slate-500">移动/旋转标架</div>
+            </button>
+            <button
+              id="stepBtn3"
+              class="step-card border border-slate-300 bg-white p-2 rounded text-left transition hover:bg-sky-50"
+            >
+              <div class="text-[10px] font-bold text-slate-400">STEP 3</div>
+              <div class="text-xs font-bold text-slate-800 mt-0.5">对比表示</div>
+              <div class="text-[10px] text-slate-500">揭示 w 分量机制</div>
+            </button>
+          </div>
+
+          <!-- 标准图形学标架角色选择器 -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-300 shadow-sm mb-3">
+            <div class="text-xs font-bold text-slate-700 mb-1.5 flex justify-between items-center">
+              <span>当前考察的局部标架 (Target Frame):</span>
+              <span
+                id="frameRoleBadge"
+                class="bg-sky-100 text-sky-800 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold"
+                >Model Frame (M)</span
+              >
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                id="btnRoleModel"
+                class="py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+                模型坐标系 (Model)
+              </button>
+              <button
+                id="btnRoleCamera"
+                class="py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+                观察/相机坐标系 (Camera)
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-tight" id="frameRoleHelpText">
+              模型坐标系绑定在物体本身；观察/相机坐标系以视点为原点，视线方向构成基底。
+            </p>
+          </div>
+
+          <!-- 对象选择器：点 vs 自由向量 -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-300 shadow-sm mb-3">
+            <div class="text-xs font-bold text-slate-700 mb-1.5 flex justify-between items-center">
+              <span>几何对象类型 (Geometric Entity):</span>
+              <span
+                id="entityBadge"
+                class="bg-amber-100 text-amber-800 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold"
+                >Point P (w=1)</span
+              >
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                id="btnSelectPoint"
+                class="py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm"
+              >
+                <span class="w-2 h-2 rounded-full bg-amber-300"></span> 点 P (Point)
+              </button>
+              <button
+                id="btnSelectVector"
+                class="py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1"
+              >
+                <span class="font-mono">→</span> 自由向量 v (Vector)
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5 leading-tight" id="entityHelpText">
+              点的位置依赖原点锚定；平移标架时其局部坐标必定改变 ($w=1$)。
+            </p>
+          </div>
+
+          <!-- 标架数学参数面板 -->
+          <div class="bg-white p-3 rounded-lg border border-slate-300 shadow-sm space-y-2.5 mb-3">
+            <div
+              class="text-xs font-bold text-slate-800 border-b border-slate-100 pb-1 flex justify-between items-center"
+            >
+              <span>标架定义 (Origin & Basis Vectors)</span>
+              <span class="text-[10px] text-slate-500">在世界坐标系 (W) 中的数值</span>
+            </div>
+
+            <!-- World Frame W -->
+            <div class="text-xs bg-slate-50 p-2 rounded border border-slate-200">
+              <div class="font-bold text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-sm bg-slate-400"></span> 世界坐标系 (World Frame, W)
+              </div>
+              <div class="grid grid-cols-3 gap-1 font-mono text-[11px] text-slate-600 mt-1">
+                <div>O_W: <b class="text-slate-800">(0.0, 0.0)</b></div>
+                <div>i_W: <b class="text-slate-800">(1.0, 0.0)</b></div>
+                <div>j_W: <b class="text-slate-800">(0.0, 1.0)</b></div>
+              </div>
+            </div>
+
+            <!-- Local Frame: Model or Camera -->
+            <div class="text-xs bg-sky-50/70 p-2 rounded border border-sky-200">
+              <div class="font-bold text-sky-900 flex justify-between items-center">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-sm bg-sky-500"></span>
+                  <span id="frameParamTitle">模型坐标系 (Model Frame, M)</span>
+                </span>
+                <span id="frameBAngleTag" class="text-[11px] font-mono font-bold text-sky-700"
+                  >θ = 30.0°</span
+                >
+              </div>
+              <div class="grid grid-cols-1 gap-1 font-mono text-[11px] text-slate-700 mt-1.5">
+                <div class="flex justify-between">
+                  <span id="originLabel">原点 O_M (in W):</span>
+                  <span id="obCoordsTag" class="font-bold text-slate-900">(2.00, 1.50)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span id="uAxisLabel">基底 u_M (in W):</span>
+                  <span id="ubCoordsTag" class="font-bold text-sky-800">(0.87, 0.50)</span>
+                </div>
+                <div class="flex justify-between">
+                  <span id="vAxisLabel">基底 v_M (in W):</span>
+                  <span id="vbCoordsTag" class="font-bold text-sky-800">(-0.50, 0.87)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 交互滑块调节 -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex justify-between text-xs text-slate-600">
+                <span id="sliderAngleLabel">旋转标架方向 (θ):</span>
+                <span id="sliderAngleVal" class="font-mono font-bold text-slate-800">30°</span>
+              </div>
+              <input
+                id="sliderAngle"
+                type="range"
+                min="0"
+                max="360"
+                value="30"
+                class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5 pt-1">
+              <button
+                id="btnRotatePlus"
+                class="py-1 px-2 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded border border-slate-300"
+              >
+                旋转 +45°
+              </button>
+              <button
+                id="btnResetFrameB"
+                class="py-1 px-2 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded border border-slate-300"
+              >
+                对齐世界坐标系
+              </button>
+            </div>
+          </div>
+
+          <!-- 标准图形管线场景预设 -->
+          <div
+            class="bg-gradient-to-r from-sky-50 to-blue-50 p-2.5 rounded-lg border border-sky-200 shadow-sm"
+          >
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-bold text-sky-950 flex items-center gap-1">
+                📐 图形管线场景预设 (Standard Pipeline)
+              </span>
+              <span
+                class="text-[10px] bg-sky-200 text-sky-900 px-1.5 py-0.5 rounded font-bold font-mono"
+                >Preset</span
+              >
+            </div>
+            <p class="text-[11px] text-sky-800 leading-snug mb-2" id="presetDescText">
+              几何对象在<b>模型坐标系 (Model)</b>中建模，经模型变换置入<b>世界坐标系 (World)</b
+              >，并在<b>观察/相机坐标系 (Camera)</b>下成像。
+            </p>
+            <div class="flex gap-1.5">
+              <button
+                id="btnLoadPreset"
+                class="flex-1 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded text-xs font-bold shadow-sm transition"
+              >
+                加载标准网格对象 (顶点P与表面法向n)
+              </button>
+              <button
+                id="btnToggleOrgan"
+                class="px-2 py-1.5 bg-white hover:bg-sky-100 text-sky-700 border border-sky-300 rounded text-xs font-semibold"
+              >
+                隐藏轮廓
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 右栏：坐标表示监视器 (~30%) ================= -->
+        <section
+          class="lg:col-span-3 p-2.5 lg:p-3 flex flex-col bg-white overflow-hidden h-full min-h-0 justify-between"
+        >
+          <div
+            class="flex justify-between items-center mb-2 pb-1 border-b border-slate-200 shrink-0"
+          >
+            <div class="text-xs lg:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <svg
+                class="w-4 h-4 text-sky-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              坐标表示监视器 (Representation)
+            </div>
+            <span
+              class="source-badge text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-mono"
+            >
+              Homogeneous
+            </span>
+          </div>
+
+          <div class="flex-1 min-h-0 flex flex-col justify-between gap-2 overflow-hidden">
+            <!-- 齐次坐标对比大卡片 -->
+            <div
+              class="bg-slate-50 p-2 lg:p-2.5 rounded-lg border border-slate-300 space-y-1.5 shrink-0"
+            >
+              <div class="text-xs font-bold text-slate-700 flex justify-between">
+                <span id="reprTitleCompare">世界坐标系 vs 局部标架:</span>
+                <span class="text-sky-600 font-mono text-[10px] font-bold" id="reprTypeName"
+                  >Point [x, y, w]^T</span
+                >
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-center">
+                <!-- World Frame Representation -->
+                <div class="bg-white p-2 rounded border border-slate-200 shadow-sm">
+                  <div
+                    class="text-[11px] font-bold text-slate-500 mb-0.5 flex items-center justify-center gap-1"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> [ 几何对象 ]_W
+                  </div>
+                  <div
+                    class="matrix-bracket inline-flex flex-col text-xs lg:text-sm font-mono font-bold text-slate-800 leading-tight"
+                  >
+                    <span id="coordAx">3.50</span>
+                    <span id="coordAy">2.50</span>
+                    <span
+                      id="coordAw"
+                      class="text-amber-600 font-extrabold bg-amber-50 rounded px-1"
+                      >1</span
+                    >
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">世界坐标系表示</div>
+                </div>
+
+                <!-- Local Frame Representation -->
+                <div
+                  class="bg-white p-2 rounded border border-sky-300 shadow-sm ring-1 ring-sky-100"
+                >
+                  <div
+                    class="text-[11px] font-bold text-sky-800 mb-0.5 flex items-center justify-center gap-1"
+                    id="localCoordHeader"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> [ 几何对象 ]_M
+                  </div>
+                  <div
+                    class="matrix-bracket inline-flex flex-col text-xs lg:text-sm font-mono font-bold text-sky-900 leading-tight"
+                  >
+                    <span id="coordBx">1.80</span>
+                    <span id="coordBy">0.37</span>
+                    <span
+                      id="coordBw"
+                      class="text-amber-600 font-extrabold bg-amber-50 rounded px-1"
+                      >1</span
+                    >
+                  </div>
+                  <div class="text-[10px] text-sky-600 mt-0.5" id="localCoordSub">
+                    模型坐标系表示
+                  </div>
+                </div>
+              </div>
+
+              <!-- 变化指示器小贴士 -->
+              <div
+                id="vectorInvariantAlert"
+                class="hidden bg-emerald-50 border border-emerald-200 p-1.5 rounded text-[11px] text-emerald-800 flex items-center gap-1.5"
+              >
+                <span class="text-xs">🛡️</span>
+                <span><b>平移不变量:</b> 标架原点平移时，自由向量坐标不变（$w=0$ 消去位移）。</span>
+              </div>
+            </div>
+
+            <!-- 齐次坐标教学核心透视镜 (w的代数意义) -->
+            <div
+              class="bg-amber-50/70 border border-amber-200 rounded-lg p-2 text-xs shadow-sm shrink-0"
+            >
+              <div class="font-bold text-amber-900 flex justify-between items-center mb-1">
+                <span>🔍 显微镜核心：w 分量的代数本质</span>
+                <span class="font-mono text-amber-700 font-extrabold text-[11px]" id="wValSign"
+                  >w = 1</span
+                >
+              </div>
+              <div
+                class="text-[11px] text-slate-700 space-y-0.5 font-mono bg-white/80 p-1.5 rounded border border-amber-100 leading-tight"
+              >
+                <div id="mathExpandedP" class="text-slate-800">
+                  P = x·<b>u_local</b> + y·<b>v_local</b> + <b class="text-amber-700">1·O_local</b>
+                </div>
+                <div id="mathExpandedV" class="hidden text-slate-800">
+                  v = x·<b>u_local</b> + y·<b>v_local</b> + <b class="text-amber-700">0·O_local</b>
+                </div>
+              </div>
+              <p class="text-[10px] text-amber-900 mt-1 leading-tight">
+                点依赖原点（$w=1$）；向量仅有方向与大小，与原点完全无关（$w=0$）。
+              </p>
+            </div>
+
+            <!-- 标架变换矩阵 (Frame Transformation Matrix) -->
+            <div
+              class="bg-slate-50 p-2.5 rounded-lg border border-slate-300 text-xs flex-1 min-h-0 flex flex-col justify-between"
+            >
+              <div>
+                <div class="font-bold text-slate-800 mb-0.5 flex justify-between items-center">
+                  <span id="matrixTitle">标架变换矩阵 M_{W ← Local}</span>
+                  <span class="text-[10px] font-mono text-slate-500" id="matrixColDesc"
+                    >[ u | v | O ]</span
+                  >
+                </div>
+                <p class="text-[10px] text-slate-500 mb-1.5">
+                  列向量由局部标架基底与原点在世界系的分量构成：
+                </p>
+
+                <div class="flex justify-center my-1">
+                  <div
+                    class="matrix-bracket inline-grid grid-cols-3 gap-x-3 gap-y-1 text-xs font-mono font-bold text-slate-800 text-right"
+                  >
+                    <span id="mat00">0.87</span><span id="mat01">-0.50</span
+                    ><span id="mat02" class="text-sky-700">2.00</span> <span id="mat10">0.50</span
+                    ><span id="mat11"> 0.87</span><span id="mat12" class="text-sky-700">1.50</span>
+                    <span class="text-slate-400">0</span><span class="text-slate-400">0</span
+                    ><span class="text-amber-700 font-extrabold">1</span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="mt-1 pt-1.5 border-t border-slate-200 text-[10px] font-mono text-slate-600 bg-white p-1 rounded"
+                id="matrixFormulaBar"
+              >
+                [Object]_W = M_{W ← M} × [Object]_M
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ================= 底部：实验控制与课堂思考问题 ================= -->
+      <footer class="p-2.5 bg-white border-t border-slate-200 flex flex-col gap-2 shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <!-- 操作按钮组 -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600">标架动作:</span>
+            <button
+              id="btnQuickMove"
+              class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded border border-slate-300 transition"
+            >
+              平移标架
+            </button>
+            <button
+              id="btnQuickRotate"
+              class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded border border-slate-300 transition"
+            >
+              旋转标架
+            </button>
+            <button
+              id="btnToggleProjections"
+              class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded border border-slate-300 transition"
+            >
+              投影虚线: 开
+            </button>
+          </div>
+
+          <!-- 显存与几何状态指示 -->
+          <div class="flex items-center gap-2 text-xs font-mono">
+            <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded border border-slate-200">
+              客观几何实体: <b class="text-emerald-700">物理空间唯一且不变</b>
+            </span>
+            <span class="bg-sky-50 text-sky-800 px-2 py-1 rounded border border-sky-200">
+              坐标系标准: <b>模型 / 世界 / 观察(相机)</b>
+            </span>
+          </div>
+        </div>
+
+        <!-- 核心教学结论与启发式提问条 -->
+        <div
+          class="bg-slate-100 rounded-lg p-2.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 border-l-4 border-sky-600 text-xs"
+        >
+          <div class="text-slate-800">
+            <b class="text-sky-800">课堂核心结论：</b
+            >坐标不是几何对象的物理实体属性，而是其在特定标架基底与原点下的<b>代数表示</b>！
+          </div>
+          <div
+            id="questionBox"
+            class="bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 px-3 py-1 rounded cursor-pointer transition flex items-center gap-1.5 font-medium shrink-0"
+          >
+            <span>💭</span>
+            <span id="questionText"
+              >课堂思考 1/3: 几何对象本身改变了吗？平移标架改变了什么？(点击切换)</span
+            >
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      /* ==========================================================
+       1. 教学状态管理 (Application State)
+       ========================================================== */
+      const state = {
+        // 观察模式: 'point' 或 'vector'
+        entityType: 'point',
+
+        // 当前局部标架角色: 'model' (模型坐标系) 或 'camera' (观察/相机坐标系)
+        frameRole: 'model',
+
+        // 几何对象在基准世界坐标系 W (World) 中的绝对坐标
+        pointP: { x: 3.5, y: 2.5 }, // 点 P (x, y)
+        vectorV: { x: 1.5, y: 1.8 }, // 自由向量 v (vx, vy)
+        vectorStart: { x: 0.8, y: 0.8 }, // 自由向量在画布上的绘制起点
+
+        // 局部标架 (Model 或 Camera) 在世界坐标系 W 中的原点及角度 (rad)
+        localFrame: {
+          origin: { x: 2.0, y: 1.5 },
+          angle: (30 * Math.PI) / 180, // 30 deg
+        },
+
+        // 图形管线模型轮廓显示
+        showMeshOutline: false,
+
+        // 教学引导当前步骤 (1, 2, 3)
+        currentStep: 1,
+
+        // 视图配置
+        showProjections: true,
+        zoom: 46, // 像素每世界单位
+        pan: { x: 0, y: 0 },
+
+        // 鼠标拖拽交互状态
+        draggingTarget: null, // 'pointP', 'originLocal', 'axisLocal', 'vectorTip', 'vectorBase'
+        mouseWorld: { x: 0, y: 0 },
+
+        // 课堂提问轮换
+        questionIdx: 0,
+      };
+
+      const questions = [
+        '课堂思考 1/3: 几何对象本身改变了吗？（答：绝对没有！它在空间中静止，改变的只是度量它的模型/世界/相机坐标系）',
+        '课堂思考 2/3: 哪些数值改变了？哪些数值保持不变？（答：坐标数值 [x, y]^T 随标架而变；点点几何距离与向量模长完全守恒）',
+        '课堂思考 3/3: 为什么 Point 和 Vector 的 w 分量不同？（答：点绑定标架原点 w=1；向量为位移与原点无关 w=0，消去原点平移量）',
+      ];
+
+      /* ==========================================================
+       2. DOM 元素缓存
+       ========================================================== */
+      const canvas = document.getElementById('geoCanvas');
+      const ctx = canvas.getContext('2d');
+      const canvasContainer = document.getElementById('canvasContainer');
+
+      const coordAx = document.getElementById('coordAx');
+      const coordAy = document.getElementById('coordAy');
+      const coordAw = document.getElementById('coordAw');
+      const coordBx = document.getElementById('coordBx');
+      const coordBy = document.getElementById('coordBy');
+      const coordBw = document.getElementById('coordBw');
+      const reprTypeName = document.getElementById('reprTypeName');
+      const vectorInvariantAlert = document.getElementById('vectorInvariantAlert');
+      const wValSign = document.getElementById('wValSign');
+      const mathExpandedP = document.getElementById('mathExpandedP');
+      const mathExpandedV = document.getElementById('mathExpandedV');
+
+      const mat00 = document.getElementById('mat00');
+      const mat01 = document.getElementById('mat01');
+      const mat02 = document.getElementById('mat02');
+      const mat10 = document.getElementById('mat10');
+      const mat11 = document.getElementById('mat11');
+      const mat12 = document.getElementById('mat12');
+
+      const frameBAngleTag = document.getElementById('frameBAngleTag');
+      const obCoordsTag = document.getElementById('obCoordsTag');
+      const ubCoordsTag = document.getElementById('ubCoordsTag');
+      const vbCoordsTag = document.getElementById('vbCoordsTag');
+      const sliderAngle = document.getElementById('sliderAngle');
+      const sliderAngleVal = document.getElementById('sliderAngleVal');
+
+      const btnSelectPoint = document.getElementById('btnSelectPoint');
+      const btnSelectVector = document.getElementById('btnSelectVector');
+      const entityBadge = document.getElementById('entityBadge');
+      const entityHelpText = document.getElementById('entityHelpText');
+      const legendActiveObj = document.getElementById('legendActiveObj');
+      const legendActiveFrameName = document.getElementById('legendActiveFrameName');
+
+      const btnRoleModel = document.getElementById('btnRoleModel');
+      const btnRoleCamera = document.getElementById('btnRoleCamera');
+      const frameRoleBadge = document.getElementById('frameRoleBadge');
+      const frameControlBadge = document.getElementById('frameControlBadge');
+      const frameRoleHelpText = document.getElementById('frameRoleHelpText');
+      const frameParamTitle = document.getElementById('frameParamTitle');
+      const originLabel = document.getElementById('originLabel');
+      const uAxisLabel = document.getElementById('uAxisLabel');
+      const vAxisLabel = document.getElementById('vAxisLabel');
+      const localCoordHeader = document.getElementById('localCoordHeader');
+      const localCoordSub = document.getElementById('localCoordSub');
+      const matrixTitle = document.getElementById('matrixTitle');
+      const matrixColDesc = document.getElementById('matrixColDesc');
+      const matrixFormulaBar = document.getElementById('matrixFormulaBar');
+      const presetDescText = document.getElementById('presetDescText');
+
+      const stepBtn1 = document.getElementById('stepBtn1');
+      const stepBtn2 = document.getElementById('stepBtn2');
+      const stepBtn3 = document.getElementById('stepBtn3');
+
+      const btnRotatePlus = document.getElementById('btnRotatePlus');
+      const btnResetFrameB = document.getElementById('btnResetFrameB');
+      const btnQuickMove = document.getElementById('btnQuickMove');
+      const btnQuickRotate = document.getElementById('btnQuickRotate');
+      const btnToggleProjections = document.getElementById('btnToggleProjections');
+      const btnCenterCanvas = document.getElementById('btnCenterCanvas');
+      const btnLoadPreset = document.getElementById('btnLoadPreset');
+      const btnToggleOrgan = document.getElementById('btnToggleOrgan');
+
+      const questionBox = document.getElementById('questionBox');
+      const questionText = document.getElementById('questionText');
+      const mouseWorldCoords = document.getElementById('mouseWorldCoords');
+      const canvasStatusText = document.getElementById('canvasStatusText');
+
+      /* ==========================================================
+       3. 核心数学转换工具 (Linear Algebra & Frame Math)
+       ========================================================== */
+      function getLocalFrameBasis() {
+        const cosT = Math.cos(state.localFrame.angle);
+        const sinT = Math.sin(state.localFrame.angle);
+        return {
+          u: { x: cosT, y: sinT }, // u 轴方向
+          v: { x: -sinT, y: cosT }, // v 轴方向
+        };
+      }
+
+      // 将几何对象在世界坐标系 W 中的绝对坐标转换至局部标架 (Model 或 Camera)
+      function convertToLocalFrame(objInW, isPoint = true) {
+        const cosT = Math.cos(state.localFrame.angle);
+        const sinT = Math.sin(state.localFrame.angle);
+        const o = state.localFrame.origin;
+
+        if (isPoint) {
+          // P_Local = R^T * (P_W - O_Local)
+          const dx = objInW.x - o.x;
+          const dy = objInW.y - o.y;
+          return {
+            x: dx * cosT + dy * sinT,
+            y: -dx * sinT + dy * cosT,
+            w: 1,
+          };
+        } else {
+          // v_Local = R^T * v_W (与原点平移完全解耦)
+          return {
+            x: objInW.x * cosT + objInW.y * sinT,
+            y: -objInW.x * sinT + objInW.y * cosT,
+            w: 0,
+          };
+        }
+      }
+
+      // 屏幕像素与世界坐标转换
+      function worldToScreen(wx, wy) {
+        const cx = canvas.width / (2 * window.devicePixelRatio);
+        const cy = canvas.height / (2 * window.devicePixelRatio);
+        return {
+          x: cx + state.pan.x + wx * state.zoom,
+          y: cy + state.pan.y - wy * state.zoom, // Y轴翻转
+        };
+      }
+
+      function screenToWorld(sx, sy) {
+        const cx = canvas.width / (2 * window.devicePixelRatio);
+        const cy = canvas.height / (2 * window.devicePixelRatio);
+        return {
+          x: (sx - cx - state.pan.x) / state.zoom,
+          y: -(sy - cy - state.pan.y) / state.zoom,
+        };
+      }
+
+      /* ==========================================================
+       4. 矢量画布绘制引擎 (Render Pipeline)
+       ========================================================== */
+      function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvasContainer.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        render();
+      }
+
+      function drawArrow(from, to, color, width = 2, headLen = 9) {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const angle = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+
+        // 箭杆
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+
+        // 箭头
+        ctx.beginPath();
+        ctx.moveTo(to.x, to.y);
+        ctx.lineTo(
+          to.x - headLen * Math.cos(angle - Math.PI / 6),
+          to.y - headLen * Math.sin(angle - Math.PI / 6),
+        );
+        ctx.lineTo(
+          to.x - headLen * Math.cos(angle + Math.PI / 6),
+          to.y - headLen * Math.sin(angle + Math.PI / 6),
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function render() {
+        const dpr = window.devicePixelRatio || 1;
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+
+        // 1. 教室投影专用微灰白高亮背景
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. 绘制参考网格
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        const step = state.zoom;
+        const originScreen = worldToScreen(0, 0);
+
+        ctx.beginPath();
+        for (let x = originScreen.x % step; x < w; x += step) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+        }
+        for (let y = originScreen.y % step; y < h; y += step) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+
+        // 3. 图形管线模型轮廓 / 相机视锥示意
+        if (state.showMeshOutline) {
+          drawGraphicsPipelineContext();
+        }
+
+        // 4. 绘制世界坐标系 (World Frame W)
+        drawWorldFrame();
+
+        // 5. 绘制局部标架 (Model 或 Camera Frame)
+        drawLocalFrame();
+
+        // 6. 绘制几何对象 (Point P 或 Vector v)
+        if (state.entityType === 'point') {
+          drawPointEntity();
+        } else {
+          drawVectorEntity();
+        }
+
+        ctx.restore();
+      }
+
+      function drawWorldFrame() {
+        const o = worldToScreen(0, 0);
+        const iEnd = worldToScreen(2.5, 0);
+        const jEnd = worldToScreen(0, 2.5);
+
+        // 主轴线
+        drawArrow(o, iEnd, '#475569', 2.2, 10);
+        drawArrow(o, jEnd, '#475569', 2.2, 10);
+
+        // 轴文字标签
+        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.fillStyle = '#334155';
+        ctx.fillText('i_W (1,0)', iEnd.x + 6, iEnd.y + 4);
+        ctx.fillText('j_W (0,1)', jEnd.x - 24, jEnd.y - 8);
+
+        // 原点 O_W
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#334155';
+        ctx.fill();
+        ctx.fillText('O_W (0,0)', o.x - 56, o.y + 16);
+      }
+
+      function drawLocalFrame() {
+        const oLocal = state.localFrame.origin;
+        const basis = getLocalFrameBasis();
+        const oScreen = worldToScreen(oLocal.x, oLocal.y);
+        const uScreen = worldToScreen(oLocal.x + basis.u.x * 2.2, oLocal.y + basis.u.y * 2.2);
+        const vScreen = worldToScreen(oLocal.x + basis.v.x * 2.2, oLocal.y + basis.v.y * 2.2);
+
+        const isModel = state.frameRole === 'model';
+        const uLabel = isModel ? 'u_M' : 'u_C (Right)';
+        const vLabel = isModel ? 'v_M' : 'v_C (Up)';
+        const oPrefix = isModel ? 'O_M' : 'O_C';
+
+        // 局部标架两个主轴
+        drawArrow(oScreen, uScreen, '#0284c7', 2.8, 11);
+        drawArrow(oScreen, vScreen, '#0369a1', 2.8, 11);
+
+        // 轴文字
+        ctx.font = 'bold 12px var(--font-mono)';
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText(uLabel, uScreen.x + 8, uScreen.y + 4);
+        ctx.fillStyle = '#0369a1';
+        ctx.fillText(vLabel, vScreen.x - 14, vScreen.y - 8);
+
+        // 旋转圆弧手柄
+        ctx.beginPath();
+        ctx.arc(oScreen.x, oScreen.y, 35, -state.localFrame.angle, 0, state.localFrame.angle < 0);
+        ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 原点手柄
+        ctx.beginPath();
+        ctx.arc(oScreen.x, oScreen.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.fillStyle = '#0369a1';
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillText(
+          `${oPrefix} (${oLocal.x.toFixed(1)}, ${oLocal.y.toFixed(1)})`,
+          oScreen.x + 10,
+          oScreen.y + 18,
+        );
+
+        // 原点位移矢量连线 O_W -> O_Local
+        if (state.showProjections) {
+          const owScreen = worldToScreen(0, 0);
+          ctx.beginPath();
+          ctx.moveTo(owScreen.x, owScreen.y);
+          ctx.lineTo(oScreen.x, oScreen.y);
+          ctx.strokeStyle = 'rgba(2, 132, 199, 0.35)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      function drawPointEntity() {
+        const p = state.pointP;
+        const pScreen = worldToScreen(p.x, p.y);
+        const oLocal = state.localFrame.origin;
+        const olScreen = worldToScreen(oLocal.x, oLocal.y);
+        const owScreen = worldToScreen(0, 0);
+
+        // 投影辅助虚线
+        if (state.showProjections) {
+          ctx.beginPath();
+          ctx.moveTo(owScreen.x, owScreen.y);
+          ctx.lineTo(pScreen.x, pScreen.y);
+          ctx.strokeStyle = 'rgba(100, 116, 139, 0.45)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(olScreen.x, olScreen.y);
+          ctx.lineTo(pScreen.x, pScreen.y);
+          ctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([3, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // 点 P 实心高对比手柄
+        ctx.beginPath();
+        ctx.arc(pScreen.x, pScreen.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = '#d97706';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // 文本标签
+        const isModel = state.frameRole === 'model';
+        const localPrefix = isModel ? 'P_M' : 'P_C';
+        const pLocal = convertToLocalFrame(p, true);
+
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillStyle = '#b45309';
+        ctx.fillText(`点 P (Point)`, pScreen.x + 12, pScreen.y - 8);
+
+        ctx.font = 'bold 11px var(--font-mono)';
+        ctx.fillStyle = '#475569';
+        ctx.fillText(
+          `P_W: (${p.x.toFixed(2)}, ${p.y.toFixed(2)}, 1)`,
+          pScreen.x + 12,
+          pScreen.y + 10,
+        );
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText(
+          `${localPrefix}: (${pLocal.x.toFixed(2)}, ${pLocal.y.toFixed(2)}, 1)`,
+          pScreen.x + 12,
+          pScreen.y + 24,
+        );
+      }
+
+      function drawVectorEntity() {
+        const v = state.vectorV;
+        const base = state.vectorStart;
+        const tip = { x: base.x + v.x, y: base.y + v.y };
+
+        const baseScreen = worldToScreen(base.x, base.y);
+        const tipScreen = worldToScreen(tip.x, tip.y);
+
+        // 自由向量主体
+        drawArrow(baseScreen, tipScreen, '#059669', 3.5, 14);
+
+        // 向量起点可拖动手柄
+        ctx.beginPath();
+        ctx.arc(baseScreen.x, baseScreen.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#059669';
+        ctx.fill();
+
+        // 文本
+        const isModel = state.frameRole === 'model';
+        const localPrefix = isModel ? 'v_M' : 'v_C';
+        const vLocal = convertToLocalFrame(v, false);
+
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillStyle = '#047857';
+        ctx.fillText(`自由向量 v (Vector)`, tipScreen.x + 12, tipScreen.y - 6);
+
+        ctx.font = 'bold 11px var(--font-mono)';
+        ctx.fillStyle = '#475569';
+        ctx.fillText(
+          `v_W: (${v.x.toFixed(2)}, ${v.y.toFixed(2)}, 0)`,
+          tipScreen.x + 12,
+          tipScreen.y + 12,
+        );
+        ctx.fillStyle = '#0284c7';
+        ctx.fillText(
+          `${localPrefix}: (${vLocal.x.toFixed(2)}, ${vLocal.y.toFixed(2)}, 0)`,
+          tipScreen.x + 12,
+          tipScreen.y + 26,
+        );
+      }
+
+      function drawGraphicsPipelineContext() {
+        ctx.save();
+        const origin = worldToScreen(state.localFrame.origin.x, state.localFrame.origin.y);
+        ctx.translate(origin.x, origin.y);
+        ctx.rotate(-state.localFrame.angle);
+
+        if (state.frameRole === 'model') {
+          // 绘制三维模型/网格包围盒与轮廓（如标准立方体或三维网格表面）
+          ctx.beginPath();
+          ctx.roundRect(-60, -40, 120, 80, 8);
+          ctx.fillStyle = 'rgba(2, 132, 199, 0.08)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(2, 132, 199, 0.45)';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([5, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.font = 'bold 11px Inter, sans-serif';
+          ctx.fillStyle = '#0284c7';
+          ctx.fillText('Model Geometry Mesh (Local M)', -50, -46);
+        } else {
+          // 观察/相机坐标系：绘制视锥示意
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(130, -65);
+          ctx.lineTo(130, 65);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(2, 132, 199, 0.06)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(2, 132, 199, 0.35)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.font = 'bold 11px Inter, sans-serif';
+          ctx.fillStyle = '#0369a1';
+          ctx.fillText('Camera View Frustum (Camera C)', 35, -72);
+        }
+        ctx.restore();
+      }
+
+      /* ==========================================================
+       5. 数据监视器与矩阵数值同步 (Sync UI State)
+       ========================================================== */
+      function updateUI() {
+        const isPoint = state.entityType === 'point';
+        const isModel = state.frameRole === 'model';
+        const basis = getLocalFrameBasis();
+        const oLocal = state.localFrame.origin;
+
+        // 1. 标架角色标签
+        const frameSuffix = isModel ? 'M' : 'C';
+        const frameFullName = isModel
+          ? '模型坐标系 (Model Frame, M)'
+          : '观察/相机坐标系 (Camera Frame, C)';
+        legendActiveFrameName.textContent = frameFullName;
+        frameControlBadge.textContent = isModel ? 'Model Frame Controls' : 'Camera Frame Controls';
+        frameRoleBadge.textContent = isModel ? 'Model Frame (M)' : 'Camera Frame (C)';
+        frameParamTitle.textContent = frameFullName;
+        originLabel.textContent = `原点 O_${frameSuffix} (in W):`;
+        uAxisLabel.textContent = `基底 u_${frameSuffix} (in W):`;
+        vAxisLabel.textContent = `基底 v_${frameSuffix} (in W):`;
+
+        localCoordHeader.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> [ 几何对象 ]_${frameSuffix}`;
+        localCoordSub.textContent = isModel ? '模型坐标系表示' : '观察/相机坐标系表示';
+        matrixTitle.textContent = `标架变换矩阵 M_{W ← ${frameSuffix}}`;
+        matrixFormulaBar.textContent = `[Object]_W = M_{W ← ${frameSuffix}} × [Object]_${frameSuffix}`;
+
+        // 角度
+        const deg = Math.round((state.localFrame.angle * 180) / Math.PI) % 360;
+        frameBAngleTag.textContent = `θ = ${deg >= 0 ? deg : deg + 360}.0°`;
+        sliderAngle.value = deg >= 0 ? deg : deg + 360;
+        sliderAngleVal.textContent = `${deg >= 0 ? deg : deg + 360}°`;
+
+        obCoordsTag.textContent = `(${oLocal.x.toFixed(2)}, ${oLocal.y.toFixed(2)})`;
+        ubCoordsTag.textContent = `(${basis.u.x.toFixed(2)}, ${basis.u.y.toFixed(2)})`;
+        vbCoordsTag.textContent = `(${basis.v.x.toFixed(2)}, ${basis.v.y.toFixed(2)})`;
+
+        // 2. 右栏坐标对比
+        if (isPoint) {
+          const pW = state.pointP;
+          const pLocal = convertToLocalFrame(pW, true);
+
+          coordAx.textContent = pW.x.toFixed(2);
+          coordAy.textContent = pW.y.toFixed(2);
+          coordAw.textContent = '1';
+
+          coordBx.textContent = pLocal.x.toFixed(2);
+          coordBy.textContent = pLocal.y.toFixed(2);
+          coordBw.textContent = '1';
+
+          reprTypeName.textContent = 'Point Vector [x, y, 1]^T';
+          vectorInvariantAlert.classList.add('hidden');
+          wValSign.textContent = 'w = 1';
+          mathExpandedP.innerHTML = `P = x·<b>u_${frameSuffix}</b> + y·<b>v_${frameSuffix}</b> + <b class="text-amber-700">1·O_${frameSuffix}</b>`;
+          mathExpandedP.classList.remove('hidden');
+          mathExpandedV.classList.add('hidden');
+        } else {
+          const vW = state.vectorV;
+          const vLocal = convertToLocalFrame(vW, false);
+
+          coordAx.textContent = vW.x.toFixed(2);
+          coordAy.textContent = vW.y.toFixed(2);
+          coordAw.textContent = '0';
+
+          coordBx.textContent = vLocal.x.toFixed(2);
+          coordBy.textContent = vLocal.y.toFixed(2);
+          coordBw.textContent = '0';
+
+          reprTypeName.textContent = 'Vector [vx, vy, 0]^T';
+          vectorInvariantAlert.classList.remove('hidden');
+          wValSign.textContent = 'w = 0';
+          mathExpandedV.innerHTML = `v = x·<b>u_${frameSuffix}</b> + y·<b>v_${frameSuffix}</b> + <b class="text-amber-700">0·O_${frameSuffix}</b>`;
+          mathExpandedP.classList.add('hidden');
+          mathExpandedV.classList.remove('hidden');
+        }
+
+        // 3. 变换矩阵 M_{W <- Local}
+        mat00.textContent = basis.u.x.toFixed(2);
+        mat01.textContent = basis.v.x.toFixed(2);
+        mat02.textContent = oLocal.x.toFixed(2);
+
+        mat10.textContent = basis.u.y.toFixed(2);
+        mat11.textContent = basis.v.y.toFixed(2);
+        mat12.textContent = oLocal.y.toFixed(2);
+      }
+
+      /* ==========================================================
+       6. 鼠标拾取与交互拖动逻辑 (Interaction Handling)
+       ========================================================== */
+      function getPointerDistance(p1, p2) {
+        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      }
+
+      canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+
+        const olScreen = worldToScreen(state.localFrame.origin.x, state.localFrame.origin.y);
+        const basis = getLocalFrameBasis();
+        const axisHandleScreen = worldToScreen(
+          state.localFrame.origin.x + basis.u.x * 2.2,
+          state.localFrame.origin.y + basis.u.y * 2.2,
+        );
+
+        if (getPointerDistance({ x: sx, y: sy }, olScreen) < 18) {
+          state.draggingTarget = 'originLocal';
+        } else if (getPointerDistance({ x: sx, y: sy }, axisHandleScreen) < 18) {
+          state.draggingTarget = 'axisLocal';
+        } else if (state.entityType === 'point') {
+          const pScreen = worldToScreen(state.pointP.x, state.pointP.y);
+          if (getPointerDistance({ x: sx, y: sy }, pScreen) < 18) {
+            state.draggingTarget = 'pointP';
+          }
+        } else {
+          const baseScreen = worldToScreen(state.vectorStart.x, state.vectorStart.y);
+          const tipScreen = worldToScreen(
+            state.vectorStart.x + state.vectorV.x,
+            state.vectorStart.y + state.vectorV.y,
+          );
+          if (getPointerDistance({ x: sx, y: sy }, tipScreen) < 18) {
+            state.draggingTarget = 'vectorTip';
+          } else if (getPointerDistance({ x: sx, y: sy }, baseScreen) < 18) {
+            state.draggingTarget = 'vectorBase';
+          }
+        }
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        const wPt = screenToWorld(sx, sy);
+        state.mouseWorld = wPt;
+        mouseWorldCoords.textContent = `World: (${wPt.x.toFixed(2)}, ${wPt.y.toFixed(2)})`;
+
+        if (!state.draggingTarget) return;
+
+        if (state.draggingTarget === 'pointP') {
+          state.pointP.x = wPt.x;
+          state.pointP.y = wPt.y;
+        } else if (state.draggingTarget === 'originLocal') {
+          state.localFrame.origin.x = wPt.x;
+          state.localFrame.origin.y = wPt.y;
+        } else if (state.draggingTarget === 'axisLocal') {
+          const dx = wPt.x - state.localFrame.origin.x;
+          const dy = wPt.y - state.localFrame.origin.y;
+          state.localFrame.angle = Math.atan2(dy, dx);
+        } else if (state.draggingTarget === 'vectorTip') {
+          state.vectorV.x = wPt.x - state.vectorStart.x;
+          state.vectorV.y = wPt.y - state.vectorStart.y;
+        } else if (state.draggingTarget === 'vectorBase') {
+          state.vectorStart.x = wPt.x;
+          state.vectorStart.y = wPt.y;
+        }
+
+        updateUI();
+        render();
+      });
+
+      window.addEventListener('mouseup', () => {
+        state.draggingTarget = null;
+      });
+
+      /* ==========================================================
+       7. 控件事件绑定 (UI Event Bindings)
+       ========================================================== */
+      // 标架角色切换：模型坐标系 vs 观察/相机坐标系
+      btnRoleModel.addEventListener('click', () => {
+        state.frameRole = 'model';
+        btnRoleModel.className =
+          'py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm';
+        btnRoleCamera.className =
+          'py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1';
+        frameRoleHelpText.textContent =
+          '模型坐标系绑定在物体本身；在此标架下定义物体的局部顶点与法向量。';
+        canvasStatusText.textContent =
+          '当前研究：模型变换 (Model Transform) · 模型坐标系 → 世界坐标系';
+        updateUI();
+        render();
+      });
+
+      btnRoleCamera.addEventListener('click', () => {
+        state.frameRole = 'camera';
+        btnRoleCamera.className =
+          'py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm';
+        btnRoleModel.className =
+          'py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1';
+        frameRoleHelpText.textContent =
+          '观察/相机坐标系以视点为原点，视线朝向构成基底；考察世界物体在相机视口中的表示。';
+        canvasStatusText.textContent =
+          '当前研究：观察变换 (View Transform) · 世界坐标系 → 观察/相机坐标系';
+        updateUI();
+        render();
+      });
+
+      // 对象切换
+      btnSelectPoint.addEventListener('click', () => {
+        state.entityType = 'point';
+        btnSelectPoint.className =
+          'py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm';
+        btnSelectVector.className =
+          'py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1';
+        entityBadge.className =
+          'bg-amber-100 text-amber-800 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold';
+        entityBadge.textContent = 'Point P (w=1)';
+        legendActiveObj.textContent = '点 P (Point, w=1)';
+        entityHelpText.textContent = '点由原点锚定；平移标架时其局部坐标必定改变 (w=1)。';
+        updateUI();
+        render();
+      });
+
+      btnSelectVector.addEventListener('click', () => {
+        state.entityType = 'vector';
+        btnSelectVector.className =
+          'py-1.5 px-2 bg-sky-600 text-white rounded text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm';
+        btnSelectPoint.className =
+          'py-1.5 px-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded text-xs font-bold transition flex items-center justify-center gap-1';
+        entityBadge.className =
+          'bg-emerald-100 text-emerald-800 text-[10px] font-mono px-1.5 py-0.5 rounded font-bold';
+        entityBadge.textContent = 'Vector v (w=0)';
+        legendActiveObj.textContent = '自由向量 v (Vector, w=0)';
+        entityHelpText.textContent = '自由向量只有方向与大小；平移标架时其坐标保持完全不变 (w=0)！';
+        updateUI();
+        render();
+      });
+
+      // 旋转滑块
+      sliderAngle.addEventListener('input', (e) => {
+        state.localFrame.angle = (parseFloat(e.target.value) * Math.PI) / 180;
+        updateUI();
+        render();
+      });
+
+      btnRotatePlus.addEventListener('click', () => {
+        state.localFrame.angle += Math.PI / 4;
+        updateUI();
+        render();
+      });
+
+      btnResetFrameB.addEventListener('click', () => {
+        state.localFrame.origin = { x: 0, y: 0 };
+        state.localFrame.angle = 0;
+        updateUI();
+        render();
+      });
+
+      btnQuickMove.addEventListener('click', () => {
+        state.localFrame.origin.x += 0.8;
+        if (state.localFrame.origin.x > 4.5) state.localFrame.origin.x = -1.0;
+        updateUI();
+        render();
+      });
+
+      btnQuickRotate.addEventListener('click', () => {
+        state.localFrame.angle += Math.PI / 6;
+        updateUI();
+        render();
+      });
+
+      btnToggleProjections.addEventListener('click', () => {
+        state.showProjections = !state.showProjections;
+        btnToggleProjections.textContent = `投影虚线: ${state.showProjections ? '开' : '关'}`;
+        render();
+      });
+
+      btnCenterCanvas.addEventListener('click', () => {
+        state.pan = { x: 0, y: 0 };
+        state.zoom = 46;
+        render();
+      });
+
+      // 标准图形管线预设
+      btnLoadPreset.addEventListener('click', () => {
+        state.showMeshOutline = true;
+        state.entityType = 'point';
+        state.localFrame.origin = { x: 2.2, y: 1.8 };
+        state.localFrame.angle = (25 * Math.PI) / 180;
+        const basis = getLocalFrameBasis();
+        state.pointP = {
+          x: state.localFrame.origin.x + basis.u.x * 1.6,
+          y: state.localFrame.origin.y + basis.u.y * 1.6,
+        };
+        btnSelectPoint.click();
+        canvasStatusText.textContent =
+          '图形管线预设载入：模型坐标系 (Model) ↔ 世界坐标系 (World) ↔ 相机坐标系 (Camera)';
+        updateUI();
+        render();
+      });
+
+      btnToggleOrgan.addEventListener('click', () => {
+        state.showMeshOutline = !state.showMeshOutline;
+        btnToggleOrgan.textContent = state.showMeshOutline ? '隐藏轮廓' : '显示轮廓';
+        render();
+      });
+
+      // 教学三步引导
+      function setActiveStep(step) {
+        state.currentStep = step;
+        [stepBtn1, stepBtn2, stepBtn3].forEach((btn, idx) => {
+          if (idx + 1 === step) {
+            btn.classList.add('step-active');
+          } else {
+            btn.classList.remove('step-active');
+          }
+        });
+        if (step === 1) {
+          canvasStatusText.textContent =
+            'Step 1: 几何对象在客观世界空间中静止，保持真实物理位置不变';
+        } else if (step === 2) {
+          canvasStatusText.textContent =
+            'Step 2: 平移或旋转模型坐标系/相机坐标系，观察局部基底与原点的变化';
+        } else {
+          canvasStatusText.textContent =
+            'Step 3: 查看右栏监视器，比较世界坐标系与局部标架的表示，体会 w=1 与 w=0 的代数本质';
+        }
+      }
+
+      stepBtn1.addEventListener('click', () => setActiveStep(1));
+      stepBtn2.addEventListener('click', () => setActiveStep(2));
+      stepBtn3.addEventListener('click', () => setActiveStep(3));
+
+      // 课堂思考提问轮换
+      questionBox.addEventListener('click', () => {
+        state.questionIdx = (state.questionIdx + 1) % questions.length;
+        questionText.textContent = questions[state.questionIdx];
+      });
+
+      // 响应窗口大小重调
+      window.addEventListener('resize', resizeCanvas);
+
+      // 监听 Canvas 容器尺寸变化 (保障最大化/还原时绝对精确填充满)
+      if (window.ResizeObserver && canvasContainer) {
+        const ro = new ResizeObserver(() => {
+          resizeCanvas();
+        });
+        ro.observe(canvasContainer);
+      }
+
+      // 初始化系统
+      window.onload = () => {
+        resizeCanvas();
+        updateUI();
+      };
+    </script>
+  </body>
+</html>

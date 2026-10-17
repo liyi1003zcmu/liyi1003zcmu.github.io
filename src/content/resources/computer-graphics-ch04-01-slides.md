@@ -6,7 +6,7 @@ chapter: 第 4 章
 order: 40
 resourceType: 课件
 date: 2026-10-16
-updatedDate: 2026-10-16
+updatedDate: 2026-10-17
 fileUrl: /slides/computer-graphics/ch04/lecture-4-1.html
 fileSize: 在线课件
 fileFormat: Reveal.js

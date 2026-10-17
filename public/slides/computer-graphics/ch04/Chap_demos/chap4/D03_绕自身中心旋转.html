@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>二维旋转中心对比</title>
+    <style>
+      :root {
+        --bg-page: #ffffff;
+        --bg-card: #ffffff;
+        --bg-panel: #f8fafc;
+        --bg-hover: #f1f5f9;
+        --color-primary: #173b57;
+        --color-sub: #6f8798;
+        --color-border: #d8e2e8;
+        --color-cyan: #18a6b7;
+        --color-cyan-hover: #138896;
+        --color-cyan-light: #ddf4f6;
+        --color-orig: #b8c6ce;
+        --color-center: #d47a45;
+        --color-center-light: #fcefe8;
+        --font-base:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+          'Helvetica Neue', sans-serif;
+        --font-mono: 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-page);
+        color: var(--color-primary);
+        font-family: var(--font-base);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        line-height: 1.45;
+      }
+
+      /* Top Compact Header */
+      header {
+        padding: 14px 24px 8px;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: #ffffff;
+      }
+
+      .header-main-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--color-primary);
+        letter-spacing: -0.3px;
+      }
+
+      .core-question {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-sub);
+      }
+
+      .core-question span {
+        color: var(--color-cyan);
+        font-weight: 700;
+      }
+
+      /* Main Container: 3 Windows Grid */
+      main {
+        flex: 1;
+        padding: 14px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 1440px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .windows-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        flex: 1;
+        min-height: 380px;
+      }
+
+      .window-card {
+        background: var(--bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(23, 59, 87, 0.04);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .window-card:hover {
+        border-color: #b5cbd7;
+        box-shadow: 0 3px 8px rgba(23, 59, 87, 0.07);
+      }
+
+      .window-header {
+        padding: 10px 14px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .window-title-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .window-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+
+      .window-sub {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-cyan);
+        background: var(--color-cyan-light);
+        padding: 2px 7px;
+        border-radius: 4px;
+      }
+
+      .canvas-wrapper {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        min-height: 320px;
+        background: #ffffff;
+        overflow: hidden;
+        cursor: crosshair;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .window-footer-hint {
+        padding: 6px 12px;
+        font-size: 12px;
+        color: var(--color-sub);
+        background: #ffffff;
+        border-top: 1px solid #edf2f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 28px;
+      }
+
+      .hint-highlight {
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+
+      /* Bottom Control Bar */
+      .controls-panel {
+        background: var(--bg-panel);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 12px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .controls-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .btn-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        font-family: var(--font-base);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 7px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        color: var(--color-primary);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+        min-height: 36px;
+        user-select: none;
+      }
+
+      .btn:hover {
+        background: var(--bg-hover);
+        border-color: var(--color-sub);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn-primary {
+        background: var(--color-cyan);
+        border-color: var(--color-cyan);
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background: var(--color-cyan-hover);
+        border-color: var(--color-cyan-hover);
+      }
+
+      .btn-quick {
+        font-size: 13px;
+        padding: 6px 12px;
+      }
+
+      /* Slider Row */
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+        min-width: 260px;
+      }
+
+      .slider-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-sub);
+        font-family: var(--font-mono);
+        white-space: nowrap;
+      }
+
+      .angle-slider {
+        flex: 1;
+        height: 6px;
+        background: var(--color-border);
+        border-radius: 3px;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .angle-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--color-cyan);
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 4px rgba(23, 59, 87, 0.25);
+        cursor: pointer;
+        transition: transform 0.1s;
+      }
+
+      .angle-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      .angle-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--color-cyan);
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 4px rgba(23, 59, 87, 0.25);
+        cursor: pointer;
+      }
+
+      .angle-display-badge {
+        min-width: 58px;
+        padding: 4px 8px;
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 5px;
+        font-size: 17px;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--color-primary);
+        text-align: right;
+      }
+
+      .status-tag {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--color-sub);
+        min-width: 56px;
+      }
+
+      /* Switches */
+      .switch-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .switch-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-primary);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .switch-label input[type='checkbox'] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--color-cyan);
+        cursor: pointer;
+      }
+
+      /* Conclusion Bar */
+      footer {
+        padding: 10px 24px 14px;
+        background: #ffffff;
+        border-top: 1px solid var(--color-border);
+        text-align: center;
+      }
+
+      .conclusion-text {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-primary);
+      }
+
+      .conclusion-text span {
+        color: var(--color-cyan);
+        font-weight: 800;
+        font-size: 16px;
+      }
+
+      /* Responsive */
+      @media (max-width: 960px) {
+        .windows-grid {
+          grid-template-columns: 1fr;
+        }
+        .canvas-wrapper {
+          min-height: 280px;
+        }
+        .controls-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .slider-container {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Compact Header -->
+    <header>
+      <div class="header-main-row">
+        <h1>二维旋转中心对比</h1>
+        <div class="core-question">同样旋转 60°，<span>为什么物体会到达不同的位置？</span></div>
+      </div>
+    </header>
+
+    <!-- Main 3 Synchronized Comparison Windows -->
+    <main>
+      <div class="windows-grid">
+        <!-- Window 1 -->
+        <section class="window-card" id="cardWin1" aria-label="窗口一：中心在原点，绕原点旋转">
+          <div class="window-header">
+            <div class="window-title-wrap">
+              <span class="window-title">① 中心在原点</span>
+              <span class="window-sub">绕 O 旋转</span>
+            </div>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvasWin1" aria-label="窗口一Canvas画布"></canvas>
+          </div>
+          <div class="window-footer-hint">
+            <span>旋转中心：<strong class="hint-highlight">O = C</strong> (0, 0)</span>
+            <span>原地转动 · 无公转位移</span>
+          </div>
+        </section>
+
+        <!-- Window 2 -->
+        <section class="window-card" id="cardWin2" aria-label="窗口二：中心偏离原点，绕原点旋转">
+          <div class="window-header">
+            <div class="window-title-wrap">
+              <span class="window-title">② 偏移后绕原点</span>
+              <span class="window-sub">绕 O 旋转</span>
+            </div>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvasWin2" aria-label="窗口二Canvas画布"></canvas>
+          </div>
+          <div class="window-footer-hint">
+            <span>旋转中心：<strong class="hint-highlight">O</strong> (0, 0)</span>
+            <span>中心 C 沿圆弧公转至 C′</span>
+          </div>
+        </section>
+
+        <!-- Window 3 -->
+        <section
+          class="window-card"
+          id="cardWin3"
+          aria-label="窗口三：中心偏离原点，绕自身中心旋转"
+        >
+          <div class="window-header">
+            <div class="window-title-wrap">
+              <span class="window-title">③ 偏移后绕自身中心</span>
+              <span class="window-sub">绕 C 旋转</span>
+            </div>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="canvasWin3" aria-label="窗口三Canvas画布"></canvas>
+          </div>
+          <div class="window-footer-hint">
+            <span>旋转中心：<strong class="hint-highlight">C</strong> (保持固定)</span>
+            <span style="color: var(--color-cyan); font-weight: 700"
+              >移到原点 → 旋转 → 移回原位</span
+            >
+          </div>
+        </section>
+      </div>
+
+      <!-- Bottom Unified Controls -->
+      <div class="controls-panel">
+        <!-- Row 1: Playback Buttons & Angle Slider -->
+        <div class="controls-row">
+          <div class="btn-group">
+            <button class="btn btn-primary" id="btnPlayPause" aria-label="播放动画">
+              <span id="playIcon">▶</span>
+              <span id="playText">播放</span>
+            </button>
+            <button class="btn" id="btnReset" aria-label="重置角度">
+              <span>↺</span>
+              <span>重置</span>
+            </button>
+            <button class="btn btn-quick" id="btnJump0">开始 0°</button>
+            <button class="btn btn-quick" id="btnJump60">结束 60°</button>
+          </div>
+
+          <!-- Slider -->
+          <div class="slider-container">
+            <span class="slider-label">0°</span>
+            <input
+              type="range"
+              class="angle-slider"
+              id="angleSlider"
+              min="0"
+              max="60"
+              step="1"
+              value="0"
+              aria-label="旋转角度调节滑块"
+              aria-valuemin="0"
+              aria-valuemax="60"
+              aria-valuenow="0"
+            />
+            <span class="slider-label">60°</span>
+            <div class="angle-display-badge" id="angleText">0°</div>
+            <span class="status-tag" id="statusText">0°</span>
+          </div>
+        </div>
+
+        <!-- Row 2: Toggles -->
+        <div class="controls-row" style="border-top: 1px solid #e8eef3; padding-top: 8px">
+          <div class="switch-group">
+            <label class="switch-label">
+              <input type="checkbox" id="chkLoop" checked />
+              <span>循环对比</span>
+            </label>
+            <label class="switch-label">
+              <input type="checkbox" id="chkGhost" checked />
+              <span>初始轮廓</span>
+            </label>
+            <label class="switch-label">
+              <input type="checkbox" id="chkTrajectory" checked />
+              <span>旋转轨迹</span>
+            </label>
+            <label class="switch-label">
+              <input type="checkbox" id="chkCenters" checked />
+              <span>中心点</span>
+            </label>
+          </div>
+          <div style="font-size: 12px; color: var(--color-sub)">
+            按键盘空格键快速播放/暂停，左右方向键微调角度
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Minimal Conclusion -->
+    <footer>
+      <p class="conclusion-text"><span>旋转中心</span>决定物体是“原地转动”，还是“绕中心公转”。</p>
+    </footer>
+
+    <!-- JavaScript Engine -->
+    <script>
+      /* =========================================================
+       1. Global State & Common Shape Definition
+       ========================================================= */
+      const state = {
+        angleDeg: 0, // Current angle in degrees [0, 60]
+        maxAngleDeg: 60, // Target max angle
+        isPlaying: false, // Playback state
+        isLooping: true, // Continuous loop comparison
+        animDuration: 1800, // ms for 0 to 60 deg
+        pauseAtEndDuration: 850, // ms pause at 60 deg before repeat
+        pauseTimer: null,
+        lastTimestamp: null,
+
+        // Visual toggles
+        showGhost: true,
+        showTrajectory: true,
+        showCenters: true,
+
+        // Initial center offset for Window 2 & 3
+        // cx = 2.8, cy = 1.6
+        offsetC: { x: 2.8, y: 1.6 },
+      };
+
+      // Exactly identical asymmetric irregular 2D polygon (7 vertices)
+      // Designed with clear directional pointer & asymmetric wings
+      // Local centroid is rigorously normalized at (0, 0)
+      const LOCAL_SHAPE_VERTICES = [
+        { x: 1.3, y: 0.1 }, // Pointer tip
+        { x: 0.3, y: 0.7 }, // Top wing
+        { x: -0.8, y: 0.6 }, // Upper rear
+        { x: -0.5, y: 0.0 }, // Inward asymmetric notch
+        { x: -0.9, y: -0.6 }, // Lower rear
+        { x: 0.2, y: -0.5 }, // Bottom belly
+        { x: 0.6, y: -0.2 }, // Chin notch
+      ];
+
+      // Interior orientation marker (line from center towards tip)
+      const LOCAL_AXIS_MARKER = {
+        from: { x: 0.0, y: 0.0 },
+        to: { x: 0.85, y: 0.06 },
+      };
+
+      /* =========================================================
+       2. Canvas Contexts & Coordinate Mapping
+       ========================================================= */
+      const canvas1 = document.getElementById('canvasWin1');
+      const canvas2 = document.getElementById('canvasWin2');
+      const canvas3 = document.getElementById('canvasWin3');
+      const ctx1 = canvas1.getContext('2d');
+      const ctx2 = canvas2.getContext('2d');
+      const ctx3 = canvas3.getContext('2d');
+
+      // Mathematical coordinate settings:
+      // x in [-1.2, 4.8], y in [-1.0, 4.6]
+      // Origin O is placed identically in lower-left area of each canvas
+      const COORD_BOUNDS = {
+        minX: -1.2,
+        maxX: 4.6,
+        minY: -1.0,
+        maxY: 4.6,
+      };
+
+      // Get scaling and origin screen position for any of the 3 canvases
+      function getViewportTransform(canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+
+        // Fit coordinate bounds into canvas width and height with padding
+        const padLeft = 32;
+        const padBottom = 28;
+        const availW = w - padLeft - 20;
+        const availH = h - padBottom - 20;
+
+        const spanX = COORD_BOUNDS.maxX - COORD_BOUNDS.minX; // 5.8
+        const spanY = COORD_BOUNDS.maxY - COORD_BOUNDS.minY; // 5.6
+
+        const scale = Math.min(availW / spanX, availH / spanY);
+
+        // Screen position of Origin (0,0)
+        const originScreenX = padLeft - COORD_BOUNDS.minX * scale;
+        const originScreenY = h - (padBottom - COORD_BOUNDS.minY * scale);
+
+        return { scale, originScreenX, originScreenY, w, h, dpr };
+      }
+
+      // World coordinates (x, y) to Screen pixel coordinates
+      function worldToScreen(wx, wy, vp) {
+        return {
+          x: vp.originScreenX + wx * vp.scale,
+          y: vp.originScreenY - wy * vp.scale, // y is flipped in canvas
+        };
+      }
+
+      /* =========================================================
+       3. 2D Transformation Math (Column-Vector Convention)
+       ========================================================= */
+      // Rotate 2D vector (x, y) counterclockwise around origin by thetaRad
+      function rotateVec(x, y, thetaRad) {
+        const cosT = Math.cos(thetaRad);
+        const sinT = Math.sin(thetaRad);
+        return {
+          x: x * cosT - y * sinT,
+          y: x * sinT + y * cosT,
+        };
+      }
+
+      /*
+      Window 1: Object center at (0, 0), rotated around O
+      P' = R(theta) * P_loc
+    */
+      function getWindow1Vertices(thetaRad) {
+        return LOCAL_SHAPE_VERTICES.map((v) => rotateVec(v.x, v.y, thetaRad));
+      }
+
+      /*
+      Window 2: Center offset to C(cx, cy), rotated around Origin O
+      P' = R(theta) * (P_loc + C) = R(theta)*P_loc + R(theta)*C
+    */
+      function getWindow2Vertices(thetaRad) {
+        const C = state.offsetC;
+        return LOCAL_SHAPE_VERTICES.map((v) => {
+          const initialWorld = { x: v.x + C.x, y: v.y + C.y };
+          return rotateVec(initialWorld.x, initialWorld.y, thetaRad);
+        });
+      }
+
+      /*
+      Window 3: Center offset to C(cx, cy), rotated around C
+      P' = T(C) * R(theta) * T(-C) * (P_loc + C)
+         = R(theta)*P_loc + C
+      Center C stays strictly invariant!
+    */
+      function getWindow3Vertices(thetaRad) {
+        const C = state.offsetC;
+        return LOCAL_SHAPE_VERTICES.map((v) => {
+          const rotatedLoc = rotateVec(v.x, v.y, thetaRad);
+          return {
+            x: rotatedLoc.x + C.x,
+            y: rotatedLoc.y + C.y,
+          };
+        });
+      }
+
+      /* =========================================================
+       4. Drawing Helpers
+       ========================================================= */
+      // Draw Coordinate System (Axes, Grid, Labels)
+      function drawCoordinateSystem(ctx, vp) {
+        const o = worldToScreen(0, 0, vp);
+        const xEnd = worldToScreen(4.3, 0, vp);
+        const yEnd = worldToScreen(0, 4.3, vp);
+        const xStart = worldToScreen(-0.9, 0, vp);
+        const yStart = worldToScreen(0, -0.7, vp);
+
+        ctx.save();
+
+        // Subtle sparse grid
+        ctx.strokeStyle = '#EEF3F7';
+        ctx.lineWidth = 1;
+        for (let x = -1; x <= 4; x++) {
+          if (x === 0) continue;
+          const p1 = worldToScreen(x, -0.8, vp);
+          const p2 = worldToScreen(x, 4.4, vp);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+        for (let y = -1; y <= 4; y++) {
+          if (y === 0) continue;
+          const p1 = worldToScreen(-0.9, y, vp);
+          const p2 = worldToScreen(4.4, y, vp);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+
+        // Main Axes
+        ctx.strokeStyle = '#6F8798';
+        ctx.lineWidth = 1.6;
+
+        // X Axis
+        ctx.beginPath();
+        ctx.moveTo(xStart.x, xStart.y);
+        ctx.lineTo(xEnd.x, xEnd.y);
+        ctx.stroke();
+
+        // X Arrow
+        ctx.fillStyle = '#6F8798';
+        ctx.beginPath();
+        ctx.moveTo(xEnd.x, xEnd.y);
+        ctx.lineTo(xEnd.x - 7, xEnd.y - 4);
+        ctx.lineTo(xEnd.x - 7, xEnd.y + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Y Axis
+        ctx.beginPath();
+        ctx.moveTo(yStart.x, yStart.y);
+        ctx.lineTo(yEnd.x, yEnd.y);
+        ctx.stroke();
+
+        // Y Arrow
+        ctx.beginPath();
+        ctx.moveTo(yEnd.x, yEnd.y);
+        ctx.lineTo(yEnd.x - 4, yEnd.y + 7);
+        ctx.lineTo(yEnd.x + 4, yEnd.y + 7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Axis Labels
+        ctx.font = 'bold 12px ' + getComputedStyle(document.body).fontFamily;
+        ctx.fillStyle = '#6F8798';
+        ctx.fillText('x', xEnd.x - 2, xEnd.y + 14);
+        ctx.fillText('y', yEnd.x - 14, yEnd.y + 10);
+
+        // Origin text 'O'
+        ctx.fillStyle = '#173B57';
+        ctx.font = 'bold 13px ' + getComputedStyle(document.body).fontFamily;
+        ctx.fillText('O', o.x - 12, o.y + 14);
+
+        ctx.restore();
+      }
+
+      // Draw the 2D polygon with optional styling
+      function drawPolygon(ctx, vertices, vp, style) {
+        if (!vertices || vertices.length < 3) return;
+
+        const screenPts = vertices.map((v) => worldToScreen(v.x, v.y, vp));
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(screenPts[0].x, screenPts[0].y);
+        for (let i = 1; i < screenPts.length; i++) {
+          ctx.lineTo(screenPts[i].x, screenPts[i].y);
+        }
+        ctx.closePath();
+
+        // Fill
+        if (style.fill) {
+          ctx.fillStyle = style.fill;
+          ctx.fill();
+        }
+
+        // Stroke
+        if (style.stroke) {
+          ctx.strokeStyle = style.stroke;
+          ctx.lineWidth = style.lineWidth || 2;
+          if (style.dashed) {
+            ctx.setLineDash(style.dashed);
+          } else {
+            ctx.setLineDash([]);
+          }
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      // Draw internal orientation line inside the polygon
+      function drawOrientationMarker(ctx, centerW, thetaRad, vp, style) {
+        const rotFrom = rotateVec(LOCAL_AXIS_MARKER.from.x, LOCAL_AXIS_MARKER.from.y, thetaRad);
+        const rotTo = rotateVec(LOCAL_AXIS_MARKER.to.x, LOCAL_AXIS_MARKER.to.y, thetaRad);
+
+        const p1 = worldToScreen(centerW.x + rotFrom.x, centerW.y + rotFrom.y, vp);
+        const p2 = worldToScreen(centerW.x + rotTo.x, centerW.y + rotTo.y, vp);
+
+        ctx.save();
+        ctx.strokeStyle = style.stroke || '#18A6B7';
+        ctx.lineWidth = style.lineWidth || 1.8;
+        if (style.dashed) ctx.setLineDash(style.dashed);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // Small arrowhead on internal line
+        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+        const headLen = 5.5;
+        ctx.fillStyle = style.stroke || '#18A6B7';
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(
+          p2.x - headLen * Math.cos(angle - Math.PI / 6),
+          p2.y - headLen * Math.sin(angle - Math.PI / 6),
+        );
+        ctx.lineTo(
+          p2.x - headLen * Math.cos(angle + Math.PI / 6),
+          p2.y - headLen * Math.sin(angle + Math.PI / 6),
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      // Draw circular angle arc with arrow
+      function drawAngleArc(ctx, centerW, radiusW, startAngleRad, sweepAngleRad, vp, label) {
+        if (Math.abs(sweepAngleRad) < 0.02) return;
+
+        const c = worldToScreen(centerW.x, centerW.y, vp);
+        const r = radiusW * vp.scale;
+
+        ctx.save();
+        ctx.strokeStyle = '#18A6B7';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([3, 3]);
+
+        // Note: screen y is inverted, so counterclockwise in Cartesian (+y up)
+        // corresponds to clockwise in screen coordinates (-y down).
+        // Screen angle = -CartesianAngle
+        const screenStart = -startAngleRad;
+        const screenEnd = -(startAngleRad + sweepAngleRad);
+
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, r, screenStart, screenEnd, true); // true = anticlockwise in screen = +Cartesian
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw Arrow at end of arc
+        const arrowScreenAngle = screenEnd - Math.PI / 2;
+        const endX = c.x + r * Math.cos(screenEnd);
+        const endY = c.y + r * Math.sin(screenEnd);
+        const headLen = 6.5;
+
+        ctx.fillStyle = '#18A6B7';
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(
+          endX - headLen * Math.cos(arrowScreenAngle - Math.PI / 6),
+          endY - headLen * Math.sin(arrowScreenAngle - Math.PI / 6),
+        );
+        ctx.lineTo(
+          endX - headLen * Math.cos(arrowScreenAngle + Math.PI / 6),
+          endY - headLen * Math.sin(arrowScreenAngle + Math.PI / 6),
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Label
+        if (label) {
+          const midScreen = -(startAngleRad + sweepAngleRad * 0.55);
+          const labelR = r + 11;
+          const lx = c.x + labelR * Math.cos(midScreen);
+          const ly = c.y + labelR * Math.sin(midScreen);
+
+          ctx.font = 'bold 12px ' + getComputedStyle(document.body).fontFamily;
+          ctx.fillStyle = '#18A6B7';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, lx, ly);
+        }
+
+        ctx.restore();
+      }
+
+      // Draw marked center points (O, C, C')
+      function drawPointMarker(ctx, wx, wy, vp, color, label, subtext, radius = 5) {
+        const p = worldToScreen(wx, wy, vp);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.stroke();
+
+        if (label) {
+          ctx.font = 'bold 13px ' + getComputedStyle(document.body).fontFamily;
+          ctx.fillStyle = color;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          const labelText = subtext ? `${label} (${subtext})` : label;
+          ctx.fillText(labelText, p.x + 8, p.y - 2);
+        }
+        ctx.restore();
+      }
+
+      /* =========================================================
+       5. Render Pipeline for the 3 Windows
+       ========================================================= */
+      function renderWindow1(thetaRad) {
+        const vp = getViewportTransform(canvas1);
+        ctx1.clearRect(0, 0, vp.w, vp.h);
+        drawCoordinateSystem(ctx1, vp);
+
+        const isFinal = state.angleDeg >= 59.9;
+        const isStart = state.angleDeg <= 0.1;
+
+        // 1. Ghost start shape at 0 deg
+        if (state.showGhost && !isStart) {
+          const vStart = getWindow1Vertices(0);
+          drawPolygon(ctx1, vStart, vp, {
+            stroke: 'rgba(184, 198, 206, 0.9)',
+            fill: 'rgba(216, 226, 232, 0.25)',
+            lineWidth: 1.5,
+            dashed: [3, 3],
+          });
+          drawOrientationMarker(ctx1, { x: 0, y: 0 }, 0, vp, {
+            stroke: 'rgba(184, 198, 206, 0.85)',
+            dashed: [2, 2],
+          });
+
+          // "Start" label
+          const pTipStart = worldToScreen(vStart[0].x, vStart[0].y, vp);
+          ctx1.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx1.fillStyle = 'rgba(111, 135, 152, 0.7)';
+          ctx1.fillText('Start (0°)', pTipStart.x + 4, pTipStart.y + 14);
+        }
+
+        // 2. Angle Arc around O
+        if (state.showTrajectory && state.angleDeg > 1) {
+          drawAngleArc(
+            ctx1,
+            { x: 0, y: 0 },
+            1.45,
+            0,
+            thetaRad,
+            vp,
+            `${Math.round(state.angleDeg)}°`,
+          );
+        }
+
+        // 3. Current active/final polygon
+        const vCurrent = getWindow1Vertices(thetaRad);
+        drawPolygon(ctx1, vCurrent, vp, {
+          stroke: '#18A6B7',
+          fill: isFinal ? 'rgba(24, 166, 183, 0.24)' : 'rgba(24, 166, 183, 0.16)',
+          lineWidth: isFinal ? 2.5 : 2.0,
+        });
+        drawOrientationMarker(ctx1, { x: 0, y: 0 }, thetaRad, vp, {
+          stroke: '#18A6B7',
+          lineWidth: 2.0,
+        });
+
+        // 4. Center marker O = C
+        if (state.showCenters) {
+          drawPointMarker(ctx1, 0, 0, vp, '#173B57', 'O = C', '', 5);
+        }
+
+        // End label
+        if (isFinal) {
+          const pTipEnd = worldToScreen(vCurrent[0].x, vCurrent[0].y, vp);
+          ctx1.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx1.fillStyle = '#18A6B7';
+          ctx1.fillText('End (60°)', pTipEnd.x + 6, pTipEnd.y - 6);
+        }
+      }
+
+      function renderWindow2(thetaRad) {
+        const vp = getViewportTransform(canvas2);
+        ctx2.clearRect(0, 0, vp.w, vp.h);
+        drawCoordinateSystem(ctx2, vp);
+
+        const C = state.offsetC;
+        const isFinal = state.angleDeg >= 59.9;
+        const isStart = state.angleDeg <= 0.1;
+
+        // Current center position C(theta) rotating around Origin O
+        const curC = rotateVec(C.x, C.y, thetaRad);
+        // Final center C' at 60 deg
+        const finalC = rotateVec(C.x, C.y, (60 * Math.PI) / 180);
+
+        // 1. Ghost start shape at initial offset C
+        if (state.showGhost && !isStart) {
+          const vStart = getWindow2Vertices(0);
+          drawPolygon(ctx2, vStart, vp, {
+            stroke: 'rgba(184, 198, 206, 0.9)',
+            fill: 'rgba(216, 226, 232, 0.25)',
+            lineWidth: 1.5,
+            dashed: [3, 3],
+          });
+          drawOrientationMarker(ctx2, C, 0, vp, {
+            stroke: 'rgba(184, 198, 206, 0.85)',
+            dashed: [2, 2],
+          });
+
+          // Radius line from O to start C
+          const oScreen = worldToScreen(0, 0, vp);
+          const cStartScreen = worldToScreen(C.x, C.y, vp);
+          ctx2.save();
+          ctx2.strokeStyle = 'rgba(111, 135, 152, 0.4)';
+          ctx2.lineWidth = 1.2;
+          ctx2.setLineDash([2, 3]);
+          ctx2.beginPath();
+          ctx2.moveTo(oScreen.x, oScreen.y);
+          ctx2.lineTo(cStartScreen.x, cStartScreen.y);
+          ctx2.stroke();
+          ctx2.restore();
+
+          const pTipStart = worldToScreen(vStart[0].x, vStart[0].y, vp);
+          ctx2.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx2.fillStyle = 'rgba(111, 135, 152, 0.7)';
+          ctx2.fillText('Start', pTipStart.x + 6, pTipStart.y + 14);
+        }
+
+        // 2. Trajectory of Center C around Origin O
+        if (state.showTrajectory && state.angleDeg > 1) {
+          const radiusC = Math.hypot(C.x, C.y);
+          const startAngle = Math.atan2(C.y, C.x);
+          drawAngleArc(
+            ctx2,
+            { x: 0, y: 0 },
+            radiusC,
+            startAngle,
+            thetaRad,
+            vp,
+            `${Math.round(state.angleDeg)}°`,
+          );
+
+          // Radius line from O to current C
+          const oScreen = worldToScreen(0, 0, vp);
+          const cCurScreen = worldToScreen(curC.x, curC.y, vp);
+          ctx2.save();
+          ctx2.strokeStyle = 'rgba(24, 166, 183, 0.45)';
+          ctx2.lineWidth = 1.4;
+          ctx2.setLineDash([3, 3]);
+          ctx2.beginPath();
+          ctx2.moveTo(oScreen.x, oScreen.y);
+          ctx2.lineTo(cCurScreen.x, cCurScreen.y);
+          ctx2.stroke();
+          ctx2.restore();
+        }
+
+        // 3. Current active/final polygon
+        const vCurrent = getWindow2Vertices(thetaRad);
+        drawPolygon(ctx2, vCurrent, vp, {
+          stroke: '#18A6B7',
+          fill: isFinal ? 'rgba(24, 166, 183, 0.24)' : 'rgba(24, 166, 183, 0.16)',
+          lineWidth: isFinal ? 2.5 : 2.0,
+        });
+        drawOrientationMarker(ctx2, curC, thetaRad, vp, {
+          stroke: '#18A6B7',
+          lineWidth: 2.0,
+        });
+
+        // 4. Center markers O, C, and C'
+        if (state.showCenters) {
+          // Origin O
+          drawPointMarker(ctx2, 0, 0, vp, '#173B57', 'O', '', 4.5);
+
+          // Initial C (if ghost is shown or during motion)
+          if (!isStart) {
+            drawPointMarker(ctx2, C.x, C.y, vp, 'rgba(212, 122, 69, 0.65)', 'C', '', 4);
+          }
+
+          // Current / Moving C(theta)
+          const labelC = isFinal ? 'C′' : isStart ? 'C' : 'C(θ)';
+          drawPointMarker(ctx2, curC.x, curC.y, vp, '#D47A45', labelC, '', 5.5);
+        }
+
+        // End label
+        if (isFinal) {
+          const pTipEnd = worldToScreen(vCurrent[0].x, vCurrent[0].y, vp);
+          ctx2.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx2.fillStyle = '#18A6B7';
+          ctx2.fillText('End (60°)', pTipEnd.x + 6, pTipEnd.y - 6);
+        }
+      }
+
+      function renderWindow3(thetaRad) {
+        const vp = getViewportTransform(canvas3);
+        ctx3.clearRect(0, 0, vp.w, vp.h);
+        drawCoordinateSystem(ctx3, vp);
+
+        const C = state.offsetC;
+        const isFinal = state.angleDeg >= 59.9;
+        const isStart = state.angleDeg <= 0.1;
+
+        // 1. Ghost start shape at initial offset C
+        if (state.showGhost && !isStart) {
+          const vStart = getWindow3Vertices(0);
+          drawPolygon(ctx3, vStart, vp, {
+            stroke: 'rgba(184, 198, 206, 0.9)',
+            fill: 'rgba(216, 226, 232, 0.25)',
+            lineWidth: 1.5,
+            dashed: [3, 3],
+          });
+          drawOrientationMarker(ctx3, C, 0, vp, {
+            stroke: 'rgba(184, 198, 206, 0.85)',
+            dashed: [2, 2],
+          });
+
+          const pTipStart = worldToScreen(vStart[0].x, vStart[0].y, vp);
+          ctx3.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx3.fillStyle = 'rgba(111, 135, 152, 0.7)';
+          ctx3.fillText('Start', pTipStart.x + 6, pTipStart.y + 14);
+        }
+
+        // 2. In-place rotation angle arc around C
+        if (state.showTrajectory && state.angleDeg > 1) {
+          drawAngleArc(ctx3, C, 1.45, 0, thetaRad, vp, `${Math.round(state.angleDeg)}°`);
+        }
+
+        // 3. Current active/final polygon (rotates strictly around fixed C)
+        const vCurrent = getWindow3Vertices(thetaRad);
+        drawPolygon(ctx3, vCurrent, vp, {
+          stroke: '#18A6B7',
+          fill: isFinal ? 'rgba(24, 166, 183, 0.24)' : 'rgba(24, 166, 183, 0.16)',
+          lineWidth: isFinal ? 2.5 : 2.0,
+        });
+        drawOrientationMarker(ctx3, C, thetaRad, vp, {
+          stroke: '#18A6B7',
+          lineWidth: 2.0,
+        });
+
+        // 4. Center markers O and fixed C
+        if (state.showCenters) {
+          drawPointMarker(ctx3, 0, 0, vp, '#173B57', 'O', '', 4.5);
+          // Fixed C (Never moves, no C')
+          drawPointMarker(ctx3, C.x, C.y, vp, '#D47A45', 'C', '固定', 5.5);
+        }
+
+        // End label
+        if (isFinal) {
+          const pTipEnd = worldToScreen(vCurrent[0].x, vCurrent[0].y, vp);
+          ctx3.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+          ctx3.fillStyle = '#18A6B7';
+          ctx3.fillText('End (60°)', pTipEnd.x + 6, pTipEnd.y - 6);
+        }
+      }
+
+      // Master synchronized render call
+      function renderAll() {
+        const thetaRad = (state.angleDeg * Math.PI) / 180;
+        renderWindow1(thetaRad);
+        renderWindow2(thetaRad);
+        renderWindow3(thetaRad);
+      }
+
+      /* =========================================================
+       6. High-DPI Canvas Resizing
+       ========================================================= */
+      function resizeCanvases() {
+        const canvases = [canvas1, canvas2, canvas3];
+        const dpr = window.devicePixelRatio || 1;
+
+        canvases.forEach((cvs) => {
+          const rect = cvs.parentElement.getBoundingClientRect();
+          const displayW = Math.floor(rect.width);
+          const displayH = Math.floor(rect.height);
+
+          if (cvs.width !== displayW * dpr || cvs.height !== displayH * dpr) {
+            cvs.width = displayW * dpr;
+            cvs.height = displayH * dpr;
+          }
+        });
+
+        renderAll();
+      }
+
+      /* =========================================================
+       7. Animation Loop & Smooth Playback
+       ========================================================= */
+      function updateUIElements() {
+        const roundedAngle = Math.round(state.angleDeg);
+        const slider = document.getElementById('angleSlider');
+        const angleBadge = document.getElementById('angleText');
+        const statusBadge = document.getElementById('statusText');
+
+        slider.value = roundedAngle;
+        slider.setAttribute('aria-valuenow', roundedAngle);
+        angleBadge.textContent = `${roundedAngle}°`;
+
+        if (state.isPlaying) {
+          statusBadge.textContent = '旋转中';
+          statusBadge.style.color = 'var(--color-cyan)';
+        } else if (roundedAngle >= 60) {
+          statusBadge.textContent = '60°';
+          statusBadge.style.color = 'var(--color-primary)';
+        } else if (roundedAngle <= 0) {
+          statusBadge.textContent = '0°';
+          statusBadge.style.color = 'var(--color-sub)';
+        } else {
+          statusBadge.textContent = `${roundedAngle}°`;
+          statusBadge.style.color = 'var(--color-primary)';
+        }
+      }
+
+      function setAngle(newAngleDeg) {
+        state.angleDeg = Math.max(0, Math.min(60, newAngleDeg));
+        updateUIElements();
+        renderAll();
+      }
+
+      function animate(timestamp) {
+        if (!state.isPlaying) return;
+
+        if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+        const delta = timestamp - state.lastTimestamp;
+        state.lastTimestamp = timestamp;
+
+        // Rate of rotation: 60 deg / 1800 ms
+        const speed = (state.maxAngleDeg / state.animDuration) * delta;
+        let nextAngle = state.angleDeg + speed;
+
+        if (nextAngle >= state.maxAngleDeg) {
+          nextAngle = state.maxAngleDeg;
+          setAngle(nextAngle);
+
+          if (state.isLooping) {
+            // Pause at 60 deg, then cycle back
+            state.isPlaying = false;
+            updatePlayBtn(false);
+
+            clearTimeout(state.pauseTimer);
+            state.pauseTimer = setTimeout(() => {
+              setAngle(0);
+              state.lastTimestamp = null;
+              state.isPlaying = true;
+              updatePlayBtn(true);
+              requestAnimationFrame(animate);
+            }, state.pauseAtEndDuration);
+          } else {
+            state.isPlaying = false;
+            updatePlayBtn(false);
+          }
+          return;
+        }
+
+        setAngle(nextAngle);
+        requestAnimationFrame(animate);
+      }
+
+      function updatePlayBtn(playing) {
+        const playIcon = document.getElementById('playIcon');
+        const playText = document.getElementById('playText');
+        const btn = document.getElementById('btnPlayPause');
+
+        if (playing) {
+          playIcon.textContent = 'Ⅱ';
+          playText.textContent = '暂停';
+          btn.setAttribute('aria-label', '暂停动画');
+        } else {
+          playIcon.textContent = '▶';
+          playText.textContent = '播放';
+          btn.setAttribute('aria-label', '播放动画');
+        }
+        updateUIElements();
+      }
+
+      function togglePlay() {
+        clearTimeout(state.pauseTimer);
+
+        if (state.isPlaying) {
+          state.isPlaying = false;
+          state.lastTimestamp = null;
+          updatePlayBtn(false);
+        } else {
+          // If at the end, restart from 0
+          if (state.angleDeg >= 59.9) {
+            setAngle(0);
+          }
+          state.isPlaying = true;
+          state.lastTimestamp = null;
+          updatePlayBtn(true);
+          requestAnimationFrame(animate);
+        }
+      }
+
+      /* =========================================================
+       8. Event Bindings
+       ========================================================= */
+      function initEvents() {
+        // Play / Pause
+        document.getElementById('btnPlayPause').addEventListener('click', togglePlay);
+
+        // Reset
+        document.getElementById('btnReset').addEventListener('click', () => {
+          clearTimeout(state.pauseTimer);
+          state.isPlaying = false;
+          state.lastTimestamp = null;
+          updatePlayBtn(false);
+          setAngle(0);
+        });
+
+        // Quick jumps
+        document.getElementById('btnJump0').addEventListener('click', () => {
+          clearTimeout(state.pauseTimer);
+          state.isPlaying = false;
+          updatePlayBtn(false);
+          setAngle(0);
+        });
+
+        document.getElementById('btnJump60').addEventListener('click', () => {
+          clearTimeout(state.pauseTimer);
+          state.isPlaying = false;
+          updatePlayBtn(false);
+          setAngle(60);
+        });
+
+        // Slider
+        const slider = document.getElementById('angleSlider');
+        slider.addEventListener('input', (e) => {
+          clearTimeout(state.pauseTimer);
+          if (state.isPlaying) {
+            state.isPlaying = false;
+            updatePlayBtn(false);
+          }
+          setAngle(parseFloat(e.target.value));
+        });
+
+        // Checkboxes
+        document.getElementById('chkLoop').addEventListener('change', (e) => {
+          state.isLooping = e.target.checked;
+        });
+
+        document.getElementById('chkGhost').addEventListener('change', (e) => {
+          state.showGhost = e.target.checked;
+          renderAll();
+        });
+
+        document.getElementById('chkTrajectory').addEventListener('change', (e) => {
+          state.showTrajectory = e.target.checked;
+          renderAll();
+        });
+
+        document.getElementById('chkCenters').addEventListener('change', (e) => {
+          state.showCenters = e.target.checked;
+          renderAll();
+        });
+
+        // Window resize
+        window.addEventListener('resize', resizeCanvases);
+
+        // Keyboard Accessibility
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlay();
+          } else if (e.code === 'ArrowRight' || e.code === 'ArrowUp') {
+            e.preventDefault();
+            clearTimeout(state.pauseTimer);
+            state.isPlaying = false;
+            updatePlayBtn(false);
+            setAngle(Math.min(60, state.angleDeg + 1));
+          } else if (e.code === 'ArrowLeft' || e.code === 'ArrowDown') {
+            e.preventDefault();
+            clearTimeout(state.pauseTimer);
+            state.isPlaying = false;
+            updatePlayBtn(false);
+            setAngle(Math.max(0, state.angleDeg - 1));
+          } else if (e.code === 'KeyR') {
+            e.preventDefault();
+            clearTimeout(state.pauseTimer);
+            state.isPlaying = false;
+            updatePlayBtn(false);
+            setAngle(0);
+          }
+        });
+      }
+
+      /* =========================================================
+       9. Bootstrapping
+       ========================================================= */
+      window.addEventListener('DOMContentLoaded', () => {
+        initEvents();
+        resizeCanvases();
+        setAngle(0);
+
+        // Auto start a gentle demonstration loop after 600ms
+        setTimeout(() => {
+          if (!state.isPlaying && state.angleDeg === 0) {
+            togglePlay();
+          }
+        }, 600);
+      });
+    </script>
+  </body>
+</html>

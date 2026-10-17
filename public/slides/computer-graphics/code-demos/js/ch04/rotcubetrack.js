@@ -28,7 +28,7 @@ function initCube() {
 
   gl = canvas.getContext('webgl2');
   if (!gl) {
-    alert('当前浏览器不支持 WebGL 2.0');
+    alert("WebGL isn't available");
     return;
   }
 
@@ -42,7 +42,6 @@ function initCube() {
   var program = initShaders(gl, 'vertex-shader', 'fragment-shader');
   if (program === -1) return;
   gl.useProgram(program);
-
   var vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
 

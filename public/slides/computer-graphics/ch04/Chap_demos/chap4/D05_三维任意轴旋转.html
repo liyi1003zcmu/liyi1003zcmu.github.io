@@ -1,0 +1,1297 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D04-03 · 三维复合变换与任意轴旋转实验台</title>
+    <style>
+      :root {
+        --bg-page: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-panel: #f1f5f9;
+        --color-primary: #173b57;
+        --color-sub: #64748b;
+        --color-border: #cbd5e1;
+        --color-cyan: #0284c7;
+        --color-cyan-light: #e0f2fe;
+        --color-green: #059669;
+        --color-green-light: #d1fae5;
+        --color-amber: #d97706;
+        --color-amber-light: #fef3c7;
+        --color-purple: #7c3aed;
+        --color-red: #ef4444;
+        --font-base:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+          sans-serif;
+        --font-mono: 'SF Mono', Consolas, Menlo, Monaco, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background-color: var(--bg-page);
+        color: var(--color-primary);
+        font-family: var(--font-base);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      header {
+        padding: 12px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .brand-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        background: #e0f2fe;
+        color: #0369a1;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 6px;
+        border: 1px solid #bae6fd;
+      }
+
+      h1 {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--color-primary);
+      }
+
+      .phase-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #475569;
+      }
+
+      .guidance-bar {
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        padding: 8px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+        color: #334155;
+      }
+
+      .main-container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 430px;
+        gap: 16px;
+        padding: 16px 24px;
+        max-width: 1720px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      @media (max-width: 1080px) {
+        .main-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* 3D Viewport Card */
+      .viewport-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      }
+
+      .viewport-header {
+        padding: 10px 18px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .canvas-wrapper {
+        position: relative;
+        flex: 1;
+        min-height: 480px;
+        background: radial-gradient(circle at center, #ffffff 40%, #f1f5f9 100%);
+        cursor: grab;
+      }
+
+      .canvas-wrapper:active {
+        cursor: grabbing;
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .viewport-overlay {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        pointer-events: none;
+      }
+
+      .legend-tag {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(4px);
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      /* Control Panel */
+      .panel-card {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .section-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        padding: 14px 16px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* Step Timeline Stepper */
+      .stepper-nav {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+        margin-bottom: 10px;
+      }
+
+      .step-btn {
+        padding: 6px 0;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        transition: all 0.15s;
+      }
+
+      .step-btn:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+
+      .step-btn.active {
+        background: var(--color-cyan);
+        color: #ffffff;
+        border-color: var(--color-cyan);
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      }
+
+      .step-btn.core {
+        position: relative;
+      }
+
+      .step-btn.core::after {
+        content: '★';
+        position: absolute;
+        top: -6px;
+        right: 2px;
+        color: #f59e0b;
+        font-size: 10px;
+      }
+
+      .step-info-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .step-info-box h4 {
+        font-size: 13px;
+        color: #0f172a;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .playback-controls {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .btn-action {
+        flex: 1;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+
+      .btn-action:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+      }
+
+      .btn-primary {
+        background: var(--color-cyan);
+        color: #ffffff;
+        border-color: var(--color-cyan);
+      }
+
+      .btn-primary:hover {
+        background: #0270a6;
+      }
+
+      /* Parameters Controls */
+      .param-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .param-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+
+      .param-item label {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 600;
+      }
+
+      .param-item input {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        padding: 5px 8px;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        background: #ffffff;
+      }
+
+      /* Matrix Display */
+      .matrix-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        background: #f8fafc;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .matrix-cell {
+        padding: 4px 2px;
+        background: #ffffff;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+      }
+
+      .matrix-cell.highlight {
+        background: #e0f2fe;
+        color: #0369a1;
+        font-weight: 700;
+        border-color: #bae6fd;
+      }
+
+      .matrix-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .matrix-tab {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .matrix-tab.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+      }
+
+      /* Preset Buttons Bar */
+      .preset-bar {
+        padding: 10px 24px;
+        background: #ffffff;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: #f8fafc;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .preset-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+
+      .preset-btn.active {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #7dd3fc;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand-wrap">
+        <span class="badge">D04-03</span>
+        <h1>三维复合变换与任意轴旋转实验台</h1>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span id="phase-badge" class="phase-badge" style="background: #e0f2fe; color: #0369a1"
+          >准备与对齐阶段 (Phase 1)</span
+        >
+        <span style="font-size: 12px; color: #64748b">支持鼠标拖拽旋转三维视角 / 滚轮缩放</span>
+      </div>
+    </header>
+
+    <div class="guidance-bar">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span
+          style="
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-cyan);
+          "
+        ></span>
+        <span id="guidance-text"
+          ><strong>阶段一：对齐准备</strong> — 通过平移与两次坐标轴旋转，将任意斜轴对齐到标准 Z
+          轴。</span
+        >
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 12px; color: #64748b">
+        列向量级联：M = M₇ · M₆ · M₅ · M₄ · M₃ · M₂ · M₁
+      </div>
+    </div>
+
+    <div class="main-container">
+      <!-- Left: 3D Viewport -->
+      <div class="viewport-card">
+        <div class="viewport-header">
+          <span>三维几何空间视图 (Axonometric 3D)</span>
+          <button
+            id="btn-reset-view"
+            class="btn-action"
+            style="padding: 3px 10px; font-size: 11px; flex: none"
+          >
+            ↺ 重置视角
+          </button>
+        </div>
+        <div class="canvas-wrapper" id="canvas-container">
+          <canvas id="gl-canvas"></canvas>
+          <div class="viewport-overlay">
+            <div class="legend-tag">
+              <span class="color-dot" style="background: #ef4444"></span>X 轴 (红色)
+            </div>
+            <div class="legend-tag">
+              <span class="color-dot" style="background: #10b981"></span>Y 轴 (绿色)
+            </div>
+            <div class="legend-tag">
+              <span class="color-dot" style="background: #0284c7"></span>Z 轴 (蓝色)
+            </div>
+            <div class="legend-tag">
+              <span class="color-dot" style="background: #f59e0b"></span>空间旋转轴 L (橙黄粗线)
+            </div>
+            <div class="legend-tag">
+              <span class="color-dot" style="background: #8b5cf6"></span>待旋转物体 (立方标记体)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Controls & Matrices -->
+      <div class="panel-card">
+        <!-- Step Stepper Card -->
+        <div class="section-card">
+          <div class="section-title">
+            <span>七步矩阵链逐步单步调试</span>
+            <span
+              id="step-counter"
+              style="font-family: var(--font-mono); font-size: 12px; color: var(--color-cyan)"
+              >Step 0 / 7</span
+            >
+          </div>
+
+          <div class="stepper-nav">
+            <button class="step-btn active" data-step="0">
+              <span>S0</span><small>初始</small>
+            </button>
+            <button class="step-btn" data-step="1"><span>S1</span><small>T(-P₀)</small></button>
+            <button class="step-btn" data-step="2"><span>S2</span><small>Ry(-θy)</small></button>
+            <button class="step-btn" data-step="3"><span>S3</span><small>Rx(θx)</small></button>
+            <button class="step-btn core" data-step="4"><span>S4</span><small>Rz(θ)</small></button>
+            <button class="step-btn" data-step="5"><span>S5</span><small>Rx(-θx)</small></button>
+            <button class="step-btn" data-step="6"><span>S6</span><small>Ry(θy)</small></button>
+            <button class="step-btn" data-step="7"><span>S7</span><small>T(P₀)</small></button>
+          </div>
+
+          <div class="step-info-box" id="step-info-box">
+            <h4 id="step-title">Step 0: 原始几何空间状态</h4>
+            <p id="step-desc" style="color: #475569">
+              空间中存在基准点 \(P_0\) 与方向向量 \(\mathbf{u}\) 所确定的任意轴
+              \(L\)，目标是将物体绕该轴逆时针旋转 \(\theta\)。
+            </p>
+          </div>
+
+          <div class="playback-controls">
+            <button id="btn-prev" class="btn-action">◀ 上一步</button>
+            <button id="btn-play" class="btn-action btn-primary">▶ 自动连贯播放</button>
+            <button id="btn-next" class="btn-action">下一步 ▶</button>
+            <button id="btn-reset" class="btn-action" style="flex: 0.6">↺ 复位</button>
+          </div>
+        </div>
+
+        <!-- Live Parameters Card -->
+        <div class="section-card">
+          <div class="section-title">
+            <span>旋转轴参数设置</span>
+            <span style="font-size: 11px; color: #64748b">(改变参数实时重算)</span>
+          </div>
+          <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px">
+            不动基准点 P₀ (x₀, y₀, z₀):
+          </div>
+          <div class="param-group">
+            <div class="param-item">
+              <label>P₀.x</label><input type="number" id="p0x" step="0.5" value="1.0" />
+            </div>
+            <div class="param-item">
+              <label>P₀.y</label><input type="number" id="p0y" step="0.5" value="1.0" />
+            </div>
+            <div class="param-item">
+              <label>P₀.z</label><input type="number" id="p0z" step="0.5" value="0.5" />
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px">
+            轴方向向量 u (ux, uy, uz):
+          </div>
+          <div class="param-group">
+            <div class="param-item">
+              <label>u.x</label><input type="number" id="ux" step="0.5" value="1.0" />
+            </div>
+            <div class="param-item">
+              <label>u.y</label><input type="number" id="uy" step="0.5" value="1.0" />
+            </div>
+            <div class="param-item">
+              <label>u.z</label><input type="number" id="uz" step="0.5" value="1.0" />
+            </div>
+          </div>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 6px;
+            "
+          >
+            <label style="font-size: 11px; font-weight: 700; color: #475569"
+              >核心目标旋转角 θ (°):</label
+            >
+            <span
+              id="theta-val"
+              style="
+                font-family: var(--font-mono);
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--color-cyan);
+              "
+              >60°</span
+            >
+          </div>
+          <input
+            type="range"
+            id="theta-slider"
+            min="0"
+            max="360"
+            value="60"
+            style="width: 100%; margin-top: 4px"
+          />
+        </div>
+
+        <!-- Matrix Inspector Card -->
+        <div class="section-card">
+          <div class="section-title">
+            <span>4×4 齐次矩阵监视器</span>
+            <div class="matrix-tabs">
+              <button class="matrix-tab active" id="tab-curr">当前初等矩阵 Mₖ</button>
+              <button class="matrix-tab" id="tab-cum">累积复合矩阵 M</button>
+            </div>
+          </div>
+          <div class="matrix-grid" id="matrix-display">
+            <!-- 16 cells dynamically generated -->
+          </div>
+          <div
+            style="margin-top: 8px; font-size: 11px; color: #64748b; line-height: 1.4"
+            id="matrix-note"
+          >
+            当前矩阵：单位矩阵（无变换）
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Presets Bar -->
+    <div class="preset-bar">
+      <strong style="font-size: 12px; color: #475569">推荐课堂预设：</strong>
+      <button class="preset-btn active" id="pre-1">
+        预设 1: 立方体空间对角线 (P₀=(1,1,0.5), u=(1,1,1), θ=60°)
+      </button>
+      <button class="preset-btn" id="pre-2">
+        预设 2: 平面偏置斜轴 (P₀=(1.5,0,1), u=(0,1,1), θ=90°)
+      </button>
+      <button class="preset-btn" id="pre-3">
+        预设 3: 医疗器械穿刺定位轴 (P₀=(1.2,0.8,1.5), u=(0.3,0.4,0.86), θ=45°)
+      </button>
+    </div>
+
+    <script>
+      /* ========================================================
+       Matrix & 3D Math Utilities
+       ======================================================== */
+      const Math3D = {
+        identity() {
+          return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        },
+        multiply(a, b) {
+          const out = new Array(16);
+          for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+              let sum = 0;
+              for (let k = 0; k < 4; k++) {
+                sum += a[r * 4 + k] * b[k * 4 + c];
+              }
+              out[r * 4 + c] = sum;
+            }
+          }
+          return out;
+        },
+        translation(tx, ty, tz) {
+          return [1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1];
+        },
+        rotX(rad) {
+          const c = Math.cos(rad),
+            s = Math.sin(rad);
+          return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1];
+        },
+        rotY(rad) {
+          const c = Math.cos(rad),
+            s = Math.sin(rad);
+          return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1];
+        },
+        rotZ(rad) {
+          const c = Math.cos(rad),
+            s = Math.sin(rad);
+          return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        },
+        transformPoint(m, p) {
+          const x = p[0],
+            y = p[1],
+            z = p[2],
+            w = p[3] !== undefined ? p[3] : 1;
+          const rx = m[0] * x + m[1] * y + m[2] * z + m[3] * w;
+          const ry = m[4] * x + m[5] * y + m[6] * z + m[7] * w;
+          const rz = m[8] * x + m[9] * y + m[10] * z + m[11] * w;
+          const rw = m[12] * x + m[13] * y + m[14] * z + m[15] * w;
+          return [rx / rw, ry / rw, rz / rw];
+        },
+      };
+
+      /* ========================================================
+       State Management
+       ======================================================== */
+      const state = {
+        currentStep: 0,
+        activeTab: 'curr', // 'curr' or 'cum'
+        isPlaying: false,
+        playTimer: null,
+        params: {
+          p0: [1.0, 1.0, 0.5],
+          u: [1.0, 1.0, 1.0],
+          theta: (60 * Math.PI) / 180,
+        },
+        // Angles for alignment
+        thetaX: 0,
+        thetaY: 0,
+        // Camera
+        camera: {
+          yaw: (38 * Math.PI) / 180,
+          pitch: (24 * Math.PI) / 180,
+          distance: 5.5,
+          zoom: 70, // pixels per unit
+          isDragging: false,
+          lastX: 0,
+          lastY: 0,
+        },
+      };
+
+      // Step definitions
+      const stepDefinitions = [
+        {
+          step: 0,
+          title: 'Step 0: 原始几何空间状态',
+          phase: '初始准备 (Phase 0)',
+          phaseColor: '#64748b',
+          desc: '任意斜轴 L 由基准点 P₀ 与单位方向向量 u 确定。待旋转物体（立方标记体）处于初始姿态。',
+          matrixName: '单位矩阵 I',
+          calcM: () => Math3D.identity(),
+        },
+        {
+          step: 1,
+          title: 'Step 1: 平移旋转轴至原点 M₁ = T(-P₀)',
+          phase: '阶段一 · 准备与对齐 (Phase 1)',
+          phaseColor: '#0284c7',
+          desc: '把基准点 P₀ 平移到原点 (0,0,0)，将问题转化为‘过原点的倾斜轴旋转’。',
+          matrixName: '平移矩阵 T(-P₀)',
+          calcM: () =>
+            Math3D.translation(-state.params.p0[0], -state.params.p0[1], -state.params.p0[2]),
+        },
+        {
+          step: 2,
+          title: 'Step 2: 绕 Y 轴转入 YOZ 平面 M₂ = Ry(-θy)',
+          phase: '阶段一 · 准备与对齐 (Phase 1)',
+          phaseColor: '#0284c7',
+          desc: '绕 Y 轴顺时针旋转，消除轴在 X 轴方向的偏斜投影，使其完全落入 YOZ 坐标平面。',
+          matrixName: '绕 Y 轴旋转矩阵 Ry(-θy)',
+          calcM: () => Math3D.rotY(-state.thetaY),
+        },
+        {
+          step: 3,
+          title: 'Step 3: 绕 X 轴旋转与 Z 轴重合 M₃ = Rx(θx)',
+          phase: '阶段一 · 准备与对齐 (Phase 1)',
+          phaseColor: '#0284c7',
+          desc: '绕 X 轴逆时针旋转，使旋转轴与标准坐标轴 Z 轴完全重合！对齐复合变换 A = M₃ M₂ M₁ 完成。',
+          matrixName: '绕 X 轴旋转矩阵 Rx(θx)',
+          calcM: () => Math3D.rotX(state.thetaX),
+        },
+        {
+          step: 4,
+          title: 'Step 4: 核心旋转！绕 Z 轴旋转 θ 角度 M₄ = Rz(θ)',
+          phase: '阶段二 · 核心变换 (Phase 2)',
+          phaseColor: '#d97706',
+          desc: '★ 核心几何目标：此时旋转轴已与 Z 轴重合，直接应用标准绕 Z 轴旋转矩阵完成实际目标旋转！',
+          matrixName: '标准 Z 轴旋转矩阵 Rz(θ)',
+          calcM: () => Math3D.rotZ(state.params.theta),
+        },
+        {
+          step: 5,
+          title: 'Step 5: 逆向撤销 X 轴旋转 M₅ = Rx(-θx)',
+          phase: '阶段三 · 逆向撤销与恢复 (Phase 3)',
+          phaseColor: '#059669',
+          desc: '核心旋转完成后，开始逆序恢复空间基准：绕 X 轴顺时针逆转回 YOZ 平面。',
+          matrixName: '逆旋转矩阵 Rx(-θx)',
+          calcM: () => Math3D.rotX(-state.thetaX),
+        },
+        {
+          step: 6,
+          title: 'Step 6: 逆向撤销 Y 轴旋转 M₆ = Ry(θy)',
+          phase: '阶段三 · 逆向撤销与恢复 (Phase 3)',
+          phaseColor: '#059669',
+          desc: '绕 Y 轴逆时针逆转，将旋转轴方向恢复到初始空间倾斜指向。',
+          matrixName: '逆旋转矩阵 Ry(θy)',
+          calcM: () => Math3D.rotY(state.thetaY),
+        },
+        {
+          step: 7,
+          title: 'Step 7: 逆向平移恢复基准点原位 M₇ = T(P₀)',
+          phase: '阶段三 · 逆向撤销与恢复 (Phase 3)',
+          phaseColor: '#059669',
+          desc: '将基准点从原点平移回初始 P₀。全流程复合变换 M = A⁻¹ Rz(θ) A 彻底完成！',
+          matrixName: '逆平移矩阵 T(P₀)',
+          calcM: () =>
+            Math3D.translation(state.params.p0[0], state.params.p0[1], state.params.p0[2]),
+        },
+      ];
+
+      // Compute alignment angles θx and θy
+      function recomputeAngles() {
+        const u = state.params.u;
+        const len = Math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) || 1;
+        const ux = u[0] / len;
+        const uy = u[1] / len;
+        const uz = u[2] / len;
+
+        // Project onto YOZ: d = sqrt(uy^2 + uz^2)
+        const d = Math.sqrt(uy * uy + uz * uz);
+        if (d > 0.0001) {
+          state.thetaX = Math.asin(uy / 1.0); // angle with YOZ/Z
+          state.thetaY = Math.asin(ux / 1.0); // angle in XOZ
+        } else {
+          state.thetaX = 0;
+          state.thetaY = Math.PI / 2;
+        }
+      }
+
+      // Compute step matrices & accumulated matrices
+      function getStepMatrices() {
+        recomputeAngles();
+        const stepMs = [];
+        for (let i = 0; i < stepDefinitions.length; i++) {
+          stepMs.push(stepDefinitions[i].calcM());
+        }
+
+        // Accumulated matrices:
+        // Step 0: I
+        // Step 1: M1
+        // Step 2: M2 * M1
+        // Step 3: M3 * M2 * M1
+        // ...
+        const cumMs = [Math3D.identity()];
+        for (let i = 1; i < stepDefinitions.length; i++) {
+          cumMs.push(Math3D.multiply(stepMs[i], cumMs[i - 1]));
+        }
+
+        return { stepMs, cumMs };
+      }
+
+      /* ========================================================
+       Canvas 3D Renderer
+       ======================================================== */
+      const canvas = document.getElementById('gl-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        render();
+      }
+      window.addEventListener('resize', resizeCanvas);
+
+      // Project 3D point (x,y,z) to 2D screen coordinates
+      function project(p, width, height) {
+        const yaw = state.camera.yaw;
+        const pitch = state.camera.pitch;
+        const zoom = state.camera.zoom;
+
+        // Rotate Y (Yaw)
+        const x1 = p[0] * Math.cos(yaw) - p[2] * Math.sin(yaw);
+        const y1 = p[1];
+        const z1 = p[0] * Math.sin(yaw) + p[2] * Math.cos(yaw);
+
+        // Rotate X (Pitch)
+        const x2 = x1;
+        const y2 = y1 * Math.cos(pitch) - z1 * Math.sin(pitch);
+        const z2 = y1 * Math.sin(pitch) + z1 * Math.cos(pitch);
+
+        // Axonometric projection center
+        const cx = width / 2;
+        const cy = height / 2 + 30;
+
+        // Screen X, Y (Y-up in math -> Y-down on canvas)
+        return {
+          x: cx + x2 * zoom,
+          y: cy - y2 * zoom,
+          depth: z2,
+        };
+      }
+
+      // Geometry definition for 3D marker object (An asymmetrical 3D cube with orientation mark)
+      const baseCubeVertices = [
+        // base box [-0.35, 0.35]
+        [-0.4, -0.4, -0.4],
+        [0.4, -0.4, -0.4],
+        [0.4, 0.4, -0.4],
+        [-0.4, 0.4, -0.4], // bottom
+        [-0.4, -0.4, 0.4],
+        [0.4, -0.4, 0.4],
+        [0.4, 0.4, 0.4],
+        [-0.4, 0.4, 0.4], // top
+        // Top tip (pointer arrow indicating orientation)
+        [0.0, 0.0, 0.9],
+      ];
+
+      const cubeFaces = [
+        { v: [0, 1, 2, 3], col: 'rgba(139, 92, 246, 0.65)' }, // bottom
+        { v: [4, 5, 6, 7], col: 'rgba(167, 139, 250, 0.75)' }, // top
+        { v: [0, 1, 5, 4], col: 'rgba(124, 58, 237, 0.70)' }, // front
+        { v: [2, 3, 7, 6], col: 'rgba(109, 40, 217, 0.60)' }, // back
+        { v: [1, 2, 6, 5], col: 'rgba(147, 51, 234, 0.75)' }, // right
+        { v: [3, 0, 4, 7], col: 'rgba(126, 34, 206, 0.65)' }, // left
+        // arrow pyramid faces
+        { v: [4, 5, 8], col: 'rgba(245, 158, 11, 0.85)' },
+        { v: [5, 6, 8], col: 'rgba(251, 191, 36, 0.85)' },
+        { v: [6, 7, 8], col: 'rgba(217, 119, 6, 0.85)' },
+        { v: [7, 4, 8], col: 'rgba(180, 83, 9, 0.85)' },
+      ];
+
+      function render() {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const { cumMs } = getStepMatrices();
+        const currentCumM = cumMs[state.currentStep];
+
+        // Draw Grid on XOZ plane
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(203, 213, 225, 0.4)';
+        for (let g = -3; g <= 3; g++) {
+          const p1 = project([g, 0, -3], w, h);
+          const p2 = project([g, 0, 3], w, h);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+
+          const p3 = project([-3, 0, g], w, h);
+          const p4 = project([3, 0, g], w, h);
+          ctx.beginPath();
+          ctx.moveTo(p3.x, p3.y);
+          ctx.lineTo(p4.x, p4.y);
+          ctx.stroke();
+        }
+
+        // Draw Standard Global Coordinate Axes (X: Red, Y: Green, Z: Blue)
+        function drawAxis(from, to, color, label) {
+          const pStart = project(from, w, h);
+          const pEnd = project(to, w, h);
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = color;
+          ctx.beginPath();
+          ctx.moveTo(pStart.x, pStart.y);
+          ctx.lineTo(pEnd.x, pEnd.y);
+          ctx.stroke();
+
+          ctx.font = 'bold 13px sans-serif';
+          ctx.fillStyle = color;
+          ctx.fillText(label, pEnd.x + 6, pEnd.y + 4);
+        }
+
+        drawAxis([0, 0, 0], [3.2, 0, 0], '#ef4444', 'X');
+        drawAxis([0, 0, 0], [0, 3.2, 0], '#10b981', 'Y');
+        drawAxis([0, 0, 0], [0, 0, 3.2], '#0284c7', 'Z');
+
+        // Draw Base Arbitrary Axis L (Initial state - faint dashed)
+        const p0 = state.params.p0;
+        const u = state.params.u;
+        const uLen = Math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) || 1;
+        const normU = [u[0] / uLen, u[1] / uLen, u[2] / uLen];
+
+        // Initial axis line
+        const lineLen = 3.5;
+        const initAxStart = [
+          p0[0] - normU[0] * lineLen,
+          p0[1] - normU[1] * lineLen,
+          p0[2] - normU[2] * lineLen,
+        ];
+        const initAxEnd = [
+          p0[0] + normU[0] * lineLen,
+          p0[1] + normU[1] * lineLen,
+          p0[2] + normU[2] * lineLen,
+        ];
+
+        const pInitStart = project(initAxStart, w, h);
+        const pInitEnd = project(initAxEnd, w, h);
+
+        ctx.save();
+        ctx.setLineDash([6, 6]);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pInitStart.x, pInitStart.y);
+        ctx.lineTo(pInitEnd.x, pInitEnd.y);
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw Current Transformed Axis L' (Solid Bright Amber)
+        const curAxStart = Math3D.transformPoint(currentCumM, initAxStart);
+        const curAxEnd = Math3D.transformPoint(currentCumM, initAxEnd);
+        const curP0 = Math3D.transformPoint(currentCumM, p0);
+
+        const pCurStart = project(curAxStart, w, h);
+        const pCurEnd = project(curAxEnd, w, h);
+        const pCurP0 = project(curP0, w, h);
+
+        ctx.save();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(pCurStart.x, pCurStart.y);
+        ctx.lineTo(pCurEnd.x, pCurEnd.y);
+        ctx.stroke();
+        ctx.restore();
+
+        // Mark current P0 point
+        ctx.beginPath();
+        ctx.arc(pCurP0.x, pCurP0.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#d97706';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillStyle = '#b45309';
+        ctx.fillText(
+          `P₀' (${curP0[0].toFixed(1)}, ${curP0[1].toFixed(1)}, ${curP0[2].toFixed(1)})`,
+          pCurP0.x + 8,
+          pCurP0.y - 6,
+        );
+
+        // Transform 3D Object Vertices
+        // Initial object offset near P0 to clearly see rotation
+        const objCenter = [p0[0] + 0.6, p0[1] + 0.5, p0[2] + 0.4];
+        const transformedVerts = baseCubeVertices.map((v) => {
+          const worldV = [objCenter[0] + v[0], objCenter[1] + v[1], objCenter[2] + v[2]];
+          const tWorldV = Math3D.transformPoint(currentCumM, worldV);
+          return project(tWorldV, w, h);
+        });
+
+        // Painter's algorithm: sort faces by average depth
+        const sortedFaces = cubeFaces
+          .map((f) => {
+            let avgDepth = 0;
+            f.v.forEach((idx) => {
+              avgDepth += transformedVerts[idx].depth;
+            });
+            avgDepth /= f.v.length;
+            return { ...f, avgDepth };
+          })
+          .sort((a, b) => b.avgDepth - a.avgDepth);
+
+        // Draw Object Faces
+        sortedFaces.forEach((f) => {
+          ctx.beginPath();
+          const start = transformedVerts[f.v[0]];
+          ctx.moveTo(start.x, start.y);
+          for (let i = 1; i < f.v.length; i++) {
+            const pt = transformedVerts[f.v[i]];
+            ctx.lineTo(pt.x, pt.y);
+          }
+          ctx.closePath();
+          ctx.fillStyle = f.col;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+
+        // Draw Orientation Flag/Arrow on top tip
+        const tipPt = transformedVerts[8];
+        ctx.beginPath();
+        ctx.arc(tipPt.x, tipPt.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+      }
+
+      /* ========================================================
+       UI Updates & Controls
+       ======================================================== */
+      function updateUI() {
+        const step = state.currentStep;
+        const def = stepDefinitions[step];
+        const { stepMs, cumMs } = getStepMatrices();
+
+        // Update Step Stepper Buttons
+        document.querySelectorAll('.step-btn').forEach((btn) => {
+          btn.classList.toggle('active', parseInt(btn.dataset.step) === step);
+        });
+
+        // Update Phase Badge & Guidance
+        const badge = document.getElementById('phase-badge');
+        badge.textContent = def.phase;
+        badge.style.background = def.phaseColor + '20';
+        badge.style.color = def.phaseColor;
+
+        document.getElementById('guidance-text').innerHTML =
+          `<strong>${def.phase}</strong> — ${def.desc}`;
+        document.getElementById('step-counter').textContent = `Step ${step} / 7`;
+        document.getElementById('step-title').textContent = def.title;
+        document.getElementById('step-desc').textContent = def.desc;
+
+        // Update Matrix Grid
+        const mToDisplay = state.activeTab === 'curr' ? stepMs[step] : cumMs[step];
+        const grid = document.getElementById('matrix-display');
+        grid.innerHTML = '';
+
+        for (let i = 0; i < 16; i++) {
+          const val = mToDisplay[i];
+          const cell = document.createElement('div');
+          cell.className = 'matrix-cell';
+          const formatted = Math.abs(val) < 0.0001 ? '0.00' : val.toFixed(2);
+          cell.textContent = formatted;
+
+          // Highlight non-zero off-diagonals or translation elements
+          const r = Math.floor(i / 4),
+            c = i % 4;
+          if (r === c && Math.abs(val - 1) > 0.01) cell.classList.add('highlight');
+          if (r !== c && Math.abs(val) > 0.01) cell.classList.add('highlight');
+
+          grid.appendChild(cell);
+        }
+
+        document.getElementById('matrix-note').innerHTML = `
+        <strong>${state.activeTab === 'curr' ? def.matrixName : '累积复合矩阵 M = M' + step + '···M₁'}</strong>:
+        ${state.activeTab === 'curr' ? def.desc : '当前物体顶点与旋转轴所经历的全部变换复合结果。'}
+      `;
+
+        render();
+      }
+
+      function setStep(newStep) {
+        state.currentStep = Math.max(0, Math.min(7, newStep));
+        updateUI();
+      }
+
+      // Playback loop
+      function togglePlay() {
+        state.isPlaying = !state.isPlaying;
+        const btn = document.getElementById('btn-play');
+        if (state.isPlaying) {
+          btn.textContent = '⏸ 暂停播放';
+          btn.style.background = '#e11d48';
+          state.playTimer = setInterval(() => {
+            if (state.currentStep >= 7) {
+              setStep(0);
+            } else {
+              setStep(state.currentStep + 1);
+            }
+          }, 1600);
+        } else {
+          btn.textContent = '▶ 自动连贯播放';
+          btn.style.background = 'var(--color-cyan)';
+          clearInterval(state.playTimer);
+        }
+      }
+
+      /* ========================================================
+       Event Listeners
+       ======================================================== */
+      // Stepper buttons
+      document.querySelectorAll('.step-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (state.isPlaying) togglePlay();
+          setStep(parseInt(btn.dataset.step));
+        });
+      });
+
+      document.getElementById('btn-prev').addEventListener('click', () => {
+        if (state.isPlaying) togglePlay();
+        setStep(state.currentStep - 1);
+      });
+      document.getElementById('btn-next').addEventListener('click', () => {
+        if (state.isPlaying) togglePlay();
+        setStep(state.currentStep + 1);
+      });
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        if (state.isPlaying) togglePlay();
+        setStep(0);
+      });
+      document.getElementById('btn-play').addEventListener('click', togglePlay);
+
+      // Matrix Tabs
+      document.getElementById('tab-curr').addEventListener('click', () => {
+        state.activeTab = 'curr';
+        document.getElementById('tab-curr').classList.add('active');
+        document.getElementById('tab-cum').classList.remove('active');
+        updateUI();
+      });
+      document.getElementById('tab-cum').addEventListener('click', () => {
+        state.activeTab = 'cum';
+        document.getElementById('tab-cum').classList.add('active');
+        document.getElementById('tab-curr').classList.remove('active');
+        updateUI();
+      });
+
+      // Parameters input
+      function readInputs() {
+        state.params.p0 = [
+          parseFloat(document.getElementById('p0x').value) || 0,
+          parseFloat(document.getElementById('p0y').value) || 0,
+          parseFloat(document.getElementById('p0z').value) || 0,
+        ];
+        state.params.u = [
+          parseFloat(document.getElementById('ux').value) || 1,
+          parseFloat(document.getElementById('uy').value) || 0,
+          parseFloat(document.getElementById('uz').value) || 0,
+        ];
+        state.params.theta =
+          ((parseFloat(document.getElementById('theta-slider').value) || 60) * Math.PI) / 180;
+        document.getElementById('theta-val').textContent =
+          document.getElementById('theta-slider').value + '°';
+        updateUI();
+      }
+
+      ['p0x', 'p0y', 'p0z', 'ux', 'uy', 'uz'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', readInputs);
+      });
+      document.getElementById('theta-slider').addEventListener('input', readInputs);
+
+      // Presets
+      function loadPreset(p0, u, thetaDeg, btnId) {
+        document.getElementById('p0x').value = p0[0];
+        document.getElementById('p0y').value = p0[1];
+        document.getElementById('p0z').value = p0[2];
+        document.getElementById('ux').value = u[0];
+        document.getElementById('uy').value = u[1];
+        document.getElementById('uz').value = u[2];
+        document.getElementById('theta-slider').value = thetaDeg;
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+        document.getElementById(btnId).classList.add('active');
+        readInputs();
+        setStep(0);
+      }
+
+      document.getElementById('pre-1').addEventListener('click', () => {
+        loadPreset([1.0, 1.0, 0.5], [1.0, 1.0, 1.0], 60, 'pre-1');
+      });
+      document.getElementById('pre-2').addEventListener('click', () => {
+        loadPreset([1.5, 0.0, 1.0], [0.0, 1.0, 1.0], 90, 'pre-2');
+      });
+      document.getElementById('pre-3').addEventListener('click', () => {
+        loadPreset([1.2, 0.8, 1.5], [0.3, 0.4, 0.86], 45, 'pre-3');
+      });
+
+      // Camera Mouse Interaction
+      const container = document.getElementById('canvas-container');
+      container.addEventListener('mousedown', (e) => {
+        state.camera.isDragging = true;
+        state.camera.lastX = e.clientX;
+        state.camera.lastY = e.clientY;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!state.camera.isDragging) return;
+        const dx = e.clientX - state.camera.lastX;
+        const dy = e.clientY - state.camera.lastY;
+        state.camera.yaw += dx * 0.008;
+        state.camera.pitch += dy * 0.008;
+        state.camera.pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, state.camera.pitch));
+        state.camera.lastX = e.clientX;
+        state.camera.lastY = e.clientY;
+        render();
+      });
+      window.addEventListener('mouseup', () => {
+        state.camera.isDragging = false;
+      });
+      container.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          state.camera.zoom *= e.deltaY < 0 ? 1.08 : 0.92;
+          state.camera.zoom = Math.max(30, Math.min(180, state.camera.zoom));
+          render();
+        },
+        { passive: false },
+      );
+
+      document.getElementById('btn-reset-view').addEventListener('click', () => {
+        state.camera.yaw = (38 * Math.PI) / 180;
+        state.camera.pitch = (24 * Math.PI) / 180;
+        state.camera.zoom = 70;
+        render();
+      });
+
+      // Init
+      resizeCanvas();
+      readInputs();
+      setStep(0);
+    </script>
+  </body>
+</html>

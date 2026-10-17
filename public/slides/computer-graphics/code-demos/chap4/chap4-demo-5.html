@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <link rel="stylesheet" href="../demo.css?v=20261016" />
+    <link rel="stylesheet" href="../demo.css?v=20261017" />
     <meta http-equiv="Content-type" content="text/html;charset=utf-8" />
     <title>第四章 Demo 5：跟踪球四元数旋转</title>
     <script id="vertex-shader" type="x-shader/x-vertex">
@@ -13,21 +13,19 @@
       uniform vec4 r;
       vec4 multq(vec4 a, vec4 b)
       {
-        return vec4(
-          a.x * b.x - dot(a.yzw, b.yzw),
-          a.x * b.yzw + b.x * a.yzw + cross(b.yzw, a.yzw)
-        );
+        return(vec4(a.x*b.x-dot(a.yzw,b.yzw), a.x*b.yzw+b.x*a.yzw+cross(b.yzw,a.yzw)));
       }
 
       vec4 invq(vec4 a)
       {
-        return vec4(a.x, -a.yzw) / dot(a, a);
+        return (vec4(a.x, -a.yzw)/dot(a,a));
       }
 
       void main()
       {
-        vec4 p = vec4(0.0, vPosition.xyz);
-        p = multq(r, multq(p, invq(r)));
+        vec4 p;
+        p=vec4(0.0, vPosition.xyz);
+        p=multq(r, multq(p,invq(r)));
         gl_Position = vec4(p.yzw, 1.0);
         aColor = vColor;
       }
@@ -44,6 +42,7 @@
         fColor = aColor;
       }
     </script>
+    <script type="text/javascript" src="../js/common/webgl-utils.js"></script>
     <script type="text/javascript" src="../js/common/initShaders.js"></script>
     <script type="text/javascript" src="../js/common/gl-matrix.js"></script>
 

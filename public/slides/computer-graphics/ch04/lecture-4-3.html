@@ -1,0 +1,2930 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 4-3 复合变换</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 0.68em !important;
+        line-height: 1.5 !important;
+        padding: 14px 22px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+        margin-top: 14px;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 10px 0;
+        padding: 12px 18px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      .slide-canvas-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px 18px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .slide-canvas-card canvas {
+        display: block;
+        width: 100%;
+        height: 250px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(30, 56, 96, 0.1);
+        cursor: pointer;
+      }
+
+      .slide-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 14px;
+        border-radius: 8px;
+        font-size: 0.48em;
+        font-weight: 700;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .slide-btn:hover {
+        background: #f2f6fb;
+      }
+
+      .slide-btn.primary {
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #ffffff;
+        border: none;
+      }
+
+      .slide-btn.primary:hover {
+        filter: brightness(0.95);
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261017" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 4 · 03</div>
+            <h1>复合变换：顺序、任意中心与器械空间定位</h1>
+            <p class="lead fragment fade-up">
+              绕定点旋转 · 矩阵乘法非对易性 · 连乘复合 · 任意轴旋转
+            </p>
+            <div class="flow title-flow" style="justify-content: flex-start; margin-top: 42px">
+              <div class="node fragment fade-up">Center Shift T⁻¹</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Rotation R</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Restore T</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">Composite Matrix</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">Surgical Placement</div>
+            </div>
+            <aside class="notes">
+              <p class="title-mark fragment fade-up">
+                40 min · 旋转中心陷阱 + 乘法顺序律 + 任意轴公式 + 医疗器械对齐
+              </p>
+            </aside>
+          </div>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Motivation</div>
+            <h2>导入：怎样让图形绕自己的中心旋转？</h2>
+            <p class="lead fragment fade-up">
+              上节课已经知道绕原点旋转的矩阵。现在问题变成：如果图形的中心不在原点，还能直接用同一个旋转矩阵吗？
+            </p>
+            <div class="media-shell fragment fade-up">
+              <img
+                src="./images/chap04/ch04-R04-13A.png"
+                alt="绕自己的中心点旋转"
+                data-fallback="绕自己的中心点旋转"
+                data-prompt="生成一张16:9横向白底大学计算机图形学教学示意图，主题‘图形怎样绕自己的中心旋转？’。画面左侧显示一个不对称二维箭头形或L形图形，中心点C不在坐标原点O。用虚线圆弧表示希望图形绕C旋转；同时用淡灰圆弧表示如果直接使用R(θ)会绕O旋转。顶部问题：‘绕原点的旋转矩阵，能直接用于绕中心点C旋转吗？’白底，深蓝、蓝灰、青蓝，少量琥珀色用于问题提示，不要复杂背景。"
+              />
+            </div>
+          </section>
+          <section id="sec-2-2">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Prediction</div>
+            <h2>Prediction：直接乘以旋转矩阵会怎样？</h2>
+            <div class="compare">
+              <div class="card fragment fade-up" style="padding: 20px 22px">
+                <h3 style="font-size: 0.95em; margin-bottom: 6px">期望结果</h3>
+                <p style="font-size: 0.72em; margin-bottom: 8px">
+                  图形绕自身中心点 <strong>C</strong> 改变方向。
+                </p>
+                <div class="mathbox" style="margin: 6px 0; padding: 6px 12px; font-size: 0.76em">
+                  中心点 C 保持不动
+                </div>
+              </div>
+              <div class="card fragment fade-up" style="padding: 20px 22px">
+                <h3 style="font-size: 0.95em; margin-bottom: 6px">直接使用</h3>
+                <p style="font-size: 0.72em; margin-bottom: 8px">对所有顶点直接应用绕原点旋转。</p>
+                <div class="mathbox" style="margin: 6px 0; padding: 6px 12px; font-size: 0.76em">
+                  \(P' = R(\theta)P\)
+                </div>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" style="margin-top: 16px; padding: 14px 20px">
+              <span class="tag">课堂预测</span><span class="timer">60 s</span>
+              <p style="font-size: 0.65em; margin-top: 4px">
+                如果 C 不在原点，直接使用 \(R(\theta)\) 后，C 还会留在原位置吗？
+              </p>
+            </div>
+          </section>
+          <section id="sec-2-3">
+            <span class="slide-no">#sec-2-3</span>
+            <div class="eyebrow">Geometry</div>
+            <h2>旋转中心：决定“绕哪里转”</h2>
+            <p class="lead fragment fade-up">
+              旋转不是只由角度决定，还必须明确<strong>不动点</strong>。二维平面中绕原点旋转时，默认不动点就是原点。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>对象顶点</h3>
+                <p>图形由若干顶点 \(P_i\) 定义。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>旋转中心</h3>
+                <p>中心点 \(C=(c_x,c_y)\) 是希望保持不动的点。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>旋转角</h3>
+                <p>绕 C 逆时针旋转 \(\theta\)。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              核心判断：如果变换后 C 改变了位置，就不是“绕 C 旋转”。
+            </div>
+          </section>
+          <section id="sec-2-4">
+            <span class="slide-no">#sec-2-4</span>
+            <div class="eyebrow">Decomposition</div>
+            <h2>把绕C旋转拆成三个已知变换</h2>
+            <p class="lead fragment fade-up">
+              我们不会重新发明一个新旋转矩阵，而是把问题转化成已经会做的“绕原点旋转”。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">
+                1. 平移 \(-C\)<br /><span class="small">把中心移到原点</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">
+                2. 旋转 \(R(\theta)\)<br /><span class="small">绕原点旋转</span>
+              </div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">
+                3. 平移 \(+C\)<br /><span class="small">移回原位置</span>
+              </div>
+            </div>
+            <div class="activity fragment fade-up">
+              <span class="tag">思考</span>
+              <p>这三个步骤中，哪一步是真正的“旋转”？哪两步只是为了创造旋转条件？</p>
+            </div>
+          </section>
+          <section id="sec-2-5">
+            <span class="slide-no">#sec-2-5</span>
+            <div class="eyebrow">Geometric Decomposition</div>
+            <h2>四步分解图解：绕自身中心旋转</h2>
+            <p class="lead fragment fade-up">
+              通过“平移到原点—绕原点旋转—平移回原处”，实现绕物体自身中心点 \(P_C(c_x,c_y)\) 的旋转。
+            </p>
+            <div class="grid4" style="margin-top: 18px">
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div
+                  style="
+                    height: 180px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 12px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-mrotstart.png"
+                    alt="起始状态"
+                    style="max-height: 165px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">1. 起始状态</h3>
+                <p class="formula" style="font-size: 0.68em; margin: 4px 0; padding: 4px 8px">
+                  \(M_0 = I\)
+                </p>
+                <p class="small" style="margin: 0">图形中心位于 \(P_C\)</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div
+                  style="
+                    height: 180px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 12px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-mrot1.png"
+                    alt="平移中心到原点"
+                    style="max-height: 165px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">2. 中心移至原点</h3>
+                <p class="formula" style="font-size: 0.68em; margin: 4px 0; padding: 4px 8px">
+                  \(M_1 = T(-P_C)\)
+                </p>
+                <p class="small" style="margin: 0">平移量为 \((-c_x, -c_y)\)</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div
+                  style="
+                    height: 180px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 12px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-mrot2.png"
+                    alt="绕原点旋转"
+                    style="max-height: 165px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">3. 绕原点旋转</h3>
+                <p class="formula" style="font-size: 0.68em; margin: 4px 0; padding: 4px 8px">
+                  \(M_2 = R(\theta)\)
+                </p>
+                <p class="small" style="margin: 0">绕原点逆时针旋转 \(\theta\)</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div
+                  style="
+                    height: 180px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 12px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-mrot3.png"
+                    alt="平移回原位置"
+                    style="max-height: 165px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">4. 平移回原位</h3>
+                <p class="formula" style="font-size: 0.68em; margin: 4px 0; padding: 4px 8px">
+                  \(M_3 = T(P_C)\)
+                </p>
+                <p class="small" style="margin: 0">恢复中心到 \(P_C\)</p>
+              </div>
+            </div>
+            <div
+              class="formula fragment fade-up"
+              style="margin-top: 14px; font-size: 0.82em; padding: 12px 20px"
+            >
+              \[M = M_3 M_2 M_1 M_0 = T(P_C)\,R(\theta)\,T(-P_C)\]
+            </div>
+          </section>
+          <section id="sec-2-6">
+            <span class="slide-no">#sec-2-6</span>
+            <div class="eyebrow">Algebraic Synthesis</div>
+            <h2>代数综合：绕自身中心旋转矩阵推导</h2>
+            <p class="lead fragment fade-up">
+              将点 \(P(x,y)\) 绕中心点 \(P_C(c_x,c_y)\) 逆时针旋转 \(\theta\)
+              角，三步变换矩阵连乘综合为单一复合矩阵：
+            </p>
+            <div class="grid3" style="margin-top: 16px">
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div class="kicker">Step 1 · 移到原点</div>
+                <div style="font-size: 0.66em; margin: 6px 0">
+                  \[M_1 = \begin{bmatrix}1&0&-c_x\\0&1&-c_y\\0&0&1\end{bmatrix}\]
+                </div>
+                <p class="small" style="margin: 0">消除中心点偏移量</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div class="kicker">Step 2 · 原点旋转</div>
+                <div style="font-size: 0.66em; margin: 6px 0">
+                  \[M_2 =
+                  \begin{bmatrix}\cos\theta&-\sin\theta&0\\\sin\theta&\cos\theta&0\\0&0&1\end{bmatrix}\]
+                </div>
+                <p class="small" style="margin: 0">标准绕原点逆时针旋转</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 14px; text-align: center">
+                <div class="kicker">Step 3 · 移回原位</div>
+                <div style="font-size: 0.66em; margin: 6px 0">
+                  \[M_3 = \begin{bmatrix}1&0&c_x\\0&1&c_y\\0&0&1\end{bmatrix}\]
+                </div>
+                <p class="small" style="margin: 0">正向平移恢复中心点</p>
+              </div>
+            </div>
+            <div
+              class="formula fragment fade-up"
+              style="
+                margin-top: 12px;
+                font-size: 0.5em !important;
+                padding: 10px 16px;
+                overflow-x: auto;
+                white-space: nowrap;
+              "
+            >
+              \[M = M_3 M_2 M_1 =
+              \begin{bmatrix}1&0&c_x\\0&1&c_y\\0&0&1\end{bmatrix}\begin{bmatrix}\cos\theta&-\sin\theta&0\\\sin\theta&\cos\theta&0\\0&0&1\end{bmatrix}\begin{bmatrix}1&0&-c_x\\0&1&-c_y\\0&0&1\end{bmatrix}
+              = \begin{bmatrix}\cos\theta & -\sin\theta & c_x(1-\cos\theta)+c_y\sin\theta \\
+              \sin\theta & \cos\theta & c_y(1-\cos\theta)-c_x\sin\theta \\ 0 & 0 & 1\end{bmatrix}\]
+            </div>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 12px;
+              "
+              class="fragment fade-up"
+            >
+              <span style="font-size: 0.72em; font-weight: 700; color: #14345e"
+                >点变换形式：\(P' = M \cdot P\)</span
+              >
+              <a
+                class="demo-link"
+                href="Chap_demos/chap4/D03_绕自身中心旋转.html"
+                target="_blank"
+                style="min-height: 38px; padding: 0 18px; font-size: 0.5em; border-radius: 10px"
+              >
+                🔗 打开二维绕自身中心旋转交互实验台 (Demo)
+              </a>
+            </div>
+          </section>
+          <section id="sec-2-7">
+            <span class="slide-no">#sec-2-7</span>
+            <div class="eyebrow">AI Collaboration · Concept Building</div>
+            <h2>AI先给方案：让它说清楚“为什么这样拆”</h2>
+            <p class="lead fragment fade-up">
+              复合变换不是背公式。可以先让AI提出分解方案，再用“固定点是否保持不动”来检验方案。
+            </p>
+            <div class="activity ai fragment fade-up" style="margin-top: 14px; padding: 14px 20px">
+              <h3 style="font-size: 0.92em; margin-bottom: 4px">协作任务</h3>
+              <p style="font-size: 0.68em; line-height: 1.45; margin: 0">
+                向AI提问：一个二维图形的中心点为 \(C=(c_x,c_y)\)，怎样让所有顶点绕 \(C\) 逆时针旋转
+                \(\theta\)？请不要直接给最终矩阵，先说明每一步几何目的。
+              </p>
+            </div>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">要求1</h3>
+                <p style="font-size: 0.68em; margin: 0">必须说明：哪一步创造“绕原点旋转”的条件。</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">要求2</h3>
+                <p style="font-size: 0.68em; margin: 0">必须说明：哪一步是真正的旋转。</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">要求3</h3>
+                <p style="font-size: 0.68em; margin: 0">必须说明：哪一步用于恢复中心位置。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              课堂规则：AI给出分解思路，学生用几何条件和Demo验证，不直接抄结论。
+            </div>
+          </section>
+          <section id="sec-2-8">
+            <span class="slide-no">#sec-2-8</span>
+            <div class="eyebrow">Human Check</div>
+            <h2>人类核验：中心点C必须保持不动</h2>
+            <p class="lead fragment fade-up">
+              判断一个复合矩阵是否正确，最简单的测试是把中心点 \(C\) 代入。绕 \(C\) 旋转时，\(C\)
+              应该仍然是 \(C\)。
+            </p>
+            <div
+              class="formula fragment fade-up"
+              style="margin: 8px 0; padding: 8px 16px; font-size: 0.78em"
+            >
+              \[T(C)R(\theta)T(-C)C = C\]
+            </div>
+            <div class="compare">
+              <div class="card fragment fade-up" style="padding: 16px 20px">
+                <h3 style="font-size: 0.92em; margin-bottom: 4px">正确思路</h3>
+                <p style="font-size: 0.68em; margin-bottom: 6px">
+                  先把 \(C\) 移到原点，再旋转，最后移回。
+                </p>
+                <div class="mathbox" style="margin: 4px 0; padding: 6px 10px; font-size: 0.72em">
+                  \(M=T(C)R(\theta)T(-C)\)
+                </div>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 20px">
+                <h3 style="font-size: 0.92em; margin-bottom: 4px">常见错误</h3>
+                <p style="font-size: 0.68em; margin-bottom: 6px">
+                  把平移顺序写反，中心点不再固定。
+                </p>
+                <div
+                  class="mathbox"
+                  style="
+                    margin: 4px 0;
+                    padding: 6px 10px;
+                    font-size: 0.72em;
+                    color: var(--red);
+                    border-color: rgba(199, 75, 90, 0.25);
+                  "
+                >
+                  \(M=T(-C)R(\theta)T(C)\)
+                </div>
+              </div>
+            </div>
+            <div class="activity fragment fade-up" style="margin-top: 14px; padding: 12px 18px">
+              <span class="tag">课堂互动</span><span class="timer">90 s</span>
+              <p style="font-size: 0.65em; margin-top: 4px">
+                任选一个简单中心点，例如 \(C=(2,0,1)^T\)，代入两种矩阵，判断哪个能让 \(C\)
+                保持不动。
+              </p>
+            </div>
+          </section>
+          <section id="sec-2-9">
+            <span class="slide-no">#sec-2-9</span>
+            <div class="eyebrow">Matrix Form</div>
+            <h2>绕任意中心点旋转的矩阵表达</h2>
+            <p class="lead fragment fade-up">
+              采用列向量约定，顶点从右向左依次经历：移到原点、旋转、移回。
+            </p>
+            <div
+              class="formula fragment fade-up"
+              style="margin: 8px 0; padding: 8px 16px; font-size: 0.78em"
+            >
+              \[P' = T(C)\,R(\theta)\,T(-C)\,P\]
+            </div>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">第一步</h3>
+                <p style="font-size: 0.68em; margin: 0">\(T(-C)P\)：把旋转中心移到原点。</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">第二步</h3>
+                <p style="font-size: 0.68em; margin: 0">\(R(\theta)\)：执行已知的绕原点旋转。</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <h3 style="font-size: 0.9em; margin-bottom: 4px">第三步</h3>
+                <p style="font-size: 0.68em; margin: 0">\(T(C)\)：恢复到原来的中心位置。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              注意：矩阵写成 \(T(C)R(\theta)T(-C)\)，但执行顺序从右往左。
+            </div>
+          </section>
+          <section id="sec-2-10">
+            <span class="slide-no">#sec-2-10</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>随堂测试 1：顺序能不能换？</h2>
+            <div class="activity fragment fade-up" style="margin-top: 14px; padding: 12px 18px">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p style="font-size: 0.68em; margin-top: 4px">
+                若想让图形绕中心点 \(C\) 旋转，采用列向量时正确表达式是：
+              </p>
+            </div>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="quiz-card fragment fade-up" style="padding: 14px 16px; font-size: 0.54em">
+                <strong>A</strong>\(P'=T(-C)R(\theta)T(C)P\)
+              </div>
+              <div class="quiz-card fragment fade-up" style="padding: 14px 16px; font-size: 0.54em">
+                <strong>B</strong>\(P'=T(C)R(\theta)T(-C)P\)
+              </div>
+              <div class="quiz-card fragment fade-up" style="padding: 14px 16px; font-size: 0.54em">
+                <strong>C</strong>\(P'=R(\theta)T(C)T(-C)P\)
+              </div>
+            </div>
+            <div
+              class="quiz-answer fragment fade-up"
+              style="margin-top: 14px; padding: 12px 18px; font-size: 0.58em"
+            >
+              <strong>参考答案：B。</strong>右侧的 \(T(-C)\) 首先把中心移到原点，之后旋转，最后
+              \(T(C)\) 移回。
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Composite Transform</div>
+            <h2>复合变换：多个基本变换合成为一个矩阵</h2>
+            <p class="lead fragment fade-up">
+              在齐次坐标中，平移、旋转和缩放都写成矩阵。因此连续执行多个变换时，可以把它们合成一个总矩阵。
+            </p>
+            <div class="formula fragment fade-up">\[P' = M_n\cdots M_3M_2M_1P\]</div>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>数学意义</h3>
+                <p>多个映射连续作用，构成一个新的映射。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>图形学意义</h3>
+                <p>最终可以把一个总矩阵送入顶点着色器。</p>
+              </div>
+            </div>
+          </section>
+          <section id="sec-3-2">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Step Monitor</div>
+            <h2>不要只看最终矩阵，要看每一步状态</h2>
+            <p class="lead fragment fade-up">
+              复合变换理解困难，通常不是因为公式难，而是因为学生看不到每一步的中间几何状态。
+            </p>
+            <div class="flow">
+              <div class="node fragment fade-up">\(P_0=P\)</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">\(P_1=T(-C)P_0\)</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node primary fragment fade-up">\(P_2=R P_1\)</div>
+              <div class="arrow fragment fade-up">→</div>
+              <div class="node fragment fade-up">\(P_3=T(C)P_2\)</div>
+            </div>
+            <div class="quote fragment fade-up">
+              Demo观察重点：每一步顶点坐标怎样变，旋转中心在哪里。
+            </div>
+          </section>
+          <section id="sec-3-3">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Interactive Demo · Order Contrast</div>
+            <h2>Demo：复合变换顺序对比实验</h2>
+            <p class="lead fragment fade-up">
+              同样执行平移 \(d_x=180\) 与逆时针旋转
+              \(\theta=60^\circ\)，变换顺序决定了几何轨迹与最终停驻位置：
+            </p>
+            <div class="grid2" style="margin-top: 14px">
+              <!-- 方案 A: 先旋转后平移 -->
+              <div class="slide-canvas-card fragment fade-up">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <div>
+                    <h3 style="font-size: 0.88em; margin: 0; color: #14345e">
+                      顺序 A：先旋转，后平移
+                    </h3>
+                    <span class="small" style="color: var(--muted)"
+                      >列向量自右向左：\(P' = T(180, 0)\,R(60^\circ)\,P\)</span
+                    >
+                  </div>
+                  <span
+                    class="pill"
+                    style="
+                      font-size: 0.52em;
+                      background: #e0f2fe;
+                      color: #0284c7;
+                      border: 1px solid #bae6fd;
+                    "
+                    >M = T · R</span
+                  >
+                </div>
+                <canvas id="slide-canvas-rt" width="480" height="250"></canvas>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 8px;
+                    font-size: 0.52em;
+                  "
+                >
+                  <div>
+                    状态：<span id="slide-status-rt" style="font-weight: 700; color: #0284c7"
+                      >就绪</span
+                    >
+                    · 终点：<strong style="color: #0284c7">(180, 0)</strong>
+                  </div>
+                  <div style="display: flex; gap: 6px">
+                    <button id="slide-btn-play-rt" class="slide-btn slide-btn-primary">
+                      ▶ 播放
+                    </button>
+                    <button id="slide-btn-reset-rt" class="slide-btn">↺ 重置</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 方案 B: 先平移后旋转 -->
+              <div class="slide-canvas-card fragment fade-up">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <div>
+                    <h3 style="font-size: 0.88em; margin: 0; color: #14345e">
+                      顺序 B：先平移，后旋转
+                    </h3>
+                    <span class="small" style="color: var(--muted)"
+                      >列向量自右向左：\(P' = R(60^\circ)\,T(180, 0)\,P\)</span
+                    >
+                  </div>
+                  <span
+                    class="pill"
+                    style="
+                      font-size: 0.52em;
+                      background: #fef3c7;
+                      color: #d97706;
+                      border: 1px solid #fde68a;
+                    "
+                    >M = R · T</span
+                  >
+                </div>
+                <canvas id="slide-canvas-tr" width="480" height="250"></canvas>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 8px;
+                    font-size: 0.52em;
+                  "
+                >
+                  <div>
+                    状态：<span id="slide-status-tr" style="font-weight: 700; color: #d97706"
+                      >就绪</span
+                    >
+                    · 终点：<strong style="color: #d97706">(90, 155.9)</strong>
+                  </div>
+                  <div style="display: flex; gap: 6px">
+                    <button id="slide-btn-play-tr" class="slide-btn slide-btn-primary">
+                      ▶ 播放
+                    </button>
+                    <button id="slide-btn-reset-tr" class="slide-btn">↺ 重置</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 12px;
+              "
+              class="fragment fade-up"
+            >
+              <div style="display: flex; gap: 8px; align-items: center">
+                <button
+                  id="slide-btn-play-all"
+                  class="slide-btn slide-btn-primary"
+                  style="padding: 6px 16px; font-size: 0.54em"
+                >
+                  ▶ 同步播放对比 (Play Both)
+                </button>
+                <button
+                  id="slide-btn-reset-all"
+                  class="slide-btn"
+                  style="padding: 6px 14px; font-size: 0.54em"
+                >
+                  ↺ 重置全部
+                </button>
+              </div>
+              <div style="display: flex; gap: 10px">
+                <a
+                  class="demo-link"
+                  href="Chap_demos/chap4/D04_复合变换顺序对比.html"
+                  target="_blank"
+                  style="min-height: 36px; padding: 0 16px; font-size: 0.5em; border-radius: 10px"
+                >
+                  🔗 全屏顺序对比实验台 (D04)
+                </a>
+                <a
+                  class="demo-link"
+                  href="Chap_demos/chap4/D03_绕自身中心旋转.html"
+                  target="_blank"
+                  style="
+                    min-height: 36px;
+                    padding: 0 16px;
+                    font-size: 0.5em;
+                    border-radius: 10px;
+                    background: linear-gradient(135deg, #1e8a64, #157db8);
+                  "
+                >
+                  🔗 绕中心旋转实验台 (D03)
+                </a>
+              </div>
+            </div>
+          </section>
+          <section id="sec-3-4">
+            <span class="slide-no">#sec-3-4</span>
+            <div class="eyebrow">Non-Commutative Geometry</div>
+            <h2>变换顺序核心规律：非对易性与书写顺序</h2>
+            <p class="lead fragment fade-up">
+              采用列向量约定时，右侧矩阵先作用于点。平移与旋转不满足交换律（\(T \cdot R \neq R \cdot
+              T\)）。
+            </p>
+            <div class="grid2" style="margin-top: 16px">
+              <div class="card fragment fade-up" style="padding: 18px 20px">
+                <h3 style="font-size: 0.9em; margin: 0 0 8px; color: #14345e">几何运动机制对比</h3>
+                <ul style="font-size: 0.65em; line-height: 1.55; margin: 0 0 0 16px">
+                  <li>
+                    <strong>先转后移 \(T(d_x) R(\theta)\)</strong
+                    >：<br />物体在原点先完成自转；随后的平移严格沿着全局坐标轴推进，位移方向不受旋转角度影响。最终中心落在
+                    \((d_x, 0)\)。
+                  </li>
+                  <li style="margin-top: 8px">
+                    <strong>先移后转 \(R(\theta) T(d_x)\)</strong>：<br />物体先平移脱离原点到达
+                    \((d_x, 0)\)；随后的旋转以原点为心进行“大回旋（公转）”，将平移向量整体甩转
+                    \(\theta\)。最终中心落在 \((d_x\cos\theta, d_x\sin\theta)\)！
+                  </li>
+                </ul>
+              </div>
+              <div class="card fragment fade-up" style="padding: 18px 20px">
+                <h3 style="font-size: 0.9em; margin: 0 0 8px; color: #14345e">
+                  代数推导与矩阵对比
+                </h3>
+                <div style="font-size: 0.62em; margin: 6px 0">
+                  <p style="margin: 2px 0"><strong>先旋转后平移矩阵：</strong></p>
+                  \[T(d_x, 0) R(\theta) = \begin{bmatrix}1 & 0 & d_x \\ 0 & 1 & 0 \\ 0 & 0 &
+                  1\end{bmatrix} \begin{bmatrix}\cos\theta & -\sin\theta & 0 \\ \sin\theta &
+                  \cos\theta & 0 \\ 0 & 0 & 1\end{bmatrix} = \begin{bmatrix}\cos\theta & -\sin\theta
+                  & d_x \\ \sin\theta & \cos\theta & 0 \\ 0 & 0 & 1\end{bmatrix}\]
+                </div>
+                <div style="font-size: 0.62em; margin: 6px 0">
+                  <p style="margin: 2px 0"><strong>先平移后旋转矩阵：</strong></p>
+                  \[R(\theta) T(d_x, 0) = \begin{bmatrix}\cos\theta & -\sin\theta & 0 \\ \sin\theta
+                  & \cos\theta & 0 \\ 0 & 0 & 1\end{bmatrix} \begin{bmatrix}1 & 0 & d_x \\ 0 & 1 & 0
+                  \\ 0 & 0 & 1\end{bmatrix} = \begin{bmatrix}\cos\theta & -\sin\theta &
+                  d_x\cos\theta \\ \sin\theta & \cos\theta & d_x\sin\theta \\ 0 & 0 &
+                  1\end{bmatrix}\]
+                </div>
+                <div class="small" style="color: var(--amber); margin-top: 4px">
+                  第三列（平移量）显式不同：\(\begin{bmatrix}d_x \\ 0\end{bmatrix} \neq
+                  \begin{bmatrix}d_x\cos\theta \\ d_x\sin\theta\end{bmatrix}\)
+                </div>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              style="margin-top: 14px; font-size: 0.72em !important; padding: 14px 20px"
+            >
+              <strong>核心铁律：</strong
+              >变换公式的书写顺序（自左向右）与实际几何作用顺序（自右向左）严格对偶；颠倒矩阵次序将产生截然不同的空间位置与变换结果！
+            </div>
+          </section>
+          <section id="sec-3-5">
+            <span class="slide-no">#sec-3-5</span>
+            <div class="eyebrow">AI Bug Hunt</div>
+            <h2>AI Bug Hunt：矩阵顺序中的“看似合理”错误</h2>
+            <p class="lead fragment fade-up">
+              AI常会按语言顺序写矩阵：先缩放、再旋转、最后平移，于是写成
+              \(SRT\)。这在列向量约定下是错误的。
+            </p>
+            <div class="activity ai fragment fade-up">
+              <h3>协作任务</h3>
+              <p>
+                请AI判断：“模型先缩放、再旋转、最后平移，复合矩阵写成 \(SRT\)
+                对吗？”然后要求它明确说明采用的是列向量还是行向量约定。
+              </p>
+            </div>
+            <div class="grid3" style="margin-top: 22px">
+              <div class="card fragment fade-up">
+                <h3>先定约定</h3>
+                <p>本课统一采用列向量：\(P'=MP\)。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>再看作用顺序</h3>
+                <p>右侧矩阵先作用，所以先缩放应在最右侧。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>最后用Demo反证</h3>
+                <p>在D04-03中比较 \(TRS\) 与 \(SRT\) 的中间状态。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              AI容易给出“语言上顺”的答案；图形学要看数学约定和几何结果。
+            </div>
+          </section>
+          <section id="sec-3-6">
+            <span class="slide-no">#sec-3-6</span>
+            <div class="eyebrow">TRS</div>
+            <h2>实例变换：从单位模型到场景对象</h2>
+            <p class="lead fragment fade-up">
+              模型通常在自己的局部坐标系中定义。放入场景时，一般经历：缩放得到大小、旋转得到方向、平移到目标位置。
+            </p>
+            <div class="media-shell fragment fade-up">
+              <img
+                src="./images/chap04/ch04-R04-17.png"
+                alt="实例变换 TRS"
+                data-fallback="实例变换 TRS"
+                data-prompt="生成一张16:9白底计算机图形学教学流程图，主题‘从单位模型到医学场景实例’。左侧Unit Tool或Unit Cube，原点位于中心。依次经过Scale获得目标尺寸、Rotate获得目标方向、Translate放到患者模型目标位置。右侧为Scene Instance：简化器械与目标点对齐。下方公式M=T R S。每阶段显示对象状态变化。白底、深蓝、青蓝、蓝灰。"
+              />
+            </div>
+          </section>
+          <section id="sec-3-7">
+            <span class="slide-no">#sec-3-7</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>随堂测试 2：TRS中谁先作用？</h2>
+            <div class="activity fragment fade-up">
+              <span class="tag">单选</span><span class="timer">60 s</span>
+              <p>若 \(M=TRS\)，并采用列向量 \(P'=MP\)，顶点首先经历哪个变换？</p>
+            </div>
+            <div class="grid3" style="margin-top: 22px">
+              <div class="quiz-card fragment fade-up"><strong>A</strong>\(T\)：先平移</div>
+              <div class="quiz-card fragment fade-up"><strong>B</strong>\(R\)：先旋转</div>
+              <div class="quiz-card fragment fade-up"><strong>C</strong>\(S\)：先缩放</div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：C。</strong>右侧的 \(S\) 首先作用，之后 \(R\)，最后 \(T\)。
+            </div>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">3D Extension</div>
+            <h2>从二维绕中心点，到三维绕任意轴</h2>
+            <p class="lead fragment fade-up">
+              二维绕任意点旋转已经展示了复合变换思想。三维中更常见的问题是：点或物体绕空间中的一条任意固定轴旋转。
+            </p>
+            <div class="grid2">
+              <div class="card fragment fade-up">
+                <h3>二维问题</h3>
+                <p>固定一个点 \(C\)，让图形绕它旋转。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>三维问题</h3>
+                <p>固定一条轴 \(L\)，让点或物体绕它旋转。</p>
+              </div>
+            </div>
+            <div class="quote fragment fade-up">思想仍然相同：把复杂旋转轴转化为熟悉的坐标轴。</div>
+          </section>
+          <section id="sec-4-2">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Problem Formulation</div>
+            <h2>三维空间绕任意轴旋转问题提出</h2>
+            <p class="lead fragment fade-up">
+              给定空间基准点 \(P_0(x_0,y_0,z_0)\) 与轴方向单位向量 \(\mathbf{u}\)，求解任意点 \(P\)
+              绕该轴逆时针旋转 \(\theta\) 后的新位置 \(P'\)：
+            </p>
+            <div class="two-col" style="margin-top: 14px; align-items: center">
+              <div>
+                <div class="card fragment fade-up" style="padding: 16px 20px">
+                  <h3 style="font-size: 0.9em; margin-bottom: 6px">任意轴定义参数</h3>
+                  <ul style="font-size: 0.65em; line-height: 1.5; margin-left: 16px">
+                    <li><strong>不动基准点：</strong>\(P_0 = (x_0, y_0, z_0)\)</li>
+                    <li><strong>方向向量：</strong>\(\mathbf{u} = P_1 - P_0 = (u_x, u_y, u_z)\)</li>
+                    <li><strong>旋转角度：</strong>\(\theta\)（右手定则正方向）</li>
+                  </ul>
+                </div>
+                <div class="activity fragment fade-up" style="margin-top: 12px; padding: 12px 18px">
+                  <span class="tag">化归思想</span>
+                  <p style="font-size: 0.65em; margin-top: 4px">
+                    我们并不重新推导任意斜轴旋转公式，而是通过<strong>刚体变换</strong>将旋转轴对齐到<strong>已知主轴（Z轴）</strong>，完成旋转后再逆向撤销复原！
+                  </p>
+                </div>
+              </div>
+              <div
+                class="fragment fade-up"
+                style="display: flex; justify-content: center; align-items: center"
+              >
+                <div
+                  style="
+                    height: 340px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 18px;
+                    border: 1px solid var(--line);
+                    overflow: hidden;
+                    box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxis.png"
+                    alt="三维空间绕任意轴旋转几何模型"
+                    style="max-height: 320px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-3">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Phase 1 · Step 1 ~ 3</div>
+            <h2>阶段一 · 准备与对齐：将任意轴对齐到Z轴</h2>
+            <p class="lead fragment fade-up">
+              任意轴既不经过原点，方向亦倾斜。需先将基准点移到原点，再绕坐标轴旋转两次，使其与 \(Z\)
+              轴完全重合：
+            </p>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss1.png"
+                    alt="步骤1：轴移到原点"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">1. 轴平移至原点</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_1 = T(-P_0)\)
+                </div>
+                <p class="small" style="margin: 0">将基准点 \(P_0\) 平移至原点</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss2.png"
+                    alt="步骤2：转入YOZ平面"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">2. 绕Y轴转入YOZ</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_2 = R_y(-\theta_y)\)
+                </div>
+                <p class="small" style="margin: 0">绕 Y 轴顺时针旋转消去 X 偏斜</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss3.png"
+                    alt="步骤3：重合Z轴"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">3. 绕X轴重合Z轴</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_3 = R_x(\theta_x)\)
+                </div>
+                <p class="small" style="margin: 0">绕 X 轴逆时针旋转对齐 Z 轴</p>
+              </div>
+            </div>
+            <div
+              class="formula fragment fade-up"
+              style="margin-top: 10px; font-size: 0.78em; padding: 10px 18px"
+            >
+              对齐复合变换：\(A = M_3 M_2 M_1 = R_x(\theta_x)\,R_y(-\theta_y)\,T(-P_0)\)
+            </div>
+          </section>
+          <section id="sec-4-4">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">Phase 2 · Step 4</div>
+            <h2>阶段二 · 核心变换：绕Z轴执行目标旋转</h2>
+            <p class="lead fragment fade-up">
+              当旋转轴已完全与标准坐标轴 \(Z\)
+              轴重合后，空间中点的旋转直接化简为已知的标准坐标轴旋转：
+            </p>
+            <div class="two-col" style="margin-top: 14px; align-items: center">
+              <div
+                class="fragment fade-up"
+                style="display: flex; justify-content: center; align-items: center"
+              >
+                <div
+                  style="
+                    height: 350px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 18px;
+                    border: 1px solid var(--line);
+                    overflow: hidden;
+                    box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss4.png"
+                    alt="步骤4：绕Z轴标准旋转"
+                    style="max-height: 330px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+              </div>
+              <div>
+                <div class="card fragment fade-up" style="padding: 20px 22px">
+                  <h3 style="font-size: 0.95em; margin-bottom: 8px">
+                    4. 绕 Z 轴逆时针旋转 \(\theta\)
+                  </h3>
+                  <p style="font-size: 0.7em; line-height: 1.5; margin-bottom: 10px">
+                    此时轴线与 \(Z\) 轴完全一致，直接应用标准绕原点旋转矩阵：
+                  </p>
+                  <div class="mathbox" style="margin: 8px 0; padding: 8px 12px; font-size: 0.68em">
+                    \[M_4 = R_z(\theta) = \begin{bmatrix}\cos\theta & -\sin\theta & 0 & 0 \\
+                    \sin\theta & \cos\theta & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1\end{bmatrix}\]
+                  </div>
+                  <div
+                    class="quote"
+                    style="font-size: 0.65em !important; margin-top: 12px; padding: 10px 14px"
+                  >
+                    <strong>化归核心：</strong
+                    >所有前期繁复的几何对齐，都是为了在此时调用最简单、最标准的原点主轴旋转矩阵。
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section id="sec-4-5">
+            <span class="slide-no">#sec-4-5</span>
+            <div class="eyebrow">Phase 3 · Step 5 ~ 7</div>
+            <h2>阶段三 · 逆向撤销与恢复：将旋转轴送回原位</h2>
+            <p class="lead fragment fade-up">
+              核心旋转完成后，必须将先前的对齐操作严格按照逆序、取逆矩阵逐一撤销，恢复空间坐标基准：
+            </p>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss5.png"
+                    alt="步骤5：撤销X轴旋转"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">5. 撤销X轴旋转</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_5 = R_x(-\theta_x)\)
+                </div>
+                <p class="small" style="margin: 0">顺时针逆转回 YOZ 平面</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss6.png"
+                    alt="步骤6：撤销Y轴旋转"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">6. 撤销Y轴旋转</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_6 = R_y(\theta_y)\)
+                </div>
+                <p class="small" style="margin: 0">逆时针逆转恢复空间轴向</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 14px 14px; text-align: center">
+                <div
+                  style="
+                    height: 175px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ffffff;
+                    border-radius: 12px;
+                    border: 1px solid var(--line);
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  "
+                >
+                  <img
+                    src="./images/chap04/ch04-rot3danyaxiss7.png"
+                    alt="步骤7：平移回原处"
+                    style="max-height: 160px; max-width: 95%; object-fit: contain"
+                  />
+                </div>
+                <h3 style="font-size: 0.85em; margin: 0 0 4px">7. 平移恢复原位</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.7em">
+                  \(M_7 = T(P_0)\)
+                </div>
+                <p class="small" style="margin: 0">正向平移恢复基准点 \(P_0\)</p>
+              </div>
+            </div>
+            <div
+              class="formula fragment fade-up"
+              style="margin-top: 10px; font-size: 0.78em; padding: 10px 18px"
+            >
+              恢复复合变换：\(A^{-1} = M_7 M_6 M_5 = T(P_0)\,R_y(\theta_y)\,R_x(-\theta_x)\)
+            </div>
+          </section>
+          <section id="sec-4-6">
+            <span class="slide-no">#sec-4-6</span>
+            <div class="eyebrow">Matrix Chain Synthesis</div>
+            <h2>三维任意轴旋转的七步矩阵链</h2>
+            <p class="lead fragment fade-up">
+              综合全部七步变换，按照列向量“自右向左”的作用次序级联，得到完整空间复合变换矩阵：
+            </p>
+            <div
+              class="formula fragment fade-up"
+              style="
+                margin: 10px 0;
+                padding: 10px 16px;
+                font-size: 0.65em !important;
+                overflow-x: auto;
+                white-space: nowrap;
+              "
+            >
+              \[M = M_7 M_6 M_5 M_4 M_3 M_2 M_1 =
+              T(P_0)\,R_y(\theta_y)\,R_x(-\theta_x)\,R_z(\theta)\,R_x(\theta_x)\,R_y(-\theta_y)\,T(-P_0)\]
+            </div>
+            <div class="grid3" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <div class="kicker">右侧 · 先执行</div>
+                <h3 style="font-size: 0.9em; margin: 4px 0">对齐算子 \(A\)</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.66em">
+                  \(R_x(\theta_x)R_y(-\theta_y)T(-P_0)\)
+                </div>
+                <p class="small" style="margin: 0">将任意轴移到原点并对齐Z轴</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <div class="kicker" style="color: var(--cyan)">中间 · 核心</div>
+                <h3 style="font-size: 0.9em; margin: 4px 0; color: var(--cyan)">
+                  目标旋转 \(R_z(\theta)\)
+                </h3>
+                <div
+                  class="mathbox"
+                  style="
+                    margin: 4px 0;
+                    padding: 4px 8px;
+                    font-size: 0.66em;
+                    color: var(--cyan);
+                    border-color: rgba(21, 125, 184, 0.3);
+                  "
+                >
+                  绕标准 \(Z\) 轴转动 \(\theta\)
+                </div>
+                <p class="small" style="margin: 0">执行唯一的实际几何旋转</p>
+              </div>
+              <div class="card fragment fade-up" style="padding: 16px 18px">
+                <div class="kicker">左侧 · 后执行</div>
+                <h3 style="font-size: 0.9em; margin: 4px 0">逆对齐算子 \(A^{-1}\)</h3>
+                <div class="mathbox" style="margin: 4px 0; padding: 4px 8px; font-size: 0.66em">
+                  \(T(P_0)R_y(\theta_y)R_x(-\theta_x)\)
+                </div>
+                <p class="small" style="margin: 0">严格按逆序逆操作恢复坐标基准</p>
+              </div>
+            </div>
+            <div
+              class="quote fragment fade-up"
+              style="margin-top: 12px; font-size: 0.68em !important; padding: 10px 18px"
+            >
+              <strong>代数结构：</strong>\(M = A^{-1}\,R_z(\theta)\,A\)，与二维绕中心点旋转 \(M =
+              T(P_C)\,R(\theta)\,T(-P_C)\) 思想完全同构！
+            </div>
+          </section>
+          <section id="sec-4-7">
+            <span class="slide-no">#sec-4-7</span>
+            <div class="eyebrow">Interactive Demo</div>
+            <h2 style="margin-bottom: 0.2em">Demo：三维复合变换与任意轴旋转实验台</h2>
+            <p
+              class="lead fragment fade-up"
+              style="font-size: 0.62em; line-height: 1.42; margin-bottom: 14px"
+            >
+              分步单步调试任意轴旋转七步矩阵链，直观观察基准点平移、双轴对齐、核心旋转与逆向恢复全过程。
+            </p>
+            <div class="grid2" style="gap: 20px; align-items: stretch">
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D04-03 · 教学仪器</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >HTML5 Canvas + 3D 交互实验</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    三维复合变换实验台 (任意轴旋转)
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 12px 0"
+                  >
+                    直观操控三维空间任意斜轴，单步调试 7 步矩阵链并同步解算 \(4\times 4\)
+                    齐次矩阵数值，打通抽象代数与空间几何直觉。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹 <strong>七步矩阵链单步分解</strong>：Step 1~7
+                        逐帧联动，直观展现轴平移对齐与坐标基准恢复
+                      </div>
+                      <div>
+                        🔹 <strong>任意轴自由参数定制</strong>：自由调节不动基准点 \(P_0\)
+                        与方向向量 \(\mathbf{u}\)，实时重算
+                      </div>
+                      <div>
+                        🔹 <strong>矩阵数值链同步高亮</strong>：同步输出每步初等矩阵 \(M_k\)
+                        与累乘复合矩阵 \(M = A^{-1}R_z(\theta)A\)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap4/D05_三维任意轴旋转.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 54px;
+                      font-size: 0.66em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：三维复合变换实验台</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card fragment fade-up"
+                style="
+                  padding: 20px 24px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">3 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题单步对照矩阵链
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.55em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>轴是否经过原点？</strong>单步观察 \(M_1=T(-P_0)\) 执行后，基准点
+                      \(P_0\) 是否恰好落在原点。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>轴是否对齐Z轴？</strong>观察 \(M_2=R_y(-\theta_y)\) 与
+                      \(M_3=R_x(\theta_x)\) 执行后，任意轴如何与 \(Z\) 轴完全重合。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>核心旋转是哪一步？</strong>观察第 4 步
+                      \(M_4=R_z(\theta)\)，空间物体如何真正执行绕轴转动。
+                    </li>
+                    <li>
+                      <strong>逆变换恢复了什么？</strong>观察 \(M_5, M_6, M_7\)
+                      的逆序执行，坐标系基准如何原路返回初始位置。
+                    </li>
+                  </ol>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 12px;
+                    padding: 8px 14px;
+                    background: rgba(5, 150, 105, 0.08);
+                    border-radius: 10px;
+                    font-size: 0.5em;
+                    line-height: 1.45;
+                    color: #065f46;
+                  "
+                >
+                  💡
+                  <strong>核心精髓</strong
+                  >：每一步都是简单初等矩阵，但串联相乘后就能完成任意复杂的空间旋转。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">
+              D04-03 · 三维复合变换实验台：调用本地独立交互Demo，支持7步单步对照观察。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Medical Closure</div>
+            <h2>回到医疗器械定位：复合变换为什么必要？</h2>
+            <p class="lead fragment fade-up">
+              医疗场景中的器械模型通常从自己的局部坐标系出发，最终必须到达患者模型中的目标位置和目标方向。
+            </p>
+            <div class="grid3">
+              <div class="card fragment fade-up">
+                <h3>目标点</h3>
+                <p>器械入口点或定位点必须与Target Point重合。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>目标方向</h3>
+                <p>器械轴线需要与Target Direction一致。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>复合矩阵</h3>
+                <p>由平移、旋转、缩放与固定点约束共同构成。</p>
+              </div>
+            </div>
+            <div class="med-strip fragment fade-up">
+              <strong>医工闭环：</strong
+              >数学上是矩阵相乘，图形学中是顶点变换，医学可视化中表现为器械准确对齐目标结构。
+            </div>
+          </section>
+          <section id="sec-5-2">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">AI Collaboration · Evidence Chain</div>
+            <h2>AI协作：用“证据链”完成复合变换判断</h2>
+            <p class="lead fragment fade-up">
+              复合变换的AI协作不能停留在“问答案”。本节要求学生把AI解释、公式约定、特殊点测试和Demo观察连接成证据链。
+            </p>
+            <div class="activity ai fragment fade-up">
+              <h3>协作任务单</h3>
+              <p>
+                请AI帮助分析一个虚拟医疗器械模型：先按比例缩放，再调整方向，最后把器械入口点对齐患者模型的目标点。要求AI给出矩阵表达，并说明每一步的几何目的。
+              </p>
+            </div>
+            <div class="grid4" style="margin-top: 22px">
+              <div class="quiz-card fragment fade-up">
+                <strong>1</strong>写清楚列向量约定 \(P'=MP\)
+              </div>
+              <div class="quiz-card fragment fade-up">
+                <strong>2</strong>检查目标点或中心点是否保持预期位置
+              </div>
+              <div class="quiz-card fragment fade-up"><strong>3</strong>用一个特殊顶点手算一轮</div>
+              <div class="quiz-card fragment fade-up">
+                <strong>4</strong>用D04-03逐步播放并截图记录
+              </div>
+            </div>
+            <div class="quote fragment fade-up">
+              提交一句最终判断：AI给出的矩阵是否正确？依据是“约定 + 特殊点 +
+              Demo中间状态”，而不是AI的语气。
+            </div>
+          </section>
+          <section id="sec-5-3">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课时小结：复合变换是“可控的组合”</h2>
+            <p class="lead fragment fade-up">
+              本课从一个二维图形绕自身中心旋转出发，逐步建立复合变换思想，并扩展到三维任意轴和医疗器械定位。
+            </p>
+            <div class="grid4">
+              <div class="card fragment fade-up">
+                <h3>固定点</h3>
+                <p>旋转必须说明绕哪里转。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>分解</h3>
+                <p>复杂变换可以拆成已知基本变换。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>顺序</h3>
+                <p>矩阵乘法顺序决定最终结果。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>应用</h3>
+                <p>器械定位依赖正确复合矩阵。</p>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              \[\text{Prepare}\rightarrow \text{Core Transform}\rightarrow \text{Undo / Restore}\]
+            </div>
+          </section>
+          <section id="sec-5-4">
+            <span class="slide-no">#sec-5-4</span>
+            <div class="eyebrow">Exit Ticket</div>
+            <h2>Exit Ticket</h2>
+            <div class="question fragment fade-up">
+              <div class="q">用一句话回答</div>
+              <p>为什么“绕自己的中心旋转”不能简单写成 \(P'=R(\theta)P\)？</p>
+            </div>
+            <div class="question fragment fade-up">
+              <div class="q">选择矩阵表达式</div>
+              <p>若模型先缩放、再旋转、最后平移，采用列向量时总矩阵应写成？</p>
+            </div>
+            <div class="grid3">
+              <div class="quiz-card fragment fade-up"><strong>A</strong>\(M=SRT\)</div>
+              <div class="quiz-card fragment fade-up"><strong>B</strong>\(M=TRS\)</div>
+              <div class="quiz-card fragment fade-up"><strong>C</strong>\(M=RST\)</div>
+            </div>
+            <div class="quiz-answer fragment fade-up">
+              <strong>参考答案：B。</strong>采用列向量时，右侧 \(S\) 首先作用，随后 \(R\)，最后
+              \(T\)。
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+    <script>
+      (function () {
+        const TARGET_ANGLE = 60; // deg
+        const TARGET_DIST = 180; // px
+        const RECT = { w: 60, h: 30 };
+
+        function initSlideDemo(canvasId, statusId, btnPlayId, btnResetId, isRotateFirst) {
+          const canvas = document.getElementById(canvasId);
+          if (!canvas) return null;
+          const ctx = canvas.getContext('2d');
+          const statusEl = document.getElementById(statusId);
+          const btnPlay = document.getElementById(btnPlayId);
+          const btnReset = document.getElementById(btnResetId);
+
+          let phase = 0; // 0: ready, 1: step1, 2: step2, 3: done
+          let angle = 0;
+          let dist = 0;
+          let animId = null;
+
+          function getOrigin() {
+            return { x: 120, y: canvas.height - 70 };
+          }
+
+          function drawAxes(origin) {
+            ctx.save();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px sans-serif';
+
+            // X axis
+            ctx.beginPath();
+            ctx.moveTo(25, origin.y);
+            ctx.lineTo(canvas.width - 25, origin.y);
+            ctx.stroke();
+            // Arrow
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 25, origin.y);
+            ctx.lineTo(canvas.width - 33, origin.y - 4);
+            ctx.lineTo(canvas.width - 33, origin.y + 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillText('+X', canvas.width - 20, origin.y + 14);
+
+            // Y axis
+            ctx.beginPath();
+            ctx.moveTo(origin.x, canvas.height - 20);
+            ctx.lineTo(origin.x, 20);
+            ctx.stroke();
+            // Arrow
+            ctx.beginPath();
+            ctx.moveTo(origin.x, 20);
+            ctx.lineTo(origin.x - 4, 28);
+            ctx.lineTo(origin.x + 4, 28);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillText('+Y', origin.x - 20, 24);
+
+            // Origin
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(origin.x, origin.y, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillText('O (0,0)', origin.x - 34, origin.y + 15);
+            ctx.restore();
+          }
+
+          function drawTrajectory(origin) {
+            ctx.save();
+            ctx.setLineDash([3, 3]);
+            ctx.lineWidth = 1.2;
+
+            if (isRotateFirst) {
+              ctx.strokeStyle = '#0284c7';
+              ctx.beginPath();
+              ctx.moveTo(origin.x, origin.y);
+              ctx.lineTo(origin.x + TARGET_DIST, origin.y);
+              ctx.stroke();
+
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#0284c7';
+              ctx.beginPath();
+              ctx.arc(origin.x + TARGET_DIST, origin.y, 3.5, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.strokeStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.moveTo(origin.x, origin.y);
+              ctx.lineTo(origin.x + TARGET_DIST, origin.y);
+              ctx.stroke();
+
+              ctx.strokeStyle = '#d97706';
+              ctx.beginPath();
+              ctx.arc(origin.x, origin.y, TARGET_DIST, 0, (-TARGET_ANGLE * Math.PI) / 180, true);
+              ctx.stroke();
+
+              const rad = (-TARGET_ANGLE * Math.PI) / 180;
+              const endX = origin.x + TARGET_DIST * Math.cos(rad);
+              const endY = origin.y + TARGET_DIST * Math.sin(rad);
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#d97706';
+              ctx.beginPath();
+              ctx.arc(endX, endY, 3.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const origin = getOrigin();
+            drawAxes(origin);
+            drawTrajectory(origin);
+
+            ctx.save();
+            ctx.translate(origin.x, origin.y);
+
+            if (isRotateFirst) {
+              ctx.translate(dist, 0);
+              ctx.rotate((-angle * Math.PI) / 180);
+            } else {
+              ctx.rotate((-angle * Math.PI) / 180);
+              ctx.translate(dist, 0);
+            }
+
+            ctx.beginPath();
+            ctx.rect(-RECT.w / 2, -RECT.h / 2, RECT.w, RECT.h);
+            ctx.fillStyle = isRotateFirst ? '#e0f2fe' : '#fef3c7';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isRotateFirst ? '#0284c7' : '#d97706';
+            ctx.stroke();
+
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+          }
+
+          function update() {
+            if (phase === 1) {
+              if (isRotateFirst) {
+                angle += 1.5;
+                if (angle >= TARGET_ANGLE) {
+                  angle = TARGET_ANGLE;
+                  phase = 2;
+                  if (statusEl) statusEl.textContent = '阶段 2：沿 +X 平移 180';
+                }
+              } else {
+                dist += 4;
+                if (dist >= TARGET_DIST) {
+                  dist = TARGET_DIST;
+                  phase = 2;
+                  if (statusEl) statusEl.textContent = '阶段 2：绕原点逆时针旋转 60°';
+                }
+              }
+              render();
+              animId = requestAnimationFrame(update);
+            } else if (phase === 2) {
+              if (isRotateFirst) {
+                dist += 4;
+                if (dist >= TARGET_DIST) {
+                  dist = TARGET_DIST;
+                  phase = 3;
+                  if (statusEl) statusEl.textContent = '完成！停留在 (180, 0)';
+                }
+              } else {
+                angle += 1.5;
+                if (angle >= TARGET_ANGLE) {
+                  angle = TARGET_ANGLE;
+                  phase = 3;
+                  if (statusEl) statusEl.textContent = '完成！停留在 (90, 155.9)';
+                }
+              }
+              render();
+              if (phase === 2) {
+                animId = requestAnimationFrame(update);
+              }
+            }
+          }
+
+          function play() {
+            if (phase === 3) {
+              reset();
+            }
+            if (phase === 0) {
+              phase = 1;
+              if (statusEl)
+                statusEl.textContent = isRotateFirst
+                  ? '阶段 1：绕原点自转 60°'
+                  : '阶段 1：沿 +X 平移 180';
+              animId = requestAnimationFrame(update);
+            }
+          }
+
+          function reset() {
+            if (animId) cancelAnimationFrame(animId);
+            phase = 0;
+            angle = 0;
+            dist = 0;
+            if (statusEl) statusEl.textContent = '就绪';
+            render();
+          }
+
+          if (btnPlay) btnPlay.addEventListener('click', play);
+          if (btnReset) btnReset.addEventListener('click', reset);
+          canvas.addEventListener('click', play);
+
+          render();
+          return { play, reset, render };
+        }
+
+        window.addEventListener('load', function () {
+          const demoRT = initSlideDemo(
+            'slide-canvas-rt',
+            'slide-status-rt',
+            'slide-btn-play-rt',
+            'slide-btn-reset-rt',
+            true,
+          );
+          const demoTR = initSlideDemo(
+            'slide-canvas-tr',
+            'slide-status-tr',
+            'slide-btn-play-tr',
+            'slide-btn-reset-tr',
+            false,
+          );
+
+          const btnPlayAll = document.getElementById('slide-btn-play-all');
+          const btnResetAll = document.getElementById('slide-btn-reset-all');
+
+          if (btnPlayAll && demoRT && demoTR) {
+            btnPlayAll.addEventListener('click', function () {
+              demoRT.play();
+              demoTR.play();
+            });
+          }
+          if (btnResetAll && demoRT && demoTR) {
+            btnResetAll.addEventListener('click', function () {
+              demoRT.reset();
+              demoTR.reset();
+            });
+          }
+
+          Reveal.on('slidechanged', function (event) {
+            if (event.currentSlide && event.currentSlide.id === 'sec-3-3') {
+              if (demoRT) demoRT.render();
+              if (demoTR) demoTR.render();
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

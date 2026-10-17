@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D04-04 复合变换顺序对比实验台</title>
+    <style>
+      :root {
+        --bg-page: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-panel: #f1f5f9;
+        --color-primary: #1e3a5f;
+        --color-sub: #64748b;
+        --color-border: #cbd5e1;
+        --color-cyan: #0284c7;
+        --color-cyan-light: #e0f2fe;
+        --color-amber: #d97706;
+        --color-amber-light: #fef3c7;
+        --color-green: #10b981;
+        --color-green-light: #d1fae5;
+        --color-red: #ef4444;
+        --font-base:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+          sans-serif;
+        --font-mono: 'SF Mono', Consolas, Menlo, Courier, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--bg-page);
+        color: var(--color-primary);
+        font-family: var(--font-base);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 16px 28px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--color-primary);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--color-cyan-light);
+        color: var(--color-cyan);
+      }
+
+      main {
+        flex: 1;
+        padding: 20px 28px;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .toolbar {
+        background: #ffffff;
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        color: var(--color-primary);
+        transition: all 0.2s;
+      }
+
+      .btn:hover {
+        background: var(--bg-panel);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        color: #ffffff;
+        border: none;
+      }
+
+      .btn-primary:hover {
+        filter: brightness(0.95);
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        flex: 1;
+      }
+
+      .demo-card {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+      }
+
+      .card-header {
+        padding: 14px 18px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 16px;
+        font-weight: 800;
+      }
+
+      .formula-badge {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: #0284c7;
+      }
+
+      .canvas-container {
+        position: relative;
+        flex: 1;
+        min-height: 400px;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .card-footer {
+        padding: 12px 18px;
+        background: #ffffff;
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: var(--color-sub);
+      }
+
+      .status-text {
+        font-weight: 700;
+        color: var(--color-primary);
+      }
+
+      .summary-box {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-left: 6px solid var(--color-amber);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 900px) {
+        .comparison-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span class="badge">D04-04</span>
+        <h1>复合变换顺序对比实验台：先转后移 vs 先移后转</h1>
+      </div>
+      <div style="font-size: 14px; color: var(--color-sub)">
+        操作：平移 <strong>dx = 180</strong> · 逆时针旋转 <strong>θ = 60°</strong>
+      </div>
+    </header>
+
+    <main>
+      <div class="toolbar">
+        <div style="display: flex; gap: 10px; align-items: center">
+          <button id="btn-play-all" class="btn btn-primary">▶ 同步播放对比 (Play Both)</button>
+          <button id="btn-reset-all" class="btn">↺ 重置全部 (Reset)</button>
+        </div>
+        <div style="font-size: 13px; color: var(--color-sub)">
+          提示：点击下方各卡片内的画布或控制按钮，亦可单独播放单项变换过程。
+        </div>
+      </div>
+
+      <div class="comparison-grid">
+        <!-- 方案 A: 先旋转后平移 -->
+        <div class="demo-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">方案 A：先旋转，后平移</span>
+              <div style="font-size: 12px; color: var(--color-sub); margin-top: 2px">
+                列向量：P' = T(180, 0) · R(60°) · P
+              </div>
+            </div>
+            <span class="formula-badge">M = T · R</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="canvas-rt" width="580" height="420"></canvas>
+          </div>
+          <div class="card-footer">
+            <div>
+              状态：<span id="status-rt" class="status-text">就绪</span> · 终点：<strong
+                style="color: #0284c7"
+                >(180, 0)</strong
+              >
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button id="btn-play-rt" class="btn">播放</button>
+              <button id="btn-reset-rt" class="btn">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 方案 B: 先平移后旋转 -->
+        <div class="demo-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">方案 B：先平移，后旋转</span>
+              <div style="font-size: 12px; color: var(--color-sub); margin-top: 2px">
+                列向量：P' = R(60°) · T(180, 0) · P
+              </div>
+            </div>
+            <span class="formula-badge">M = R · T</span>
+          </div>
+          <div class="canvas-container">
+            <canvas id="canvas-tr" width="580" height="420"></canvas>
+          </div>
+          <div class="card-footer">
+            <div>
+              状态：<span id="status-tr" class="status-text">就绪</span> · 终点：<strong
+                style="color: #d97706"
+                >(90, 155.9)</strong
+              >
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button id="btn-play-tr" class="btn">播放</button>
+              <button id="btn-reset-tr" class="btn">重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div>
+          <strong>几何本质观察：</strong>
+          方案 A 中，物体在原点自转 60°，随后沿全局 X 轴平移，终点必在 X 轴上
+          <strong>(180, 0)</strong>； 方案 B 中，物体先沿 X 轴平移 180，再绕原点公转
+          60°，使位移向量偏转，最终被甩到第一象限 <strong>(90, 155.9)</strong>！
+        </div>
+        <div style="font-weight: 800; color: #b45309; white-space: nowrap; margin-left: 16px">
+          矩阵乘法非对易：T · R ≠ R · T
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        const TARGET_ANGLE = 60; // deg
+        const TARGET_DIST = 180; // px
+        const RECT = { w: 64, h: 32 };
+
+        function createDemo(canvasId, statusId, isRotateFirst) {
+          const canvas = document.getElementById(canvasId);
+          const ctx = canvas.getContext('2d');
+          const statusEl = document.getElementById(statusId);
+
+          let phase = 0; // 0: idle, 1: step1, 2: step2, 3: done
+          let angle = 0;
+          let dist = 0;
+          let animId = null;
+
+          function getOrigin() {
+            return { x: 140, y: canvas.height - 120 };
+          }
+
+          function drawGrid(origin) {
+            ctx.save();
+            ctx.strokeStyle = '#f1f5f9';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 30) {
+              ctx.beginPath();
+              ctx.moveTo(x, 0);
+              ctx.lineTo(x, canvas.height);
+              ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += 30) {
+              ctx.beginPath();
+              ctx.moveTo(0, y);
+              ctx.lineTo(canvas.width, y);
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+
+          function drawAxes(origin) {
+            ctx.save();
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px var(--font-base)';
+
+            // X Axis
+            ctx.beginPath();
+            ctx.moveTo(30, origin.y);
+            ctx.lineTo(canvas.width - 30, origin.y);
+            ctx.stroke();
+            // Arrow
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 30, origin.y);
+            ctx.lineTo(canvas.width - 40, origin.y - 6);
+            ctx.lineTo(canvas.width - 40, origin.y + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillText('+X', canvas.width - 25, origin.y + 16);
+
+            // Y Axis
+            ctx.beginPath();
+            ctx.moveTo(origin.x, canvas.height - 30);
+            ctx.lineTo(origin.x, 30);
+            ctx.stroke();
+            // Arrow
+            ctx.beginPath();
+            ctx.moveTo(origin.x, 30);
+            ctx.lineTo(origin.x - 6, 40);
+            ctx.lineTo(origin.x + 6, 40);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillText('+Y', origin.x - 24, 35);
+
+            // Origin marker
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(origin.x, origin.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillText('O (0,0)', origin.x - 38, origin.y + 18);
+            ctx.restore();
+          }
+
+          function drawTrajectory(origin) {
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1.5;
+
+            if (isRotateFirst) {
+              // RT: dashed straight path on X axis
+              ctx.strokeStyle = '#0284c7';
+              ctx.beginPath();
+              ctx.moveTo(origin.x, origin.y);
+              ctx.lineTo(origin.x + TARGET_DIST, origin.y);
+              ctx.stroke();
+              // End marker
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#0284c7';
+              ctx.beginPath();
+              ctx.arc(origin.x + TARGET_DIST, origin.y, 4, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              // TR: straight path on X then arc to rotated pos
+              ctx.strokeStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.moveTo(origin.x, origin.y);
+              ctx.lineTo(origin.x + TARGET_DIST, origin.y);
+              ctx.stroke();
+
+              ctx.strokeStyle = '#d97706';
+              ctx.beginPath();
+              ctx.arc(origin.x, origin.y, TARGET_DIST, 0, (-TARGET_ANGLE * Math.PI) / 180, true);
+              ctx.stroke();
+              // End marker
+              const rad = (-TARGET_ANGLE * Math.PI) / 180;
+              const endX = origin.x + TARGET_DIST * Math.cos(rad);
+              const endY = origin.y + TARGET_DIST * Math.sin(rad);
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#d97706';
+              ctx.beginPath();
+              ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const origin = getOrigin();
+            drawGrid(origin);
+            drawAxes(origin);
+            drawTrajectory(origin);
+
+            ctx.save();
+            ctx.translate(origin.x, origin.y);
+
+            if (isRotateFirst) {
+              // T(dist) * R(angle) -> Canvas: translate then rotate
+              ctx.translate(dist, 0);
+              ctx.rotate((-angle * Math.PI) / 180);
+            } else {
+              // R(angle) * T(dist) -> Canvas: rotate then translate
+              ctx.rotate((-angle * Math.PI) / 180);
+              ctx.translate(dist, 0);
+            }
+
+            // Draw the square/rectangle
+            ctx.beginPath();
+            ctx.rect(-RECT.w / 2, -RECT.h / 2, RECT.w, RECT.h);
+            ctx.fillStyle = isRotateFirst ? '#e0f2fe' : '#fef3c7';
+            ctx.fill();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = isRotateFirst ? '#0284c7' : '#d97706';
+            ctx.stroke();
+
+            // Center point dot
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+          }
+
+          function update() {
+            if (phase === 1) {
+              if (isRotateFirst) {
+                angle += 1.2;
+                if (angle >= TARGET_ANGLE) {
+                  angle = TARGET_ANGLE;
+                  phase = 2;
+                  statusEl.textContent = '阶段 2：沿 +X 平移 180';
+                }
+              } else {
+                dist += 3;
+                if (dist >= TARGET_DIST) {
+                  dist = TARGET_DIST;
+                  phase = 2;
+                  statusEl.textContent = '阶段 2：绕原点逆时针旋转 60°';
+                }
+              }
+              render();
+              animId = requestAnimationFrame(update);
+            } else if (phase === 2) {
+              if (isRotateFirst) {
+                dist += 3;
+                if (dist >= TARGET_DIST) {
+                  dist = TARGET_DIST;
+                  phase = 3;
+                  statusEl.textContent = '完成！停留在 (180, 0)';
+                }
+              } else {
+                angle += 1.2;
+                if (angle >= TARGET_ANGLE) {
+                  angle = TARGET_ANGLE;
+                  phase = 3;
+                  statusEl.textContent = '完成！停留在 (90, 155.9)';
+                }
+              }
+              render();
+              if (phase === 2) {
+                animId = requestAnimationFrame(update);
+              }
+            }
+          }
+
+          function play() {
+            if (phase === 3) {
+              reset();
+            }
+            if (phase === 0) {
+              phase = 1;
+              statusEl.textContent = isRotateFirst
+                ? '阶段 1：绕原点自转 60°'
+                : '阶段 1：沿 +X 平移 180';
+              animId = requestAnimationFrame(update);
+            }
+          }
+
+          function reset() {
+            if (animId) cancelAnimationFrame(animId);
+            phase = 0;
+            angle = 0;
+            dist = 0;
+            statusEl.textContent = '就绪';
+            render();
+          }
+
+          render();
+          return { play, reset };
+        }
+
+        const demoRT = createDemo('canvas-rt', 'status-rt', true);
+        const demoTR = createDemo('canvas-tr', 'status-tr', false);
+
+        document.getElementById('btn-play-rt').addEventListener('click', demoRT.play);
+        document.getElementById('btn-reset-rt').addEventListener('click', demoRT.reset);
+        document.getElementById('canvas-rt').addEventListener('click', demoRT.play);
+
+        document.getElementById('btn-play-tr').addEventListener('click', demoTR.play);
+        document.getElementById('btn-reset-tr').addEventListener('click', demoTR.reset);
+        document.getElementById('canvas-tr').addEventListener('click', demoTR.play);
+
+        document.getElementById('btn-play-all').addEventListener('click', function () {
+          demoRT.play();
+          demoTR.play();
+        });
+
+        document.getElementById('btn-reset-all').addEventListener('click', function () {
+          demoRT.reset();
+          demoTR.reset();
+        });
+      })();
+    </script>
+  </body>
+</html>
