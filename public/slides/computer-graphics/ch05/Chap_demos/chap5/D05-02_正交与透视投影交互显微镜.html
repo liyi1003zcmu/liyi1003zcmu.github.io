@@ -555,6 +555,82 @@
         flex-shrink: 0;
       }
 
+      .main-grid > *,
+      .bottom-section > * {
+        min-width: 0;
+      }
+
+      @media (max-width: 800px) {
+        html,
+        body {
+          width: 100%;
+          height: auto;
+          min-height: 100%;
+          overflow-x: hidden;
+          overflow-y: auto;
+        }
+
+        body {
+          display: block;
+        }
+
+        .app-container {
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+          max-height: none;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+
+        .header,
+        .header-left,
+        .header-right {
+          height: auto;
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        .header {
+          gap: 8px;
+          padding: 10px 12px;
+        }
+
+        .main-grid {
+          height: auto;
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .main-grid > .view-panel {
+          height: 480px;
+          min-height: 480px;
+          border-bottom: 1px solid var(--panel-border);
+        }
+
+        .main-grid > .view-panel:last-child {
+          height: auto;
+          min-height: 640px;
+        }
+
+        .bottom-section {
+          height: auto;
+          min-height: 150px;
+          padding: 14px 12px;
+        }
+
+        .experiment-row,
+        .answer-options {
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        input,
+        button,
+        select {
+          max-width: 100%;
+        }
+      }
+
       .guide-stages {
         display: flex;
         gap: 8px;
@@ -697,6 +773,25 @@
       .btn-switch-flow:hover {
         color: var(--navy);
         border-color: var(--navy);
+      }
+      @media (max-width: 800px) {
+        .guide-stages,
+        .experiment-row,
+        .answer-options,
+        .header-left,
+        .header-right {
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        .guide-content-box,
+        .controls-panel-body,
+        .param-slider-row,
+        .slider-wrap,
+        .presets-grid {
+          min-width: 0;
+          max-width: 100%;
+        }
       }
     </style>
   </head>
@@ -1432,7 +1527,7 @@
         }
 
         function compileShader(type, srcId) {
-          const src = document.getElementById(srcId).text;
+          const src = document.getElementById(srcId).text.trimStart();
           const s = gl.createShader(type);
           gl.shaderSource(s, src);
           gl.compileShader(s);
@@ -1446,6 +1541,7 @@
 
         const vs = compileShader(gl.VERTEX_SHADER, 'vs-shader');
         const fs = compileShader(gl.FRAGMENT_SHADER, 'fs-shader');
+        if (!vs || !fs) return false;
         glProgram = gl.createProgram();
         gl.attachShader(glProgram, vs);
         gl.attachShader(glProgram, fs);

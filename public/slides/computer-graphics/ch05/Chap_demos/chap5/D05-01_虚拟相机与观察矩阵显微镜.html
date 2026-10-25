@@ -675,6 +675,91 @@
         background: #ffffff;
       }
 
+      .main-grid > *,
+      .controls-panel > *,
+      .bottom-section > * {
+        min-width: 0;
+      }
+
+      @media (max-width: 800px) {
+        html,
+        body {
+          width: 100%;
+          height: auto;
+          min-height: 100%;
+          overflow-x: hidden;
+          overflow-y: auto;
+        }
+
+        body {
+          display: block;
+        }
+
+        .app-container {
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+          max-height: none;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+
+        .header,
+        .header-left,
+        .header-right {
+          height: auto;
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        .header {
+          gap: 8px;
+          padding: 10px 12px;
+        }
+
+        .main-grid {
+          height: auto;
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .main-grid > .view-panel {
+          height: 460px;
+          min-height: 460px;
+          border-bottom: 1px solid var(--panel-border);
+        }
+
+        .bottom-section {
+          height: auto;
+          grid-template-rows: auto auto;
+        }
+
+        .controls-panel {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 10px;
+          padding: 12px;
+        }
+
+        .guide-panel {
+          height: auto;
+          min-height: 100px;
+          padding: 14px 12px;
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .action-row,
+        .action-btn-group {
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        input,
+        button,
+        select {
+          max-width: 100%;
+        }
+      }
+
       .guide-stages {
         display: flex;
         gap: 6px;
@@ -842,6 +927,25 @@
         to {
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+      @media (max-width: 800px) {
+        .guide-stages,
+        .action-row,
+        .action-btn-group,
+        .header-left,
+        .header-right {
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+
+        .guide-content,
+        .action-card,
+        .param-card,
+        .input-group,
+        .param-inputs {
+          min-width: 0;
+          max-width: 100%;
         }
       }
     </style>
@@ -1670,7 +1774,7 @@
 
         // 编译 Shader
         function createShader(type, srcId) {
-          const src = document.getElementById(srcId).text;
+          const src = document.getElementById(srcId).text.trimStart();
           const shader = gl.createShader(type);
           gl.shaderSource(shader, src);
           gl.compileShader(shader);
@@ -1684,6 +1788,7 @@
 
         const vs = createShader(gl.VERTEX_SHADER, 'vs-shader');
         const fs = createShader(gl.FRAGMENT_SHADER, 'fs-shader');
+        if (!vs || !fs) return false;
         glProgram = gl.createProgram();
         gl.attachShader(glProgram, vs);
         gl.attachShader(glProgram, fs);
