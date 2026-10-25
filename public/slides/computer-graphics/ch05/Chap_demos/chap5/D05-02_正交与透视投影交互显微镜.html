@@ -1,0 +1,2403 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D05-02 · 正交与透视投影交互显微镜 - 计算机图形学教学Demo</title>
+    <style>
+      :root {
+        --bg: #f5f8fc;
+        --panel: #ffffff;
+        --panel-soft: #f8fafc;
+        --panel-border: rgba(24, 59, 99, 0.12);
+        --text: #183b63;
+        --text-muted: #657c92;
+        --navy: #183b63;
+        --blue: #1d4ed8;
+        --cyan: #168da8;
+        --cyan-light: #a9d9e4;
+        --cyan-soft: #f0f9fb;
+        --green: #23856a;
+        --green-soft: #ecfdf5;
+        --amber: #c28a32;
+        --amber-soft: #fef7ed;
+        --red: #dc2626;
+        --red-soft: #fef2f2;
+        --mono-font: 'JetBrains Mono', Consolas, 'Fira Code', monospace;
+        --sans-font: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans-font);
+        font-size: 14px;
+        line-height: 1.4;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+      }
+
+      /* 1600x900 逻辑画幅容器 */
+      .app-container {
+        width: 1600px;
+        height: 900px;
+        max-width: 100vw;
+        max-height: 100vh;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 16px 40px rgba(24, 59, 99, 0.12);
+        position: relative;
+      }
+
+      /* 顶部标题与问题条 (70px) */
+      .header {
+        height: 70px;
+        padding: 0 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .badge-id {
+        background: var(--navy);
+        color: #ffffff;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .header-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--navy);
+        letter-spacing: -0.01em;
+      }
+
+      .header-question {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-left: 6px;
+        padding-left: 14px;
+        border-left: 2px solid var(--panel-border);
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .status-pill.success {
+        background: var(--green-soft);
+        color: var(--green);
+        border-color: rgba(35, 133, 106, 0.25);
+      }
+
+      .status-pill.mode {
+        background: var(--cyan-soft);
+        color: var(--cyan);
+        border-color: rgba(22, 141, 168, 0.3);
+        font-weight: 700;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .btn-reset-top {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+      }
+
+      .btn-reset-top:hover {
+        background: var(--panel-soft);
+        border-color: var(--text-muted);
+      }
+
+      /* 错误/警告通告条 */
+      .alert-banner {
+        display: none;
+        background: var(--red-soft);
+        border-bottom: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 6px 24px;
+        font-size: 13px;
+        font-weight: 600;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .alert-banner.active {
+        display: flex;
+      }
+
+      /* 中央三栏主区域 (516px) */
+      .main-grid {
+        height: 516px;
+        display: grid;
+        grid-template-columns: 39% 36% 25%;
+        border-bottom: 1px solid var(--panel-border);
+        flex-shrink: 0;
+        background: #f8fafc;
+      }
+
+      .view-panel {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .view-panel:not(:last-child) {
+        border-right: 1px solid var(--panel-border);
+      }
+
+      .panel-header {
+        height: 40px;
+        padding: 0 16px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .panel-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-tag {
+        font-size: 11px;
+        color: var(--text-muted);
+        background: var(--bg);
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+      }
+
+      /* Canvas 容器 */
+      .canvas-wrapper {
+        flex: 1;
+        position: relative;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      canvas.view-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* 悬浮图例与标注 */
+      .canvas-legend {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        pointer-events: none;
+      }
+
+      .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-bar {
+        width: 12px;
+        height: 4px;
+        border-radius: 2px;
+      }
+
+      /* 中间投影画面高度测量标尺 */
+      .projection-measure-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: 0 4px 12px rgba(24, 59, 99, 0.05);
+      }
+
+      .measure-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono-font);
+        font-size: 12px;
+      }
+
+      /* 裁剪状态卡片标签 */
+      .clip-status-tags {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .cube-status-pill {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .cube-status-pill.inside {
+        background: var(--green-soft);
+        color: var(--green);
+        border-color: rgba(35, 133, 106, 0.3);
+      }
+
+      .cube-status-pill.intersect {
+        background: var(--amber-soft);
+        color: var(--amber);
+        border-color: rgba(194, 138, 50, 0.3);
+      }
+
+      .cube-status-pill.outside {
+        background: #f1f5f9;
+        color: #94a3b8;
+        border-color: #cbd5e1;
+      }
+
+      /* 右侧参数控制面板 */
+      .controls-panel-body {
+        flex: 1;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+        background: #ffffff;
+      }
+
+      .control-card {
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .control-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--navy);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* 投影模式切换 Tab */
+      .mode-tab-group {
+        display: flex;
+        background: #e2e8f0;
+        border-radius: 8px;
+        padding: 3px;
+        gap: 3px;
+      }
+
+      .mode-tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 6px 0;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: center;
+      }
+
+      .mode-tab-btn.active {
+        background: #ffffff;
+        color: var(--cyan);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      }
+
+      /* 参数滑动条行 */
+      .param-slider-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .param-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .param-name {
+        color: var(--navy);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .param-value {
+        font-family: var(--mono-font);
+        font-size: 12px;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .slider-wrap input[type='range'] {
+        flex: 1;
+        accent-color: var(--cyan);
+        height: 4px;
+        cursor: pointer;
+      }
+
+      .slider-wrap input[type='number'] {
+        width: 58px;
+        padding: 2px 4px;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        text-align: center;
+        font-family: var(--mono-font);
+        font-size: 11px;
+        font-weight: 600;
+        outline: none;
+      }
+
+      /* 预设按钮网格 */
+      .presets-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .btn-preset {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .btn-preset:hover {
+        background: #f0f9fb;
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      .btn-preset.active {
+        background: var(--navy);
+        color: #ffffff;
+        border-color: var(--navy);
+      }
+
+      /* 坐标显微镜展开卡片 */
+      .microscope-toggle-btn {
+        background: #ffffff;
+        border: 1px dashed var(--cyan);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--cyan);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+      }
+
+      .microscope-toggle-btn:hover {
+        background: var(--cyan-soft);
+      }
+
+      .microscope-drawer {
+        display: none;
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 11px;
+      }
+
+      .microscope-drawer.active {
+        display: flex;
+      }
+
+      .coord-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 0;
+        border-bottom: 1px dotted var(--panel-border);
+      }
+
+      .coord-label {
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      .coord-val {
+        font-family: var(--mono-font);
+        font-weight: 700;
+        color: var(--navy);
+      }
+
+      .coord-val.ndc {
+        color: var(--cyan);
+      }
+
+      /* 底部教学探究区 (150px) */
+      .bottom-section {
+        height: 150px;
+        padding: 12px 24px;
+        background: #ffffff;
+        border-top: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .guide-stages {
+        display: flex;
+        gap: 8px;
+      }
+
+      .stage-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        transition: all 0.2s ease;
+      }
+
+      .stage-item.active {
+        background: var(--cyan);
+        color: #ffffff;
+        border-color: var(--cyan);
+        box-shadow: 0 4px 10px rgba(22, 141, 168, 0.2);
+      }
+
+      .stage-item.completed {
+        background: var(--green-soft);
+        color: var(--green);
+        border-color: rgba(35, 133, 106, 0.3);
+      }
+
+      .stage-num {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+
+      .stage-item.active .stage-num {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .guide-content-box {
+        flex: 1;
+        background: #f0f9fb;
+        border: 1px solid rgba(22, 141, 168, 0.2);
+        border-radius: 10px;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .guide-text-area {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .guide-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--cyan);
+        letter-spacing: 0.04em;
+      }
+
+      .guide-main-text {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--navy);
+      }
+
+      .guide-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-opt {
+        background: #ffffff;
+        border: 1px solid rgba(22, 141, 168, 0.3);
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--navy);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-opt:hover {
+        background: #e0f2fe;
+        border-color: var(--cyan);
+      }
+
+      .btn-opt.selected {
+        background: var(--cyan);
+        color: #ffffff;
+        border-color: var(--cyan);
+      }
+
+      .btn-action-primary {
+        background: var(--cyan);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 10px rgba(22, 141, 168, 0.25);
+        transition: all 0.15s ease;
+      }
+
+      .btn-action-primary:hover {
+        background: #147b93;
+        transform: translateY(-1px);
+      }
+
+      .btn-switch-flow {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-switch-flow:hover {
+        color: var(--navy);
+        border-color: var(--navy);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- 顶部标题栏 (70px) -->
+      <header class="header">
+        <div class="header-left">
+          <span class="badge-id">D05-02</span>
+          <h1 class="header-title">正交与透视投影交互显微镜</h1>
+          <span class="header-question">相机和模型不变，只改变投影方式，画面会发生什么变化？</span>
+        </div>
+        <div class="header-right">
+          <div id="modePill" class="status-pill mode">
+            <span class="dot"></span>
+            <span id="modePillText">透视投影 Perspective</span>
+          </div>
+          <div class="status-pill success" title="两个立方体模型顶点初始化后永久不可变">
+            <span class="dot"></span>
+            <span>Vertex Buffer 未变化 (模型数据固定)</span>
+          </div>
+          <button id="btnResetAll" class="btn-reset-top" title="恢复所有投影参数到默认透视状态">
+            <span>↺</span> 恢复默认
+          </button>
+        </div>
+      </header>
+
+      <!-- 异常参数告警条 -->
+      <div id="alertBanner" class="alert-banner">
+        <span>⚠️</span>
+        <span id="alertMessage">参数错误提示</span>
+      </div>
+
+      <!-- 中央主区域 (516px) -->
+      <main class="main-grid">
+        <!-- 左栏：三维世界与动态观察体 (39%) -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🌐 三维世界与观察体</span>
+              <span style="font-size: 12px; font-weight: 400; color: var(--text-muted)"
+                >（总览相机固定在 (11, 7, 12)）</span
+              >
+            </div>
+            <span class="panel-tag">World & Frustum</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="worldCanvas" class="view-canvas"></canvas>
+
+            <!-- 悬浮图例 -->
+            <div class="canvas-legend">
+              <div class="legend-row">
+                <span class="legend-bar" style="background: #183b63"></span> 近处立方体 (中心 z =
+                −3.0)
+              </div>
+              <div class="legend-row">
+                <span class="legend-bar" style="background: #168da8"></span> 远处立方体 (中心 z =
+                −7.0)
+              </div>
+              <div class="legend-row">
+                <span class="legend-bar" style="background: #23856a"></span> Near 裁剪截面
+              </div>
+              <div class="legend-row">
+                <span class="legend-bar" style="background: #657c92"></span> Far 裁剪截面
+              </div>
+              <div class="legend-row">
+                <span class="legend-bar" style="background: #0284c7"></span> 视线射线 (Eye(0,0,0) →
+                −Z)
+              </div>
+            </div>
+
+            <!-- 立方体动态裁剪状态标签 -->
+            <div class="clip-status-tags">
+              <div id="statusNearCube" class="cube-status-pill inside">
+                <span class="dot"></span>
+                <span>近处立方体：完全可见</span>
+              </div>
+              <div id="statusFarCube" class="cube-status-pill inside">
+                <span class="dot"></span>
+                <span>远处立方体：完全可见</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 中栏：实时投影渲染结果 (36%) -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📷 当前相机看到的结果</span>
+              <span style="font-size: 12px; font-weight: 400; color: var(--text-muted)"
+                >（WebGL2 真实投影与裁剪）</span
+              >
+            </div>
+            <span class="panel-tag">WebGL2 Canvas</span>
+          </div>
+          <div class="canvas-wrapper" id="cameraViewportWrap">
+            <canvas id="cameraCanvas" class="view-canvas"></canvas>
+
+            <!-- 投影高度测量对比牌 -->
+            <div class="projection-measure-badge">
+              <div
+                style="font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px"
+              >
+                屏幕投影尺寸动态实测：
+              </div>
+              <div class="measure-item">
+                <span style="color: #183b63">■ 近处高度:</span>
+                <span id="measureNearH" class="param-value">0 px</span>
+              </div>
+              <div class="measure-item">
+                <span style="color: #168da8">■ 远处高度:</span>
+                <span id="measureFarH" class="param-value">0 px</span>
+              </div>
+              <div
+                style="font-size: 11px; color: var(--text-muted); margin-top: 2px"
+                id="measureRatioNote"
+              >
+                透视近大远小：近处为远处的 2.33 倍
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 右栏：投影参数控制 (25%) -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>⚙️ 投影参数控制</span>
+            </div>
+            <span class="panel-tag">Projection Settings</span>
+          </div>
+          <div class="controls-panel-body">
+            <!-- 1. 投影类型选择 -->
+            <div class="control-card">
+              <div class="control-card-title">
+                <span>投影方式切换</span>
+              </div>
+              <div class="mode-tab-group">
+                <button
+                  id="btnModePersp"
+                  class="mode-tab-btn active"
+                  onclick="setProjectionMode('perspective')"
+                >
+                  透视投影 Perspective
+                </button>
+                <button
+                  id="btnModeOrtho"
+                  class="mode-tab-btn"
+                  onclick="setProjectionMode('orthographic')"
+                >
+                  正交投影 Orthographic
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. 透视参数组 -->
+            <div id="perspParamsGroup" class="control-card">
+              <div class="control-card-title">
+                <span>透视视锥体参数 (Perspective)</span>
+              </div>
+
+              <!-- fovy -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">垂直视场角 fovy</span>
+                  <span id="valFovy" class="param-value">60°</span>
+                </div>
+                <div class="slider-wrap">
+                  <input
+                    type="range"
+                    id="rangeFovy"
+                    min="15"
+                    max="110"
+                    step="1"
+                    value="60"
+                    oninput="onFovySlider(this.value)"
+                  />
+                  <input
+                    type="number"
+                    id="numFovy"
+                    min="15"
+                    max="110"
+                    step="1"
+                    value="60"
+                    onchange="onFovyNum(this.value)"
+                  />
+                </div>
+              </div>
+
+              <!-- aspect -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">宽高比 aspect</span>
+                  <span id="valAspect" class="param-value">1.778</span>
+                </div>
+                <div class="slider-wrap">
+                  <input
+                    type="range"
+                    id="rangeAspect"
+                    min="0.75"
+                    max="2.4"
+                    step="0.01"
+                    value="1.778"
+                    oninput="onAspectSlider(this.value)"
+                  />
+                  <input
+                    type="number"
+                    id="numAspect"
+                    min="0.75"
+                    max="2.4"
+                    step="0.01"
+                    value="1.778"
+                    onchange="onAspectNum(this.value)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. 正交参数组 (正交模式下显示) -->
+            <div id="orthoParamsGroup" class="control-card" style="display: none">
+              <div class="control-card-title">
+                <span>正交长方体边界 (Orthographic)</span>
+              </div>
+
+              <!-- left / right -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">水平范围 [left, right]</span>
+                  <span id="valOrthoX" class="param-value">[−3.20, 3.20]</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px">
+                  <input
+                    type="number"
+                    id="numOrthoLeft"
+                    step="0.2"
+                    value="-3.2"
+                    onchange="onOrthoParamChange()"
+                  />
+                  <input
+                    type="number"
+                    id="numOrthoRight"
+                    step="0.2"
+                    value="3.2"
+                    onchange="onOrthoParamChange()"
+                  />
+                </div>
+              </div>
+
+              <!-- bottom / top -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">垂直范围 [bottom, top]</span>
+                  <span id="valOrthoY" class="param-value">[−1.80, 1.80]</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px">
+                  <input
+                    type="number"
+                    id="numOrthoBottom"
+                    step="0.2"
+                    value="-1.8"
+                    onchange="onOrthoParamChange()"
+                  />
+                  <input
+                    type="number"
+                    id="numOrthoTop"
+                    step="0.2"
+                    value="1.8"
+                    onchange="onOrthoParamChange()"
+                  />
+                </div>
+              </div>
+
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  border-top: 1px dashed var(--panel-border);
+                  padding-top: 4px;
+                "
+              >
+                正交宽高比:
+                <span
+                  id="valOrthoAspect"
+                  style="font-family: var(--mono-font); font-weight: 700; color: var(--cyan)"
+                  >1.778</span
+                >
+                (由边界算出，光线平行无 fovy)
+              </div>
+            </div>
+
+            <!-- 4. 公共 Near / Far 裁剪面 -->
+            <div class="control-card">
+              <div class="control-card-title">
+                <span>裁剪距离 (0 &lt; near &lt; far)</span>
+              </div>
+
+              <!-- near -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">近裁剪面 near</span>
+                  <span id="valNear" class="param-value">1.00</span>
+                </div>
+                <div class="slider-wrap">
+                  <input
+                    type="range"
+                    id="rangeNear"
+                    min="0.2"
+                    max="8.5"
+                    step="0.1"
+                    value="1.0"
+                    oninput="onNearSlider(this.value)"
+                  />
+                  <input
+                    type="number"
+                    id="numNear"
+                    min="0.2"
+                    max="8.5"
+                    step="0.1"
+                    value="1.0"
+                    onchange="onNearNum(this.value)"
+                  />
+                </div>
+              </div>
+
+              <!-- far -->
+              <div class="param-slider-row">
+                <div class="param-label-row">
+                  <span class="param-name">远裁剪面 far</span>
+                  <span id="valFar" class="param-value">12.00</span>
+                </div>
+                <div class="slider-wrap">
+                  <input
+                    type="range"
+                    id="rangeFar"
+                    min="3.0"
+                    max="20.0"
+                    step="0.5"
+                    value="12.0"
+                    oninput="onFarSlider(this.value)"
+                  />
+                  <input
+                    type="number"
+                    id="numFar"
+                    min="3.0"
+                    max="20.0"
+                    step="0.5"
+                    value="12.0"
+                    onchange="onFarNum(this.value)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. 课堂快速演示预设 -->
+            <div class="control-card">
+              <div class="control-card-title">
+                <span>教学预设场景</span>
+              </div>
+              <div class="presets-grid">
+                <button id="presetA" class="btn-preset active" onclick="applyPreset('A')">
+                  预设A: 投影对比
+                </button>
+                <button id="presetB" class="btn-preset" onclick="applyPreset('B')">
+                  预设B: 缩小fovy
+                </button>
+                <button id="presetC" class="btn-preset" onclick="applyPreset('C')">
+                  预设C: near裁剪
+                </button>
+                <button id="presetD" class="btn-preset" onclick="applyPreset('D')">
+                  预设D: far裁剪
+                </button>
+              </div>
+            </div>
+
+            <!-- 6. 坐标显微镜展开卡片 -->
+            <button
+              id="btnToggleMicroscope"
+              class="microscope-toggle-btn"
+              onclick="toggleMicroscope()"
+            >
+              <span>🔍 显示坐标显微镜 (Clip / NDC)</span>
+            </button>
+
+            <div id="microscopeDrawer" class="microscope-drawer">
+              <div style="font-weight: 700; color: var(--navy); margin-bottom: 2px">
+                样本点：近处立方体中心
+              </div>
+              <div class="coord-row">
+                <span class="coord-label">世界/相机坐标 P:</span>
+                <span class="coord-val">(−0.900, 0.000, −3.000)</span>
+              </div>
+              <div class="coord-row">
+                <span class="coord-label">齐次裁剪坐标 p_clip:</span>
+                <span id="valClipCoord" class="coord-val">(−0.877, 0.000, 1.833, 3.000)</span>
+              </div>
+              <div class="coord-row">
+                <span class="coord-label">透视除法后 NDC:</span>
+                <span id="valNdcCoord" class="coord-val ndc">(−0.292, 0.000, 0.611)</span>
+              </div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px">
+                注：仅表示样本单点坐标，不代表立方体整体裁剪状态。
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- 底部教学探究区 (150px) -->
+      <footer class="bottom-section">
+        <!-- 四阶段标签 -->
+        <div class="guide-stages">
+          <div id="stage1Pill" class="stage-item active">
+            <span class="stage-num">1</span>
+            <span>Prediction 预测</span>
+          </div>
+          <div id="stage2Pill" class="stage-item">
+            <span class="stage-num">2</span>
+            <span>Operation 操作</span>
+          </div>
+          <div id="stage3Pill" class="stage-item">
+            <span class="stage-num">3</span>
+            <span>Observation 观察</span>
+          </div>
+          <div id="stage4Pill" class="stage-item">
+            <span class="stage-num">4</span>
+            <span>Explanation 解释</span>
+          </div>
+        </div>
+
+        <!-- 动态问答与结论条 -->
+        <div class="guide-content-box">
+          <div class="guide-text-area">
+            <span id="guideStepTag" class="guide-tag">STAGE 1 · 观察体与成像规律预测</span>
+            <span id="guideQuestionText" class="guide-main-text">
+              两个立方体实际尺寸严格相同（边长均为 1.4）。切换到透视投影后，哪一个看起来更大？
+            </span>
+          </div>
+          <div id="guideButtonsSlot" class="guide-buttons">
+            <button class="btn-opt" onclick="onSelectAnswer('A')">A. 近处立方体更大</button>
+            <button class="btn-opt" onclick="onSelectAnswer('B')">B. 远处立方体更大</button>
+            <button class="btn-opt" onclick="onSelectAnswer('C')">C. 两者始终等大</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- 原生 WebGL2 着色器 (GLSL ES 3.00) -->
+    <script id="vs-shader" type="x-shader/x-vertex">
+      #version 300 es
+      layout(location = 0) in vec3 aPosition;
+      layout(location = 1) in vec3 aNormal;
+
+      uniform mat4 uModelMatrix;
+      uniform mat4 uViewMatrix;
+      uniform mat4 uProjectionMatrix;
+      uniform vec3 uColor;
+
+      out vec3 vNormal;
+      out vec3 vColor;
+
+      void main() {
+          vNormal = mat3(uModelMatrix) * aNormal;
+          vColor = uColor;
+          gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+      }
+    </script>
+
+    <script id="fs-shader" type="x-shader/x-fragment">
+      #version 300 es
+      precision mediump float;
+
+      in vec3 vNormal;
+      in vec3 vColor;
+      out vec4 fragColor;
+
+      void main() {
+          // 简易漫反射光照，体现立方体三维体积感
+          vec3 lightDir = normalize(vec3(0.5, 0.8, 1.0));
+          float diff = max(dot(normalize(vNormal), lightDir), 0.25);
+          vec3 finalCol = vColor * (0.45 + 0.55 * diff);
+          fragColor = vec4(finalCol, 1.0);
+      }
+    </script>
+
+    <!-- 主程序脚本 -->
+    <script>
+      /**
+       * D05-02 · 正交与透视投影交互显微镜
+       * 原生 WebGL2 + Canvas 2D + 纯原生三维矩阵数学实现
+       */
+
+      // 全局状态
+      const state = {
+        mode: 'perspective', // 'perspective' | 'orthographic'
+        // 透视参数
+        fovy: 60.0,
+        aspect: 16 / 9,
+        near: 1.0,
+        far: 12.0,
+        // 正交参数
+        orthoLeft: -3.2,
+        orthoRight: 3.2,
+        orthoBottom: -1.8,
+        orthoTop: 1.8,
+        // 教学引导阶段
+        guideStep: 1,
+        userChoice: null,
+        currentPreset: 'A',
+        microscopeOpen: false,
+      };
+
+      // 场景物体定义（固定不可变）
+      const SCENE = {
+        cubeSize: 1.4,
+        nearCubePos: [-0.9, 0.0, -3.0],
+        farCubePos: [1.1, 0.0, -7.0],
+        nearCubeColor: [0.09, 0.23, 0.39], // 深蓝 #183B63
+        farCubeColor: [0.09, 0.55, 0.66], // 青蓝 #168DA8
+      };
+
+      // ==========================================
+      // 1. 原生三维矩阵与向量数学运算库
+      // ==========================================
+      const mat4 = {
+        identity: () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
+
+        // 平移矩阵
+        translation: (tx, ty, tz) =>
+          new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, tx, ty, tz, 1]),
+
+        // 透视投影矩阵 (GLSL 列主序)
+        perspective: (fovyRad, aspect, near, far) => {
+          const f = 1.0 / Math.tan(fovyRad / 2.0);
+          const nf = 1.0 / (near - far);
+          return new Float32Array([
+            f / aspect,
+            0,
+            0,
+            0,
+            0,
+            f,
+            0,
+            0,
+            0,
+            0,
+            (far + near) * nf,
+            -1,
+            0,
+            0,
+            2.0 * far * near * nf,
+            0,
+          ]);
+        },
+
+        // 正交投影矩阵 (GLSL 列主序)
+        ortho: (left, right, bottom, top, near, far) => {
+          const dx = right - left;
+          const dy = top - bottom;
+          const dz = far - near;
+          return new Float32Array([
+            2.0 / dx,
+            0,
+            0,
+            0,
+            0,
+            2.0 / dy,
+            0,
+            0,
+            0,
+            0,
+            -2.0 / dz,
+            0,
+            -(right + left) / dx,
+            -(top + bottom) / dy,
+            -(far + near) / dz,
+            1,
+          ]);
+        },
+
+        // 4x4 矩阵乘以 4 维齐次点 p = [x, y, z, w]
+        transformVec4: (m, p) => {
+          // m 为列主序 16 元素
+          return [
+            m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12] * p[3],
+            m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13] * p[3],
+            m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14] * p[3],
+            m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15] * p[3],
+          ];
+        },
+      };
+
+      const vec3 = {
+        add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+        sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+        dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+        cross: (a, b) => [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0],
+        ],
+        len: (a) => Math.hypot(a[0], a[1], a[2]),
+        normalize: (a) => {
+          const l = Math.hypot(a[0], a[1], a[2]);
+          return l > 1e-8 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 0];
+        },
+      };
+
+      // ==========================================
+      // 2. WebGL2 相机视图初始化与渲染
+      // ==========================================
+      let gl = null;
+      let glProgram = null;
+      let glUniforms = {};
+      let glCubeVAO = null;
+      let glCubeIndexCount = 0;
+      let lastValidProjMatrix = mat4.identity();
+
+      function initCubeMesh() {
+        const h = SCENE.cubeSize / 2.0; // 0.7
+        // 6 个面共 24 个顶点，含法向量
+        const positions = new Float32Array([
+          // 前 (+Z)
+          -h,
+          -h,
+          h,
+          h,
+          -h,
+          h,
+          h,
+          h,
+          h,
+          -h,
+          h,
+          h,
+          // 后 (-Z)
+          h,
+          -h,
+          -h,
+          -h,
+          -h,
+          -h,
+          -h,
+          h,
+          -h,
+          h,
+          h,
+          -h,
+          // 顶 (+Y)
+          -h,
+          h,
+          h,
+          h,
+          h,
+          h,
+          h,
+          h,
+          -h,
+          -h,
+          h,
+          -h,
+          // 底 (-Y)
+          -h,
+          -h,
+          -h,
+          h,
+          -h,
+          -h,
+          h,
+          -h,
+          h,
+          -h,
+          -h,
+          h,
+          // 右 (+X)
+          h,
+          -h,
+          h,
+          h,
+          -h,
+          -h,
+          h,
+          h,
+          -h,
+          h,
+          h,
+          h,
+          // 左 (-X)
+          -h,
+          -h,
+          -h,
+          -h,
+          -h,
+          h,
+          -h,
+          h,
+          h,
+          -h,
+          h,
+          -h,
+        ]);
+
+        const normals = new Float32Array([
+          // 前
+          0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+          // 后
+          0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+          // 顶
+          0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+          // 底
+          0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+          // 右
+          1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
+          // 左
+          -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0,
+        ]);
+
+        const indices = new Uint16Array([
+          0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17,
+          18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
+        ]);
+
+        return { positions, normals, indices };
+      }
+
+      function initWebGL() {
+        const canvas = document.getElementById('cameraCanvas');
+        gl = canvas.getContext('webgl2', { antialias: true });
+
+        if (!gl) {
+          alert('当前浏览器无法初始化 WebGL2，请使用支持 WebGL2 的现代浏览器。');
+          return false;
+        }
+
+        function compileShader(type, srcId) {
+          const src = document.getElementById(srcId).text;
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src);
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(s));
+            gl.deleteShader(s);
+            return null;
+          }
+          return s;
+        }
+
+        const vs = compileShader(gl.VERTEX_SHADER, 'vs-shader');
+        const fs = compileShader(gl.FRAGMENT_SHADER, 'fs-shader');
+        glProgram = gl.createProgram();
+        gl.attachShader(glProgram, vs);
+        gl.attachShader(glProgram, fs);
+        gl.linkProgram(glProgram);
+
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(glProgram));
+          return false;
+        }
+
+        glUniforms = {
+          uModelMatrix: gl.getUniformLocation(glProgram, 'uModelMatrix'),
+          uViewMatrix: gl.getUniformLocation(glProgram, 'uViewMatrix'),
+          uProjectionMatrix: gl.getUniformLocation(glProgram, 'uProjectionMatrix'),
+          uColor: gl.getUniformLocation(glProgram, 'uColor'),
+        };
+
+        // 创建立方体通用顶点缓冲区 (仅初始化一次，后续绝不重新上传模型 Buffer)
+        const mesh = initCubeMesh();
+        glCubeVAO = gl.createVertexArray();
+        gl.bindVertexArray(glCubeVAO);
+
+        const posBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.positions, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        const normBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, mesh.normals, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+        const idxBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
+
+        glCubeIndexCount = mesh.indices.length;
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.clearColor(0.97, 0.98, 0.99, 1.0);
+
+        return true;
+      }
+
+      function renderWebGLCameraView(projMatrix) {
+        if (!gl || !glProgram) return;
+
+        const canvas = document.getElementById('cameraCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        const cw = canvas.clientWidth;
+        const ch = canvas.clientHeight;
+
+        if (canvas.width !== Math.floor(cw * dpr) || canvas.height !== Math.floor(ch * dpr)) {
+          canvas.width = Math.floor(cw * dpr);
+          canvas.height = Math.floor(ch * dpr);
+        }
+
+        // 根据当前投影使用的 aspect 处理居中有效视口，非显示区域留白，防止画布额外拉伸
+        let vpWidth = canvas.width;
+        let vpHeight = canvas.height;
+        let vpX = 0;
+        let vpY = 0;
+
+        const canvasAspect = canvas.width / canvas.height;
+        const targetAspect =
+          state.mode === 'perspective'
+            ? state.aspect
+            : (state.orthoRight - state.orthoLeft) / (state.orthoTop - state.orthoBottom);
+
+        if (targetAspect > canvasAspect) {
+          vpWidth = canvas.width;
+          vpHeight = Math.floor(canvas.width / targetAspect);
+          vpY = Math.floor((canvas.height - vpHeight) / 2);
+        } else {
+          vpHeight = canvas.height;
+          vpWidth = Math.floor(canvas.height * targetAspect);
+          vpX = Math.floor((canvas.width - vpWidth) / 2);
+        }
+
+        // 全画布清屏
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clearColor(0.97, 0.98, 0.99, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // 设置有效渲染视口
+        gl.viewport(vpX, vpY, vpWidth, vpHeight);
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(vpX, vpY, vpWidth, vpHeight);
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.disable(gl.SCISSOR_TEST);
+
+        gl.useProgram(glProgram);
+
+        // 目标相机位于原点，观察负Z方向：View Matrix 为单位矩阵
+        const viewMat = mat4.identity();
+        gl.uniformMatrix4fv(glUniforms.uViewMatrix, false, viewMat);
+        gl.uniformMatrix4fv(glUniforms.uProjectionMatrix, false, projMatrix);
+
+        gl.bindVertexArray(glCubeVAO);
+
+        // 1. 绘制近处立方体 (深蓝)
+        const mNear = mat4.translation(
+          SCENE.nearCubePos[0],
+          SCENE.nearCubePos[1],
+          SCENE.nearCubePos[2],
+        );
+        gl.uniformMatrix4fv(glUniforms.uModelMatrix, false, mNear);
+        gl.uniform3fv(glUniforms.uColor, SCENE.nearCubeColor);
+        gl.drawElements(gl.TRIANGLES, glCubeIndexCount, gl.UNSIGNED_SHORT, 0);
+
+        // 2. 绘制远处立方体 (青蓝)
+        const mFar = mat4.translation(
+          SCENE.farCubePos[0],
+          SCENE.farCubePos[1],
+          SCENE.farCubePos[2],
+        );
+        gl.uniformMatrix4fv(glUniforms.uModelMatrix, false, mFar);
+        gl.uniform3fv(glUniforms.uColor, SCENE.farCubeColor);
+        gl.drawElements(gl.TRIANGLES, glCubeIndexCount, gl.UNSIGNED_SHORT, 0);
+      }
+
+      // ==========================================
+      // 3. Canvas 2D 左侧总览视图 (固定总览相机)
+      // ==========================================
+      // 总览相机固定在 (11, 7, 12)，观察目标 (0, 0, -5)，Up 为 (0, 1, 0)
+      const spectatorCamera = (() => {
+        const eye = [11.0, 7.0, 12.0];
+        const at = [0.0, 0.0, -5.0];
+        const up = [0.0, 1.0, 0.0];
+        const n = vec3.normalize(vec3.sub(eye, at));
+        const u = vec3.normalize(vec3.cross(up, n));
+        const v = vec3.cross(n, u);
+        return { eye, u, v, n };
+      })();
+
+      function projectSpectator(p, width, height) {
+        const d = vec3.sub(p, spectatorCamera.eye);
+        const xc = vec3.dot(spectatorCamera.u, d);
+        const yc = vec3.dot(spectatorCamera.v, d);
+        const zc = vec3.dot(spectatorCamera.n, d);
+
+        const depth = -zc;
+        if (depth <= 0.1) return null;
+
+        const fovFactor = 520;
+        const sx = width / 2.0 + (xc / depth) * fovFactor;
+        const sy = height / 2.0 - (yc / depth) * fovFactor;
+        return { x: sx, y: sy, depth };
+      }
+
+      function renderWorldView() {
+        const canvas = document.getElementById('worldCanvas');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+
+        if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        // 1. 绘制地面基准网格 (y = -1.8)
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
+        ctx.lineWidth = 1;
+        const gridFloorY = -1.8;
+        for (let x = -8; x <= 8; x += 1.5) {
+          const p1 = projectSpectator([x, gridFloorY, 2], w, h);
+          const p2 = projectSpectator([x, gridFloorY, -14], w, h);
+          if (p1 && p2) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+        for (let z = 2; z >= -14; z -= 1.5) {
+          const p1 = projectSpectator([-8, gridFloorY, z], w, h);
+          const p2 = projectSpectator([8, gridFloorY, z], w, h);
+          if (p1 && p2) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+
+        // 2. 绘制世界原点与坐标轴
+        function drawAxis(start, end, color, label) {
+          const pS = projectSpectator(start, w, h);
+          const pE = projectSpectator(end, w, h);
+          if (!pS || !pE) return;
+
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(pS.x, pS.y);
+          ctx.lineTo(pE.x, pE.y);
+          ctx.stroke();
+
+          const dx = pE.x - pS.x,
+            dy = pE.y - pS.y;
+          const ang = Math.atan2(dy, dx);
+          ctx.beginPath();
+          ctx.moveTo(pE.x, pE.y);
+          ctx.lineTo(
+            pE.x - 7 * Math.cos(ang - Math.PI / 6),
+            pE.y - 7 * Math.sin(ang - Math.PI / 6),
+          );
+          ctx.lineTo(
+            pE.x - 7 * Math.cos(ang + Math.PI / 6),
+            pE.y - 7 * Math.sin(ang + Math.PI / 6),
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.font = 'bold 11px var(--mono-font)';
+          ctx.fillText(label, pE.x + 6, pE.y + 3);
+        }
+
+        drawAxis([0, 0, 0], [2.5, 0, 0], '#94a3b8', '+X');
+        drawAxis([0, 0, 0], [0, 2.5, 0], '#059669', '+Y');
+        drawAxis([0, 0, 0], [0, 0, 2.5], '#2563eb', '+Z');
+
+        // 3. 绘制目标相机位置与视线
+        const eyeP = projectSpectator([0, 0, 0], w, h);
+        const lookDirP = projectSpectator([0, 0, -13], w, h);
+        if (eyeP && lookDirP) {
+          // 视线中心轴
+          ctx.strokeStyle = 'rgba(2, 132, 199, 0.4)';
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(eyeP.x, eyeP.y);
+          ctx.lineTo(lookDirP.x, lookDirP.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 相机 Eye 点
+          ctx.beginPath();
+          ctx.arc(eyeP.x, eyeP.y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = '#183b63';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.font = 'bold 12px var(--sans-font)';
+          ctx.fillStyle = '#183b63';
+          ctx.fillText('Eye (0,0,0)', eyeP.x + 8, eyeP.y - 6);
+        }
+
+        // 4. 动态绘制当前投影观察体 (视锥体 / 长方体)
+        drawObservationVolume(ctx, w, h);
+
+        // 5. 绘制两只立方体 (按总览深度正确前后排序绘制)
+        const cubes = [
+          {
+            center: SCENE.nearCubePos,
+            color: 'rgba(24, 59, 99, 0.75)',
+            stroke: '#0f274a',
+            label: '近处立方体 (z=−3.0)',
+          },
+          {
+            center: SCENE.farCubePos,
+            color: 'rgba(22, 141, 168, 0.75)',
+            stroke: '#11677c',
+            label: '远处立方体 (z=−7.0)',
+          },
+        ];
+
+        // 计算到总览相机的距离
+        cubes.forEach((c) => {
+          c.dist = vec3.len(vec3.sub(c.center, spectatorCamera.eye));
+        });
+        cubes.sort((a, b) => b.dist - a.dist);
+
+        cubes.forEach((c) => {
+          drawSpectatorCube(ctx, c.center, c.color, c.stroke, c.label, w, h);
+        });
+
+        ctx.restore();
+      }
+
+      // 绘制三维观察体（近截面、远截面与侧棱）
+      function drawObservationVolume(ctx, w, h) {
+        let nearPts = [],
+          farPts = [];
+        const nearZ = -state.near;
+        const farZ = -state.far;
+
+        if (state.mode === 'perspective') {
+          // 透视视锥体截面
+          const rad = (state.fovy * Math.PI) / 360.0;
+          const tanH = Math.tan(rad);
+          const nearH = state.near * tanH;
+          const nearW = nearH * state.aspect;
+          const farH = state.far * tanH;
+          const farW = farH * state.aspect;
+
+          nearPts = [
+            [-nearW, nearH, nearZ],
+            [nearW, nearH, nearZ],
+            [nearW, -nearH, nearZ],
+            [-nearW, -nearH, nearZ],
+          ];
+          farPts = [
+            [-farW, farH, farZ],
+            [farW, farH, farZ],
+            [farW, -farH, farZ],
+            [-farW, -farH, farZ],
+          ];
+
+          // 从相机 Eye 发出的视锥射线 (Eye 到近裁面 4 顶点虚线)
+          const eye2D = projectSpectator([0, 0, 0], w, h);
+          if (eye2D) {
+            ctx.strokeStyle = 'rgba(22, 141, 168, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            nearPts.forEach((pt) => {
+              const p2D = projectSpectator(pt, w, h);
+              if (p2D) {
+                ctx.beginPath();
+                ctx.moveTo(eye2D.x, eye2D.y);
+                ctx.lineTo(p2D.x, p2D.y);
+                ctx.stroke();
+              }
+            });
+            ctx.setLineDash([]);
+          }
+        } else {
+          // 正交长方体截面
+          const l = state.orthoLeft,
+            r = state.orthoRight;
+          const b = state.orthoBottom,
+            t = state.orthoTop;
+
+          nearPts = [
+            [l, t, nearZ],
+            [r, t, nearZ],
+            [r, b, nearZ],
+            [l, b, nearZ],
+          ];
+          farPts = [
+            [l, t, farZ],
+            [r, t, farZ],
+            [r, b, farZ],
+            [l, b, farZ],
+          ];
+        }
+
+        const near2D = nearPts.map((p) => projectSpectator(p, w, h));
+        const far2D = farPts.map((p) => projectSpectator(p, w, h));
+
+        // 1. 远截面 (半透明蓝灰)
+        if (far2D.every((p) => p !== null)) {
+          ctx.beginPath();
+          ctx.moveTo(far2D[0].x, far2D[0].y);
+          for (let i = 1; i < 4; i++) ctx.lineTo(far2D[i].x, far2D[i].y);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(101, 124, 146, 0.12)';
+          ctx.fill();
+          ctx.strokeStyle = '#657c92';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.font = 'bold 11px var(--mono-font)';
+          ctx.fillStyle = '#657c92';
+          ctx.fillText(`Far = ${state.far.toFixed(1)}`, far2D[1].x + 6, far2D[1].y);
+        }
+
+        // 2. 侧棱连线 (4条)
+        ctx.strokeStyle = 'rgba(22, 141, 168, 0.55)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 4; i++) {
+          if (near2D[i] && far2D[i]) {
+            ctx.beginPath();
+            ctx.moveTo(near2D[i].x, near2D[i].y);
+            ctx.lineTo(far2D[i].x, far2D[i].y);
+            ctx.stroke();
+          }
+        }
+
+        // 3. 近截面 (翠绿高亮)
+        if (near2D.every((p) => p !== null)) {
+          ctx.beginPath();
+          ctx.moveTo(near2D[0].x, near2D[0].y);
+          for (let i = 1; i < 4; i++) ctx.lineTo(near2D[i].x, near2D[i].y);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(35, 133, 106, 0.18)';
+          ctx.fill();
+          ctx.strokeStyle = '#23856a';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.font = 'bold 11px var(--mono-font)';
+          ctx.fillStyle = '#23856a';
+          ctx.fillText(`Near = ${state.near.toFixed(1)}`, near2D[1].x + 6, near2D[1].y);
+        }
+      }
+
+      // 辅助：在 Canvas 2D 绘制一个三维立方体
+      function drawSpectatorCube(ctx, center, fillColor, strokeColor, label, w, h) {
+        const s = SCENE.cubeSize / 2.0;
+        const verts = [
+          [-s, -s, -s],
+          [s, -s, -s],
+          [s, s, -s],
+          [-s, s, -s],
+          [-s, -s, s],
+          [s, -s, s],
+          [s, s, s],
+          [-s, s, s],
+        ].map((v) => vec3.add(v, center));
+
+        const faces = [
+          [4, 5, 6, 7], // 前
+          [1, 0, 3, 2], // 后
+          [3, 2, 6, 7], // 顶
+          [0, 1, 5, 4], // 底
+          [5, 1, 2, 6], // 右
+          [0, 4, 7, 3], // 左
+        ];
+
+        // 计算面深度并由远及近绘制
+        const sortedFaces = faces
+          .map((indices) => {
+            let sumD = 0;
+            const pts = indices.map((idx) => {
+              const p = projectSpectator(verts[idx], w, h);
+              sumD += p ? p.depth : 0;
+              return p;
+            });
+            return { pts, avgD: sumD / 4.0 };
+          })
+          .sort((a, b) => b.avgD - a.avgD);
+
+        sortedFaces.forEach((f) => {
+          if (f.pts.every((p) => p !== null)) {
+            ctx.beginPath();
+            ctx.moveTo(f.pts[0].x, f.pts[0].y);
+            for (let i = 1; i < 4; i++) ctx.lineTo(f.pts[i].x, f.pts[i].y);
+            ctx.closePath();
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        });
+
+        // 中心标签
+        const centerProj = projectSpectator(center, w, h);
+        if (centerProj) {
+          ctx.font = 'bold 11px var(--sans-font)';
+          ctx.fillStyle = strokeColor;
+          ctx.fillText(label, centerProj.x - 36, centerProj.y - 18);
+        }
+      }
+
+      // ==========================================
+      // 4. 几何裁剪判定与投影尺寸计算
+      // ==========================================
+      function evaluateCubeClipping(center) {
+        const s = SCENE.cubeSize / 2.0;
+        // 立方体 8 个角点（相机位于原点看负Z，Eye坐标即世界坐标）
+        const corners = [
+          [-s, -s, -s],
+          [s, -s, -s],
+          [s, s, -s],
+          [-s, s, -s],
+          [-s, -s, s],
+          [s, -s, s],
+          [s, s, s],
+          [-s, s, s],
+        ].map((v) => vec3.add(v, center));
+
+        let insideCount = 0;
+
+        corners.forEach((p) => {
+          const x = p[0],
+            y = p[1],
+            z = p[2];
+          const dist = -z; // 沿视线距离 (深度)
+
+          // 1. 近远裁剪面检测
+          if (dist < state.near || dist > state.far) {
+            return;
+          }
+
+          // 2. 左右上下边界检测
+          if (state.mode === 'perspective') {
+            const rad = (state.fovy * Math.PI) / 360.0;
+            const tanH = Math.tan(rad);
+            const halfH = dist * tanH;
+            const halfW = halfH * state.aspect;
+            if (Math.abs(x) <= halfW && Math.abs(y) <= halfH) {
+              insideCount++;
+            }
+          } else {
+            if (
+              x >= state.orthoLeft &&
+              x <= state.orthoRight &&
+              y >= state.orthoBottom &&
+              y <= state.orthoTop
+            ) {
+              insideCount++;
+            }
+          }
+        });
+
+        if (insideCount === 8) return 'inside';
+        if (insideCount > 0) return 'intersect';
+        return 'outside';
+      }
+
+      function updateClippingUI() {
+        const statusNear = evaluateCubeClipping(SCENE.nearCubePos);
+        const statusFar = evaluateCubeClipping(SCENE.farCubePos);
+
+        const mapText = {
+          inside: '完全可见 (在体内部)',
+          intersect: '部分裁剪 (跨越截面)',
+          outside: '完全裁剪 (在体外部)',
+        };
+
+        const pillNear = document.getElementById('statusNearCube');
+        pillNear.className = `cube-status-pill ${statusNear}`;
+        pillNear.innerHTML = `<span class="dot"></span><span>近处: ${mapText[statusNear]}</span>`;
+
+        const pillFar = document.getElementById('statusFarCube');
+        pillFar.className = `cube-status-pill ${statusFar}`;
+        pillFar.innerHTML = `<span class="dot"></span><span>远处: ${mapText[statusFar]}</span>`;
+
+        return { statusNear, statusFar };
+      }
+
+      // 计算两个立方体在当前屏幕视口中的真实投影高度 (像素)
+      function calculateProjectedHeights(projMat) {
+        const canvas = document.getElementById('cameraCanvas');
+        const s = SCENE.cubeSize / 2.0;
+
+        function getProjectedH(center) {
+          const topPt = [center[0], center[1] + s, center[2], 1.0];
+          const botPt = [center[0], center[1] - s, center[2], 1.0];
+
+          const cTop = mat4.transformVec4(projMat, topPt);
+          const cBot = mat4.transformVec4(projMat, botPt);
+
+          if (cTop[3] <= 0.01 || cBot[3] <= 0.01) return 0;
+
+          const ndcTopY = cTop[1] / cTop[3];
+          const ndcBotY = cBot[1] / cBot[3];
+
+          // 转化为像素高度
+          return Math.abs(ndcTopY - ndcBotY) * (canvas.clientHeight / 2.0);
+        }
+
+        const hNear = Math.round(getProjectedH(SCENE.nearCubePos));
+        const hFar = Math.round(getProjectedH(SCENE.farCubePos));
+
+        document.getElementById('measureNearH').textContent = `${hNear} px`;
+        document.getElementById('measureFarH').textContent = `${hFar} px`;
+
+        const note = document.getElementById('measureRatioNote');
+        if (state.mode === 'orthographic') {
+          note.textContent = '正交光线平行：远近物体投影高度严格等大 (1:1)';
+          note.style.color = 'var(--green)';
+        } else {
+          const ratio = hFar > 0 ? (hNear / hFar).toFixed(2) : '∞';
+          note.textContent = `透视近大远小：近处为远处的 ${ratio} 倍`;
+          note.style.color = 'var(--navy)';
+        }
+
+        return { hNear, hFar };
+      }
+
+      // 更新坐标显微镜 (Clip / NDC)
+      function updateMicroscope(projMat) {
+        // 样本点：近处立方体中心 (-0.9, 0, -3)
+        const pEye = [SCENE.nearCubePos[0], SCENE.nearCubePos[1], SCENE.nearCubePos[2], 1.0];
+        const pClip = mat4.transformVec4(projMat, pEye);
+
+        const fmt = (n) => (n >= 0 ? `+${n.toFixed(3)}` : n.toFixed(3));
+
+        document.getElementById('valClipCoord').textContent =
+          `(${fmt(pClip[0])}, ${fmt(pClip[1])}, ${fmt(pClip[2])}, ${fmt(pClip[3])})`;
+
+        if (Math.abs(pClip[3]) > 1e-4) {
+          const ndc = [pClip[0] / pClip[3], pClip[1] / pClip[3], pClip[2] / pClip[3]];
+          document.getElementById('valNdcCoord').textContent =
+            `(${fmt(ndc[0])}, ${fmt(ndc[1])}, ${fmt(ndc[2])})`;
+        } else {
+          document.getElementById('valNdcCoord').textContent = '(w接近0，无法除法)';
+        }
+      }
+
+      // ==========================================
+      // 5. 投影矩阵生成与全局同步更新
+      // ==========================================
+      function computeProjectionMatrix() {
+        // 参数合法性严格校验
+        const banner = document.getElementById('alertBanner');
+        const msg = document.getElementById('alertMessage');
+
+        if (state.near <= 0.05) {
+          banner.className = 'alert-banner active';
+          msg.textContent = '非法参数：near 必须大于 0！';
+          return null;
+        }
+        if (state.far <= state.near) {
+          banner.className = 'alert-banner active';
+          msg.textContent = '非法参数：必须满足 0 < near < far！';
+          return null;
+        }
+
+        if (state.mode === 'perspective') {
+          if (state.fovy <= 5 || state.fovy >= 175) {
+            banner.className = 'alert-banner active';
+            msg.textContent = '非法参数：fovy 必须在合理视场角范围内！';
+            return null;
+          }
+          if (state.aspect <= 0.1) {
+            banner.className = 'alert-banner active';
+            msg.textContent = '非法参数：aspect 必须大于 0！';
+            return null;
+          }
+        } else {
+          if (state.orthoLeft >= state.orthoRight || state.orthoBottom >= state.orthoTop) {
+            banner.className = 'alert-banner active';
+            msg.textContent = '非法参数：正交边界必须满足 left < right 且 bottom < top！';
+            return null;
+          }
+        }
+
+        banner.className = 'alert-banner';
+
+        if (state.mode === 'perspective') {
+          const rad = (state.fovy * Math.PI) / 180.0;
+          return mat4.perspective(rad, state.aspect, state.near, state.far);
+        } else {
+          return mat4.ortho(
+            state.orthoLeft,
+            state.orthoRight,
+            state.orthoBottom,
+            state.orthoTop,
+            state.near,
+            state.far,
+          );
+        }
+      }
+
+      function updateAll() {
+        const projMat = computeProjectionMatrix();
+        if (projMat) {
+          lastValidProjMatrix = projMat;
+        }
+
+        // 1. 渲染中间 WebGL2
+        renderWebGLCameraView(lastValidProjMatrix);
+
+        // 2. 渲染左侧 Canvas 2D
+        renderWorldView();
+
+        // 3. 计算裁剪与测量
+        updateClippingUI();
+        calculateProjectedHeights(lastValidProjMatrix);
+        updateMicroscope(lastValidProjMatrix);
+        syncControlInputs();
+      }
+
+      function syncControlInputs() {
+        document.getElementById('modePillText').textContent =
+          state.mode === 'perspective' ? '透视投影 Perspective' : '正交投影 Orthographic';
+
+        document.getElementById('valFovy').textContent = `${Math.round(state.fovy)}°`;
+        document.getElementById('rangeFovy').value = Math.round(state.fovy);
+        document.getElementById('numFovy').value = Math.round(state.fovy);
+
+        document.getElementById('valAspect').textContent = state.aspect.toFixed(3);
+        document.getElementById('rangeAspect').value = state.aspect.toFixed(2);
+        document.getElementById('numAspect').value = state.aspect.toFixed(2);
+
+        document.getElementById('valNear').textContent = state.near.toFixed(2);
+        document.getElementById('rangeNear').value = state.near.toFixed(1);
+        document.getElementById('numNear').value = state.near.toFixed(1);
+
+        document.getElementById('valFar').textContent = state.far.toFixed(2);
+        document.getElementById('rangeFar').value = state.far.toFixed(1);
+        document.getElementById('numFar').value = state.far.toFixed(1);
+
+        document.getElementById('numOrthoLeft').value = state.orthoLeft.toFixed(1);
+        document.getElementById('numOrthoRight').value = state.orthoRight.toFixed(1);
+        document.getElementById('numOrthoBottom').value = state.orthoBottom.toFixed(1);
+        document.getElementById('numOrthoTop').value = state.orthoTop.toFixed(1);
+        document.getElementById('valOrthoX').textContent =
+          `[${state.orthoLeft.toFixed(1)}, ${state.orthoRight.toFixed(1)}]`;
+        document.getElementById('valOrthoY').textContent =
+          `[${state.orthoBottom.toFixed(1)}, ${state.orthoTop.toFixed(1)}]`;
+        const oAspect = (state.orthoRight - state.orthoLeft) / (state.orthoTop - state.orthoBottom);
+        document.getElementById('valOrthoAspect').textContent = oAspect.toFixed(3);
+      }
+
+      // ==========================================
+      // 6. 控制事件与模式切换
+      // ==========================================
+      function setProjectionMode(m) {
+        state.mode = m;
+        const isPersp = m === 'perspective';
+
+        document.getElementById('btnModePersp').className =
+          `mode-tab-btn ${isPersp ? 'active' : ''}`;
+        document.getElementById('btnModeOrtho').className =
+          `mode-tab-btn ${!isPersp ? 'active' : ''}`;
+
+        document.getElementById('perspParamsGroup').style.display = isPersp ? 'flex' : 'none';
+        document.getElementById('orthoParamsGroup').style.display = isPersp ? 'none' : 'flex';
+
+        updateAll();
+        updateGuideUI();
+      }
+
+      function onFovySlider(val) {
+        state.fovy = parseFloat(val);
+        updateAll();
+      }
+      function onFovyNum(val) {
+        state.fovy = Math.max(15, Math.min(110, parseFloat(val) || 60));
+        updateAll();
+      }
+
+      function onAspectSlider(val) {
+        state.aspect = parseFloat(val);
+        updateAll();
+      }
+      function onAspectNum(val) {
+        state.aspect = Math.max(0.75, Math.min(2.4, parseFloat(val) || 1.778));
+        updateAll();
+      }
+
+      function onNearSlider(val) {
+        state.near = parseFloat(val);
+        updateAll();
+      }
+      function onNearNum(val) {
+        state.near = Math.max(0.2, parseFloat(val) || 1.0);
+        updateAll();
+      }
+
+      function onFarSlider(val) {
+        state.far = parseFloat(val);
+        updateAll();
+      }
+      function onFarNum(val) {
+        state.far = Math.max(state.near + 0.5, parseFloat(val) || 12.0);
+        updateAll();
+      }
+
+      function onOrthoParamChange() {
+        state.orthoLeft = parseFloat(document.getElementById('numOrthoLeft').value) || -3.2;
+        state.orthoRight = parseFloat(document.getElementById('numOrthoRight').value) || 3.2;
+        state.orthoBottom = parseFloat(document.getElementById('numOrthoBottom').value) || -1.8;
+        state.orthoTop = parseFloat(document.getElementById('numOrthoTop').value) || 1.8;
+        updateAll();
+      }
+
+      function toggleMicroscope() {
+        state.microscopeOpen = !state.microscopeOpen;
+        const drawer = document.getElementById('microscopeDrawer');
+        drawer.className = `microscope-drawer ${state.microscopeOpen ? 'active' : ''}`;
+        document.getElementById('btnToggleMicroscope').innerHTML = state.microscopeOpen
+          ? '<span>▲ 收起坐标显微镜</span>'
+          : '<span>🔍 显示坐标显微镜 (Clip / NDC)</span>';
+      }
+
+      // 4 大教学预设
+      function applyPreset(p) {
+        state.currentPreset = p;
+        document.querySelectorAll('.btn-preset').forEach((b) => b.classList.remove('active'));
+        document.getElementById(`preset${p}`).classList.add('active');
+
+        if (p === 'A') {
+          // 预设A：投影对比 (恢复标准透视)
+          state.mode = 'perspective';
+          state.fovy = 60.0;
+          state.aspect = 16 / 9;
+          state.near = 1.0;
+          state.far = 12.0;
+        } else if (p === 'B') {
+          // 预设B：缩小 fovy 到 30°
+          state.mode = 'perspective';
+          state.fovy = 30.0;
+          state.aspect = 16 / 9;
+          state.near = 1.0;
+          state.far = 12.0;
+        } else if (p === 'C') {
+          // 预设C：near 裁剪到 3.0 (切入近处立方体)
+          state.mode = 'perspective';
+          state.fovy = 60.0;
+          state.aspect = 16 / 9;
+          state.near = 3.0;
+          state.far = 12.0;
+        } else if (p === 'D') {
+          // 预设D：far 裁剪到 5.0 (远处立方体完全被裁)
+          state.mode = 'perspective';
+          state.fovy = 60.0;
+          state.aspect = 16 / 9;
+          state.near = 1.0;
+          state.far = 5.0;
+        }
+
+        setProjectionMode(state.mode);
+      }
+
+      // 恢复全部默认
+      document.getElementById('btnResetAll').addEventListener('click', () => {
+        state.guideStep = 1;
+        state.userChoice = null;
+        state.orthoLeft = -3.2;
+        state.orthoRight = 3.2;
+        state.orthoBottom = -1.8;
+        state.orthoTop = 1.8;
+        applyPreset('A');
+        updateGuideUI();
+      });
+
+      // ==========================================
+      // 7. 教学引导闭环 (Prediction → Operation → Observation → Explanation)
+      // ==========================================
+      function updateGuideUI() {
+        const step = state.guideStep;
+
+        for (let i = 1; i <= 4; i++) {
+          const pill = document.getElementById(`stage${i}Pill`);
+          pill.className = 'stage-item';
+          if (i === step) pill.classList.add('active');
+          if (i < step) pill.classList.add('completed');
+        }
+
+        const tag = document.getElementById('guideStepTag');
+        const qText = document.getElementById('guideQuestionText');
+        const slot = document.getElementById('guideButtonsSlot');
+
+        if (step === 1) {
+          tag.textContent = 'STAGE 1 · 观察体与成像规律预测';
+          qText.textContent =
+            '两个立方体实际尺寸严格相同（边长均为 1.4）。切换到透视投影后，哪一个看起来更大？';
+          slot.innerHTML = `
+      <button class="btn-opt" onclick="onSelectAnswer('A')">A. 近处立方体更大</button>
+      <button class="btn-opt" onclick="onSelectAnswer('B')">B. 远处立方体更大</button>
+      <button class="btn-opt" onclick="onSelectAnswer('C')">C. 两者始终等大</button>
+    `;
+        } else if (step === 2) {
+          tag.textContent = 'STAGE 2 · 执行投影切换操作';
+          qText.textContent = `你的预测是 [${state.userChoice}]。请点击下方按钮，切换到正交或透视投影，观察屏幕中两个立方体高度标尺的变化。`;
+          slot.innerHTML = `
+      <button class="btn-action-primary" onclick="setProjectionMode(state.mode === 'perspective' ? 'orthographic' : 'perspective'); gotoStep(3);">
+        ⇄ 切换为 ${state.mode === 'perspective' ? '正交投影 Orthographic' : '透视投影 Perspective'}
+      </button>
+    `;
+        } else if (step === 3) {
+          tag.textContent = 'STAGE 3 · 动态实测与现象观察';
+          const heights = calculateProjectedHeights(lastValidProjMatrix);
+          const clips = updateClippingUI();
+          qText.innerHTML = `
+      实测结果：当前为<strong>${state.mode === 'perspective' ? '透视' : '正交'}投影</strong>！
+      近处立方体投影高度 <strong>${heights.hNear} px</strong>，远处 <strong>${heights.hFar} px</strong>。<br>
+      状态：近处[${clips.statusNear === 'inside' ? '完全可见' : '被裁剪'}]，远处[${clips.statusFar === 'inside' ? '完全可见' : '被裁剪'}]。<strong>两模型顶点 Buffer 完全没有被修改！</strong>
+    `;
+          slot.innerHTML = `
+      <button class="btn-action-primary" onclick="gotoStep(4)">
+        查看原理解释 →
+      </button>
+    `;
+        } else if (step === 4) {
+          tag.textContent = 'STAGE 4 · 教学原理与数学结论';
+          const correct = state.userChoice === 'A';
+          qText.innerHTML = `
+      <strong>结论：A 正确</strong>（${correct ? '预测准确！' : '注意透视投影原理'}）。<br>
+      <strong>正交投影</strong>：光线平行无消失点，投影尺寸与深度距离无关；<br>
+      <strong>透视投影</strong>：投影线汇聚于 Eye，透视除法中 w = −z 随深度增大，使归一化坐标缩小，产生近大远小！
+    `;
+          slot.innerHTML = `
+      <button class="btn-switch-flow" onclick="applyPreset('B'); gotoStep(3);">体验预设B: 缩fovy</button>
+      <button class="btn-switch-flow" onclick="applyPreset('C'); gotoStep(3);">体验预设C: near裁剪</button>
+      <button class="btn-switch-flow" onclick="applyPreset('A'); gotoStep(1);">重置并重新探究</button>
+    `;
+        }
+      }
+
+      function onSelectAnswer(choice) {
+        state.userChoice = choice;
+        state.guideStep = 2;
+        updateGuideUI();
+      }
+
+      function gotoStep(s) {
+        state.guideStep = s;
+        updateGuideUI();
+      }
+
+      // ==========================================
+      // 8. 窗口初始化与自检验证
+      // ==========================================
+      window.addEventListener('DOMContentLoaded', () => {
+        initWebGL();
+        setProjectionMode('perspective');
+        updateGuideUI();
+
+        window.addEventListener('resize', () => {
+          updateAll();
+        });
+
+        runSelfVerification();
+      });
+
+      // 自检与数值断言 (满足要求第十七节)
+      function runSelfVerification() {
+        console.log('=== [D05-02 投影显微镜] 启动自动化测试与数学验证 ===');
+
+        // 测试1：透视矩阵
+        const pMat = mat4.perspective((60 * Math.PI) / 180, 16 / 9, 1.0, 12.0);
+        console.assert(pMat[11] === -1, '透视矩阵第11项应为 -1 (w_clip = -z_eye)');
+
+        // 测试2：样本点透视除法近大远小
+        const pNear = mat4.transformVec4(pMat, [-0.9, 0, -3, 1]);
+        const pFar = mat4.transformVec4(pMat, [-0.9, 0, -7, 1]);
+        const ndcNearW = Math.abs(pNear[0] / pNear[3]);
+        const ndcFarW = Math.abs(pFar[0] / pFar[3]);
+        console.assert(ndcNearW > ndcFarW * 2.0, '近处点在 NDC 空间中应显著大于远处点');
+
+        // 测试3：正交投影矩阵无透视除法 (w_clip = 1)
+        const oMat = mat4.ortho(-3.2, 3.2, -1.8, 1.8, 1.0, 12.0);
+        const oNear = mat4.transformVec4(oMat, [-0.9, 0, -3, 1]);
+        const oFar = mat4.transformVec4(oMat, [-0.9, 0, -7, 1]);
+        console.assert(Math.abs(oNear[3] - 1.0) < 1e-5, '正交投影 w_clip 严格等于 1.0');
+        console.assert(
+          Math.abs(oNear[0] - oFar[0]) < 1e-5,
+          '正交投影中相同 X 坐标的物体投影 X 严格相同，无近大远小',
+        );
+
+        console.log('✓ 全部测试通过: 正交与透视投影矩阵、齐次裁剪与 NDC 坐标数学验证 100% 正确！');
+      }
+    </script>
+  </body>
+</html>

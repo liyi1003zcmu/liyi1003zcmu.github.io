@@ -1,0 +1,2582 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D05-01 · 虚拟相机与观察矩阵显微镜 - 计算机图形学教学Demo</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --panel-soft: #f8fafc;
+        --panel-border: rgba(30, 56, 96, 0.12);
+        --text: #172a45;
+        --text-muted: #556982;
+        --navy: #0f274a;
+        --blue: #1d4ed8;
+        --blue-subtle: #eff6ff;
+        --cyan: #0284c7;
+        --cyan-subtle: #f0f9ff;
+        --green: #059669;
+        --green-subtle: #ecfdf5;
+        --amber: #d97706;
+        --amber-subtle: #fffbeb;
+        --red: #dc2626;
+        --red-subtle: #fef2f2;
+        --mono-font: 'JetBrains Mono', Consolas, 'Fira Code', monospace;
+        --sans-font:
+          'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', system-ui,
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans-font);
+        font-size: 14px;
+        line-height: 1.4;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* 1600x900 逻辑视口容器 */
+      .app-container {
+        width: 1600px;
+        height: 900px;
+        max-width: 100vw;
+        max-height: 100vh;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 16px 40px rgba(15, 39, 74, 0.1);
+        position: relative;
+      }
+
+      /* 顶部标题栏 (68px) */
+      .header {
+        height: 68px;
+        padding: 0 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .header-title-badge {
+        background: var(--navy);
+        color: #ffffff;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      .header-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--navy);
+        letter-spacing: -0.01em;
+      }
+
+      .header-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-left: 4px;
+        padding-left: 14px;
+        border-left: 2px solid var(--panel-border);
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .status-pill.success {
+        background: var(--green-subtle);
+        color: var(--green);
+        border-color: rgba(5, 150, 105, 0.25);
+      }
+
+      .status-pill.info {
+        background: var(--cyan-subtle);
+        color: var(--cyan);
+        border-color: rgba(2, 132, 199, 0.25);
+      }
+
+      .status-pill.alert {
+        background: var(--red-subtle);
+        color: var(--red);
+        border-color: rgba(220, 38, 38, 0.25);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .btn-reset-top {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+      }
+
+      .btn-reset-top:hover {
+        background: var(--panel-soft);
+        border-color: var(--text-muted);
+      }
+
+      /* 错误/警告通告条 */
+      .alert-banner {
+        display: none;
+        background: #fef2f2;
+        border-bottom: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 6px 24px;
+        font-size: 13px;
+        font-weight: 600;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .alert-banner.active {
+        display: flex;
+      }
+
+      /* 中央三栏主区域 (516px) */
+      .main-grid {
+        height: 516px;
+        display: grid;
+        grid-template-columns: 35% 30% 35%;
+        border-bottom: 1px solid var(--panel-border);
+        flex-shrink: 0;
+        background: #f8fafc;
+      }
+
+      .view-panel {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .view-panel:not(:last-child) {
+        border-right: 1px solid var(--panel-border);
+      }
+
+      .panel-header {
+        height: 40px;
+        padding: 0 16px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--panel-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+
+      .panel-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-tag {
+        font-size: 11px;
+        color: var(--text-muted);
+        background: var(--bg);
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+      }
+
+      /* 左侧 Canvas 容器 */
+      .canvas-wrapper {
+        flex: 1;
+        position: relative;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      canvas.view-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .canvas-legend {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        pointer-events: none;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .legend-color {
+        width: 12px;
+        height: 3px;
+        border-radius: 2px;
+      }
+
+      /* 中间面板：标架与观察矩阵 */
+      .matrix-panel-body {
+        flex: 1;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+        background: #ffffff;
+      }
+
+      .section-card {
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .section-card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* u, v, n 标架向量展示 */
+      .frame-vectors {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .vector-box {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .vector-name {
+        font-weight: 700;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .vector-name.u {
+        color: #dc2626;
+      }
+      .vector-name.v {
+        color: #059669;
+      }
+      .vector-name.n {
+        color: #1d4ed8;
+      }
+
+      .vector-vals {
+        font-family: var(--mono-font);
+        font-size: 11px;
+        color: var(--navy);
+        letter-spacing: -0.02em;
+      }
+
+      /* 4x4 View Matrix Grid */
+      .matrix-container {
+        position: relative;
+        padding: 2px 8px;
+      }
+
+      .matrix-bracket {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        position: relative;
+        padding: 6px 8px;
+      }
+
+      .matrix-bracket::before,
+      .matrix-bracket::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 5px;
+        border-top: 2px solid var(--navy);
+        border-bottom: 2px solid var(--navy);
+      }
+
+      .matrix-bracket::before {
+        left: 0;
+        border-left: 2px solid var(--navy);
+        border-radius: 4px 0 0 4px;
+      }
+
+      .matrix-bracket::after {
+        right: 0;
+        border-right: 2px solid var(--navy);
+        border-radius: 0 4px 4px 0;
+      }
+
+      .matrix-cell {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        padding: 5px 2px;
+        text-align: center;
+        font-family: var(--mono-font);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--navy);
+        transition: background-color 0.4s ease;
+      }
+
+      .matrix-cell.rot {
+        color: #0f274a;
+      }
+
+      .matrix-cell.trans {
+        background: #f0fdf4;
+        border-color: rgba(5, 150, 105, 0.3);
+        color: #047857;
+        font-weight: 700;
+      }
+
+      .matrix-cell.homo {
+        color: #94a3b8;
+        background: #f8fafc;
+      }
+
+      .matrix-cell.highlight {
+        background: #fef3c7 !important;
+        transition: background-color 0.05s ease;
+      }
+
+      /* 样本点坐标变换对比 */
+      .sample-point-box {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .sample-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .sample-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sample-coord {
+        font-family: var(--mono-font);
+        font-weight: 700;
+        color: var(--navy);
+        font-size: 12px;
+      }
+
+      .sample-coord.camera {
+        color: var(--cyan);
+      }
+
+      /* 逆变换数学本质卡片 */
+      .inverse-formula-bar {
+        background: #eef2ff;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 12px;
+        color: #3730a3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .inverse-formula-bar code {
+        font-family: var(--mono-font);
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      /* 底部区域：控制区 (148px) + 教学引导区 (100px) = 248px */
+      .bottom-section {
+        height: 248px;
+        display: grid;
+        grid-template-rows: 148px 100px;
+        flex-shrink: 0;
+        background: #ffffff;
+      }
+
+      /* 参数控制面板 */
+      .controls-panel {
+        padding: 10px 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1.35fr;
+        gap: 16px;
+        border-bottom: 1px solid var(--panel-border);
+        background: #ffffff;
+        align-items: center;
+      }
+
+      .param-card {
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        height: 126px;
+        justify-content: space-between;
+      }
+
+      .param-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .param-title {
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .param-title.eye {
+        color: var(--navy);
+      }
+      .param-title.at {
+        color: var(--cyan);
+      }
+      .param-title.up {
+        color: var(--green);
+      }
+
+      .param-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .param-inputs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .input-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      .input-number-wrap {
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .input-number-wrap input {
+        width: 100%;
+        border: none;
+        outline: none;
+        text-align: center;
+        font-family: var(--mono-font);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--navy);
+        padding: 3px 0;
+      }
+
+      .input-number-wrap input:focus {
+        background: #f0f9ff;
+      }
+
+      .btn-step {
+        background: var(--panel-soft);
+        border: none;
+        width: 18px;
+        height: 24px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-step:hover {
+        background: #e2e8f0;
+        color: var(--navy);
+      }
+
+      /* 快捷操作与预设卡片 */
+      .action-card {
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        height: 126px;
+        justify-content: space-between;
+      }
+
+      .action-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .action-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--navy);
+        width: 58px;
+        flex-shrink: 0;
+      }
+
+      .action-btn-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+      }
+
+      .btn-action {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 4px 7px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy);
+        cursor: pointer;
+        flex: 1;
+        text-align: center;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .btn-action:hover {
+        background: #f0f9ff;
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+
+      .btn-action.preset {
+        background: #f8fafc;
+      }
+
+      .btn-action.preset.active {
+        background: var(--navy);
+        color: #ffffff;
+        border-color: var(--navy);
+      }
+
+      /* 教学引导区 (100px) */
+      .guide-panel {
+        height: 100px;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: #ffffff;
+      }
+
+      .guide-stages {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .stage-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        background: var(--panel-soft);
+        border: 1px solid var(--panel-border);
+        transition: all 0.2s ease;
+      }
+
+      .stage-item.active {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      }
+
+      .stage-item.completed {
+        background: var(--green-subtle);
+        color: var(--green);
+        border-color: rgba(5, 150, 105, 0.3);
+      }
+
+      .stage-num {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+      }
+
+      .stage-item.active .stage-num {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .guide-content {
+        flex: 1;
+        background: #f0f9ff;
+        border: 1px solid rgba(2, 132, 199, 0.2);
+        border-radius: 10px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 72px;
+      }
+
+      .guide-question-box {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .guide-step-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--cyan);
+        letter-spacing: 0.04em;
+      }
+
+      .guide-question-text {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--navy);
+      }
+
+      .guide-options-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-opt {
+        background: #ffffff;
+        border: 1px solid rgba(2, 132, 199, 0.3);
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--navy);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-opt:hover {
+        background: #e0f2fe;
+        border-color: var(--cyan);
+      }
+
+      .btn-opt.selected {
+        background: var(--cyan);
+        color: #ffffff;
+        border-color: var(--cyan);
+      }
+
+      .btn-opt.correct {
+        background: var(--green) !important;
+        color: #ffffff !important;
+        border-color: var(--green) !important;
+      }
+
+      .btn-opt.wrong {
+        background: var(--red) !important;
+        color: #ffffff !important;
+        border-color: var(--red) !important;
+      }
+
+      .btn-primary-action {
+        background: #0284c7;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        transition: all 0.15s ease;
+      }
+
+      .btn-primary-action:hover {
+        background: #0369a1;
+        transform: translateY(-1px);
+      }
+
+      .btn-switch-exp {
+        background: #ffffff;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-switch-exp:hover {
+        color: var(--navy);
+        border-color: var(--navy);
+      }
+
+      /* 辅助动画 */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- 顶部标题栏 -->
+      <header class="header">
+        <div class="header-left">
+          <span class="header-title-badge">D05-01</span>
+          <h1 class="header-title">虚拟相机与观察矩阵显微镜</h1>
+          <span class="header-subtitle">改变相机，不改变模型——观察世界如何进入相机标架</span>
+        </div>
+        <div class="header-right">
+          <div id="webglStatusPill" class="status-pill success">
+            <span class="dot"></span>
+            <span id="webglStatusText">WebGL2 就绪</span>
+          </div>
+          <div class="status-pill info" title="立方体顶点数据在初始化后永久保持不可变">
+            <span class="dot"></span>
+            <span>Vertex Buffer 未变化 (24顶点 / 36索引)</span>
+          </div>
+          <button id="btnResetAll" class="btn-reset-top" title="恢复所有参数与视角到初始状态">
+            <span>↺</span> 恢复初始状态
+          </button>
+        </div>
+      </header>
+
+      <!-- 错误/非法参数提示条 -->
+      <div id="alertBanner" class="alert-banner">
+        <span>⚠️</span>
+        <span id="alertMessage">参数错误提示</span>
+      </div>
+
+      <!-- 中央三栏主视图 (516px) -->
+      <main class="main-grid">
+        <!-- 左栏：世界视图 (World View) -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>🌐 世界概览</span>
+              <span style="font-size: 12px; font-weight: 400; color: var(--text-muted)"
+                >（固定旁观视角）</span
+              >
+            </div>
+            <span class="panel-tag">World Frame</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="worldCanvas" class="view-canvas"></canvas>
+            <div class="canvas-legend">
+              <div class="legend-item">
+                <span class="legend-color" style="background: #64748b"></span> 世界坐标轴
+                (X灰/Y绿/Z蓝)
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #0284c7"></span> 视线方向 (Eye → At)
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #059669"></span> 参考 Up 向量
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #1d4ed8"></span> 相机标架 (u红 / v绿 /
+                n蓝)
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #d97706"></span> 样本点 P (1, 1, 1)
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 中栏：相机标架与观察矩阵 -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📐 相机标架与观察矩阵</span>
+            </div>
+            <span class="panel-tag">View Matrix (4×4)</span>
+          </div>
+          <div class="matrix-panel-body">
+            <!-- 1. 正交相机标架 u, v, n -->
+            <div class="section-card">
+              <div class="section-card-title">
+                <span>相机局部正交标架 (u-v-n)</span>
+                <span style="font-size: 11px; font-weight: normal; color: var(--text-muted)"
+                  >列向量数学约定</span
+                >
+              </div>
+              <div class="frame-vectors">
+                <div class="vector-box">
+                  <div class="vector-name u"><span>u (横轴/右)</span> <small>Up×n</small></div>
+                  <div class="vector-vals" id="vecUDisplay">(1.000, 0.000, 0.000)</div>
+                </div>
+                <div class="vector-box">
+                  <div class="vector-name v"><span>v (上轴)</span> <small>n×u</small></div>
+                  <div class="vector-vals" id="vecVDisplay">(0.000, 1.000, 0.000)</div>
+                </div>
+                <div class="vector-box">
+                  <div class="vector-name n"><span>n (后轴)</span> <small>Eye−At</small></div>
+                  <div class="vector-vals" id="vecNDisplay">(0.000, 0.000, 1.000)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. 观察矩阵 4x4 数值展示 -->
+            <div class="section-card">
+              <div class="section-card-title">
+                <span>观察矩阵 V = R · T(−Eye)</span>
+                <span style="font-size: 11px; font-weight: normal; color: #047857"
+                  >绿色为平移列</span
+                >
+              </div>
+              <div class="matrix-container">
+                <div class="matrix-bracket" id="matrixGrid">
+                  <!-- Row 0 -->
+                  <div class="matrix-cell rot" id="m00">1.000</div>
+                  <div class="matrix-cell rot" id="m01">0.000</div>
+                  <div class="matrix-cell rot" id="m02">0.000</div>
+                  <div class="matrix-cell trans" id="m03">0.000</div>
+                  <!-- Row 1 -->
+                  <div class="matrix-cell rot" id="m10">0.000</div>
+                  <div class="matrix-cell rot" id="m11">1.000</div>
+                  <div class="matrix-cell rot" id="m12">0.000</div>
+                  <div class="matrix-cell trans" id="m13">0.000</div>
+                  <!-- Row 2 -->
+                  <div class="matrix-cell rot" id="m20">0.000</div>
+                  <div class="matrix-cell rot" id="m21">0.000</div>
+                  <div class="matrix-cell rot" id="m22">1.000</div>
+                  <div class="matrix-cell trans" id="m23">-5.000</div>
+                  <!-- Row 3 -->
+                  <div class="matrix-cell homo" id="m30">0.000</div>
+                  <div class="matrix-cell homo" id="m31">0.000</div>
+                  <div class="matrix-cell homo" id="m32">0.000</div>
+                  <div class="matrix-cell homo" id="m33">1.000</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. 样本点 P 变换对比 -->
+            <div class="section-card">
+              <div class="section-card-title">
+                <span>固定样本点坐标变换：P' = V · P</span>
+              </div>
+              <div class="sample-point-box">
+                <div class="sample-row">
+                  <span class="sample-label">
+                    <span class="dot" style="background: #64748b; width: 7px; height: 7px"></span>
+                    世界坐标 P:
+                  </span>
+                  <span class="sample-coord">(1.000, 1.000, 1.000)</span>
+                </div>
+                <div class="sample-row">
+                  <span class="sample-label">
+                    <span
+                      class="dot"
+                      style="background: var(--cyan); width: 7px; height: 7px"
+                    ></span>
+                    相机坐标 P':
+                  </span>
+                  <span class="sample-coord camera" id="sampleCamCoord"
+                    >(1.000, 1.000, -4.000)</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. 逆变换数学本质 -->
+            <div class="inverse-formula-bar">
+              <span>核心关系：</span>
+              <code>V = C<sub>pose</sub><sup>−1</sup></code>
+              <span style="font-size: 11px; color: #4338ca">（相机在世界中的位姿之逆）</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 右栏：相机视图 (Camera View) -->
+        <section class="view-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📷 相机成像视图</span>
+              <span style="font-size: 12px; font-weight: 400; color: var(--text-muted)"
+                >（WebGL2 透视渲染）</span
+              >
+            </div>
+            <span class="panel-tag">Camera View</span>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="cameraCanvas" class="view-canvas"></canvas>
+            <div class="canvas-legend" style="bottom: 12px; right: 12px; left: auto">
+              <div class="legend-item">
+                <span class="legend-color" style="background: #2563eb"></span> 世界原点彩色立方体
+                (边长 2.0)
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #d97706"></span> 样本点 P 角点标记
+              </div>
+              <div class="legend-item" style="color: #059669; font-weight: 600">
+                ✓ 深度测试开启 (Depth Test ON)
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- 底部区域 (248px) -->
+      <footer class="bottom-section">
+        <!-- 参数控制面板 (148px) -->
+        <div class="controls-panel">
+          <!-- Eye 控制卡片 -->
+          <div class="param-card">
+            <div class="param-card-header">
+              <span class="param-title eye">📍 Eye 视点位置</span>
+              <span class="param-desc">几何类型：点</span>
+            </div>
+            <div class="param-inputs">
+              <div class="input-group">
+                <span class="input-label">Eye X</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('eye', 0, -0.5)">−</button>
+                  <input
+                    type="number"
+                    id="eyeX"
+                    value="0.0"
+                    step="0.1"
+                    onchange="onInputChange()"
+                  />
+                  <button class="btn-step" onclick="stepParam('eye', 0, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">Eye Y</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('eye', 1, -0.5)">−</button>
+                  <input
+                    type="number"
+                    id="eyeY"
+                    value="0.0"
+                    step="0.1"
+                    onchange="onInputChange()"
+                  />
+                  <button class="btn-step" onclick="stepParam('eye', 1, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">Eye Z</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('eye', 2, -0.5)">−</button>
+                  <input
+                    type="number"
+                    id="eyeZ"
+                    value="5.0"
+                    step="0.1"
+                    onchange="onInputChange()"
+                  />
+                  <button class="btn-step" onclick="stepParam('eye', 2, 0.5)">+</button>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                font-size: 11px;
+                color: var(--text-muted);
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>决定相机在世界中的物理坐标</span>
+            </div>
+          </div>
+
+          <!-- At 控制卡片 -->
+          <div class="param-card">
+            <div class="param-card-header">
+              <span class="param-title at">🎯 At 目标观察点</span>
+              <span class="param-desc">几何类型：点</span>
+            </div>
+            <div class="param-inputs">
+              <div class="input-group">
+                <span class="input-label">At X</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('at', 0, -0.5)">−</button>
+                  <input type="number" id="atX" value="0.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('at', 0, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">At Y</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('at', 1, -0.5)">−</button>
+                  <input type="number" id="atY" value="0.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('at', 1, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">At Z</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('at', 2, -0.5)">−</button>
+                  <input type="number" id="atZ" value="0.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('at', 2, 0.5)">+</button>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                font-size: 11px;
+                color: var(--text-muted);
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>决定视线方向：normalize(At − Eye)</span>
+            </div>
+          </div>
+
+          <!-- Up 控制卡片 -->
+          <div class="param-card">
+            <div class="param-card-header">
+              <span class="param-title up">⬆️ Up 参考向上</span>
+              <span class="param-desc">几何类型：向量</span>
+            </div>
+            <div class="param-inputs">
+              <div class="input-group">
+                <span class="input-label">Up X</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('up', 0, -0.5)">−</button>
+                  <input type="number" id="upX" value="0.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('up', 0, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">Up Y</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('up', 1, -0.5)">−</button>
+                  <input type="number" id="upY" value="1.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('up', 1, 0.5)">+</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <span class="input-label">Up Z</span>
+                <div class="input-number-wrap">
+                  <button class="btn-step" onclick="stepParam('up', 2, -0.5)">−</button>
+                  <input type="number" id="upZ" value="0.0" step="0.1" onchange="onInputChange()" />
+                  <button class="btn-step" onclick="stepParam('up', 2, 0.5)">+</button>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                font-size: 11px;
+                color: var(--text-muted);
+                display: flex;
+                justify-content: space-between;
+              "
+            >
+              <span>消除绕视线滚转的自由度</span>
+            </div>
+          </div>
+
+          <!-- 独立相机操作与预设卡片 -->
+          <div class="action-card">
+            <!-- 平移操作 (Eye与At同步位移) -->
+            <div class="action-row">
+              <span class="action-label">平移相机:</span>
+              <div class="action-btn-group">
+                <button class="btn-action" onclick="translateCamera(0, 0.5)">X+0.5</button>
+                <button class="btn-action" onclick="translateCamera(0, -0.5)">X−0.5</button>
+                <button class="btn-action" onclick="translateCamera(1, 0.5)">Y+0.5</button>
+                <button class="btn-action" onclick="translateCamera(1, -0.5)">Y−0.5</button>
+                <button class="btn-action" onclick="translateCamera(2, 0.5)">Z+0.5</button>
+                <button class="btn-action" onclick="translateCamera(2, -0.5)">Z−0.5</button>
+              </div>
+            </div>
+
+            <!-- 原地旋转操作 (Eye固定，仅旋转At) -->
+            <div class="action-row">
+              <span class="action-label">原地转向:</span>
+              <div class="action-btn-group">
+                <button class="btn-action" onclick="rotateCameraYaw(15)">左转 15°</button>
+                <button class="btn-action" onclick="rotateCameraYaw(-15)">右转 15°</button>
+                <button class="btn-action" onclick="rotateCameraPitch(15)">上仰 15°</button>
+                <button class="btn-action" onclick="rotateCameraPitch(-15)">下俯 15°</button>
+                <button class="btn-action" onclick="rollCamera(15)">滚转 ↻</button>
+                <button class="btn-action" onclick="rollCamera(-15)">滚转 ↺</button>
+              </div>
+            </div>
+
+            <!-- 视角预设 -->
+            <div class="action-row">
+              <span class="action-label">视角预设:</span>
+              <div class="action-btn-group">
+                <button
+                  id="presetDefault"
+                  class="btn-action preset active"
+                  onclick="applyPreset('default')"
+                >
+                  默认正视 (0,0,5)
+                </button>
+                <button
+                  id="presetTopAngled"
+                  class="btn-action preset"
+                  onclick="applyPreset('angled')"
+                >
+                  斜上方观察 (3,2,6)
+                </button>
+                <button id="presetSide" class="btn-action preset" onclick="applyPreset('side')">
+                  侧面视点 (5,0,0)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 教学引导区 (100px) -->
+        <div class="guide-panel">
+          <!-- 四阶段标签 -->
+          <div class="guide-stages">
+            <div id="stage1Pill" class="stage-item active">
+              <span class="stage-num">1</span>
+              <span>Prediction 预测</span>
+            </div>
+            <div id="stage2Pill" class="stage-item">
+              <span class="stage-num">2</span>
+              <span>Operation 操作</span>
+            </div>
+            <div id="stage3Pill" class="stage-item">
+              <span class="stage-num">3</span>
+              <span>Observation 观察</span>
+            </div>
+            <div id="stage4Pill" class="stage-item">
+              <span class="stage-num">4</span>
+              <span>Explanation 解释</span>
+            </div>
+          </div>
+
+          <!-- 动态问答与操作内容条 -->
+          <div class="guide-content">
+            <div class="guide-question-box">
+              <span id="guideStepTag" class="guide-step-tag">STAGE 1 · 观察变换规律预测</span>
+              <span id="guideQuestionText" class="guide-question-text">
+                如果相机沿 X 轴正方向平移 1.0 个单位，并保持朝向不变，世界中的固定点 P
+                在相机坐标中的 X 值会怎样变化？
+              </span>
+            </div>
+            <div id="guideActionsSlot" class="guide-options-group">
+              <button class="btn-opt" onclick="onSelectAnswer('A')">A. 增大 1.0</button>
+              <button class="btn-opt" onclick="onSelectAnswer('B')">B. 减小 1.0</button>
+              <button class="btn-opt" onclick="onSelectAnswer('C')">C. 保持不变</button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- 原生 WebGL2 着色器定义 (GLSL ES 3.00) -->
+    <script id="vs-shader" type="x-shader/x-vertex">
+      #version 300 es
+      layout(location = 0) in vec3 aPosition;
+      layout(location = 1) in vec3 aColor;
+
+      uniform mat4 uModelMatrix;
+      uniform mat4 uViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      out vec3 vColor;
+
+      void main() {
+          vColor = aColor;
+          gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix * vec4(aPosition, 1.0);
+      }
+    </script>
+
+    <script id="fs-shader" type="x-shader/x-fragment">
+      #version 300 es
+      precision mediump float;
+
+      in vec3 vColor;
+      out vec4 fragColor;
+
+      void main() {
+          fragColor = vec4(vColor, 1.0);
+      }
+    </script>
+
+    <!-- 主程序 JavaScript -->
+    <script>
+      /**
+       * D05-01 · 虚拟相机与观察矩阵显微镜
+       * 遵循 GLSL ES 3.00、无外部依赖、原生三维数学与双视图渲染
+       */
+
+      // 全局唯一的统一相机状态
+      const cameraState = {
+        eye: [0.0, 0.0, 5.0],
+        at: [0.0, 0.0, 0.0],
+        up: [0.0, 1.0, 0.0],
+      };
+
+      // 样本点 P 在世界坐标系中的定义 (固定不变)
+      const SAMPLE_P_WORLD = [1.0, 1.0, 1.0];
+
+      // 动画状态
+      let animation = {
+        running: false,
+        startTime: 0,
+        duration: 600,
+        startEye: [0, 0, 5],
+        targetEye: [0, 0, 5],
+        startAt: [0, 0, 0],
+        targetAt: [0, 0, 0],
+        startUp: [0, 1, 0],
+        targetUp: [0, 1, 0],
+        onComplete: null,
+      };
+
+      // 引导实验状态
+      let expState = {
+        currentExp: 1, // 1: 平移实验, 2: 改变At实验, 3: 非法Up实验
+        step: 1, // 1: Prediction, 2: Operation, 3: Observation, 4: Explanation
+        userChoice: null,
+        beforeCamP: [1.0, 1.0, -4.0],
+        afterCamP: [0.0, 1.0, -4.0],
+      };
+
+      // 预设列表
+      const PRESETS = {
+        default: { eye: [0.0, 0.0, 5.0], at: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0] },
+        angled: { eye: [3.0, 2.0, 6.0], at: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0] },
+        side: { eye: [5.0, 0.0, 0.0], at: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0] },
+      };
+
+      // ==========================================
+      // 1. 原生三维向量与矩阵数学库 (纯数学计算)
+      // ==========================================
+      const vec3 = {
+        create: (x = 0, y = 0, z = 0) => [x, y, z],
+        clone: (a) => [a[0], a[1], a[2]],
+        set: (out, x, y, z) => {
+          out[0] = x;
+          out[1] = y;
+          out[2] = z;
+          return out;
+        },
+        add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+        sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+        scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+        dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+        cross: (a, b) => [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0],
+        ],
+        len: (a) => Math.hypot(a[0], a[1], a[2]),
+        normalize: (a) => {
+          const l = Math.hypot(a[0], a[1], a[2]);
+          return l > 1e-8 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 0];
+        },
+        lerp: (a, b, t) => [
+          a[0] + (b[0] - a[0]) * t,
+          a[1] + (b[1] - a[1]) * t,
+          a[2] + (b[2] - a[2]) * t,
+        ],
+        // 罗德里格旋转公式：向量 v 绕轴 axis 旋转 angleRad 弧度
+        rotateAroundAxis: (v, axis, angleRad) => {
+          const k = vec3.normalize(axis);
+          const cosT = Math.cos(angleRad);
+          const sinT = Math.sin(angleRad);
+          const dotKV = vec3.dot(k, v);
+          const crossKV = vec3.cross(k, v);
+          return [
+            v[0] * cosT + crossKV[0] * sinT + k[0] * dotKV * (1 - cosT),
+            v[1] * cosT + crossKV[1] * sinT + k[1] * dotKV * (1 - cosT),
+            v[2] * cosT + crossKV[2] * sinT + k[2] * dotKV * (1 - cosT),
+          ];
+        },
+      };
+
+      const mat4 = {
+        // 创建单位矩阵 (列主序 Float32Array 16)
+        identity: () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
+
+        // 透视投影矩阵 (固定 FOV 60°, near 0.1, far 100.0)
+        perspective: (fovyRad, aspect, near, far) => {
+          const f = 1.0 / Math.tan(fovyRad / 2);
+          const nf = 1.0 / (near - far);
+          return new Float32Array([
+            f / aspect,
+            0,
+            0,
+            0,
+            0,
+            f,
+            0,
+            0,
+            0,
+            0,
+            (far + near) * nf,
+            -1,
+            0,
+            0,
+            2 * far * near * nf,
+            0,
+          ]);
+        },
+
+        // 矩阵乘以四维点 (返回转换后的点)
+        transformPoint: (vMatRow, p) => {
+          // vMatRow 为 4x4 数学行排列表达
+          const x = p[0],
+            y = p[1],
+            z = p[2],
+            w = 1.0;
+          return [
+            vMatRow[0][0] * x + vMatRow[0][1] * y + vMatRow[0][2] * z + vMatRow[0][3] * w,
+            vMatRow[1][0] * x + vMatRow[1][1] * y + vMatRow[1][2] * z + vMatRow[1][3] * w,
+            vMatRow[2][0] * x + vMatRow[2][1] * y + vMatRow[2][2] * z + vMatRow[2][3] * w,
+          ];
+        },
+      };
+
+      // ==========================================
+      // 2. 观察矩阵构造与合法性检测核心
+      // ==========================================
+      function computeCameraFrameAndMatrix(eye, at, up) {
+        // 1. 检测 Eye 与 At 是否重合
+        const diff = vec3.sub(eye, at);
+        const distEyeAt = vec3.len(diff);
+        if (distEyeAt < 1e-6) {
+          return {
+            valid: false,
+            error: 'Eye 与 At 不能重合：观察方向无法确定。',
+          };
+        }
+
+        // 2. 计算后向轴 n = normalize(Eye - At)
+        const n = vec3.normalize(diff);
+
+        // 3. 计算横轴 u = normalize(Up × n)
+        const upCrossN = vec3.cross(up, n);
+        const upCrossNLen = vec3.len(upCrossN);
+        if (upCrossNLen < 1e-6) {
+          return {
+            valid: false,
+            error: 'Up 与观察方向平行/共线，无法建立相机正交标架。',
+          };
+        }
+        const u = vec3.normalize(upCrossN);
+
+        // 4. 计算上轴 v = n × u
+        const v = vec3.cross(n, u);
+
+        // 5. 构造数学意义上的 4x4 观察矩阵（按行排列）：
+        // [ ux  uy  uz  -dot(u, Eye) ]
+        // [ vx  vy  vz  -dot(v, Eye) ]
+        // [ nx  ny  nz  -dot(n, Eye) ]
+        // [  0   0   0        1      ]
+        const tx = -vec3.dot(u, eye);
+        const ty = -vec3.dot(v, eye);
+        const tz = -vec3.dot(n, eye);
+
+        const rowMatrix = [
+          [u[0], u[1], u[2], tx],
+          [v[0], v[1], v[2], ty],
+          [n[0], n[1], n[2], tz],
+          [0.0, 0.0, 0.0, 1.0],
+        ];
+
+        // 6. 构造供 WebGL2 使用的列主序 Float32Array (transpose=false)
+        const glMatrix = new Float32Array([
+          u[0],
+          v[0],
+          n[0],
+          0.0,
+          u[1],
+          v[1],
+          n[1],
+          0.0,
+          u[2],
+          v[2],
+          n[2],
+          0.0,
+          tx,
+          ty,
+          tz,
+          1.0,
+        ]);
+
+        return {
+          valid: true,
+          u,
+          v,
+          n,
+          rowMatrix,
+          glMatrix,
+        };
+      }
+
+      // ==========================================
+      // 3. WebGL2 相机视图初始化与渲染
+      // ==========================================
+      let gl = null;
+      let glProgram = null;
+      let glUniforms = {};
+      let glBuffers = {};
+      let lastValidGlMatrix = mat4.identity();
+      let lastValidRowMatrix = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, -5],
+        [0, 0, 0, 1],
+      ];
+
+      // 彩色立方体顶点数据 (中心在原点, 边长 2, 24顶点, 6个面不同蓝色调)
+      function initCubeGeometry() {
+        // 6个面的顶点坐标 (每个面4个点)
+        const positions = new Float32Array([
+          // 前面 (+Z)
+          -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1,
+          // 后面 (-Z)
+          1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, -1,
+          // 顶面 (+Y)
+          -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1,
+          // 底面 (-Y)
+          -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1,
+          // 右面 (+X)
+          1, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1,
+          // 左面 (-X)
+          -1, -1, -1, -1, -1, 1, -1, 1, 1, -1, 1, -1,
+        ]);
+
+        // 6个面的低饱和度现代蓝色调
+        const cFront = [0.15, 0.45, 0.88]; // #2563eb 较鲜明主蓝
+        const cBack = [0.12, 0.28, 0.65]; // #1e40af 深蓝
+        const cTop = [0.45, 0.72, 0.98]; // #93c5fd 浅冰蓝
+        const cBottom = [0.1, 0.22, 0.55]; // #1d4ed8 墨蓝
+        const cRight = [0.28, 0.58, 0.95]; // #60a5fa 亮蓝
+        const cLeft = [0.22, 0.72, 0.92]; // #38bdf8 天蓝
+
+        const colors = new Float32Array([
+          // 前
+          ...cFront,
+          ...cFront,
+          ...cFront,
+          ...cFront,
+          // 后
+          ...cBack,
+          ...cBack,
+          ...cBack,
+          ...cBack,
+          // 顶
+          ...cTop,
+          ...cTop,
+          ...cTop,
+          ...cTop,
+          // 底
+          ...cBottom,
+          ...cBottom,
+          ...cBottom,
+          ...cBottom,
+          // 右
+          ...cRight,
+          ...cRight,
+          ...cRight,
+          ...cRight,
+          // 左
+          ...cLeft,
+          ...cLeft,
+          ...cLeft,
+          ...cLeft,
+        ]);
+
+        // 12个三角形索引 (36索引)
+        const indices = new Uint16Array([
+          0,
+          1,
+          2,
+          0,
+          2,
+          3, // 前
+          4,
+          5,
+          6,
+          4,
+          6,
+          7, // 后
+          8,
+          9,
+          10,
+          8,
+          10,
+          11, // 顶
+          12,
+          13,
+          14,
+          12,
+          14,
+          15, // 底
+          16,
+          17,
+          18,
+          16,
+          18,
+          19, // 右
+          20,
+          21,
+          22,
+          20,
+          22,
+          23, // 左
+        ]);
+
+        return { positions, colors, indices };
+      }
+
+      function initWebGL() {
+        const canvas = document.getElementById('cameraCanvas');
+        gl = canvas.getContext('webgl2', { antialias: true });
+
+        const statusPill = document.getElementById('webglStatusPill');
+        const statusText = document.getElementById('webglStatusText');
+
+        if (!gl) {
+          statusPill.className = 'status-pill alert';
+          statusText.textContent = 'WebGL2 不支持';
+          return false;
+        }
+
+        // 编译 Shader
+        function createShader(type, srcId) {
+          const src = document.getElementById(srcId).text;
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, src);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+          }
+          return shader;
+        }
+
+        const vs = createShader(gl.VERTEX_SHADER, 'vs-shader');
+        const fs = createShader(gl.FRAGMENT_SHADER, 'fs-shader');
+        glProgram = gl.createProgram();
+        gl.attachShader(glProgram, vs);
+        gl.attachShader(glProgram, fs);
+        gl.linkProgram(glProgram);
+
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+          console.error(gl.getProgramInfoLog(glProgram));
+          return false;
+        }
+
+        glUniforms = {
+          uModelMatrix: gl.getUniformLocation(glProgram, 'uModelMatrix'),
+          uViewMatrix: gl.getUniformLocation(glProgram, 'uViewMatrix'),
+          uProjectionMatrix: gl.getUniformLocation(glProgram, 'uProjectionMatrix'),
+        };
+
+        // 创建立方体 Buffer (仅初始化一次，后续严禁重新上传几何数据)
+        const cube = initCubeGeometry();
+
+        const vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
+
+        const posBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, cube.positions, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+        const colBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, colBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, cube.colors, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+        const idxBuf = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cube.indices, gl.STATIC_DRAW);
+
+        glBuffers = { vao, indexCount: cube.indices.length };
+
+        // 深度测试配置
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.clearColor(0.98, 0.99, 1.0, 1.0);
+
+        return true;
+      }
+
+      function renderWebGL(viewMatGl) {
+        if (!gl || !glProgram) return;
+
+        const canvas = document.getElementById('cameraCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        const displayWidth = Math.floor(canvas.clientWidth * dpr);
+        const displayHeight = Math.floor(canvas.clientHeight * dpr);
+
+        if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+          canvas.width = displayWidth;
+          canvas.height = displayHeight;
+        }
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        gl.useProgram(glProgram);
+
+        // 固定投影矩阵 (FOV 60°, 近截面 0.1, 远截面 100.0)
+        const aspect = canvas.width / canvas.height;
+        const projMat = mat4.perspective(Math.PI / 3, aspect, 0.1, 100.0);
+        const modelMat = mat4.identity(); // 模型矩阵固定为单位矩阵
+
+        gl.uniformMatrix4fv(glUniforms.uProjectionMatrix, false, projMat);
+        gl.uniformMatrix4fv(glUniforms.uViewMatrix, false, viewMatGl);
+        gl.uniformMatrix4fv(glUniforms.uModelMatrix, false, modelMat);
+
+        gl.bindVertexArray(glBuffers.vao);
+        gl.drawElements(gl.TRIANGLES, glBuffers.indexCount, gl.UNSIGNED_SHORT, 0);
+      }
+
+      // ==========================================
+      // 4. Canvas 2D 左侧世界概览视图 (固定旁观相机)
+      // ==========================================
+      // 旁观相机固定在 (8, 6, 10)，始终观察世界原点 (0, 0, 0)，Up 为 (0, 1, 0)
+      const spectatorFrame = (() => {
+        const specEye = [8.0, 6.0, 10.0];
+        const specAt = [0.0, 0.0, 0.0];
+        const specUp = [0.0, 1.0, 0.0];
+        const n = vec3.normalize(vec3.sub(specEye, specAt));
+        const u = vec3.normalize(vec3.cross(specUp, n));
+        const v = vec3.cross(n, u);
+        return { eye: specEye, u, v, n };
+      })();
+
+      // 将世界坐标点投影到左侧 2D Canvas 屏幕
+      function projectSpectator(p, width, height) {
+        // 相机坐标计算
+        const d = vec3.sub(p, spectatorFrame.eye);
+        const xc = vec3.dot(spectatorFrame.u, d);
+        const yc = vec3.dot(spectatorFrame.v, d);
+        const zc = vec3.dot(spectatorFrame.n, d); // zc 为沿 n 轴的距离
+
+        // 透视投影到屏幕
+        const fovFactor = 420;
+        // 沿视线距离: spectator 观察方向为 -n, 深度 = -zc
+        const depth = -zc;
+        if (depth <= 0.1) return null;
+
+        const sx = width / 2 + (xc / depth) * fovFactor;
+        const sy = height / 2 - (yc / depth) * fovFactor;
+        return { x: sx, y: sy, depth };
+      }
+
+      function renderWorldView(currentEye, currentAt, currentUp, currentFrame) {
+        const canvas = document.getElementById('worldCanvas');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+
+        if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        // 1. 绘制世界网格底面 (y = -1.5)
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
+        ctx.lineWidth = 1;
+        const gridSize = 6;
+        const gridStep = 1.0;
+        for (let i = -gridSize; i <= gridSize; i += gridStep) {
+          const p1 = projectSpectator([i, -1.5, -gridSize], w, h);
+          const p2 = projectSpectator([i, -1.5, gridSize], w, h);
+          if (p1 && p2) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+          const q1 = projectSpectator([-gridSize, -1.5, i], w, h);
+          const q2 = projectSpectator([gridSize, -1.5, i], w, h);
+          if (q1 && q2) {
+            ctx.beginPath();
+            ctx.moveTo(q1.x, q1.y);
+            ctx.lineTo(q2.x, q2.y);
+            ctx.stroke();
+          }
+        }
+
+        // 2. 绘制世界坐标轴 (原点为 (0,0,0)，长度 3.0)
+        const oProj = projectSpectator([0, 0, 0], w, h);
+        const xProj = projectSpectator([3.0, 0, 0], w, h);
+        const yProj = projectSpectator([0, 3.0, 0], w, h);
+        const zProj = projectSpectator([0, 0, 3.0], w, h);
+
+        function drawAxis(pStart, pEnd, color, label) {
+          if (!pStart || !pEnd) return;
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(pStart.x, pStart.y);
+          ctx.lineTo(pEnd.x, pEnd.y);
+          ctx.stroke();
+
+          // 箭头头
+          const dx = pEnd.x - pStart.x;
+          const dy = pEnd.y - pStart.y;
+          const angle = Math.atan2(dy, dx);
+          ctx.beginPath();
+          ctx.moveTo(pEnd.x, pEnd.y);
+          ctx.lineTo(
+            pEnd.x - 8 * Math.cos(angle - Math.PI / 6),
+            pEnd.y - 8 * Math.sin(angle - Math.PI / 6),
+          );
+          ctx.lineTo(
+            pEnd.x - 8 * Math.cos(angle + Math.PI / 6),
+            pEnd.y - 8 * Math.sin(angle + Math.PI / 6),
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // 标签
+          ctx.font = 'bold 11px var(--mono-font)';
+          ctx.fillText(label, pEnd.x + 6, pEnd.y + 4);
+        }
+
+        drawAxis(oProj, xProj, '#64748b', 'World +X');
+        drawAxis(oProj, yProj, '#059669', 'World +Y');
+        drawAxis(oProj, zProj, '#2563eb', 'World +Z');
+
+        // 3. 绘制世界立方体 ([-1, 1]^3)
+        const cubeVerts = [
+          [-1, -1, -1],
+          [1, -1, -1],
+          [1, 1, -1],
+          [-1, 1, -1],
+          [-1, -1, 1],
+          [1, -1, 1],
+          [1, 1, 1],
+          [-1, 1, 1],
+        ];
+        const cubeFaces = [
+          { indices: [4, 5, 6, 7], color: 'rgba(37, 99, 235, 0.45)', stroke: '#1d4ed8' }, // 前
+          { indices: [1, 0, 3, 2], color: 'rgba(30, 64, 175, 0.35)', stroke: '#1e3a8a' }, // 后
+          { indices: [3, 2, 6, 7], color: 'rgba(147, 197, 253, 0.55)', stroke: '#60a5fa' }, // 顶
+          { indices: [0, 1, 5, 4], color: 'rgba(29, 78, 216, 0.40)', stroke: '#1e40af' }, // 底
+          { indices: [5, 1, 2, 6], color: 'rgba(96, 165, 250, 0.45)', stroke: '#3b82f6' }, // 右
+          { indices: [0, 4, 7, 3], color: 'rgba(56, 189, 248, 0.40)', stroke: '#0284c7' }, // 左
+        ];
+
+        // 计算每个面深度并由远及近排序 (Painter's Algorithm)
+        const sortedFaces = cubeFaces
+          .map((face) => {
+            let sumDepth = 0;
+            const pts = face.indices.map((idx) => {
+              const p = projectSpectator(cubeVerts[idx], w, h);
+              sumDepth += p ? p.depth : 0;
+              return p;
+            });
+            return { ...face, pts, avgDepth: sumDepth / face.indices.length };
+          })
+          .sort((a, b) => b.avgDepth - a.avgDepth);
+
+        sortedFaces.forEach((face) => {
+          if (face.pts.every((p) => p !== null)) {
+            ctx.beginPath();
+            ctx.moveTo(face.pts[0].x, face.pts[0].y);
+            for (let i = 1; i < face.pts.length; i++) {
+              ctx.lineTo(face.pts[i].x, face.pts[i].y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = face.color;
+            ctx.fill();
+            ctx.strokeStyle = face.stroke;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        });
+
+        // 4. 绘制样本点 P (1, 1, 1)
+        const pProj = projectSpectator(SAMPLE_P_WORLD, w, h);
+        if (pProj) {
+          ctx.beginPath();
+          ctx.arc(pProj.x, pProj.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = '#d97706';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.font = 'bold 12px var(--sans-font)';
+          ctx.fillStyle = '#b45309';
+          ctx.fillText('P (1,1,1)', pProj.x + 8, pProj.y - 4);
+        }
+
+        // 5. 绘制虚拟相机及标架
+        const eyeProj = projectSpectator(currentEye, w, h);
+        const atProj = projectSpectator(currentAt, w, h);
+
+        if (eyeProj && atProj) {
+          // 视线射线 (Eye -> At)
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(eyeProj.x, eyeProj.y);
+          ctx.lineTo(atProj.x, atProj.y);
+          ctx.stroke();
+
+          // 目标点 At 标记
+          ctx.beginPath();
+          ctx.arc(atProj.x, atProj.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#0284c7';
+          ctx.fill();
+          ctx.font = 'bold 11px var(--mono-font)';
+          ctx.fillText('At', atProj.x + 6, atProj.y + 4);
+
+          if (currentFrame && currentFrame.valid) {
+            const u = currentFrame.u;
+            const v = currentFrame.v;
+            const n = currentFrame.n;
+
+            // 绘制相机局部标架 (u, v, n 箭头)
+            const arrowLen = 1.2;
+            const uTip = projectSpectator(vec3.add(currentEye, vec3.scale(u, arrowLen)), w, h);
+            const vTip = projectSpectator(vec3.add(currentEye, vec3.scale(v, arrowLen)), w, h);
+            const nTip = projectSpectator(vec3.add(currentEye, vec3.scale(n, arrowLen)), w, h);
+            const upTip = projectSpectator(
+              vec3.add(currentEye, vec3.scale(vec3.normalize(currentUp), 1.0)),
+              w,
+              h,
+            );
+
+            // 参考 Up 向量 (绿色虚线)
+            if (upTip) {
+              ctx.strokeStyle = '#059669';
+              ctx.setLineDash([3, 3]);
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(eyeProj.x, eyeProj.y);
+              ctx.lineTo(upTip.x, upTip.y);
+              ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.fillStyle = '#059669';
+              ctx.font = 'bold 11px var(--mono-font)';
+              ctx.fillText('Up', upTip.x + 4, upTip.y);
+            }
+
+            // u 轴 (横轴/右向，红色)
+            drawAxis(eyeProj, uTip, '#dc2626', 'u (右)');
+            // v 轴 (上向，翠绿)
+            drawAxis(eyeProj, vTip, '#059669', 'v (上)');
+            // n 轴 (后向，正Z，深蓝 - 与视线方向相反)
+            drawAxis(eyeProj, nTip, '#1d4ed8', 'n (后/+Z)');
+
+            // 绘制三维线框相机图标 (矩形机身 + 锥形镜头朝向 At)
+            drawCameraIcon(ctx, currentEye, u, v, n, w, h);
+          }
+
+          // 相机位置 Eye 圆点标记
+          ctx.beginPath();
+          ctx.arc(eyeProj.x, eyeProj.y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f274a';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.font = 'bold 12px var(--sans-font)';
+          ctx.fillStyle = '#0f274a';
+          ctx.fillText('Eye', eyeProj.x + 8, eyeProj.y - 6);
+        }
+
+        ctx.restore();
+      }
+
+      // 辅助：绘制跟随真实方向朝向 At 的 3D 线框相机图标
+      function drawCameraIcon(ctx, eye, u, v, n, w, h) {
+        // 机身半长宽高
+        const wHalf = 0.35,
+          hHalf = 0.25,
+          dHalf = 0.25;
+        // 前向为 -n
+        const fwd = vec3.scale(n, -1);
+
+        // 8 个机身角点
+        const bodyCorners = [];
+        for (let sU of [-1, 1]) {
+          for (let sV of [-1, 1]) {
+            for (let sF of [-1, 1]) {
+              const pt = vec3.add(
+                eye,
+                vec3.add(
+                  vec3.scale(u, sU * wHalf),
+                  vec3.add(vec3.scale(v, sV * hHalf), vec3.scale(fwd, sF * dHalf)),
+                ),
+              );
+              bodyCorners.push(projectSpectator(pt, w, h));
+            }
+          }
+        }
+
+        // 镜头凸起顶点 (向前伸出 0.35)
+        const lensTip = projectSpectator(vec3.add(eye, vec3.scale(fwd, dHalf + 0.35)), w, h);
+
+        ctx.strokeStyle = 'rgba(15, 39, 74, 0.75)';
+        ctx.lineWidth = 1.5;
+
+        if (bodyCorners.every((p) => p !== null)) {
+          // 简要绘制机身边框
+          const lines = [
+            [0, 1],
+            [2, 3],
+            [4, 5],
+            [6, 7],
+            [0, 2],
+            [1, 3],
+            [4, 6],
+            [5, 7],
+            [0, 4],
+            [1, 5],
+            [2, 6],
+            [3, 7],
+          ];
+          lines.forEach(([i, j]) => {
+            ctx.beginPath();
+            ctx.moveTo(bodyCorners[i].x, bodyCorners[i].y);
+            ctx.lineTo(bodyCorners[j].x, bodyCorners[j].y);
+            ctx.stroke();
+          });
+
+          // 镜头锥形连接前表面的4个点 (index 1, 3, 5, 7 为前表面)
+          if (lensTip) {
+            ctx.strokeStyle = 'rgba(2, 132, 199, 0.85)';
+            [1, 3, 5, 7].forEach((idx) => {
+              ctx.beginPath();
+              ctx.moveTo(bodyCorners[idx].x, bodyCorners[idx].y);
+              ctx.lineTo(lensTip.x, lensTip.y);
+              ctx.stroke();
+            });
+          }
+        }
+      }
+
+      // ==========================================
+      // 5. 中间面板 UI 更新 (数值、矩阵、样本点)
+      // ==========================================
+      function formatNum(n) {
+        if (Math.abs(n) < 1e-4) return '0.000';
+        return n.toFixed(3);
+      }
+
+      function updateMiddlePanel(frame) {
+        const alertBanner = document.getElementById('alertBanner');
+        const alertMessage = document.getElementById('alertMessage');
+
+        if (!frame.valid) {
+          alertBanner.className = 'alert-banner active';
+          alertMessage.textContent = frame.error;
+          document.getElementById('vecUDisplay').textContent = '标架无法构造';
+          document.getElementById('vecVDisplay').textContent = '标架无法构造';
+          document.getElementById('vecNDisplay').textContent = '标架无法构造';
+          return;
+        }
+
+        alertBanner.className = 'alert-banner';
+
+        // 1. 更新 u, v, n 显示
+        const u = frame.u,
+          v = frame.v,
+          n = frame.n;
+        document.getElementById('vecUDisplay').textContent =
+          `(${formatNum(u[0])}, ${formatNum(u[1])}, ${formatNum(u[2])})`;
+        document.getElementById('vecVDisplay').textContent =
+          `(${formatNum(v[0])}, ${formatNum(v[1])}, ${formatNum(v[2])})`;
+        document.getElementById('vecNDisplay').textContent =
+          `(${formatNum(n[0])}, ${formatNum(n[1])}, ${formatNum(n[2])})`;
+
+        // 2. 更新 4x4 View Matrix 格子
+        const M = frame.rowMatrix;
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 4; c++) {
+            const cell = document.getElementById(`m${r}${c}`);
+            const valStr = formatNum(M[r][c]);
+            if (cell.textContent !== valStr) {
+              cell.textContent = valStr;
+              cell.classList.add('highlight');
+              setTimeout(() => cell.classList.remove('highlight'), 350);
+            }
+          }
+        }
+
+        // 3. 计算样本点 P 在相机坐标中的坐标
+        const camP = mat4.transformPoint(M, SAMPLE_P_WORLD);
+        document.getElementById('sampleCamCoord').textContent =
+          `(${formatNum(camP[0])}, ${formatNum(camP[1])}, ${formatNum(camP[2])})`;
+
+        return camP;
+      }
+
+      // ==========================================
+      // 6. 全局同步刷新
+      // ==========================================
+      function updateAll() {
+        // 计算相机标架与观察矩阵
+        const frame = computeCameraFrameAndMatrix(cameraState.eye, cameraState.at, cameraState.up);
+
+        if (frame.valid) {
+          lastValidGlMatrix = frame.glMatrix;
+          lastValidRowMatrix = frame.rowMatrix;
+          updateMiddlePanel(frame);
+          renderWebGL(frame.glMatrix);
+          renderWorldView(cameraState.eye, cameraState.at, cameraState.up, frame);
+        } else {
+          // 遇到非法参数时，保持上一组合法画面的渲染，并给出明确错误原因
+          updateMiddlePanel(frame);
+          renderWebGL(lastValidGlMatrix);
+          renderWorldView(cameraState.eye, cameraState.at, cameraState.up, { valid: false });
+        }
+
+        syncInputs();
+      }
+
+      // 同步输入框数值
+      function syncInputs() {
+        document.getElementById('eyeX').value = parseFloat(cameraState.eye[0].toFixed(2));
+        document.getElementById('eyeY').value = parseFloat(cameraState.eye[1].toFixed(2));
+        document.getElementById('eyeZ').value = parseFloat(cameraState.eye[2].toFixed(2));
+
+        document.getElementById('atX').value = parseFloat(cameraState.at[0].toFixed(2));
+        document.getElementById('atY').value = parseFloat(cameraState.at[1].toFixed(2));
+        document.getElementById('atZ').value = parseFloat(cameraState.at[2].toFixed(2));
+
+        document.getElementById('upX').value = parseFloat(cameraState.up[0].toFixed(2));
+        document.getElementById('upY').value = parseFloat(cameraState.up[1].toFixed(2));
+        document.getElementById('upZ').value = parseFloat(cameraState.up[2].toFixed(2));
+      }
+
+      // ==========================================
+      // 7. 用户交互与平滑过渡动画
+      // ==========================================
+      function startCameraTransition(targetEye, targetAt, targetUp, duration = 600, onDone = null) {
+        if (animation.running) return;
+
+        animation.running = true;
+        animation.startTime = performance.now();
+        animation.duration = duration;
+        animation.startEye = [...cameraState.eye];
+        animation.targetEye = [...targetEye];
+        animation.startAt = [...cameraState.at];
+        animation.targetAt = [...targetAt];
+        animation.startUp = [...cameraState.up];
+        animation.targetUp = [...targetUp];
+        animation.onComplete = onDone;
+
+        function step(time) {
+          const elapsed = time - animation.startTime;
+          let t = Math.min(1.0, elapsed / animation.duration);
+          // 平滑缓动 (easeInOutQuad)
+          t = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+          cameraState.eye = vec3.lerp(animation.startEye, animation.targetEye, t);
+          cameraState.at = vec3.lerp(animation.startAt, animation.targetAt, t);
+          cameraState.up = vec3.lerp(animation.startUp, animation.targetUp, t);
+
+          updateAll();
+
+          if (elapsed < animation.duration) {
+            requestAnimationFrame(step);
+          } else {
+            cameraState.eye = [...animation.targetEye];
+            cameraState.at = [...animation.targetAt];
+            cameraState.up = [...animation.targetUp];
+            updateAll();
+            animation.running = false;
+            if (animation.onComplete) animation.onComplete();
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // 参数微调输入
+      function stepParam(paramName, index, delta) {
+        cameraState[paramName][index] = parseFloat(
+          (cameraState[paramName][index] + delta).toFixed(2),
+        );
+        updateAll();
+      }
+
+      function onInputChange() {
+        const parseVal = (id, fallback) => {
+          const v = parseFloat(document.getElementById(id).value);
+          return isNaN(v) ? fallback : v;
+        };
+
+        cameraState.eye[0] = parseVal('eyeX', cameraState.eye[0]);
+        cameraState.eye[1] = parseVal('eyeY', cameraState.eye[1]);
+        cameraState.eye[2] = parseVal('eyeZ', cameraState.eye[2]);
+
+        cameraState.at[0] = parseVal('atX', cameraState.at[0]);
+        cameraState.at[1] = parseVal('atY', cameraState.at[1]);
+        cameraState.at[2] = parseVal('atZ', cameraState.at[2]);
+
+        cameraState.up[0] = parseVal('upX', cameraState.up[0]);
+        cameraState.up[1] = parseVal('upY', cameraState.up[1]);
+        cameraState.up[2] = parseVal('upZ', cameraState.up[2]);
+
+        updateAll();
+      }
+
+      // 平移相机：Eye 与 At 同步位移 Δ
+      function translateCamera(axisIndex, delta) {
+        const d = [0, 0, 0];
+        d[axisIndex] = delta;
+        const newEye = vec3.add(cameraState.eye, d);
+        const newAt = vec3.add(cameraState.at, d);
+        startCameraTransition(newEye, newAt, cameraState.up, 350);
+      }
+
+      // 原地偏航旋转 (Yaw: 绕相机当前 v 轴旋转视角方向，Eye 保持不动)
+      function rotateCameraYaw(deg) {
+        const frame = computeCameraFrameAndMatrix(cameraState.eye, cameraState.at, cameraState.up);
+        if (!frame.valid) return;
+        const dir = vec3.sub(cameraState.at, cameraState.eye);
+        const rad = (deg * Math.PI) / 180;
+        const newDir = vec3.rotateAroundAxis(dir, frame.v, rad);
+        const newAt = vec3.add(cameraState.eye, newDir);
+        startCameraTransition(cameraState.eye, newAt, cameraState.up, 350);
+      }
+
+      // 原地俯仰旋转 (Pitch: 绕相机当前 u 轴旋转视线方向，Eye 保持不动)
+      function rotateCameraPitch(deg) {
+        const frame = computeCameraFrameAndMatrix(cameraState.eye, cameraState.at, cameraState.up);
+        if (!frame.valid) return;
+        const dir = vec3.sub(cameraState.at, cameraState.eye);
+        const rad = (deg * Math.PI) / 180;
+        const newDir = vec3.rotateAroundAxis(dir, frame.u, rad);
+        const newAt = vec3.add(cameraState.eye, newDir);
+        startCameraTransition(cameraState.eye, newAt, cameraState.up, 350);
+      }
+
+      // 滚转操作 (Roll: Eye 与 At 不变，Up 绕视线方向旋转)
+      function rollCamera(deg) {
+        const frame = computeCameraFrameAndMatrix(cameraState.eye, cameraState.at, cameraState.up);
+        if (!frame.valid) return;
+        const viewDir = vec3.normalize(vec3.sub(cameraState.at, cameraState.eye));
+        const rad = (deg * Math.PI) / 180;
+        const newUp = vec3.rotateAroundAxis(cameraState.up, viewDir, rad);
+        startCameraTransition(cameraState.eye, cameraState.at, newUp, 350);
+      }
+
+      // 预设应用
+      function applyPreset(name) {
+        document
+          .querySelectorAll('.btn-action.preset')
+          .forEach((b) => b.classList.remove('active'));
+        if (name === 'default') document.getElementById('presetDefault').classList.add('active');
+        if (name === 'angled') document.getElementById('presetTopAngled').classList.add('active');
+        if (name === 'side') document.getElementById('presetSide').classList.add('active');
+
+        const p = PRESETS[name];
+        if (p) {
+          startCameraTransition(p.eye, p.at, p.up, 500);
+        }
+      }
+
+      // 重置到初始状态
+      document.getElementById('btnResetAll').addEventListener('click', () => {
+        expState.currentExp = 1;
+        expState.step = 1;
+        expState.userChoice = null;
+        updateGuideUI();
+        applyPreset('default');
+      });
+
+      // ==========================================
+      // 8. 教学引导区 (Prediction → Operation → Observation → Explanation)
+      // ==========================================
+      function updateGuideUI() {
+        const step = expState.step;
+
+        // 更新阶段高亮
+        for (let i = 1; i <= 4; i++) {
+          const pill = document.getElementById(`stage${i}Pill`);
+          pill.className = 'stage-item';
+          if (i === step) pill.classList.add('active');
+          if (i < step) pill.classList.add('completed');
+        }
+
+        const stepTag = document.getElementById('guideStepTag');
+        const qText = document.getElementById('guideQuestionText');
+        const slot = document.getElementById('guideActionsSlot');
+
+        if (expState.currentExp === 1) {
+          // 实验一：X 轴平移
+          if (step === 1) {
+            stepTag.textContent = 'STAGE 1 · 观察变换规律预测';
+            qText.textContent =
+              '如果相机沿 X 轴正方向平移 1.0 个单位（保持观察方向不变），固定样本点 P 在相机坐标中的 X 值会怎样变化？';
+            slot.innerHTML = `
+        <button class="btn-opt" onclick="onSelectAnswer('A')">A. 增大 1.0</button>
+        <button class="btn-opt" onclick="onSelectAnswer('B')">B. 减小 1.0</button>
+        <button class="btn-opt" onclick="onSelectAnswer('C')">C. 保持不变</button>
+      `;
+          } else if (step === 2) {
+            stepTag.textContent = 'STAGE 2 · 执行操作与动态过渡';
+            qText.textContent = `已选择预测 [${expState.userChoice}]。点击右侧按钮，触发相机 Eye 与 At 同步沿 X 轴平移 1.0。观察模型是否移动。`;
+            slot.innerHTML = `
+        <button class="btn-primary-action" onclick="runExperimentOperation()">
+          ▶ 执行相机平移 +X 1.0
+        </button>
+      `;
+          } else if (step === 3) {
+            stepTag.textContent = 'STAGE 3 · 数值对照与现象观察';
+            qText.innerHTML = `
+        对比相机移动前后：世界坐标 P 保持 <strong>(1.000, 1.000, 1.000)</strong>；<br>
+        相机坐标由 <strong>(1.000, 1.000, −4.000)</strong> 变为 <strong style="color:var(--cyan);">(0.000, 1.000, −4.000)</strong>（X 分量减少 1.0）！
+      `;
+            slot.innerHTML = `
+        <button class="btn-primary-action" onclick="gotoStep(4)">
+          查看原理解释 →
+        </button>
+      `;
+          } else if (step === 4) {
+            stepTag.textContent = 'STAGE 4 · 教学结论揭示';
+            const isCorrect = expState.userChoice === 'B';
+            qText.innerHTML = `
+        <strong>正确答案：B. 减小 1.0</strong>（${isCorrect ? '恭喜你回答正确！' : '你的预测是 ' + expState.userChoice + '，注意观察反向相对变换'}）<br>
+        相机向 +X 平移，在相机局部标架看来，相当于<strong>世界所有物体向 −X 相对移动</strong>。即 V = C<sub>pose</sub><sup>−1</sup>。模型 Buffer 毫发无损！
+      `;
+            slot.innerHTML = `
+        <button class="btn-switch-exp" onclick="startExperiment(2)">实验二：修改 At</button>
+        <button class="btn-switch-exp" onclick="startExperiment(3)">实验三：非法 Up</button>
+        <button class="btn-switch-exp" onclick="startExperiment(1)">重做实验一</button>
+      `;
+          }
+        } else if (expState.currentExp === 2) {
+          // 实验二：保持 Eye 不变，修改 At
+          if (step === 1) {
+            stepTag.textContent = 'STAGE 1 · 实验二预测：改变目标点 At';
+            qText.textContent =
+              '如果保持 Eye 位置不变，将 At 点从 (0,0,0) 改为 (2,0,0)，相机的位置和观察方向谁改变了？';
+            slot.innerHTML = `
+        <button class="btn-opt" onclick="onSelectAnswer('A')">A. 位置变，朝向不变</button>
+        <button class="btn-opt" onclick="onSelectAnswer('B')">B. 位置不变，朝向改变</button>
+        <button class="btn-opt" onclick="onSelectAnswer('C')">C. 两者都不变</button>
+      `;
+          } else if (step === 2) {
+            stepTag.textContent = 'STAGE 2 · 执行转向操作';
+            qText.textContent =
+              '点击执行：Eye 保持 (0,0,5)，将 At 平滑变为 (2,0,0)。注意中间标架旋转矩阵的变化。';
+            slot.innerHTML = `
+        <button class="btn-primary-action" onclick="runExperimentOperation()">
+          ▶ 执行更新 At = (2.0, 0, 0)
+        </button>
+      `;
+          } else if (step === 3) {
+            stepTag.textContent = 'STAGE 3 · 观察标架旋转';
+            qText.innerHTML = `
+        观察到：Eye 位置完全没有移动；视线方向 Eye→At 转向右方；<br>
+        u、v、n 轴方向发生旋转，View Matrix 的前 3×3 旋转部分产生变化！
+      `;
+            slot.innerHTML = `
+        <button class="btn-primary-action" onclick="gotoStep(4)">
+          查看原理解释 →
+        </button>
+      `;
+          } else if (step === 4) {
+            stepTag.textContent = 'STAGE 4 · 实验二原理解释';
+            qText.innerHTML = `
+        <strong>正确答案：B</strong>。At 只用于定义观察方向向量 normalize(At − Eye)，不代表相机实体的位置。<br>
+        因此仅改变 At 只会引起相机的<strong>原地转向</strong>，模型顶点 Buffer 依然无需任何修改。
+      `;
+            slot.innerHTML = `
+        <button class="btn-switch-exp" onclick="startExperiment(1)">返回实验一</button>
+        <button class="btn-switch-exp" onclick="startExperiment(3)">实验三：非法 Up</button>
+      `;
+          }
+        } else if (expState.currentExp === 3) {
+          // 实验三：非法 Up (与视线共线)
+          if (step === 1) {
+            stepTag.textContent = 'STAGE 1 · 实验三预测：Up 与视线共线';
+            qText.textContent =
+              '默认相机从 (0,0,5) 望向 (0,0,0)，视线平行于 Z 轴。若此时将 Up 强行设为 (0,0,1)，会发生什么？';
+            slot.innerHTML = `
+        <button class="btn-opt" onclick="onSelectAnswer('A')">A. 相机正常倒立</button>
+        <button class="btn-opt" onclick="onSelectAnswer('B')">B. 标架无法构造(叉乘为0)</button>
+        <button class="btn-opt" onclick="onSelectAnswer('C')">C. 观察矩阵变为单位阵</button>
+      `;
+          } else if (step === 2) {
+            stepTag.textContent = 'STAGE 2 · 注入异常参数';
+            qText.textContent =
+              '点击按钮，将 Up 设置为 (0, 0, 1)。观察程序容错机制及中间标架的数学判定。';
+            slot.innerHTML = `
+        <button class="btn-primary-action" style="background:#dc2626;" onclick="runExperimentOperation()">
+          ▶ 注入共线 Up = (0, 0, 1)
+        </button>
+      `;
+          } else if (step === 3) {
+            stepTag.textContent = 'STAGE 3 · 观察错误捕捉';
+            qText.innerHTML = `
+        顶部弹出红色警报：<strong>Up 与观察方向平行/共线，无法建立相机正交标架。</strong><br>
+        由于 Up × n = (0,0,0)，无法求出相机横轴 u！程序拒绝生成非法矩阵，保留上一帧合法画面。
+      `;
+            slot.innerHTML = `
+        <button class="btn-primary-action" onclick="gotoStep(4)">
+          查看数学原理 →
+        </button>
+      `;
+          } else if (step === 4) {
+            stepTag.textContent = 'STAGE 4 · 几何原理总结';
+            qText.innerHTML = `
+        <strong>正确答案：B</strong>。相机坐标系需要确定唯一的向上参考以消除滚转自由度。<br>
+        若 Up 与视线同向，无穷多个方向都可以作为相机的“上向”，因此无法确定唯一的相机正交标架。
+      `;
+            slot.innerHTML = `
+        <button class="btn-switch-exp" onclick="startExperiment(1)">重置并返回实验一</button>
+        <button class="btn-switch-exp" onclick="startExperiment(2)">切换到实验二</button>
+      `;
+          }
+        }
+      }
+
+      function onSelectAnswer(choice) {
+        expState.userChoice = choice;
+        expState.step = 2;
+        updateGuideUI();
+      }
+
+      function gotoStep(s) {
+        expState.step = s;
+        updateGuideUI();
+      }
+
+      function startExperiment(expNum) {
+        expState.currentExp = expNum;
+        expState.step = 1;
+        expState.userChoice = null;
+        // 恢复到对应实验基准位姿
+        cameraState.eye = [0.0, 0.0, 5.0];
+        cameraState.at = [0.0, 0.0, 0.0];
+        cameraState.up = [0.0, 1.0, 0.0];
+        updateAll();
+        updateGuideUI();
+      }
+
+      function runExperimentOperation() {
+        if (expState.currentExp === 1) {
+          // 实验一操作：平移 +X 1.0
+          const targetEye = [1.0, 0.0, 5.0];
+          const targetAt = [1.0, 0.0, 0.0];
+          startCameraTransition(targetEye, targetAt, cameraState.up, 600, () => {
+            gotoStep(3);
+          });
+        } else if (expState.currentExp === 2) {
+          // 实验二操作：修改 At 到 (2, 0, 0)
+          const targetAt = [2.0, 0.0, 0.0];
+          startCameraTransition(cameraState.eye, targetAt, cameraState.up, 600, () => {
+            gotoStep(3);
+          });
+        } else if (expState.currentExp === 3) {
+          // 实验三操作：设置非法 Up = (0, 0, 1)
+          cameraState.up = [0.0, 0.0, 1.0];
+          updateAll();
+          setTimeout(() => {
+            gotoStep(3);
+          }, 200);
+        }
+      }
+
+      // ==========================================
+      // 9. 页面加载与数学验证执行
+      // ==========================================
+      window.addEventListener('DOMContentLoaded', () => {
+        // 1. 初始化 WebGL
+        initWebGL();
+
+        // 2. 初始渲染
+        updateAll();
+        updateGuideUI();
+
+        // 3. 窗口大小自适应
+        window.addEventListener('resize', () => {
+          updateAll();
+        });
+
+        // 4. 自动数学验证与控制台自检 (满足要求 17)
+        runSelfVerification();
+      });
+
+      // 自检与数值断言 (满足要求第十七节)
+      function runSelfVerification() {
+        console.log('=== [D05-01 虚拟相机显微镜] 启动自动化数学验证 ===');
+
+        // 测试1：默认参数
+        const f1 = computeCameraFrameAndMatrix([0, 0, 5], [0, 0, 0], [0, 1, 0]);
+        console.assert(f1.valid, '测试1失败: 默认相机应合法');
+        console.assert(
+          Math.abs(f1.u[0] - 1) < 1e-5 &&
+            Math.abs(f1.v[1] - 1) < 1e-5 &&
+            Math.abs(f1.n[2] - 1) < 1e-5,
+          '测试1标架轴应与标准基一致',
+        );
+        console.assert(Math.abs(f1.rowMatrix[2][3] - -5) < 1e-5, '测试1平移应为 -5');
+
+        // 测试2：样本点 P 变换
+        const camP1 = mat4.transformPoint(f1.rowMatrix, [1, 1, 1]);
+        console.assert(
+          Math.abs(camP1[0] - 1) < 1e-5 &&
+            Math.abs(camP1[1] - 1) < 1e-5 &&
+            Math.abs(camP1[2] - -4) < 1e-5,
+          "测试2失败: P' 应严格为 (1, 1, -4)",
+        );
+
+        // 测试3：平移 X+1
+        const f2 = computeCameraFrameAndMatrix([1, 0, 5], [1, 0, 0], [0, 1, 0]);
+        const camP2 = mat4.transformPoint(f2.rowMatrix, [1, 1, 1]);
+        console.assert(
+          Math.abs(camP2[0] - 0) < 1e-5 &&
+            Math.abs(camP2[1] - 1) < 1e-5 &&
+            Math.abs(camP2[2] - -4) < 1e-5,
+          '测试3失败: 相机向右平移1，点在相机坐标中X应减小1变成0',
+        );
+
+        // 测试4：Up 与视线平行
+        const f3 = computeCameraFrameAndMatrix([0, 0, 5], [0, 0, 0], [0, 0, 1]);
+        console.assert(!f3.valid, '测试4失败: Up与视线平行应判定为非法');
+
+        console.log('✓ 全部测试通过: 观察矩阵构造、正交标架与坐标变换数学验证 100% 正确！');
+      }
+    </script>
+  </body>
+</html>

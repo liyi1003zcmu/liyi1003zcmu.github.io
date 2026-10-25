@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-10-17
+updatedDate: 2026-10-25
 ---
 
 ## 课程简介
@@ -80,6 +80,8 @@ updatedDate: 2026-10-17
    - [第三讲：复合变换](/slides/computer-graphics/ch04/lecture-4-3.html)
    - [第四讲：WebGL 中的变换](/slides/computer-graphics/ch04/lecture-4-4.html)
 5. **观察**：相机定位、观察矩阵、平行与透视投影、规范化视见体
+   - [第一讲：虚拟相机与观察变换](/slides/computer-graphics/ch05/lecture-5-1.html)
+   - [第二讲：投影、视见体与成像](/slides/computer-graphics/ch05/lecture-5-2.html)
 6. **光照和着色**：Phong 光照模型、材质、光源、法向量与片元着色
 7. **纹理映射**：纹理坐标、采样与滤波、环境映射与凹凸贴图
 8. **使用帧缓存（介绍）**：Alpha 混合、FBO 离屏渲染、图像后处理与拾取
@@ -88,7 +90,7 @@ updatedDate: 2026-10-17
 
 ## 课件资源
 
-第〇章课程概述以及第一至第四章已发布的课件均可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
+第〇章课程概述以及第一至第五章已发布的课件均可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
 
 ## Demo 与配套代码
 
@@ -132,6 +134,13 @@ updatedDate: 2026-10-17
 
 课件内的标架、齐次坐标、基本变换、复合变换和任意轴旋转实验台保留在对应课件中直接启动，不再作为独立 Demo 重复列出。
 
+### 第五章：观察
+
+- 立方体正交投影视图：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/orthoproj.js)
+- 立方体透视投影视图：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/persproj.js)
+
+虚拟相机与观察矩阵、正交与透视投影两个互动显微镜保留在第五章对应课件中直接启动。
+
 ## 实验任务
 
 实验将围绕 WebGL 基础、二维与三维变换、观察与投影、光照着色、纹理映射及基础光栅算法逐步展开。每次实验必须按照统一要求完成邮件与课程平台双渠道提交，并检查压缩包命名、目录结构和运行入口。
@@ -154,6 +163,7 @@ updatedDate: 2026-10-17
 
 ## 更新记录
 
+- 2026-10-25：发布第五章两份在线课件、观察与投影互动实验、配套图片及正交/透视投影 WebGL 示例代码。
 - 2026-10-17：同步第四章四份在线课件及配套图片，更新第三、四讲内容并补充 WebGL2 变换流水线等互动实验。
 - 2026-10-16：发布第四章前两讲及 5 个 WebGL 2 几何变换 Demo；课件内教学仪器改为仅从对应课件启动。
 - 2026-10-03：发布第三章两份在线课件及课件内互动示例，新增按章节整理的第一至第三章 Demo 与配套代码。

@@ -1,0 +1,2478 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 5-1 虚拟相机与观察变换</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 5 additions: all new pages retain the Chapter 4 design tokens. */
+      .reveal .slides section {
+        box-sizing: border-box;
+      }
+
+      .reveal .slides section:not(.stack) {
+        text-align: left;
+      }
+
+      .reveal .slides section > .eyebrow,
+      .reveal .slides section > h2 {
+        flex-shrink: 0;
+      }
+
+      .reveal .slides section h2 {
+        font-size: 1.43em;
+        line-height: 1.19;
+        margin: 0.06em 0 0.34em;
+      }
+
+      .reveal .slides .lead {
+        max-width: 1350px !important;
+      }
+
+      .reveal .slides .sublead {
+        font-size: 0.67em !important;
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .card {
+        padding: 22px 25px;
+      }
+
+      .reveal .slides .card p,
+      .reveal .slides .card li {
+        font-size: 0.61em;
+        line-height: 1.45;
+        margin: 0.12em 0;
+      }
+
+      .reveal .slides .card .mini {
+        font-size: 0.51em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .card h3 {
+        font-size: 0.82em;
+        margin: 0 0 0.3em;
+      }
+
+      .reveal .slides .flow {
+        margin: 15px 0 8px;
+        gap: 9px;
+      }
+
+      .reveal .slides .flow .node {
+        font-size: 0.55em;
+        padding: 15px 18px;
+        min-width: 150px;
+      }
+
+      .reveal .slides .flow .arrow {
+        font-size: 0.75em;
+      }
+
+      .reveal .slides .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .reveal .slides .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .stack-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .reveal .slides .stage {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 13px 20px;
+        text-align: center;
+        font-size: 0.57em;
+      }
+
+      .reveal .slides .stage strong {
+        display: block;
+        color: var(--cyan);
+      }
+
+      .reveal .slides .formula {
+        background: #eef5fb;
+        border-left: 6px solid var(--blue);
+        border-radius: 15px;
+        padding: 19px 26px;
+        font-size: 0.93em;
+        text-align: center;
+        letter-spacing: 0.02em;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .formula small {
+        display: block;
+        font-size: 0.54em;
+        margin-top: 6px;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+
+      .reveal .slides .note-strip {
+        background: #f0f6fc;
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        border-radius: 16px;
+        padding: 14px 20px;
+        font-size: 0.59em;
+        line-height: 1.5;
+        margin-top: 15px;
+      }
+
+      .reveal .slides .note-strip.warn {
+        background: #fff8ee;
+        border-color: rgba(154, 93, 0, 0.25);
+      }
+
+      .reveal .slides .note-strip.ok {
+        background: #eef9f4;
+        border-color: rgba(30, 138, 100, 0.23);
+      }
+
+      .reveal .slides .item-list {
+        display: grid;
+        gap: 12px;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: white;
+        border: 1px solid var(--line);
+        padding: 13px 19px;
+        border-radius: 15px;
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .item .number {
+        background: #e9f3fb;
+        color: #176ea7;
+        font-weight: 800;
+        border-radius: 12px;
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .reveal .slides .item b {
+        color: var(--cyan);
+      }
+
+      .reveal .slides .item span.desc {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .media-placeholder {
+        width: 100%;
+        min-height: 290px;
+        background: repeating-linear-gradient(
+          135deg,
+          #f2f6fb,
+          #f2f6fb 14px,
+          #edf3f9 14px,
+          #edf3f9 28px
+        );
+        border: 2px dashed rgba(21, 125, 184, 0.4);
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 11px;
+        padding: 26px 30px;
+        margin: 14px auto;
+      }
+
+      .reveal .slides .media-placeholder.compact {
+        min-height: 230px;
+      }
+
+      .reveal .slides .media-placeholder .media-id {
+        background: #dfeef9;
+        border: 1px solid #bedbed;
+        border-radius: 999px;
+        color: #165d8c;
+        font-size: 0.43em;
+        padding: 7px 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+
+      .reveal .slides .media-placeholder .media-title {
+        font-size: 0.89em;
+        font-weight: 780;
+        color: #173b63;
+      }
+
+      .reveal .slides .media-placeholder .media-description {
+        max-width: 1100px;
+        font-size: 0.56em;
+        color: #5e7287;
+        line-height: 1.45;
+      }
+
+      .reveal .slides .media-placeholder.demo {
+        background: linear-gradient(135deg, #eff8fc, #ecf3fc);
+        border-color: #2f89b9;
+      }
+
+      .reveal .slides .media-placeholder.demo .media-id {
+        background: #d5eefa;
+      }
+
+      .reveal .slides .media-placeholder .link-hint {
+        color: #1975ae;
+        font-size: 0.48em;
+        font-weight: 700;
+      }
+
+      .reveal .slides pre {
+        box-shadow: none;
+        margin: 15px auto;
+        width: 100%;
+        background: #172d46;
+        color: #f5f8ff;
+        border-radius: 18px;
+        padding: 20px 24px;
+        border: 1px solid #35506b;
+        font-size: 0.55em;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .reveal .slides pre code {
+        background: transparent;
+        color: inherit;
+        font-size: 1em;
+        line-height: 1.5;
+        max-height: none;
+        padding: 0;
+      }
+
+      .reveal .slides table {
+        font-size: 0.56em;
+      }
+
+      .reveal .slides th,
+      .reveal .slides td {
+        padding: 0.5em 0.6em;
+      }
+
+      .reveal .slides .question-card {
+        border: 2px solid rgba(47, 100, 200, 0.23);
+        border-left: 8px solid var(--blue);
+        background: #f6f9ff;
+        padding: 20px 24px;
+        border-radius: 18px;
+        font-size: 0.72em;
+        line-height: 1.48;
+      }
+
+      .reveal .slides .question-card .answers {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 0.83em;
+      }
+
+      .reveal .slides .question-card .answers span {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 9px 13px;
+      }
+
+      .reveal .slides .tiny {
+        font-size: 0.51em !important;
+        color: var(--muted);
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .summary-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .reveal .slides .summary-list .item {
+        padding: 14px 19px;
+      }
+
+      .reveal .slides .title-slide .eyebrow {
+        font-size: 0.45em;
+      }
+
+      .reveal .slides .title-slide h1 {
+        font-size: 2.05em;
+      }
+
+      .reveal .slides .title-slide .lead {
+        font-size: 0.87em !important;
+      }
+
+      .reveal .slides .title-flow .chip {
+        font-size: 0.5em;
+      }
+
+      .reveal .slides .activity {
+        padding: 16px 22px;
+        margin-top: 16px;
+      }
+
+      .reveal .slides .activity p {
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .slide-no {
+        right: 6px;
+        top: 0;
+      }
+
+      .reveal .slides section.present > .eyebrow:not(.fragment),
+      .reveal .slides section.active-slide > .eyebrow:not(.fragment) {
+        animation: chapter5Fade 0.3s both;
+      }
+
+      .reveal .slides section.present > h2:not(.fragment),
+      .reveal .slides section.active-slide > h2:not(.fragment) {
+        animation: chapter5Fade 0.45s 0.08s both;
+      }
+
+      @keyframes chapter5Fade {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .reveal .slides .flow-marker {
+        display: inline-block;
+        font-weight: 800;
+        font-size: 0.8em;
+        color: var(--cyan);
+        padding: 0 8px;
+      }
+
+      .reveal .slides .two-col .media-placeholder {
+        min-height: 240px;
+      }
+
+      .reveal .slides .grid3 .card {
+        padding: 18px 20px;
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261025" rel="stylesheet" />
+    <style>
+      /* 全局标题与文字层级优化：消除标题过大与视口压迫感 */
+      .reveal h1 {
+        font-size: 1.65em !important;
+        line-height: 1.15 !important;
+        margin: 0.12em 0 0.28em !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      .reveal h2 {
+        font-size: 1.18em !important;
+        line-height: 1.22 !important;
+        margin: 0.06em 0 0.3em !important;
+        letter-spacing: -0.02em !important;
+        color: #14345e !important;
+      }
+
+      .reveal h3 {
+        font-size: 0.85em !important;
+        line-height: 1.25 !important;
+        margin: 0.12em 0 0.32em !important;
+      }
+
+      .reveal h4 {
+        font-size: 0.7em !important;
+        line-height: 1.28 !important;
+        margin: 0.1em 0 0.28em !important;
+        color: var(--blue) !important;
+      }
+
+      .reveal .lead {
+        font-size: 0.62em !important;
+        line-height: 1.48 !important;
+        color: #475569 !important;
+        margin-bottom: 12px !important;
+        max-width: 1400px !important;
+      }
+
+      .reveal .sublead {
+        font-size: 0.52em !important;
+        line-height: 1.42 !important;
+        color: var(--muted) !important;
+      }
+
+      .reveal .eyebrow {
+        font-size: 0.38em !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        color: var(--cyan) !important;
+        margin-bottom: 0.25em !important;
+      }
+
+      .reveal .quote {
+        font-size: 0.64em !important;
+        line-height: 1.42 !important;
+      }
+
+      /* 上标与下标定位修复（避免 reset.css baseline 抹平） */
+      .reveal sub,
+      .reveal sup {
+        font-size: 0.72em !important;
+        line-height: 0 !important;
+        position: relative !important;
+        vertical-align: baseline !important;
+      }
+
+      .reveal sup {
+        top: -0.48em !important;
+        margin-left: 1px;
+      }
+
+      .reveal sub {
+        bottom: -0.22em !important;
+        margin-left: 1px;
+      }
+
+      /* 代码块与行号视觉增强：大教室投影清晰字号(~32px)、行距1.68、行号分割线与精致卡片质感 */
+      .reveal pre {
+        width: 100% !important;
+        font-size: 0.72em !important; /* 基准44px下为 31.7px，80人教室清晰可辨 */
+        line-height: 1.68 !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(30, 56, 96, 0.18) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 26px rgba(31, 56, 88, 0.08) !important;
+        margin: 16px auto !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .reveal pre code {
+        display: block !important;
+        padding: 18px 24px !important;
+        overflow-x: auto !important;
+        background: #ffffff !important;
+        color: #1e293b !important;
+        font-family:
+          'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 1em !important; /* 与 pre 字号严格一致，杜绝嵌套复合缩小 */
+        line-height: 1.68 !important;
+        tab-size: 2 !important;
+      }
+
+      /* 内部表格、单元格、行号与代码行全部继承统一字号，防止多层 em 嵌套缩减 */
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln,
+      .reveal pre code tr,
+      .reveal pre code td,
+      .reveal pre code .hljs-ln-code,
+      .reveal pre code .hljs-ln-numbers,
+      .reveal pre code .hljs-ln-line,
+      .reveal pre code span {
+        font-family: inherit !important;
+        font-size: 1em !important;
+        line-height: 1.68 !important;
+      }
+
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      .reveal pre code table.hljs-ln td {
+        border: 0 !important;
+        padding: 2px 0 !important;
+        vertical-align: middle !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-numbers {
+        min-width: 48px !important;
+        padding-right: 18px !important;
+        margin-right: 0 !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        text-align: right !important;
+        border-right: 2px solid rgba(21, 125, 184, 0.25) !important;
+        user-select: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-code {
+        padding-left: 20px !important;
+        white-space: pre !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code tr:hover td {
+        background: rgba(21, 125, 184, 0.05) !important;
+      }
+
+      .media-shell {
+        height: 440px !important;
+        margin-top: 10px !important;
+      }
+
+      .card {
+        padding: 16px 20px !important;
+      }
+
+      .card p,
+      .card li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .activity p,
+      .activity li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .question p {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 5 · 01</div>
+            <h1>虚拟相机与观察变换</h1>
+            <p class="lead fragment fade-up">从模型坐标到相机坐标：谁在移动？我们从哪里看？</p>
+            <div class="title-flow">
+              <span class="chip fragment fade-up">医学模型</span
+              ><span class="chip fragment fade-up">虚拟相机</span
+              ><span class="chip fragment fade-up">相机标架</span
+              ><span class="chip fragment fade-up">View Matrix</span
+              ><span class="chip fragment fade-up">lookAt</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              第5章 · 观察　｜　40分钟独立教学单元　｜　WebGL2 / Reveal.js
+            </div>
+          </div>
+          <aside class="notes">
+            本课页码采用与第四章一致的sec-x及sec-x-y双层编号；页面标题进入时淡入，主体内容使用fragment逐项呈现。
+          </aside>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" data-timing="lesson">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · MED × CG</div>
+            <h2>医工问题：模型不动，为什么视图改变？</h2>
+            <p class="lead fragment fade-up">
+              同一个已重建的骨骼与植入物三维模型，能否在<strong>不改变模型数据</strong>的情况下，从正面、侧面和斜上方观察？
+            </p>
+            <div class="media-shell fragment fade-up">
+              <img
+                src="./images/chap05/ch05-R05-01.png"
+                alt="同一三维医学模型的不同观察视角"
+                data-fallback="同一三维医学模型的不同观察视角"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 同一简化骨骼与植入物三维模型，分三栏展示正视、侧视和斜上方视图；模型位置不变，以相机图标与方向小箭头解释视角来源。下方标“模型相同”“视角不同”；不是CT重建算法图。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-01
+              同一三维医学模型的不同观察视角】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              同一简化骨骼与植入物三维模型，分三栏展示正视、侧视和斜上方视图；模型位置不变，以相机图标与方向小箭头解释视角来源。下方标“模型相同”“视角不同”；不是CT重建算法图。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <aside class="notes">
+              【讲课提示】用同一个三维医学模型串起第四章模型变换、第五章相机与投影。先看现象，不提前给相机矩阵。
+            </aside>
+          </section>
+          <section id="sec-2-2" data-timing="lesson">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Prediction</div>
+            <h2>如果相机向右移动，模型看起来向哪边移动？</h2>
+            <p class="lead fragment fade-up">
+              保持相机观察方向不变，世界里的立方体和器械都固定不动。
+            </p>
+            <div class="question-card fragment fade-up">
+              <strong>相机沿世界X正方向平移1个单位，物体在相机坐标中的X值如何变化？</strong>
+              <div class="answers">
+                <span>A. 增大1</span><span>B. 减小1</span><span>C. 保持不变</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　世界相对于相机向相反方向移动。
+            </div>
+            <div class="note-strip fragment fade-up">
+              先独立作答，再用“相机静止、世界反向移动”的等效视角进行解释。
+            </div>
+            <aside class="notes">
+              【讲课提示】2分钟预测加简短讨论。注意本题保持相机朝向不变，不能把绕目标点旋转和简单平移混为一谈。
+            </aside>
+          </section>
+          <section id="sec-2-3" data-timing="lesson">
+            <span class="slide-no">#sec-2-3</span>
+            <div class="eyebrow">Connection · Chapter 4 → 5</div>
+            <h2>第四章移动模型；第五章移动观察者</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>Model Matrix · M</h3>
+                <p>改变对象在世界中的位置、方向或大小，回答“对象放在哪里”。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>View Matrix · V</h3>
+                <p>将世界中的点表达为相机坐标，回答“相机怎样观察”。</p>
+              </div>
+            </div>
+            <div class="flow">
+              <span class="node fragment fade-up">模型坐标</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">M</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">世界坐标</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">V</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">相机坐标</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>统一思想：</strong>对象和相机虽然角色不同，但GPU处理的仍是顶点坐标与矩阵。
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" data-timing="lesson">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Camera Parameters</div>
+            <h2>三个输入参数：Eye、At、Up</h2>
+            <p class="lead fragment fade-up">
+              一个位置、一个目标点、一条参考向上方向——让程序知道相机在哪里、看向哪里、怎样保持正立。
+            </p>
+            <div class="three-col">
+              <div class="card fragment fade-up">
+                <h3>Eye · 视点</h3>
+                <p>相机位置，几何类型是<strong>点</strong>。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>At · 观察目标</h3>
+                <p>决定视线方向，几何类型是<strong>点</strong>。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Up · 参考向上</h3>
+                <p>确定相机滚转参考，几何类型是<strong>向量</strong>。</p>
+              </div>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 380px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-02.png"
+                alt="lookAt三参数与相机标架"
+                data-fallback="lookAt三参数与相机标架"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 画单台简化虚拟相机、视点Eye、目标点At、由Eye指向At的视线、参考Up箭头；旁边三条正交相机轴，用深蓝/青蓝区分参数与结果。不要大量公式。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-02
+              lookAt三参数与相机标架】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              画单台简化虚拟相机、视点Eye、目标点At、由Eye指向At的视线、参考Up箭头；旁边三条正交相机轴，用深蓝/青蓝区分参数与结果。不要大量公式。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+          </section>
+          <section id="sec-3-2" data-timing="lesson">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Camera Frame</div>
+            <h2>从世界的方向，得到相机自己的方向</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>视线方向</h3>
+                <p><strong>f = normalize(at − eye)</strong><br />指向目标，朝向相机局部负Z方向。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>相机后向</h3>
+                <p><strong>n = normalize(eye − at)</strong><br />指向相机后方，对应局部正Z轴。</p>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              n = normalize(eye − at)<small
+                >本课程使用右手相机标架，相机默认朝局部 −Z 方向看。</small
+              >
+            </div>
+            <div class="note-strip fragment fade-up">
+              预测：只改变At、不改变Eye，会改变相机位置还是朝向？
+            </div>
+          </section>
+          <section id="sec-3-3" data-timing="lesson">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Construct Camera Basis</div>
+            <h2>借助叉积建立三个正交轴</h2>
+            <div class="item-list">
+              <div class="item fragment fade-up">
+                <span class="number">1</span
+                ><span><strong>后向 n</strong>：normalize(eye − at)。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">2</span
+                ><span><strong>右向 u</strong>：normalize(up × n)。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">3</span><span><strong>真正上向 v</strong>：n × u。</span>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              Camera Frame = {Eye, u, v, n}<small>得到相机在世界坐标中的一个正交标架。</small>
+            </div>
+            <div class="note-strip fragment fade-up">
+              需要的前置知识：第四章叉积、单位向量、参考标架。不在这里重讲向量运算定义。
+            </div>
+          </section>
+          <section id="sec-3-4" data-timing="lesson">
+            <span class="slide-no">#sec-3-4</span>
+            <div class="eyebrow">Common Pitfalls</div>
+            <h2>Up不一定就是相机最终的Y轴</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>正常情况</h3>
+                <p>参考Up并不要求与视线严格垂直；程序会构造真正的上向轴v。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>退化情况</h3>
+                <p>如果Up和视线平行或近乎平行，叉积长度为零或过小，无法稳定地构造相机标架。</p>
+              </div>
+            </div>
+            <div class="question-card fragment fade-up">
+              <strong>当eye=(0,0,5)、at=(0,0,0)时，下面哪个Up会导致退化？</strong>
+              <div class="answers">
+                <span>A. (0,1,0)</span><span>B. (0,0,1)</span><span>C. (1,0,0)</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　它与观察方向共线。
+            </div>
+          </section>
+          <section id="sec-3-5" data-timing="lesson">
+            <span class="slide-no">#sec-3-5</span>
+            <div class="eyebrow">Coordinate Frames</div>
+            <h2>同一个几何点，在不同标架下有不同坐标</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">对象标架<br />Object</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">世界标架<br />World</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">相机标架<br />Camera</span>
+            </div>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>第四章关注</h3>
+                <p>如何从对象坐标得到世界坐标：p_world = M · p_model。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>这一课关注</h3>
+                <p>如何从世界坐标得到相机坐标：p_eye = V · p_world。</p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>关键：</strong>点没有改变，改变的是点相对于不同标架的坐标表示。
+            </div>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" data-timing="lesson">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Inverse Transform</div>
+            <h2>观察矩阵：为什么需要相机位姿的逆变换？</h2>
+            <p class="lead fragment fade-up">
+              相机位姿说明“相机在世界中的位置”，但渲染需要“世界中的点相对于相机在哪里”。
+            </p>
+            <div class="formula fragment fade-up">
+              V = C<sup>−1</sup><small>C：相机标架 → 世界标架；V：世界标架 → 相机标架。</small>
+            </div>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 450px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-03.png"
+                alt="相机移动与世界反向变换"
+                data-fallback="相机移动与世界反向变换"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 设计左右并排两幅极简坐标示意：左侧世界原点固定，相机从C移动到C′，一个蓝色立方体保持不动；右侧相机固定在原点，蓝色立方体及整个世界相对坐标反向移动。用反向箭头强调V=C的逆，不加入投影。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-03
+              相机移动与世界反向变换】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              设计左右并排两幅极简坐标示意：左侧世界原点固定，相机从C移动到C′，一个蓝色立方体保持不动；右侧相机固定在原点，蓝色立方体及整个世界相对坐标反向移动。用反向箭头强调V=C的逆，不加入投影。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+          </section>
+          <section id="sec-4-2" data-timing="lesson">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Worked Example</div>
+            <h2>只有平移时，逆变换特别直观</h2>
+            <p class="lead fragment fade-up">
+              相机位于(0,0,5)，观察方向为负Z；世界中的点P=(1,0,0)。
+            </p>
+            <div class="flow">
+              <span class="node fragment fade-up">相机在Z=5</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">世界沿Z负方向平移5</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">P的相机坐标(1,0,−5)</span>
+            </div>
+            <div class="formula fragment fade-up">
+              V = T(0, 0, −5)<small>平移矩阵的逆，就是采用反方向位移。</small>
+            </div>
+            <div class="note-strip fragment fade-up">
+              思考：把相机向远处移动，不等于简单“把物体缩小”；是否变小还取决于投影类型。
+            </div>
+          </section>
+          <section id="sec-4-3" data-timing="lesson">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Orientation</div>
+            <h2>相机旋转时，也要改变坐标轴的表达</h2>
+            <p class="lead fragment fade-up">
+              相机自身绕某个轴旋转，物体没有旋转，却会在相机画面中改变方位。
+            </p>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>相机位姿 C</h3>
+                <p>由旋转R和平移T构成，用来描述相机在哪里、朝向哪里。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>观察矩阵 V</h3>
+                <p>需要逆向使用旋转和平移，使相机成为新标架的原点与基准轴。</p>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              V = R<sup>T</sup> · T(−eye)<small>假设R是相机到世界的正交旋转，列向量约定。</small>
+            </div>
+            <div class="note-strip fragment fade-up">
+              联系第四章：矩阵乘法顺序不可交换；先移动世界，再转到相机方向。
+            </div>
+          </section>
+          <section id="sec-4-4" data-timing="lesson">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">Transformation Chain</div>
+            <h2>相机不是“贴在世界里的一张图片”</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">p<sub>model</sub></span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">M</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">p<sub>world</sub></span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">V</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">p<sub>eye</sub></span>
+            </div>
+            <div class="formula fragment fade-up">p<sub>eye</sub> = V · M · p<sub>model</sub></div>
+            <div class="note-strip fragment fade-up">
+              到这里仍然是三维坐标。二维投影要在第二课时引入P。
+            </div>
+          </section>
+          <section id="sec-4-5" data-timing="lesson">
+            <span class="slide-no">#sec-4-5</span>
+            <div class="eyebrow">Quick Check</div>
+            <h2>观察方向和视点的位置，谁改变了？</h2>
+            <div class="question-card fragment fade-up">
+              <strong>保持Eye不变，修改At，一般会直接改变什么？</strong>
+              <div class="answers">
+                <span>A. 相机的位置</span><span>B. 相机的观察方向</span
+                ><span>C. 模型自身顶点坐标</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　目标点变化会改变视线方向；模型数据没有被改写。
+            </div>
+            <div class="note-strip fragment fade-up">
+              补充：Eye和At同时作相同平移，可使相机整体移动而保持观察方向不变。
+            </div>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" data-timing="lesson">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Interactive Demo</div>
+            <h2>D05-01 · 相机与观察矩阵显微镜</h2>
+            <div
+              class="grid2 fragment fade-up"
+              style="gap: 20px; align-items: stretch; margin-top: 14px; margin-bottom: 12px"
+            >
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                  border: 1px solid var(--line);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D05-01 · 教学实验台</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >WebGL2 + Canvas 2D + 原生三维数学</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    虚拟相机与观察矩阵显微镜
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 10px 0"
+                  >
+                    改变相机参数，模型几何数据保持不可变。实时探究 Eye、At、Up
+                    如何构造相机标架，以及观察矩阵为何是位姿矩阵的逆。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹 <strong>三重视角联动</strong>：世界旁观概览、4×4 矩阵数值与 WebGL2
+                        透视渲染同步更新
+                      </div>
+                      <div>
+                        🔹 <strong>顶点不可变性</strong>：模型顶点 Buffer 永久保持不变，仅更新 View
+                        Matrix
+                      </div>
+                      <div>
+                        🔹 <strong>异常几何捕捉</strong>：实时拦截 Eye 与 At 重合及 Up
+                        与视线共线错误
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap5/D05-01_虚拟相机与观察矩阵显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 52px;
+                      font-size: 0.64em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：虚拟相机与观察矩阵显微镜</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  border-top: 1px solid var(--line);
+                  border-right: 1px solid var(--line);
+                  border-bottom: 1px solid var(--line);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">4 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题观察与验证
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.54em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>预测与平移</strong>：体验“Prediction → Operation → Observation →
+                      Explanation”流程，验证相机沿 +X 平移时点 P 的相机坐标为何减少 1。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>保持 Eye 改变 At</strong
+                      >：验证相机原地转向时，视线方向变化与旋转矩阵更新，确认相机位置未变。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>非法 Up 探究</strong>：设置 Up
+                      与视线同向，观察正交标架为何无法建立及几何原因。
+                    </li>
+                    <li>
+                      <strong>顶点 Buffer 监视</strong>：观察操作全过程，Vertex Buffer
+                      状态指示灯是否全程绿灯保持未改变。
+                    </li>
+                  </ol>
+                </div>
+                <div
+                  style="
+                    font-size: 0.48em;
+                    color: var(--muted);
+                    border-top: 1px dashed var(--line);
+                    padding-top: 8px;
+                  "
+                >
+                  💡 重点理解：改变相机与移动世界具有互逆的相对运动关系（\(V =
+                  C_{\text{pose}}^{-1}\)）。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">
+              【D05-01
+              虚拟相机与观察变换显微镜】独立交互HTML制作提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              制作独立HTML交互教学Demo，不依赖外部库，界面深蓝/蓝灰/青蓝浅色风格，16:9展示。左侧三维世界视图显示相机位置、朝向和静止立方体/简化器械模型；中间实时显示相机局部u-v-n标架、一个样本点的世界坐标和相机坐标以及4×4观察矩阵；右侧显示从当前相机观察的结果。参数控件分别为Eye、At、Up，可一键复位，禁止改变模型Buffer；将相机平移与旋转以不同按钮区分，提示Up共线错误。内置Prediction→Operation→Observation→Explanation引导。
+              制作完成后将占位符替换为链接或iframe，并保留本页课堂操作要求。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              请先口头预测，再操作滑块；Demo中应显示坐标和矩阵的中间状态，而不仅是最终图像。
+            </div>
+          </section>
+          <section id="sec-5-2" data-timing="lesson">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Demo Experiment</div>
+            <h2>三次操作，只改变一个条件</h2>
+            <div class="item-list">
+              <div class="item fragment fade-up">
+                <span class="number">1</span><span>保持朝向不变，改变Eye：观察相对坐标变化。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">2</span><span>保持Eye不变，改变At：观察相机朝向改变。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">3</span><span>保持Eye和At不变，改变Up：观察相机滚转。</span>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              记录：哪些操作会导致观察矩阵改变？哪些操作会改变对象的原始顶点Buffer？
+            </div>
+          </section>
+          <section id="sec-5-3" data-timing="lesson">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Observation → Explanation</div>
+            <h2>实验现象说明了什么？</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>坐标表示改变</h3>
+                <p>世界中相同的顶点，在相机坐标中的分量会随着观察矩阵改变。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>模型几何保持</h3>
+                <p>改变Eye、At、Up时不需要重新生成模型顶点，只需改变观察状态并重新渲染。</p>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              Scene Geometry（固定） + View Matrix（变化） → New View
+            </div>
+            <div class="note-strip fragment fade-up">
+              连接第三章的事件输入、动画循环与第四章的uniform矩阵传递。
+            </div>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" data-timing="lesson">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Code Walkthrough</div>
+            <h2>在JavaScript中调用lookAt</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-trim="" data-line-numbers="">const viewMatrix = mat4.create();
+const eye = [3, 2, 6];
+const at  = [0, 0, 0];
+const up  = [0, 1, 0];
+
+mat4.lookAt(viewMatrix, eye, at, up);</code></pre>
+            <div class="note-strip fragment fade-up">
+              与教材中的lookAt(eye, at, up)记号对应。注意gl-matrix的接口需要输出矩阵参数。
+            </div>
+            <p class="sublead fragment fade-up">
+              这段代码创建的是世界坐标到相机坐标的观察矩阵，不是相机对象的模型矩阵。
+            </p>
+          </section>
+          <section id="sec-6-2" data-timing="lesson">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Shader Connection</div>
+            <h2>第四章的Model Matrix，接上View Matrix</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-glsl" data-trim="" data-line-numbers="">vec4 worldPosition = uModelMatrix * aPosition;
+vec4 cameraPosition = uViewMatrix * worldPosition;
+// 下一课：gl_Position = uProjectionMatrix * cameraPosition;</code></pre>
+            <div class="flow">
+              <span class="node fragment fade-up">Vertex Buffer</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">Model</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">World</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">View</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">Camera</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              今天先理解相机坐标的形成，不把cameraPosition误认为已经完成投影的gl_Position。
+            </div>
+          </section>
+          <section id="sec-6-3" data-timing="lesson">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">AI Collaboration · Bug Hunt</div>
+            <h2>AI给出的相机解释是否正确？</h2>
+            <div class="fragment fade-up">
+              <div class="activity ai">
+                <div class="tag">AI CLAIM</div>
+                <p>“lookAt返回相机在世界中的位姿矩阵，因此可直接作为相机的Model Matrix使用。”</p>
+              </div>
+            </div>
+            <div class="item-list">
+              <div class="item fragment fade-up">
+                <span class="number">1</span><span>确定lookAt输出矩阵的映射方向。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">2</span><span>写出相机位姿C与观察矩阵V的关系。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">3</span><span>用相机位于(0,0,5)的数值例子核验。</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>结论：</strong>通常V=C⁻¹；说“相机放在Z=5”不等于把V平移到Z=5。
+            </div>
+          </section>
+          <section id="sec-6-4" data-timing="lesson">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">Performance Connection</div>
+            <h2>相机变化时，需要修改什么数据？</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>通常不变</h3>
+                <p>模型顶点数组、拓扑和Vertex Buffer。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>会更新</h3>
+                <p>View Matrix及对应的uniform；然后重新绘制。</p>
+              </div>
+            </div>
+            <div class="question-card fragment fade-up">
+              <strong>仅移动虚拟相机时，下列哪项通常必须更新？</strong>
+              <div class="answers">
+                <span>A. 全部几何顶点坐标</span><span>B. 观察矩阵uniform</span
+                ><span>C. 每个顶点的索引顺序</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　可以使用原有顶点Buffer和新的观察矩阵。
+            </div>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" data-timing="lesson">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">Connection to Next Lesson</div>
+            <h2>观察变换解决了什么，还没解决什么？</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">三维对象</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">模型变换 M</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">世界场景</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">观察变换 V</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">相机坐标</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              下一课的问题：已经得到相机坐标，怎样决定正交/透视、裁剪范围并得到屏幕上的二维图像？
+            </div>
+          </section>
+          <section id="sec-7-2" data-timing="lesson">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课时小结：相机如何进入绘制流水线</h2>
+            <div class="summary-list">
+              <div class="item fragment fade-up">
+                <span class="number">1</span
+                ><span><strong>Eye / At / Up</strong> 定义观察位置、视线及参考向上方向。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">2</span
+                ><span><strong>lookAt</strong> 构造从世界到相机的观察矩阵。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">3</span
+                ><span><strong>V=C⁻¹</strong> 体现参考标架转换的逆变换思想。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">4</span
+                ><span><strong>p_eye=V·M·p_model</strong> 是下一课投影的输入。</span>
+              </div>
+            </div>
+          </section>
+          <section id="sec-7-3" data-timing="lesson">
+            <span class="slide-no">#sec-7-3</span>
+            <div class="eyebrow">Exit Ticket</div>
+            <h2>Exit Ticket · 一句话解释逆变换</h2>
+            <div class="fragment fade-up">
+              <div class="question-card">
+                <strong
+                  >相机朝向不变、沿世界X轴正方向平移时，世界中的固定物体在相机坐标中沿哪个方向变化？为什么？</strong
+                >
+                <div class="answers"><span>先写出预测，再用“世界相对于相机”的语言解释。</span></div>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              期望答案：物体相对坐标沿X负方向变化，因为观察变换使用相机位姿的逆变换。
+            </div>
+            <p class="sublead fragment fade-up">
+              课堂结束：请学生指出Model Matrix与View Matrix各自回答什么问题。
+            </p>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>

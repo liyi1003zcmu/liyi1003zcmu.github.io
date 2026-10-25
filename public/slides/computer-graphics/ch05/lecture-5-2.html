@@ -1,0 +1,2529 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 5-2 投影、视见体与成像</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 5 additions: all new pages retain the Chapter 4 design tokens. */
+      .reveal .slides section {
+        box-sizing: border-box;
+      }
+
+      .reveal .slides section:not(.stack) {
+        text-align: left;
+      }
+
+      .reveal .slides section > .eyebrow,
+      .reveal .slides section > h2 {
+        flex-shrink: 0;
+      }
+
+      .reveal .slides section h2 {
+        font-size: 1.43em;
+        line-height: 1.19;
+        margin: 0.06em 0 0.34em;
+      }
+
+      .reveal .slides .lead {
+        max-width: 1350px !important;
+      }
+
+      .reveal .slides .sublead {
+        font-size: 0.67em !important;
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .card {
+        padding: 22px 25px;
+      }
+
+      .reveal .slides .card p,
+      .reveal .slides .card li {
+        font-size: 0.61em;
+        line-height: 1.45;
+        margin: 0.12em 0;
+      }
+
+      .reveal .slides .card .mini {
+        font-size: 0.51em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .card h3 {
+        font-size: 0.82em;
+        margin: 0 0 0.3em;
+      }
+
+      .reveal .slides .flow {
+        margin: 15px 0 8px;
+        gap: 9px;
+      }
+
+      .reveal .slides .flow .node {
+        font-size: 0.55em;
+        padding: 15px 18px;
+        min-width: 150px;
+      }
+
+      .reveal .slides .flow .arrow {
+        font-size: 0.75em;
+      }
+
+      .reveal .slides .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .reveal .slides .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .stack-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .reveal .slides .stage {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 13px 20px;
+        text-align: center;
+        font-size: 0.57em;
+      }
+
+      .reveal .slides .stage strong {
+        display: block;
+        color: var(--cyan);
+      }
+
+      .reveal .slides .formula {
+        background: #eef5fb;
+        border-left: 6px solid var(--blue);
+        border-radius: 15px;
+        padding: 19px 26px;
+        font-size: 0.93em;
+        text-align: center;
+        letter-spacing: 0.02em;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .formula small {
+        display: block;
+        font-size: 0.54em;
+        margin-top: 6px;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+
+      .reveal .slides .note-strip {
+        background: #f0f6fc;
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        border-radius: 16px;
+        padding: 14px 20px;
+        font-size: 0.59em;
+        line-height: 1.5;
+        margin-top: 15px;
+      }
+
+      .reveal .slides .note-strip.warn {
+        background: #fff8ee;
+        border-color: rgba(154, 93, 0, 0.25);
+      }
+
+      .reveal .slides .note-strip.ok {
+        background: #eef9f4;
+        border-color: rgba(30, 138, 100, 0.23);
+      }
+
+      .reveal .slides .item-list {
+        display: grid;
+        gap: 12px;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: white;
+        border: 1px solid var(--line);
+        padding: 13px 19px;
+        border-radius: 15px;
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .item .number {
+        background: #e9f3fb;
+        color: #176ea7;
+        font-weight: 800;
+        border-radius: 12px;
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .reveal .slides .item b {
+        color: var(--cyan);
+      }
+
+      .reveal .slides .item span.desc {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .media-placeholder {
+        width: 100%;
+        min-height: 290px;
+        background: repeating-linear-gradient(
+          135deg,
+          #f2f6fb,
+          #f2f6fb 14px,
+          #edf3f9 14px,
+          #edf3f9 28px
+        );
+        border: 2px dashed rgba(21, 125, 184, 0.4);
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 11px;
+        padding: 26px 30px;
+        margin: 14px auto;
+      }
+
+      .reveal .slides .media-placeholder.compact {
+        min-height: 230px;
+      }
+
+      .reveal .slides .media-placeholder .media-id {
+        background: #dfeef9;
+        border: 1px solid #bedbed;
+        border-radius: 999px;
+        color: #165d8c;
+        font-size: 0.43em;
+        padding: 7px 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+
+      .reveal .slides .media-placeholder .media-title {
+        font-size: 0.89em;
+        font-weight: 780;
+        color: #173b63;
+      }
+
+      .reveal .slides .media-placeholder .media-description {
+        max-width: 1100px;
+        font-size: 0.56em;
+        color: #5e7287;
+        line-height: 1.45;
+      }
+
+      .reveal .slides .media-placeholder.demo {
+        background: linear-gradient(135deg, #eff8fc, #ecf3fc);
+        border-color: #2f89b9;
+      }
+
+      .reveal .slides .media-placeholder.demo .media-id {
+        background: #d5eefa;
+      }
+
+      .reveal .slides .media-placeholder .link-hint {
+        color: #1975ae;
+        font-size: 0.48em;
+        font-weight: 700;
+      }
+
+      .reveal .slides pre {
+        box-shadow: none;
+        margin: 15px auto;
+        width: 100%;
+        background: #172d46;
+        color: #f5f8ff;
+        border-radius: 18px;
+        padding: 20px 24px;
+        border: 1px solid #35506b;
+        font-size: 0.55em;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .reveal .slides pre code {
+        background: transparent;
+        color: inherit;
+        font-size: 1em;
+        line-height: 1.5;
+        max-height: none;
+        padding: 0;
+      }
+
+      .reveal .slides table {
+        font-size: 0.56em;
+      }
+
+      .reveal .slides th,
+      .reveal .slides td {
+        padding: 0.5em 0.6em;
+      }
+
+      .reveal .slides .question-card {
+        border: 2px solid rgba(47, 100, 200, 0.23);
+        border-left: 8px solid var(--blue);
+        background: #f6f9ff;
+        padding: 20px 24px;
+        border-radius: 18px;
+        font-size: 0.72em;
+        line-height: 1.48;
+      }
+
+      .reveal .slides .question-card .answers {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 0.83em;
+      }
+
+      .reveal .slides .question-card .answers span {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 9px 13px;
+      }
+
+      .reveal .slides .tiny {
+        font-size: 0.51em !important;
+        color: var(--muted);
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .summary-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .reveal .slides .summary-list .item {
+        padding: 14px 19px;
+      }
+
+      .reveal .slides .title-slide .eyebrow {
+        font-size: 0.45em;
+      }
+
+      .reveal .slides .title-slide h1 {
+        font-size: 2.05em;
+      }
+
+      .reveal .slides .title-slide .lead {
+        font-size: 0.87em !important;
+      }
+
+      .reveal .slides .title-flow .chip {
+        font-size: 0.5em;
+      }
+
+      .reveal .slides .activity {
+        padding: 16px 22px;
+        margin-top: 16px;
+      }
+
+      .reveal .slides .activity p {
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .slide-no {
+        right: 6px;
+        top: 0;
+      }
+
+      .reveal .slides section.present > .eyebrow:not(.fragment),
+      .reveal .slides section.active-slide > .eyebrow:not(.fragment) {
+        animation: chapter5Fade 0.3s both;
+      }
+
+      .reveal .slides section.present > h2:not(.fragment),
+      .reveal .slides section.active-slide > h2:not(.fragment) {
+        animation: chapter5Fade 0.45s 0.08s both;
+      }
+
+      @keyframes chapter5Fade {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .reveal .slides .flow-marker {
+        display: inline-block;
+        font-weight: 800;
+        font-size: 0.8em;
+        color: var(--cyan);
+        padding: 0 8px;
+      }
+
+      .reveal .slides .two-col .media-placeholder {
+        min-height: 240px;
+      }
+
+      .reveal .slides .grid3 .card {
+        padding: 18px 20px;
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261025" rel="stylesheet" />
+    <style>
+      /* 全局标题与文字层级优化：消除标题过大与视口压迫感 */
+      .reveal h1 {
+        font-size: 1.65em !important;
+        line-height: 1.15 !important;
+        margin: 0.12em 0 0.28em !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      .reveal h2 {
+        font-size: 1.18em !important;
+        line-height: 1.22 !important;
+        margin: 0.06em 0 0.3em !important;
+        letter-spacing: -0.02em !important;
+        color: #14345e !important;
+      }
+
+      .reveal h3 {
+        font-size: 0.85em !important;
+        line-height: 1.25 !important;
+        margin: 0.12em 0 0.32em !important;
+      }
+
+      .reveal h4 {
+        font-size: 0.7em !important;
+        line-height: 1.28 !important;
+        margin: 0.1em 0 0.28em !important;
+        color: var(--blue) !important;
+      }
+
+      .reveal .lead {
+        font-size: 0.62em !important;
+        line-height: 1.48 !important;
+        color: #475569 !important;
+        margin-bottom: 12px !important;
+        max-width: 1400px !important;
+      }
+
+      .reveal .sublead {
+        font-size: 0.52em !important;
+        line-height: 1.42 !important;
+        color: var(--muted) !important;
+      }
+
+      .reveal .eyebrow {
+        font-size: 0.38em !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        color: var(--cyan) !important;
+        margin-bottom: 0.25em !important;
+      }
+
+      .reveal .quote {
+        font-size: 0.64em !important;
+        line-height: 1.42 !important;
+      }
+
+      /* 上标与下标定位修复（避免 reset.css baseline 抹平） */
+      .reveal sub,
+      .reveal sup {
+        font-size: 0.72em !important;
+        line-height: 0 !important;
+        position: relative !important;
+        vertical-align: baseline !important;
+      }
+
+      .reveal sup {
+        top: -0.48em !important;
+        margin-left: 1px;
+      }
+
+      .reveal sub {
+        bottom: -0.22em !important;
+        margin-left: 1px;
+      }
+
+      /* 代码块与行号视觉增强：大教室投影清晰字号(~32px)、行距1.68、行号分割线与精致卡片质感 */
+      .reveal pre {
+        width: 100% !important;
+        font-size: 0.72em !important; /* 基准44px下为 31.7px，80人教室清晰可辨 */
+        line-height: 1.68 !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(30, 56, 96, 0.18) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 26px rgba(31, 56, 88, 0.08) !important;
+        margin: 16px auto !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .reveal pre code {
+        display: block !important;
+        padding: 18px 24px !important;
+        overflow-x: auto !important;
+        background: #ffffff !important;
+        color: #1e293b !important;
+        font-family:
+          'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 1em !important; /* 与 pre 字号严格一致，杜绝嵌套复合缩小 */
+        line-height: 1.68 !important;
+        tab-size: 2 !important;
+      }
+
+      /* 内部表格、单元格、行号与代码行全部继承统一字号，防止多层 em 嵌套缩减 */
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln,
+      .reveal pre code tr,
+      .reveal pre code td,
+      .reveal pre code .hljs-ln-code,
+      .reveal pre code .hljs-ln-numbers,
+      .reveal pre code .hljs-ln-line,
+      .reveal pre code span {
+        font-family: inherit !important;
+        font-size: 1em !important;
+        line-height: 1.68 !important;
+      }
+
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      .reveal pre code table.hljs-ln td {
+        border: 0 !important;
+        padding: 2px 0 !important;
+        vertical-align: middle !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-numbers {
+        min-width: 48px !important;
+        padding-right: 18px !important;
+        margin-right: 0 !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        text-align: right !important;
+        border-right: 2px solid rgba(21, 125, 184, 0.25) !important;
+        user-select: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-code {
+        padding-left: 20px !important;
+        white-space: pre !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code tr:hover td {
+        background: rgba(21, 125, 184, 0.05) !important;
+      }
+
+      .media-shell {
+        height: 440px !important;
+        margin-top: 10px !important;
+      }
+
+      .card {
+        padding: 16px 20px !important;
+      }
+
+      .card p,
+      .card li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .activity p,
+      .activity li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .question p {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 5 · 02</div>
+            <h1>投影、视见体与成像</h1>
+            <p class="lead fragment fade-up">
+              同一场景如何生成正交或透视图像？从Projection Matrix到屏幕。
+            </p>
+            <div class="title-flow">
+              <span class="chip fragment fade-up">投影类型</span
+              ><span class="chip fragment fade-up">观察体</span
+              ><span class="chip fragment fade-up">透视除法</span
+              ><span class="chip fragment fade-up">MVP</span
+              ><span class="chip fragment fade-up">Viewport</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              第5章 · 观察　｜　40分钟独立教学单元　｜　WebGL2 / Reveal.js
+            </div>
+          </div>
+          <aside class="notes">
+            本课页码采用与第四章一致的sec-x及sec-x-y双层编号；页面标题进入时淡入，主体内容使用fragment逐项呈现。
+          </aside>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" data-timing="lesson">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · MED × CG</div>
+            <h2>同一相机，为什么会得到两种不同图像？</h2>
+            <p class="lead fragment fade-up">
+              观察相同的骨骼与植入物三维模型：一张保持平行线关系，一张更接近人眼的近大远小。
+            </p>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-05.png"
+                alt="固定视角的正交与透视对照"
+                data-fallback="固定视角的正交与透视对照"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 画一组经过简化的三维医学骨骼与植入物/方盒模型，左侧正交投影，右侧透视投影。两边使用同一相机位置和朝向、相同物体布局、同一视口大小；突出“远处同尺寸物体在正交下等大，在透视下变小”。要可严格比较，不用摄影照片。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-05
+              固定视角的正交与透视对照】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              画一组经过简化的三维医学骨骼与植入物/方盒模型，左侧正交投影，右侧透视投影。两边使用同一相机位置和朝向、相同物体布局、同一视口大小；突出“远处同尺寸物体在正交下等大，在透视下变小”。要可严格比较，不用摄影照片。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <aside class="notes">
+              【讲课提示】使用医学模型作为应用场景，核心几何规律通过两个等尺寸立方体表达，避免模型复杂轮廓干扰规律。
+            </aside>
+          </section>
+          <section id="sec-2-2" data-timing="lesson">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Prediction</div>
+            <h2>相机参数不变，成像方式可以改变吗？</h2>
+            <div class="question-card fragment fade-up">
+              <strong>相同模型、相同Eye/At/Up，如果只切换投影方式，哪项可能改变？</strong>
+              <div class="answers">
+                <span>A. 物体的几何顶点数据</span><span>B. 图像中物体的相对尺寸和空间感</span
+                ><span>C. 相机的世界位置</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　投影矩阵决定从相机坐标到裁剪空间的映射。
+            </div>
+            <div class="note-strip fragment fade-up">
+              问题：哪一种适合显示空间深度，哪一种适合固定方向上的几何比较？
+            </div>
+          </section>
+          <section id="sec-2-3" data-timing="lesson">
+            <span class="slide-no">#sec-2-3</span>
+            <div class="eyebrow">Connection</div>
+            <h2>观察矩阵解决“从哪看”，投影矩阵解决“怎样成像”</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">模型位置 M</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">相机视角 V</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">投影方式 P</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">裁剪/NDC</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">屏幕图像</span>
+            </div>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>View Matrix · V</h3>
+                <p>决定相机坐标系中的几何位置和方向。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Projection Matrix · P</h3>
+                <p>决定投影规律，并将所需视见体映射到规范裁剪空间。</p>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" data-timing="lesson">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Projection Taxonomy</div>
+            <h2>两大类投影，而非许多互不相关的投影</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-06.png"
+                alt="经典投影分类总览"
+                data-fallback="经典投影分类总览"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 画严谨的计算机图形学经典投影分类示意，顶端分为“平行投影”和“透视投影”。平行侧三个极简立方体小图：多视图正交、轴测、斜投影；透视侧三个极简方盒/建筑框架小图：一点、两点、三点透视。突出分类关系，不推导公式，严格保持16:9简洁留白。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-06
+              经典投影分类总览】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              画严谨的计算机图形学经典投影分类示意，顶端分为“平行投影”和“透视投影”。平行侧三个极简立方体小图：多视图正交、轴测、斜投影；透视侧三个极简方盒/建筑框架小图：一点、两点、三点透视。突出分类关系，不推导公式，严格保持16:9简洁留白。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              计算机观察中，经典图形的差异还来自对象、相机和投影面的相对关系。
+            </div>
+          </section>
+          <section id="sec-3-2" data-timing="lesson">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Classical Views</div>
+            <h2>正视、侧视、轴测：为什么没有近大远小？</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>多视图正交</h3>
+                <p>视线与投影面垂直，采用多个观察方向辅助理解三维形体。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>轴测和斜投影</h3>
+                <p>仍属于平行投影；通过改变视线或投影方向，在一张图中显示多个表面。</p>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">平行投影线 ⇒ 相同方向上的尺度不随深度而改变</div>
+            <div class="note-strip fragment fade-up">
+              注意：二维正交投影一般不能保留三维空间任意方向的真实长度；只能在相应的投影平面或经过校准的方向上比较尺寸。
+            </div>
+          </section>
+          <section id="sec-3-3" data-timing="lesson">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Application Choice</div>
+            <h2>医学三维模型应该选择哪一种投影？</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>正交投影</h3>
+                <p>适合固定方向的结构对照、构件排列及某些测量辅助显示。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>透视投影</h3>
+                <p>更直观体现前后、距离和空间深度，适合三维浏览与交互。</p>
+              </div>
+            </div>
+            <div class="fragment fade-up">
+              <div class="activity">
+                <div class="tag">CLASS DISCUSSION</div>
+                <p>在器械定位检查界面中，为什么可能需要让用户在两种投影之间切换？</p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              强调二者互补，不将“透视更真实”等同于“所有医学应用都更准确”。
+            </div>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" data-timing="lesson">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Orthographic Projection</div>
+            <h2>正交投影：投影线与投影平面垂直</h2>
+            <p class="lead fragment fade-up">
+              在平行投影的一种常用情形中，所有投影线互相平行且垂直于投影平面。
+            </p>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-07.png"
+                alt="正交投影原理"
+                data-fallback="正交投影原理"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 极简三维几何原理图：一张竖直投影平面、两个位于不同深度但大小相同的立方体、四五条方向平行且垂直投影面的蓝色投影线；在投影面上画出同样尺寸的轮廓。显著标注投影线互相平行。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-07
+              正交投影原理】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              极简三维几何原理图：一张竖直投影平面、两个位于不同深度但大小相同的立方体、四五条方向平行且垂直投影面的蓝色投影线；在投影面上画出同样尺寸的轮廓。显著标注投影线互相平行。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+          </section>
+          <section id="sec-4-2" data-timing="lesson">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">View Volume</div>
+            <h2>正交观察体是一个长方体</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-08.png"
+                alt="正交观察体六个边界"
+                data-fallback="正交观察体六个边界"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 绘制正交摄像机的矩形长方体观察体，左/右/上/下/近/远六个面使用浅青蓝细线；相机Eye在外侧，朝负Z方向，明确near与far是正的距离参数。让投影线保持平行。旁边只画一个部分超出观察体的立方体以说明裁剪。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-08
+              正交观察体六个边界】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              绘制正交摄像机的矩形长方体观察体，左/右/上/下/近/远六个面使用浅青蓝细线；相机Eye在外侧，朝负Z方向，明确near与far是正的距离参数。让投影线保持平行。旁边只画一个部分超出观察体的立方体以说明裁剪。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              观察体与视口不是同一概念：前者决定场景中哪些区域进入成像，后者决定图像映射到屏幕的哪里。
+            </div>
+          </section>
+          <section id="sec-4-3" data-timing="lesson">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Normalization</div>
+            <h2>为什么要把任意观察体映射到规范立方体？</h2>
+            <p class="lead fragment fade-up">
+              不同程序和模型可以使用不同世界单位；GPU裁剪和后续处理需要统一的规范范围。
+            </p>
+            <div class="flow">
+              <span class="node fragment fade-up">视空间范围 [l,r]</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">平移 + 缩放</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">规范范围 [−1,1]</span>
+            </div>
+            <div class="formula fragment fade-up">
+              x<sub>ndc</sub> = 2(x − l)/(r − l) − 1<small
+                >这里以正交投影的X分量为例说明；Y、Z按相应边界映射。</small
+              >
+            </div>
+            <div class="note-strip fragment fade-up">
+              课堂快速代入：x=l时得到−1；x=r时得到1；中点对应0。
+            </div>
+          </section>
+          <section id="sec-4-4" data-timing="lesson">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">WebGL API · ortho</div>
+            <h2>用六个参数构造正交投影矩阵</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-trim="" data-line-numbers="">const projectionMatrix = mat4.create();
+mat4.ortho(projectionMatrix,
+  left, right, bottom, top, near, far);</code></pre>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>P<sub>ortho</sub> 的作用</h3>
+                <p>将选定的长方体观察范围映射为规范裁剪范围。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>与View的区别</h3>
+                <p>改变ortho的边界不会自动改变eye/at/up或相机方向。</p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              这里使用gl-matrix函数签名；near/far与默认相机沿负Z方向的约定保持一致。
+            </div>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" data-timing="lesson">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Perspective Projection</div>
+            <h2>透视投影：投影线汇聚于一个中心</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-09.png"
+                alt="从针孔相机到透视投影"
+                data-fallback="从针孔相机到透视投影"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 绘制简洁针孔相机/虚拟相机几何侧视图：左侧投影中心COP，中间垂直成像平面，右侧两个距离不同但高度相同的物体；多条射线都经过COP，投影平面上远物体像较小。可以把成像平面放在COP前方以避免倒像讨论。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-09
+              从针孔相机到透视投影】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              绘制简洁针孔相机/虚拟相机几何侧视图：左侧投影中心COP，中间垂直成像平面，右侧两个距离不同但高度相同的物体；多条射线都经过COP，投影平面上远物体像较小。可以把成像平面放在COP前方以避免倒像讨论。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              同一条深度方向上，物体越远，投影缩小越明显；正交投影没有这种透视性变化。
+            </div>
+          </section>
+          <section id="sec-5-2" data-timing="lesson">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Similarity of Triangles</div>
+            <h2>近大远小来自相似三角形</h2>
+            <p class="lead fragment fade-up">
+              相机位于原点、沿负Z方向看，在z = −f平面投影。由相似三角形可得到：
+            </p>
+            <div class="formula fragment fade-up">x′ = f · x/(−z)　　y′ = f · y/(−z)</div>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>近处：z=−2</h3>
+                <p>取f=1、x=1，则x′=0.5。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>远处：z=−4</h3>
+                <p>取f=1、x=1，则x′=0.25。</p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              学生应能解释：分母随距离增加，投影后的坐标幅度变小。
+            </div>
+          </section>
+          <section id="sec-5-3" data-timing="lesson">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Homogeneous Coordinates</div>
+            <h2>非线性透视关系，为什么仍可用矩阵？</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">三维点的齐次表示</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">4×4 投影矩阵</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up"
+                >裁剪坐标 (x<sub>c</sub>,y<sub>c</sub>,z<sub>c</sub>,w<sub>c</sub>)</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node primary fragment fade-up">除以 w<sub>c</sub></span>
+            </div>
+            <div class="formula fragment fade-up">
+              x<sub>ndc</sub> = x<sub>c</sub>/w<sub>c</sub>，y<sub>ndc</sub> = y<sub>c</sub>/w<sub
+                >c</sub
+              >
+            </div>
+            <div class="note-strip fragment fade-up">
+              透视投影矩阵利用齐次分量表示深度相关的变换；真正的除法由顶点着色器之后的流水线阶段完成。
+            </div>
+          </section>
+          <section id="sec-5-4" data-timing="lesson">
+            <span class="slide-no">#sec-5-4</span>
+            <div class="eyebrow">Perspective Frustum</div>
+            <h2>透视观察体是截头锥体（视锥体）</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 480px !important; margin-top: 14px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-10.png"
+                alt="透视视锥体与近远裁剪面"
+                data-fallback="透视视锥体与近远裁剪面"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 计算机图形学视锥体Frustum几何示意，虚拟相机位于左端，向右打开四条边界射线，近裁剪矩形和远裁剪矩形分别用青色细框和蓝灰细框表示，标清垂直视角fovy与near/far正距离，在右侧小框注明aspect=宽/高，整体极简、准确、无三角函数推导。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-10
+              透视视锥体与近远裁剪面】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              计算机图形学视锥体Frustum几何示意，虚拟相机位于左端，向右打开四条边界射线，近裁剪矩形和远裁剪矩形分别用青色细框和蓝灰细框表示，标清垂直视角fovy与near/far正距离，在右侧小框注明aspect=宽/高，整体极简、准确、无三角函数推导。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              不把视锥体理解为真实光线追踪空间；这里是栅格化管线用来决定可见范围的几何体。
+            </div>
+          </section>
+          <section id="sec-5-5" data-timing="lesson">
+            <span class="slide-no">#sec-5-5</span>
+            <div class="eyebrow">Perspective Parameters</div>
+            <h2>四个参数，分别控制取景和裁剪</h2>
+            <div class="fragment fade-up">
+              <table>
+                <thead>
+                  <tr>
+                    <th>参数</th>
+                    <th>含义</th>
+                    <th>改变后的典型效果</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>fovy</td>
+                    <td>垂直视角</td>
+                    <td>变大 → 视野更广、物体通常更小</td>
+                  </tr>
+                  <tr>
+                    <td>aspect</td>
+                    <td>宽高比</td>
+                    <td>决定水平与垂直显示范围比例</td>
+                  </tr>
+                  <tr>
+                    <td>near</td>
+                    <td>近裁剪距离</td>
+                    <td>太近的几何可能被裁剪</td>
+                  </tr>
+                  <tr>
+                    <td>far</td>
+                    <td>远裁剪距离</td>
+                    <td>太远的几何可能被裁剪</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-trim="" data-line-numbers="">mat4.perspective(projectionMatrix,
+  Math.PI / 4, canvas.width / canvas.height,
+  0.1, 100.0);</code></pre>
+            <div class="note-strip fragment fade-up">
+              gl-matrix中fovy单位是弧度；通常要求0 < near < far。
+            </div>
+          </section>
+          <section id="sec-5-6" data-timing="lesson">
+            <span class="slide-no">#sec-5-6</span>
+            <div class="eyebrow">Prediction Before Demo</div>
+            <h2>预测：FOV、near与相机后退是否相同？</h2>
+            <div class="question-card fragment fade-up">
+              <strong>固定相机、模型、视口大小，把fovy由45°增至90°，图中物体通常怎样变化？</strong>
+              <div class="answers">
+                <span>A. 更大</span><span>B. 更小，同时视野范围更宽</span
+                ><span>C. 大小不变，只改变遮挡关系</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>答案：B</strong>　FOV越大，相同角度范围内屏幕单位对应越少。
+            </div>
+            <div class="note-strip fragment fade-up">
+              接下来用相同模型和相机，分开修改参数验证，避免一次调整多个变量。
+            </div>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" data-timing="lesson">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Interactive Demo</div>
+            <h2>D05-02 · 正交与透视投影显微镜</h2>
+            <div
+              class="grid2 fragment fade-up"
+              style="gap: 20px; align-items: stretch; margin-top: 14px; margin-bottom: 12px"
+            >
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                  border: 1px solid var(--line);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D05-02 · 教学实验台</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >WebGL2 + Canvas 2D + 原生三维数学</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    正交与透视投影交互显微镜
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 10px 0"
+                  >
+                    相机和模型不变，只改变投影矩阵。直观观察正交长方体与透视视锥体的形态变化，实时验证近大远小与裁剪机制。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹
+                        <strong>三重视角联动</strong
+                        >：外部三维观察体、中间真实渲染高度实测与右侧完整投影参数控制
+                      </div>
+                      <div>
+                        🔹 <strong>顶点不可变性</strong>：场景中两只立方体顶点 Buffer
+                        永久保持不变，仅更新投影矩阵 P
+                      </div>
+                      <div>
+                        🔹 <strong>坐标显微镜</strong>：实时跟踪计算点在裁剪空间 (Clip)
+                        与透视除法后的 NDC 坐标
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap5/D05-02_正交与透视投影交互显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 52px;
+                      font-size: 0.64em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：正交与透视投影显微镜</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  border-top: 1px solid var(--line);
+                  border-right: 1px solid var(--line);
+                  border-bottom: 1px solid var(--line);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">4 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题观察与验证
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.54em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>正交 vs 透视切换</strong
+                      >：观察两只严格同尺寸立方体在正交下的等高显示（1:1）与透视下的近大远小差异。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>视场角 fovy 调节</strong>：在透视模式下逐步减小
+                      fovy，观察视锥体变窄时屏幕物体如何被“拉近放大”。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>Near/Far 边界裁剪</strong>：增大 near 使其切入近处物体，或缩小 far
+                      使远处物体消失，确认被裁剪不是遮挡。
+                    </li>
+                    <li>
+                      <strong>数学与 NDC 检验</strong>：展开“坐标显微镜”，观察透视除法中 \(w = -z\)
+                      如何将远近坐标压缩映射至 NDC。
+                    </li>
+                  </ol>
+                </div>
+                <div
+                  style="
+                    font-size: 0.48em;
+                    color: var(--muted);
+                    border-top: 1px dashed var(--line);
+                    padding-top: 8px;
+                  "
+                >
+                  💡
+                  核心法则：投影矩阵定义了“可视范围的几何体”和“如何将三维几何映射到二维规范视口”。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">
+              【D05-02
+              双投影与视见体交互实验台】独立交互HTML制作提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              制作独立运行HTML教学Demo，不引入额外库，保持16:9白底、深蓝/青蓝、简洁大字号。左侧三维场景显示两只相同立方体或简单医疗模型、固定相机和动态观察体；中间显示正交/透视投影结果；右侧提供投影切换、fovy、aspect、near、far及正交边界控制。每一步显示被裁剪、仍可见和最终投影的区别，可选显示裁剪空间、透视除法后NDC数值；内置恢复默认按钮。具有Prediction→Operation→Observation→Explanation区域。
+              制作完成后将占位符替换为链接或iframe，并保留本页课堂操作要求。
+            </aside>
+            <div class="note-strip fragment fade-up">
+              教学重点是观察中间状态，确认“投影选择”和“相机位置”是两类不同参数。
+            </div>
+          </section>
+          <section id="sec-6-2" data-timing="lesson">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Demo Operations</div>
+            <h2>三轮参数实验：一次只改一个因素</h2>
+            <div class="item-list">
+              <div class="item fragment fade-up">
+                <span class="number">1</span
+                ><span>固定相机与模型，切换正交/透视：比较不同深度同尺寸物体。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">2</span
+                ><span>固定其余参数，增大fovy：观察物体在画面中变小。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">3</span
+                ><span>逐步增大near或缩小far：观察部分几何消失的边界。</span>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              在第三轮特别询问：被裁剪掉，是否等于被前面的物体遮挡？答案：不是。
+            </div>
+          </section>
+          <section id="sec-6-3" data-timing="lesson">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Complete Viewing Pipeline</div>
+            <h2>从三维对象到屏幕：现在把整条链连接起来</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 430px !important; margin-top: 10px !important"
+            >
+              <img
+                src="./images/chap05/ch05-R05-11.png"
+                alt="第五章完整MVP与屏幕成像流程"
+                data-fallback="第五章完整MVP与屏幕成像流程"
+                data-prompt="16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。 简洁大学图形学WebGL2观察流水线流程图，左到右层级：对象坐标、Model Matrix、世界坐标、View Matrix、相机坐标、Projection Matrix、裁剪坐标、Clip / Perspective Divide、NDC、Viewport、屏幕像素。节点上用M、V、P小标记；使用两行错位流程或适度分组避免过密；突出本章新增V和P，背景白色。"
+              />
+            </div>
+            <aside class="notes">
+              【R05-11
+              第五章完整MVP与屏幕成像流程】插图生成提示词：16:9横向大学计算机图形学教学示意图，1600×900适配，白色或极浅灰白底，正式极简科学信息图风格；深蓝、蓝灰、青蓝为主色，少量绿色标正确、少量琥珀色标关注；中文大字号印刷体，清晰线条，轻微圆角框与箭头，留白充分；每图只表达一个核心机制，适合80人教室投影；不要照片、卡通、暗色背景、炫光、密集文字。
+              简洁大学图形学WebGL2观察流水线流程图，左到右层级：对象坐标、Model
+              Matrix、世界坐标、View Matrix、相机坐标、Projection Matrix、裁剪坐标、Clip /
+              Perspective
+              Divide、NDC、Viewport、屏幕像素。节点上用M、V、P小标记；使用两行错位流程或适度分组避免过密；突出本章新增V和P，背景白色。
+              生成素材后替换当前media-placeholder，保留本页说明与动画次序。
+            </aside>
+            <div class="formula fragment fade-up">
+              p<sub>clip</sub> = P · V · M · p<sub>model</sub>
+            </div>
+            <div class="note-strip fragment fade-up">
+              第三章窗口坐标/NDC的交互处理与第五章渲染方向相反，注意坐标流向。
+            </div>
+          </section>
+          <section id="sec-6-4" data-timing="lesson">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">Minimal Vertex Shader</div>
+            <h2>WebGL2：在顶点着色器中形成裁剪坐标</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-glsl" data-trim="" data-line-numbers="">#version 300 es
+in vec4 aPosition;
+uniform mat4 uModelMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uProjectionMatrix;
+
+void main() {
+  gl_Position = uProjectionMatrix *
+                uViewMatrix * uModelMatrix * aPosition;
+}</code></pre>
+            <div class="note-strip fragment fade-up">
+              gl_Position输出齐次裁剪空间坐标；透视除法和视口变换由后续图形流水线完成。
+            </div>
+          </section>
+          <section id="sec-6-5" data-timing="lesson">
+            <span class="slide-no">#sec-6-5</span>
+            <div class="eyebrow">Clipping ≠ Occlusion</div>
+            <h2>“看不到”有两种不同原因</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>超出视见体 → 裁剪</h3>
+                <p>几何不在投影定义的可见范围内，即使前方没有其他物体也可能被裁剪。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>位于后方 → 遮挡</h3>
+                <p>处于视见体内的表面可能被其他表面挡住，通常利用深度测试解决。</p>
+              </div>
+            </div>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-javascript" data-trim="" data-line-numbers="">gl.enable(gl.DEPTH_TEST);
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);</code></pre>
+            <div class="note-strip fragment fade-up">
+              本节只建立区分；背面剔除、深度精度、阴影贴图等列为教材延伸。
+            </div>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" data-timing="lesson">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">Medical Transfer</div>
+            <h2>回到医学三维模型查看器：如何选择？</h2>
+            <div class="two-col">
+              <div class="card fragment fade-up">
+                <h3>看清结构的相对空间位置</h3>
+                <p>选择合适的相机朝向与透视投影，便于观察前后和深度。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>固定视向下进行形状比较</h3>
+                <p>选择正交投影，结合合适的坐标标定与观察方向。</p>
+              </div>
+            </div>
+            <div class="fragment fade-up">
+              <div class="activity">
+                <div class="tag">TRANSFER</div>
+                <p>
+                  模型几何不变；若界面允许“绕模型旋转观察”和“正交/透视切换”，分别需要更新哪一种矩阵？
+                </p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              参考：绕模型观察主要改变V；改变投影类型主要改变P。对于轨道相机，有时也可等效地转模型，但概念职责须分清。
+            </div>
+          </section>
+          <section id="sec-7-2" data-timing="lesson">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Summary</div>
+            <h2>第五章知识闭环：三种矩阵，各负其责</h2>
+            <div class="summary-list">
+              <div class="item fragment fade-up">
+                <span class="number">M</span
+                ><span><strong>Model：</strong>模型在世界中的位置、方向、比例。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">V</span
+                ><span><strong>View：</strong>相机位置与方向，世界 → 相机。</span>
+              </div>
+              <div class="item fragment fade-up">
+                <span class="number">P</span
+                ><span><strong>Projection：</strong>投影类型、视见体及裁剪坐标。</span>
+              </div>
+            </div>
+            <div class="formula fragment fade-up">
+              Object → M → World → V → Eye → P → Clip → NDC → Screen
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              本章最重要的成果：把第四章的矩阵能力转化为完整可控的三维观察过程。
+            </div>
+          </section>
+          <section id="sec-7-3" data-timing="lesson">
+            <span class="slide-no">#sec-7-3</span>
+            <div class="eyebrow">Exit Ticket</div>
+            <h2>Exit Ticket · 两个概念判断</h2>
+            <div class="fragment fade-up">
+              <div class="question-card">
+                <strong>问题1：</strong>为什么透视投影中远处物体看起来更小？
+                <div class="answers">
+                  <span>提示：相似三角形、深度z与透视除法。</span>
+                </div>
+              </div>
+            </div>
+            <div class="fragment fade-up">
+              <div class="question-card">
+                <strong>问题2：</strong
+                >一块多边形完全在far之外，与它位于另一块多边形后面，有什么本质区别？
+                <div class="answers">
+                  <span>提示：视见体裁剪 vs 深度遮挡。</span>
+                </div>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              课后探究：同一几何场景中切换两种投影，截屏并用三句话解释视觉差异。
+            </div>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+      });
+    </script>
+  </body>
+</html>
