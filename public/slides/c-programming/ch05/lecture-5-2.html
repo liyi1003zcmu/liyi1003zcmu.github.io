@@ -1,0 +1,1310 @@
+<!DOCTYPE HTML>
+
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>程序设计基础：第5次课第2课时 void与模块化设计</title>
+  <meta content="第5次课第2课时：void无返回值函数、单一职责与模块化程序设计" name="description" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+  <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+  <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+  <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .placeholder {
+      border: 2px dashed #9ab4cc;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fbff;
+      color: #39566f;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .placeholder .title {
+      font-weight: 700;
+      color: #2056a8;
+      margin-bottom: 8px;
+      font-size: 27px;
+    }
+
+    .prompt-note {
+      font-size: 18px !important;
+      color: #6b7280 !important;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 42px;
+      row-gap: 4px;
+      margin-left: 1.1em !important;
+    }
+
+    .reveal .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity .38s ease, transform .38s ease;
+      will-change: opacity, transform;
+    }
+
+    .reveal .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+
+    /* 白底、高对比、避免绿色语法高亮 */
+    .hljs {
+      background: #fff !important;
+      color: #1f2937 !important;
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-type {
+      color: #2056a8 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-meta,
+    .hljs-preprocessor,
+    .hljs-title,
+    .hljs-function .hljs-title,
+    .hljs-name {
+      color: #6d28d9 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-string,
+    .hljs-number,
+    .hljs-literal,
+    .hljs-params {
+      color: #a65b00 !important;
+    }
+
+    .hljs-comment {
+      color: #64748b !important;
+      font-style: italic !important;
+    }
+
+    .hljs-symbol,
+    .hljs-operator,
+    .hljs-punctuation {
+      color: #334155 !important;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .path {
+      border-radius: 16px;
+      border: 1px solid #cbd8e6;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .path.break {
+      border-left: 8px solid #b42318;
+    }
+
+    .path.continue {
+      border-left: 8px solid #2c7be5;
+    }
+
+    .prompt {
+      background: #f7f7fb;
+      border-left: 6px solid #6d28d9;
+      padding: 18px 22px;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1.55;
+      text-align: left;
+      white-space: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ==================== 模块 1：课程导入与学习目标 ==================== -->
+      <section id="sec-1-0">
+        <section id="sec-1-1">
+          <p class="center sectiontag">程序设计基础 · 第5次课 · 第2课时</p>
+          <h1 class="center">函数（二）<br>void 与模块化设计：大任务拆解与分工协作</h1>
+          <p class="center title-meta">从多任务终端菜单到经典结构化分解，理解“动作型函数、单一职责与自顶向下设计”</p>
+          <aside class="notes">0:00—1:00。本课是第1课时的纵深推进：当程序从一个公式计算，扩展为拥有多级业务的完整系统时，如何优雅架构代码。</aside>
+        </section>
+
+        <section id="sec-1-2">
+          <h2>本课核心问题</h2>
+          <p class="lead center">社区慢病管理系统终端要完成更多随访任务，代码全塞进 <code>main()</code> 会怎样？</p>
+          <div class="grid3">
+            <div class="card">
+              <h3>已有基础</h3>
+              <p class="small">上一课时已掌握数值计算型函数（如 <code>calcBMI</code>），实现公式的封装与复用。</p>
+            </div>
+            <div class="card soft">
+              <h3>新增挑战</h3>
+              <p class="small">新增“慢病分级评估、综合报告输出、居民交互菜单”：如何避免 <code>main()</code> 臃肿不堪？</p>
+            </div>
+            <div class="card">
+              <h3>解决机制</h3>
+              <p class="small">使用 <code>void</code> 动作型函数与<strong>单一职责原则</strong>，实现自顶向下分解与模块化装配。</p>
+            </div>
+          </div>
+          <aside class="notes">1:00—3:00。结合上一节的慢病 BMI 计算，引出结构化程序设计的核心思想：高内聚、低耦合、模块分工。</aside>
+        </section>
+
+        <section id="sec-1-3">
+          <h2>第2课时学习目标</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>知识目标</h3>
+              <ul>
+                <li>理解无返回值函数 <code>void</code> 的含义、使用规则与调用禁忌</li>
+                <li>掌握数值计算型、条件判断型与 <code>void</code> 动作型函数的区别</li>
+                <li>理解结构化程序设计的“自顶向下、逐步细化”与“单一职责”原则</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>能力目标</h3>
+              <ul>
+                <li>能将多步骤复杂业务拆解为职责独立的函数群</li>
+                <li>能绘制函数调用拓扑树，并将函数与 <code>switch-case</code> 菜单结构组合</li>
+                <li>能借助 AI 协作审查模块接口的职责重叠与隐藏耦合，设计防御性边界</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">3:00—5:00。明确本课评价标准不仅是“函数能运行”，更在于“代码层次结构是否清晰、易测试、好扩展”。</aside>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 2：void 无返回值函数 ==================== -->
+      <section id="sec-2-0">
+        <section class="module-cover-slide" id="sec-2-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.2 / 无返回值函数 void</div>
+            <div class="cover-title">有些函数负责“计算”，<br>有些函数负责“执行动作”</div>
+            <div class="cover-subtitle">当函数的目标是向屏幕输出、改变硬件状态或执行控制流程，不需要带回数值时，用 <code>void</code>。</div>
+            <div class="cover-tags">
+              <span class="pill">void</span>
+              <span class="pill">printReport</span>
+              <span class="pill">独立语句调用</span>
+              <span class="pill">return; 提前退出</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-2-2">
+          <h2>为什么需要无返回值函数？</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>数据计算：需要返回结果</h3>
+              <p class="small"><code>calcBMI(70.0, 1.75)</code> 计算后需要把 <code>22.86</code> 交代给主调程序，因此返回 <code>double</code>。</p>
+            </div>
+            <div class="card soft">
+              <h3>报告展示：执行输出动作</h3>
+              <p class="small"><code>printReport(22.86)</code> 的任务是向屏幕打印格式化慢病随访分析报告，并不产生一个需要继续参与运算的数字。</p>
+            </div>
+          </div>
+          <pre><code class="language-c" data-line-numbers="1|3-7|9" data-trim="">void printReport(double bmi)
+{
+    if (bmi &lt;= 0) {
+        printf("Error: invalid data\n");
+        return;    /* Return early */
+    }
+    printf("Report: BMI = %.2f\n", bmi);
+}</code></pre>
+          <div class="bluebox"><strong>语法关键：</strong><code>void</code> 表明该函数“不返回任何值”。末尾的 <code>return;</code> 不带表达式，用于立即跳出函数。</div>
+          <aside class="notes">8:00—10:00。说明 void 函数的典型特征：依靠“副作用（如控制台打印）”产生作用。</aside>
+        </section>
+
+        <section id="sec-2-3">
+          <h2>两类函数，调用语法截然不同</h2>
+          <div class="path-grid">
+            <div class="path continue">
+              <h3>有返回值的函数（<code>double / int</code>）</h3>
+              <pre><code class="language-c" data-trim="">double b = calcBMI(70.0, 1.75);
+if (isSquare(16)) ...
+printf("%f", cylinder(2, 3));</code></pre>
+              <p class="small good">✓ 必须或通常作为表达式的一部分出现，可参与赋值、算术或打印。</p>
+            </div>
+            <div class="path break">
+              <h3>无返回值的函数（<code>void</code>）</h3>
+              <pre><code class="language-c" data-trim="">printReport(b);   /* Valid call */
+
+/* Common syntax errors: */
+x = printReport(b);              /* Error! */
+printf("%d", printReport(b));    /* Error! */</code></pre>
+              <p class="small danger">✗ 只能作为一条独立的语句执行，绝不能出现在需要数值的表达式中！</p>
+            </div>
+          </div>
+          <aside class="notes">10:00—12:00。让学生预测：编译器对 x = printReport(r) 会给出什么报错提示（void value not ignored as it ought to be）。</aside>
+        </section>
+
+        <section id="sec-2-4">
+          <h2>有返回值函数 vs <code>void</code> 函数对比总结</h2>
+          <table class="compare">
+            <tr>
+              <th>对比维度</th>
+              <th>有返回值函数（<code>double/int</code> 等）</th>
+              <th>无返回值函数（<code>void</code>）</th>
+            </tr>
+            <tr>
+              <td><strong>核心使命</strong></td>
+              <td>计算或判断：向主调函数交付一个数据</td>
+              <td>执行操作：屏幕输出、格式化打印、状态修改</td>
+            </tr>
+            <tr>
+              <td><strong>首部返回类型</strong></td>
+              <td>具体数据类型，如 <code>double</code>、<code>int</code></td>
+              <td>关键字 <code>void</code></td>
+            </tr>
+            <tr>
+              <td><strong><code>return</code> 语句</strong></td>
+              <td>必须写 <code>return expr;</code>，类型需匹配</td>
+              <td>可省略；若写只能是不带表达式的 <code>return;</code></td>
+            </tr>
+            <tr>
+              <td><strong>调用形式</strong></td>
+              <td>变量接收 <code>v = f(...)</code> 或作为表达式因子</td>
+              <td>独立语句 <code>f(...);</code></td>
+            </tr>
+          </table>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：<code>void</code> 函数的语法陷阱与编译诊断</h3>
+            <div class="prompt">
+              我正在学习 C 语言的 void 函数。请帮我设计 3 个故意写错的代码片段（分别展示：把 void 函数赋值给变量、在 void 函数体内部写 return 1、将 void 函数传给 printf 作为参数）。请列出对应的 GCC 编译器报错信息，并说明为什么 C 语法不允许这么做。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>同桌两人在 IDE 中敲入报错片段，观察编译器警告信息，验证与 AI 解释的一致性。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 3：模块化设计与分层架构 ==================== -->
+      <section id="sec-3-0">
+        <section class="module-cover-slide" id="sec-3-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.2 / 模块化程序设计</div>
+            <div class="cover-title">大任务拆解为小函数：<br>高内聚、低耦合、单一职责</div>
+            <div class="cover-subtitle">贯穿案例升级：将社区慢病健康终端拆解为“数据录入、BMI计算、慢病分级、报告展示与菜单调度”。</div>
+            <div class="cover-tags">
+              <span class="pill">单一职责</span>
+              <span class="pill">功能树</span>
+              <span class="pill">自顶向下</span>
+              <span class="pill">switch 菜单</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-3-2">
+          <h2>大任务审视：三个步骤是一件事吗？</h2>
+          <div class="grid3">
+            <div class="surface card">
+              <h3 class="accent">A · 数值计算</h3>
+              <p><code>weight, height → bmi</code></p>
+              <p class="small muted">纯数学计算，不受界面或语言文本影响。</p>
+            </div>
+            <div class="surface card soft">
+              <h3 class="purple">B · 慢病风险分级</h3>
+              <p><code>bmi → band (0/1/2)</code></p>
+              <p class="small muted">社区慢病评判标准（偏瘦/正常/超重肥胖），规则变动仅在此调整。</p>
+            </div>
+            <div class="surface card">
+              <h3 class="good">C · 报告打印</h3>
+              <p><code>band → 屏幕排版</code></p>
+              <p class="small muted">终端人机交互，负责控制台美化与健康指导建议展示。</p>
+            </div>
+          </div>
+          <div class="quote" style="margin-top:24px;">
+            <strong>单一职责原则（Single Responsibility）：</strong>一个函数只专心把一件事做好！<br>
+            若慢病分级标准改变，只需修改 B；若计算公式改变，只需修改 A；若输出格式升级，只需修改 C！
+          </div>
+          <aside class="notes">14:00—16:30。通过反问引导：如果把这三件事全揉在同一个函数里，换成英文界面时连计算公式都要跟着重编译，是否合理？</aside>
+        </section>
+
+        <section id="sec-3-3">
+          <h2>第一步：为各个模块定义清晰接口</h2>
+          <table class="compare">
+            <tr>
+              <th>函数名称</th>
+              <th>形参列表（输入）</th>
+              <th>返回类型（输出）</th>
+              <th>职责说明</th>
+            </tr>
+            <tr>
+              <td><code>calcBMI</code></td>
+              <td><code>double weight, double height</code></td>
+              <td><code>double</code></td>
+              <td>计算体质指数 BMI，非法输入返回 <code>-1.0</code></td>
+            </tr>
+            <tr>
+              <td><code>classifyBMI</code></td>
+              <td><code>double bmi</code></td>
+              <td><code>int</code></td>
+              <td>将 BMI 映射为慢病风险等级：<code>0</code>偏瘦、<code>1</code>正常、<code>2</code>超重肥胖</td>
+            </tr>
+            <tr>
+              <td><code>printReport</code></td>
+              <td><code>double bmi</code></td>
+              <td><code>void</code></td>
+              <td>调用 <code>classifyBMI</code> 并打印完整图文报告与健康建议</td>
+            </tr>
+          </table>
+          <pre><code class="language-c" data-line-numbers="1-7" data-trim="">int classifyBMI(double bmi)
+{
+    if (bmi &lt;= 0)     return -1;   /* Invalid data */
+    if (bmi &lt; 18.5)   return 0;    /* Underweight */
+    if (bmi &lt;= 23.9)  return 1;    /* Normal */
+    return 2;                      /* Overweight or obese */
+}</code></pre>
+          <aside class="notes">16:30—18:30。展示 clean code 风格：利用提前 return 避免多重深层嵌套 if-else。</aside>
+        </section>
+
+        <section id="sec-3-4">
+          <h2>从“代码堆积”到层次分明的功能树</h2>
+          <div class="grid2" style="align-items:center;">
+            <div>
+              <div class="flow" style="flex-direction:column; gap:16px;">
+                <div class="step" style="width:90%; background:#f4f8ff; border-color:#2c7be5;">
+                  <strong>调度层：<code>main()</code></strong><br><span class="small muted">交互控制、菜单驱动、调用业务功能</span>
+                </div>
+                <div class="arrow" style="transform:rotate(90deg);">→</div>
+                <div class="step" style="width:90%; background:#fff;">
+                  <strong>业务展示层：<code>printReport()</code></strong><br><span class="small muted">协调分类与控制台图文排版</span>
+                </div>
+                <div class="arrow" style="transform:rotate(90deg);">→</div>
+                <div class="grid2" style="width:100%; gap:12px;">
+                  <div class="step" style="font-size:24px;"><strong>算法层</strong><br><code>calcBMI()</code></div>
+                  <div class="step" style="font-size:24px;"><strong>规则层</strong><br><code>classifyBMI()</code></div>
+                </div>
+              </div>
+            </div>
+            <div class="center">
+              <img alt="模块化层次结构图" src="./images/chap05/5-4.png"
+                style="max-height: 440px; border-radius: 12px; border: 1px solid #d8e1ec; padding: 10px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06);" />
+              <p class="tiny muted" style="margin-top:8px;">教材经典结构化设计：自顶向下、逐步求精、模块划分</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-3-5">
+          <h2><code>main</code> 负责流程协调，不塞入细节</h2>
+          <pre><code class="language-c" data-line-numbers="1-2|4|6|8-15|17-21" data-trim="">void showMenu(void);
+void handleMeasure(void);
+
+int main(void)
+{
+    int choice;
+    do {
+        showMenu();
+        scanf("%d", &amp;choice);
+        switch (choice) {
+            case 1:  handleMeasure(); break;
+            case 0:  printf("Exiting system.\n"); break;
+            default: printf("Invalid choice, please retry.\n");
+        }
+    } while (choice != 0);
+    return 0;
+}
+
+void showMenu(void) {
+    printf("\n=== Chronic Disease Health System ===\n1. Input weight/height and evaluate BMI\n0. Exit\nChoice: ");
+}</code></pre>
+          <div class="quote">主函数是一张清晰的“组织架构图”：扫一眼 <code>main()</code>，就能完全理解系统的宏观运行流程！</div>
+        </section>
+
+        <section id="sec-3-6">
+          <h2>AI 协作互动：审查模块划分与接口正交性</h2>
+          <div class="card blue">
+            <h3>🤖 AI 协作互动：让 AI 诊断函数职责重叠与隐藏耦合</h3>
+            <div class="prompt">
+              我正在用 C 语言为社区慢病健康管理终端划分函数：calcBMI(weight, height) 负责计算；classifyBMI(bmi) 负责慢病风险区间分类；printReport(bmi) 负责控制台打印；handleMeasure() 负责交互输入与串联。请帮我审查这份设计：是否有某个函数承担了过多非核心职责？如果未来我想把该程序移植为手机 App（界面不再是控制台字符终端），现有的 calcBMI 和 classifyBMI 能否不改一行代码直接复用？
+            </div>
+            <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>学生体会“计算与 IO 解耦”的深刻内涵：纯逻辑函数具有极高的跨平台可移植性。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 4：教材例5-6 数字金字塔 ==================== -->
+      <section id="sec-4-0">
+        <section class="module-cover-slide" id="sec-4-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例5-6</div>
+            <div class="cover-title">数字金字塔：<br>动作型函数的经典实战</div>
+            <div class="cover-subtitle">定义和调用 <code>void pyramid(int n)</code> 输出对称数字图案，体会“图形化任务的函数封装”。</div>
+            <div class="cover-tags">
+              <span class="pill">pyramid</span>
+              <span class="pill">void 函数</span>
+              <span class="pill">循环嵌套</span>
+              <span class="pill">字符对齐</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-1a">
+          <h2>教材例5-6 题面描述</h2>
+          <div class="grid2" style="align-items: center;">
+            <div class="card blue" style="padding: 28px 34px;">
+              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 18px;">📋 题目要求</h3>
+              <p style="font-size: 28px; line-height: 1.55; color: #1f2937;">
+                输入一个正整数 \(n\)（\(1 \le n \le 9\)），输出 \(n\) 行数字金字塔。<br>
+                要求定义和调用函数 <code>void pyramid(int n)</code> 输出金字塔。
+              </p>
+            </div>
+            <div class="center">
+              <img alt="数字金字塔效果" src="./images/chap05/5-3.png"
+                style="max-height: 380px; border-radius: 12px; border: 1px solid #d8e1ec; padding: 14px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06);" />
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-2">
+          <h2>金字塔排版规律：空格与数字分解</h2>
+          <p class="lead">以 \(n = 5\) 为例，仔细观察第 \(i\) 行（\(i = 1 \dots n\)）的字符构成：</p>
+          <table class="compare">
+            <tr>
+              <th>行号 \(i\)</th>
+              <th>前置空格数（\(n - i\)）</th>
+              <th>打印内容（数字后带空格）</th>
+              <th>循环逻辑拆解</th>
+            </tr>
+            <tr>
+              <td>第 1 行</td>
+              <td>\(5 - 1 = 4\) 个空格</td>
+              <td><code>1 </code></td>
+              <td>先循环打 4 个空格，再打 1 次 <code>"1 "</code></td>
+            </tr>
+            <tr>
+              <td>第 2 行</td>
+              <td>\(5 - 2 = 3\) 个空格</td>
+              <td><code>2 2 </code></td>
+              <td>先循环打 3 个空格，再打 2 次 <code>"2 "</code></td>
+            </tr>
+            <tr>
+              <td>第 3 行</td>
+              <td>\(5 - 3 = 2\) 个空格</td>
+              <td><code>3 3 3 </code></td>
+              <td>先循环打 2 个空格，再打 3 次 <code>"3 "</code></td>
+            </tr>
+            <tr>
+              <td>第 \(i\) 行</td>
+              <td>\(n - i\) 个空格</td>
+              <td>\(i\) 次 <code>"%d ", i</code></td>
+              <td>内层双循环：先输出空格，后输出数字</td>
+            </tr>
+          </table>
+        </section>
+
+        <section id="sec-4-3">
+          <h2>教材例5-6：函数实现与思考</h2>
+          <div class="grid2" style="align-items:start;">
+            <div>
+              <pre style="margin:0 auto;"><code class="language-c" data-line-numbers="1|3|5-10|12-19" data-trim="">#include &lt;stdio.h&gt;
+
+void pyramid(int n);
+
+int main(void)
+{
+    int n;
+    scanf("%d", &amp;n);
+    pyramid(n);
+    return 0;
+}
+
+void pyramid(int n)
+{
+    int i, j;
+    for (i = 1; i &lt;= n; i++) {
+        for (j = 1; j &lt;= n - i; j++)
+            putchar(' ');
+        for (j = 1; j &lt;= i; j++)
+            printf("%d ", i);
+        putchar('\n');
+    }
+}</code></pre>
+            </div>
+            <div class="card soft">
+              <h3>深度自问自答</h3>
+              <ul>
+                <li><strong>问：为什么定义成 <code>void</code>？</strong><br>
+                  因为该函数的核心任务是<strong>控制字符终端的光标与输出</strong>，没有计算出一个数值需要交还给 <code>main</code>。
+                </li>
+                <li><strong>问：<code>main</code> 中能写 <code>int res = pyramid(5);</code> 吗？</strong><br>
+                  绝对不能！编译器会报错 <code>void value not ignored</code>。
+                </li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">21:00—23:00。引导学生总结：当函数目的是在屏幕上画图形、写日志、打印表格时，首选 void。</aside>
+        </section>
+
+        <section id="sec-4-4">
+          <h2>鲁棒性思考与 AI 协作互动</h2>
+          <div class="grid2">
+            <div class="card warn">
+              <h3>边界异常分析</h3>
+              <p class="small">如果用户输入 \(n \le 0\)，循环不执行，控制台无任何反应；如果输入 \(n \ge 10\)，双位数宽度变为 2，金字塔斜边将严重错位歪斜！</p>
+            </div>
+            <div class="card soft">
+              <h3>契约式防护建议</h3>
+              <p class="small">在函数入口加入卫语句：</p>
+              <pre style="width:100%;"><code class="language-c" data-trim="">if (n &lt; 1 || n &gt; 9) {
+    printf("Please enter an integer between 1 and 9\n");
+    return;
+}</code></pre>
+            </div>
+          </div>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：图案打印函数的对齐与边界扩展</h3>
+            <div class="prompt">
+              在 C 语言数字金字塔函数 void pyramid(int n) 中，如果我想让它支持 n=1 到 15，当数字变成两位数（如 10..15）时，原本每行打印的空格和数字格式 printf("%d ", i) 会导致右侧金字塔歪斜。如何利用 printf 字段宽度格式（如 %2d）保持两位数金字塔的完美对称？请给出推演。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>观察 AI 如何分析列宽格式对图形对齐的影响，培养细致的界面控制能力。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 5：教材例5-4 & 例5-5 健壮性检验 ==================== -->
+      <section id="sec-5-0">
+        <section class="module-cover-slide" id="sec-5-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例5-4 · 例5-5</div>
+            <div class="cover-title">核心算法函数的健壮性：<br>不仅要能跑，更要能防错</div>
+            <div class="cover-subtitle">最大公约数 <code>gcd(m, n)</code> 与素数判断 <code>prime(m)</code> 的边界与除零审查。</div>
+            <div class="cover-tags">
+              <span class="pill">gcd</span>
+              <span class="pill">prime</span>
+              <span class="pill">辗转相除</span>
+              <span class="pill">除零防御</span>
+              <span class="pill">边界测试</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-1a">
+          <h2>教材例5-4 题面描述与算法流程</h2>
+          <div class="grid2" style="align-items: center;">
+            <div class="card blue" style="padding: 26px 32px;">
+              <h3 style="color: #163f78; font-size: 32px; margin-bottom: 16px;">📋 教材例5-4 题目要求</h3>
+              <p style="font-size: 28px; line-height: 1.55; color: #1f2937;">
+                输入两个正整数 \(m\) 和 \(n\)，定义并调用函数 <code>gcd(m, n)</code> 计算它们的最大公约数（Greatest Common Divisor）。
+              </p>
+              <div class="bluebox" style="margin-top:18px;">
+                <strong>辗转相除法（欧几里得算法）：</strong><br>
+                用 \(m\) 除以 \(n\) 得余数 \(r\)；若 \(r = 0\)，则 \(n\) 即为最大公约数；否则令 \(m = n, n = r\)，继续求余。
+              </div>
+            </div>
+            <div class="center">
+              <img alt="辗转相除法流程图" src="./images/chap05/5-2.png"
+                style="max-height: 480px; border-radius: 12px; border: 1px solid #d8e1ec; padding: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06);" />
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-2">
+          <h2>辗转相除实现与致命除零漏洞</h2>
+          <div class="grid2" style="align-items:start;">
+            <div>
+              <pre style="margin:0 auto;"><code class="language-c" data-line-numbers="1-2|4|6-9|10" data-trim="">int gcd(int m, int n)
+{
+    int r;
+    r = m % n;
+    while (r != 0) {
+        m = n;
+        n = r;
+        r = m % n;
+    }
+    return n;
+}</code></pre>
+            </div>
+            <div class="card warn">
+              <h3>🚨 致命漏洞检验</h3>
+              <ul>
+                <li>若输入 <code>gcd(18, 12)</code>：返回 <code>6</code>（正常）。</li>
+                <li>若输入 <code>gcd(12, 18)</code>：第一轮 \(12 \% 18 = 12\)，自动互换为 \(18 \% 12\)（正常）。</li>
+                <li>若调用者传入 <strong><code>gcd(0, 0)</code></strong> 或 <strong><code>gcd(18, 0)</code></strong>：<br>
+                  第 4 行 <code>r = m % n;</code> 将直接触发<strong>除以 0 致命崩溃（Floating Point Exception / SIGFPE）</strong>！
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="bluebox" style="margin-top:12px;">
+            <strong>健壮性改造：</strong>函数入口必须先拦截非法值：<code>if (n &lt;= 0 || m &lt;= 0) return -1;</code>
+          </div>
+        </section>
+
+        <section id="sec-5-3">
+          <h2>教材例5-5：素数判断函数 <code>prime(m)</code></h2>
+          <div class="grid2" style="align-items:start;">
+            <div class="card blue">
+              <h3>📋 教材例5-5 题目要求</h3>
+              <p class="small">定义函数 <code>int prime(int m)</code>，当 \(m\) 是素数时返回 <code>1</code>，否则返回 <code>0</code>。</p>
+              <pre style="width:100%; margin:12px 0 0;"><code class="language-c" data-trim="">int prime(int m)
+{
+    int i;
+    if (m &lt;= 1) return 0;   /* Numbers &lt;= 1 are not prime */
+    for (i = 2; i &lt;= m / 2; i++) {
+        if (m % i == 0)
+            return 0;        /* Found factor, return 0 early */
+    }
+    return 1;                /* Loop finished, is prime */
+}</code></pre>
+            </div>
+            <div class="card soft">
+              <h3>边界测试清单</h3>
+              <table class="compare" style="font-size:24px;">
+                <tr><th>输入 \(m\)</th><th>预期返回</th><th>测试目的</th></tr>
+                <tr><td><code>1</code></td><td><code>0</code></td><td>1 既不是素数也不是合数</td></tr>
+                <tr><td><code>2</code></td><td><code>1</code></td><td>最小且唯一的偶素数</td></tr>
+                <tr><td><code>4</code></td><td><code>0</code></td><td>最小偶合数，首轮退出</td></tr>
+                <tr><td><code>97</code></td><td><code>1</code></td><td>较大两位素数，遍历完毕</td></tr>
+                <tr><td><code>-7</code></td><td><code>0</code></td><td>负数边界拦截</td></tr>
+              </table>
+            </div>
+          </div>
+          <aside class="notes">23:00—25:00。注意循环条件写成 i <= m / 2 或 i <= sqrt(m) 的性能考量；强调一旦整除立即 return 0，不浪费 CPU 算力。</aside>
+        </section>
+
+        <section id="sec-5-4">
+          <h2>参数安全再反思：格雷戈里公式 <code>funpi(e)</code></h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>函数的职责</h3>
+              <p class="small">负责迭代累加并由 <code>fabs(item) &gt;= e</code> 控制精度收敛，向调用者返回 \(\pi\) 的近似值。</p>
+            </div>
+            <div class="card soft">
+              <h3>参数隐患：若传入 \(e \le 0\)？</h3>
+              <p class="small">若调用者传入 \(e = 0\)，浮点截断导致不可预知循环；若传入 \(e &lt; 0\)，<code>fabs(item) &gt;= e</code> 恒成立，<strong>直接引发死循环</strong>！</p>
+            </div>
+          </div>
+          <div class="quote" style="margin-top:20px;">
+            <strong>契约式设计（Design by Contract）：</strong>函数设计者绝不能假设“调用者一定会乖乖输入合法数据”！
+          </div>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：经典算法函数边界漏洞自动化审计</h3>
+            <div class="prompt">
+              请扮演一位严苛的 C 语言单元测试架构师。针对三个经典教材函数：int gcd(int m, int n)、int prime(int m)、double funpi(double e)，分别列出 2 组最可能让原程序陷入除零、死循环或逻辑误判的“恶魔输入”，并提供入口防御代码。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>同桌核对 AI 提出的恶魔测试用例，在自己脑海中单步推演各分支的防御表现。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 6：课堂后测、总结与课后迁移 ==================== -->
+      <section id="sec-6-0">
+        <section class="module-cover-slide" id="sec-6-1">
+          <div class="modulecover">
+            <div class="cover-kicker">第2课时后测与总结</div>
+            <div class="cover-title">从“混乱杂糅”<br>到“结构清晰的软件架构”</div>
+            <div class="cover-subtitle">通过返回类型辨析与模块维护性诊断，掌握结构化程序设计的底层逻辑。</div>
+            <div class="cover-tags">
+              <span class="pill">返回类型辨析</span>
+              <span class="pill">维护性诊断</span>
+              <span class="pill">知识地图</span>
+              <span class="pill">下节悬念</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-6-2">
+          <h2>课堂后测：两道出口诊断题</h2>
+          <div class="grid2" style="align-items: start;">
+            <div class="card">
+              <h3>出口题一：为任务选择正确的函数接口</h3>
+              <table class="compare" style="font-size:24px;">
+                <tr><th>任务</th><th>推荐首部</th><th>原因</th></tr>
+                <tr><td>求两数最大公约数</td><td><code>int gcd(int, int)</code></td><td>需要取回一个整数结果</td></tr>
+                <tr><td>打印数字金字塔</td><td><code>void pyramid(int)</code></td><td>执行屏幕输出动作</td></tr>
+                <tr><td>判断是否为素数</td><td><code>int prime(int)</code></td><td>返回真假（1/0）标识</td></tr>
+              </table>
+              <p class="small muted" style="margin-top:8px;">追问：如果把 <code>pyramid</code> 强行定义为 <code>int</code> 并返回 0，有什么代价？（无谓的返回值混淆调用意图）。</p>
+            </div>
+            <div class="card soft">
+              <h3>出口题二：哪种架构更容易维护？</h3>
+              <div class="path-grid" style="gap:14px; margin-top:8px;">
+                <div class="path break" style="padding:14px;">
+                  <b class="danger">方案 A（超大函数）</b><br>
+                  <span class="tiny">在一个 200 行函数里塞满 scanf、公式计算、打印、菜单。改一处可能全盘出错。</span>
+                </div>
+                <div class="path continue" style="padding:14px;">
+                  <b class="good">方案 B（职责解耦）</b><br>
+                  <span class="tiny">计算函数 + 分类函数 + 报表函数 + 菜单主控。接口独立，易测易改易复用。</span>
+                </div>
+              </div>
+              <div class="bluebox" style="margin-top:12px; font-size:24px;">结论：坚定选择 <strong>B</strong>！局部修改不扩散、多人协作无冲突。</div>
+            </div>
+          </div>
+          <aside class="notes">31:00—36:00。检验学生是否真正领会“函数不仅是为了少写几行代码，更是为了解耦与降低认知复杂度”。</aside>
+        </section>
+
+        <section id="sec-6-3">
+          <h2>本课核心思维地图：结构化设计四原则</h2>
+          <div class="flow" style="margin-top:10px; margin-bottom:22px;">
+            <div class="step">1. 单一职责<br><span class="tiny">One Job, One Function</span></div>
+            <div class="arrow">→</div>
+            <div class="step">2. 严选接口<br><span class="tiny">按需选择数值/void</span></div>
+            <div class="arrow">→</div>
+            <div class="step">3. 自顶向下<br><span class="tiny">main 协调，函数执行</span></div>
+            <div class="arrow">→</div>
+            <div class="step">4. 防御边界<br><span class="tiny">卫语句拒绝非法输入</span></div>
+          </div>
+          <div class="grid3">
+            <div class="card">
+              <h3>数值计算型</h3>
+              <p class="small"><code>calcBMI</code>、<code>cylinder</code>、<code>gcd</code>：纯算术，返回值参与后续处理。</p>
+            </div>
+            <div class="card">
+              <h3>条件判断型</h3>
+              <p class="small"><code>isSquare</code>、<code>prime</code>：返回 1/0，直接用作 <code>if</code> 判定条件。</p>
+            </div>
+            <div class="card soft">
+              <h3>动作执行型</h3>
+              <p class="small"><code>printReport</code>、<code>pyramid</code>、<code>showMenu</code>：<code>void</code> 类型，完成 IO 输出。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-6-4">
+          <h2>课后迁移练习与下节预告</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>编程实战与巩固</h3>
+              <ul>
+                <li>上机编写运行教材例5-6（数字金字塔）与例5-4（最大公约数）</li>
+                <li>为 <code>gcd(m, n)</code> 和 <code>funpi(e)</code> 增加防除零、防死循环卫语句</li>
+                <li>为社区慢病健康管理系统实现完整的 <code>switch-case</code> 终端多功能交互系统</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>下节悬念：变量的作用域与生命期</h3>
+              <ul>
+                <li>在函数 A 里定义的变量 <code>x</code>，函数 B 能直接读取或修改吗？</li>
+                <li>函数执行完毕后，它的局部变量在内存中去哪儿了？</li>
+                <li>如果多个函数想共享同一批测量数据，除了不断传参，还有什么机制？</li>
+              </ul>
+            </div>
+          </div>
+          <p class="center bigq">函数让代码秩序井然，变量让数据各就其位。</p>
+          <aside class="notes">37:00—40:00。预告第3课时：局部变量、全局变量、静态变量与存储区内存分布。</aside>
+        </section>
+      </section>
+
+    </div>
+  </div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script):not(aside)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
+        }
+      });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
+
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+        });
+      });
+
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
+      });
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
+
+</html>
+
+

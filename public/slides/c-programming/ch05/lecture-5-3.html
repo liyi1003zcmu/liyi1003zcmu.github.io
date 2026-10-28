@@ -1,0 +1,1172 @@
+<!DOCTYPE HTML>
+
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>程序设计基础：第5次课第3课时 作用域与静态变量</title>
+  <meta content="第5次课第3课时：变量作用域、生存期、static静态局部变量与状态管理" name="description" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+  <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+  <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+  <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .path {
+      border-radius: 16px;
+      border: 1px solid #cbd8e6;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .path.break {
+      border-left: 8px solid #b42318;
+    }
+
+    .path.continue {
+      border-left: 8px solid #2c7be5;
+    }
+
+    .prompt {
+      background: #f7f7fb;
+      border-left: 6px solid #6d28d9;
+      padding: 18px 22px;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1.55;
+      text-align: left;
+      white-space: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ==================== 模块 1：课程导入与学习目标 ==================== -->
+      <section id="sec-1-0">
+        <section id="sec-1-1">
+          <p class="center sectiontag">程序设计基础 · 第5次课 · 第3课时</p>
+          <h1 class="center">函数（三）<br>作用域与静态变量：可见性、生存期与状态管理</h1>
+          <p class="center title-meta">从社区慢病随访记录编号到内存存储区模型，理解“局部变量、全局变量、static 静态变量与隐藏状态陷阱”</p>
+          <aside class="notes">0:00—1:00。全章最后一块拼图：解决多函数之间数据如何共享、中间计算如何隔离、状态如何持续保留的问题。</aside>
+        </section>
+
+        <section id="sec-1-2">
+          <h2>本课核心问题</h2>
+          <p class="lead center">多个函数协同处理数据时，变量应该放在哪里？能被谁看见？能保留多久？</p>
+          <div class="grid3">
+            <div class="card">
+              <h3>已有基础</h3>
+              <p class="small">已掌握自定义函数的定义、传参、返回值与 <code>void</code> 模块化分工架构。</p>
+            </div>
+            <div class="card soft">
+              <h3>新场景痛点</h3>
+              <p class="small">慢病管理系统需要为多次随访分配连续编号、计算居民历次随访动态累计平均指标，还要在模块间共享全局配置。</p>
+            </div>
+            <div class="card">
+              <h3>核心机制</h3>
+              <p class="small"><strong>作用域</strong>（空间可见范围）与<strong>存储期</strong>（时间存活周期），以及背后的内存三区分工。</p>
+            </div>
+          </div>
+          <aside class="notes">1:00—3:00。说明本节重点不仅是记住 static 关键字，更在于理解软件的状态管理与测试可复现性。</aside>
+        </section>
+
+        <section id="sec-1-3">
+          <h2>第3课时学习目标</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>知识目标</h3>
+              <ul>
+                <li>严格区分变量的<strong>作用域（Scope）</strong>与<strong>存储期（Lifetime）</strong></li>
+                <li>掌握局部变量、全局变量与 <code>static</code> 静态局部变量的声明与行为特征</li>
+                <li>理解 C 程序的内存区域划分：程序区、静态存储区与动态存储区（栈区）</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>能力目标</h3>
+              <ul>
+                <li>能准确预测同名局部遮蔽与 <code>static</code> 变量在多次调用中的演变</li>
+                <li>能设计最小测试用例，揭示全局变量副作用与 <code>static</code> 带来的“调用顺序依赖”</li>
+                <li>能借助 AI 协作自动化审计“看似正确却依赖调用次序”的隐蔽缺陷</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">3:00—5:00。本课引导学生从“语法使用”进阶到“内存机理与代码质量审计”。</aside>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 2：作用域与存储期的两个独立维度 ==================== -->
+      <section id="sec-2-0">
+        <section class="module-cover-slide" id="sec-2-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.3 / 变量的两个独立维度</div>
+            <div class="cover-title">“在哪些代码里能看见？”<br>与“在内存里能活多久？”</div>
+            <div class="cover-subtitle">作用域决定空间可见范围，存储期决定时间存活长度，两者绝非同一概念。</div>
+            <div class="cover-tags">
+              <span class="pill">作用域 Scope</span>
+              <span class="pill">存储期 Lifetime</span>
+              <span class="pill">同名遮蔽</span>
+              <span class="pill">内存三区</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-2-2">
+          <h2>认知冲突：两个同名变量是同一个吗？</h2>
+          <pre><code class="language-c" data-line-numbers="1|3-7|9-13" data-trim="">int count = 100;     /* Global variable: file scope */
+
+void sample(void)
+{
+    int count = 0;   /* Local variable: block scope */
+    printf("%d ", ++count);
+}
+
+int main(void)
+{
+    sample();
+    printf("%d\n", count);
+    return 0;
+}</code></pre>
+          <p class="center bigq">预测输出：打印 <code>1 100</code> 还是 <code>1 1</code>？</p>
+          <div class="bluebox">
+            <strong>核心规则——同名局部遮蔽（Shadowing）：</strong><br>
+            局部变量与全局变量同名时，在局部变量有效的作用域内，<strong>局部变量优先</strong>，全局变量被暂时“遮蔽屏蔽”。
+          </div>
+          <aside class="notes">5:00—7:30。让学生指出两个 count 各自存放在不同的内存单元中，互不干扰。</aside>
+        </section>
+
+        <section id="sec-2-3">
+          <h2>作用域 vs 存储期：概念辨析表</h2>
+          <table class="compare">
+            <tr>
+              <th>核心维度</th>
+              <th>要回答的问题</th>
+              <th>主要分类</th>
+              <th>决定因素</th>
+            </tr>
+            <tr>
+              <td><strong>作用域<br>(Scope)</strong></td>
+              <td><strong>空间概念</strong>：哪段代码、哪个函数能够访问该变量的名字？</td>
+              <td>• <strong>块作用域（局部）</strong>：花括号 <code>{}</code> 内<br>• <strong>文件作用域（全局）</strong>：函数外定义</td>
+              <td>变量<strong>声明所在的代码物理位置</strong></td>
+            </tr>
+            <tr>
+              <td><strong>存储期<br>(Lifetime)</strong></td>
+              <td><strong>时间概念</strong>：该变量占用的内存单元何时创建、何时释放？</td>
+              <td>• <strong>自动存储期</strong>：进入块分配，退出块释放<br>• <strong>静态存储期</strong>：程序启动分配，退出释放</td>
+              <td>变量的<strong>存储类型修饰符（如 <code>static</code>）</strong></td>
+            </tr>
+          </table>
+          <div class="quote" style="margin-top:20px;">
+            <strong>特别提醒：</strong>绝不能望文生义地认为“局部变量就必然在函数退出时消亡”——<code>static</code> 局部变量就是典型的反例！
+          </div>
+        </section>
+
+        <section id="sec-2-4">
+          <h2>C 程序的内存分工：静态存储区 vs 动态存储区</h2>
+          <div class="grid2" style="align-items:center;">
+            <div>
+              <div class="path-grid" style="gap:14px;">
+                <div class="path continue" style="padding:16px;">
+                  <h3 style="font-size:26px;">静态存储区（Static Data）</h3>
+                  <ul class="small" style="margin:6px 0 0 16px;">
+                    <li>存放<strong>全局变量</strong>与 <strong><code>static</code> 变量</strong></li>
+                    <li>程序启动时一次性分配固定的内存地址</li>
+                    <li>默认自动初始化为 <code>0</code></li>
+                  </ul>
+                </div>
+                <div class="path break" style="padding:16px;">
+                  <h3 style="font-size:26px;">动态存储区 / 栈区（Stack）</h3>
+                  <ul class="small" style="margin:6px 0 0 16px;">
+                    <li>存放<strong>普通局部变量</strong>与<strong>函数形参</strong></li>
+                    <li>每次调用函数时动态分配栈帧</li>
+                    <li>函数返回时其内存被立即回收交还系统</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="center">
+              <img alt="C程序存储区结构" src="./images/chap05/5-5.png"
+                style="max-height: 440px; border-radius: 12px; border: 1px solid #d8e1ec; padding: 10px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06);" />
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-2-5">
+          <h2>AI 协作互动：作用域与同名遮蔽陷阱审查</h2>
+          <div class="card blue">
+            <h3>🤖 AI 协作互动：多层嵌套块作用域与同名变量遮蔽演练</h3>
+            <div class="prompt">
+              我正在学习 C 语言的作用域规则。请构造一段包含【全局变量 x、main 局部变量 x、for 循环内部局部变量 x】的多层嵌套 C 程序。给出运行时的逐步单步推演表格，展示不同代码行打印的是哪一层内存空间中的 x，并分析为什么在工程中应尽量避免过度同名遮蔽。
+            </div>
+            <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>学生先不借助 AI，自己在草稿纸上圈出不同花括号对应的变量存活范围，再与 AI 的推演进行对齐验证。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 3：static 静态局部变量与状态管理 ==================== -->
+      <section id="sec-3-0">
+        <section class="module-cover-slide" id="sec-3-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.3 / 静态局部变量 static</div>
+            <div class="cover-title">只在函数内部看得见，<br>却能在调用结束后活下来</div>
+            <div class="cover-subtitle"><code>static</code> 局部变量：兼具局部安全的作用域与全程持久的静态存储期。</div>
+            <div class="cover-tags">
+              <span class="pill">static 局部变量</span>
+              <span class="pill">一次性初始化</span>
+              <span class="pill">状态保留</span>
+              <span class="pill">调用顺序依赖</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-3-2">
+          <h2>普通局部变量 vs static 静态局部变量</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>版本 A：普通局部变量（auto）</h3>
+              <pre><code class="language-c" data-trim="">void show(void)
+{
+    int count = 0;
+    count++;
+    printf("%d ", count);
+}
+
+show(); show(); show();</code></pre>
+              <div class="bluebox">
+                输出结果：<strong><code>1 1 1</code></strong><br>
+                <span class="small">每次调用重新分配栈帧并初始化为 0。</span>
+              </div>
+            </div>
+            <div class="card soft">
+              <h3>版本 B：静态局部变量（static）</h3>
+              <pre><code class="language-c" data-trim="">void show(void)
+{
+    static int count = 0;
+    count++;
+    printf("%d ", count);
+}
+
+show(); show(); show();</code></pre>
+              <div class="bluebox">
+                输出结果：<strong><code>1 2 3</code></strong><br>
+                <span class="small">只初始化一次，后续调用保留上一次的值！</span>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">11:30—13:30。强调 static 变量的初始化发生在编译载入期，不是每次执行到 static 语句都重置。</aside>
+        </section>
+
+        <section id="sec-3-3">
+          <h2>贯穿案例应用 1：慢病随访记录自动编号器</h2>
+          <pre><code class="language-c" data-line-numbers="1-6|8-11" data-trim="">int recordId(void)
+{
+    static int next = 0;   /* In static storage, initialized once */
+    next++;
+    return next;
+}
+
+int main(void)
+{
+    printf("Record ID: #%d\n", recordId());   /* Output #1 */
+    printf("Record ID: #%d\n", recordId());   /* Output #2 */
+    printf("Record ID: #%d\n", recordId());   /* Output #3 */
+    return 0;
+}</code></pre>
+          <div class="grid2" style="margin-top:16px;">
+            <div class="card">
+              <h3 class="good">优点：信息隐藏</h3>
+              <p class="small"><code>next</code> 只能在 <code>recordId</code> 内部访问，外部任何函数都无法擅自篡改编号。</p>
+            </div>
+            <div class="card warn">
+              <h3 class="danger">缺点：缺乏重置机制</h3>
+              <p class="small">如果新慢病居民建档要求重新从 <code>#1</code> 开始编号，函数接口无法从外部复位清零。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-3-4">
+          <h2>贯穿案例应用 2：动态累计平均函数</h2>
+          <pre><code class="language-c" data-line-numbers="1-8|10-14" data-trim="">double runningAverage(double bmi)
+{
+    static double sum = 0.0;
+    static int n = 0;
+    if (bmi &lt;= 0) return -1.0;   /* Guard clause: avoid polluting history */
+    sum += bmi;
+    n++;
+    return sum / n;
+}
+
+/* Simulate 3 follow-up measurements for one resident */
+printf("%.2f\n", runningAverage(24.0));   /* 24.0 / 1 = 24.00 */
+printf("%.2f\n", runningAverage(23.6));   /* 47.6 / 2 = 23.80 */
+printf("%.2f\n", runningAverage(23.8));   /* 71.4 / 3 = 23.80 */</code></pre>
+          <div class="quote">看似入参只有一个 <code>bmi</code>，实际计算却暗中依赖了过去所有历史随访数据！</div>
+        </section>
+
+        <section id="sec-3-5">
+          <h2>暗礁：隐藏状态带来“调用顺序依赖”</h2>
+          <p class="lead">同一个输入，函数一定返回相同结果吗？在有 <code>static</code> 的世界里并非如此！</p>
+          <table class="compare">
+            <tr>
+              <th>测试场景</th>
+              <th>调用序列</th>
+              <th>每次返回的结果</th>
+              <th>为什么会这样？</th>
+            </tr>
+            <tr>
+              <td>场景 1：完整历史</td>
+              <td><code>24.0 → 23.6 → 23.8</code></td>
+              <td><code>24.00 → 23.80 → 23.80</code></td>
+              <td>累加了 3 个随访测量值</td>
+            </tr>
+            <tr>
+              <td>场景 2：新居民直接测</td>
+              <td>直接调用 <code>23.8</code></td>
+              <td><code>23.80</code></td>
+              <td>只累加了 1 个值（\(23.8 / 1 = 23.8\)）</td>
+            </tr>
+            <tr>
+              <td>场景 3：未重启重复测试</td>
+              <td>再次传入 <code>24.0</code></td>
+              <td><code>23.85</code>（因为 \(95.4 / 4 = 23.85\)）</td>
+              <td>上一位居民的历史残留污染了新居民！</td>
+            </tr>
+          </table>
+          <div class="bluebox" style="margin-top:16px;">
+            <strong>软件工程警示：</strong>隐藏状态会导致<strong>无法独立进行单元测试</strong>，测试结果受前面跑了什么测试用例的严重干扰！
+          </div>
+        </section>
+
+        <section id="sec-3-6">
+          <h2>AI 协作互动：消除隐藏状态的纯函数重构</h2>
+          <div class="card blue">
+            <h3>🤖 AI 协作互动：从 static 隐藏状态重构为无副作用纯函数</h3>
+            <div class="prompt">
+              我写了一个利用 static double sum 和 static int n 维护累计平均的函数 double runningAverage(double rate)。但测试时发现它无法在同一个程序内为第二个患者清零重置。请帮我将其重构为不包含 static 变量、依赖显式参数传递（如传入当前总分与总人数）的纯函数设计，并对比两者的单元测试友好度。
+            </div>
+            <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>同桌讨论：为什么工业界现代代码规范提倡“尽量显式传递状态，慎用不可控的持久局部状态”。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 4：全局变量的利弊与防御 ==================== -->
+      <section id="sec-4-0">
+        <section class="module-cover-slide" id="sec-4-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.3 / 全局变量的权衡</div>
+            <div class="cover-title">共享虽方便，<br>副作用与隐蔽修改代价高</div>
+            <div class="cover-subtitle">任何函数都能读写全局变量，任何函数也都可能在不知不觉中改坏它。</div>
+            <div class="cover-tags">
+              <span class="pill">全局变量</span>
+              <span class="pill">副作用 Side Effect</span>
+              <span class="pill">模块紧耦合</span>
+              <span class="pill">只读 const 防御</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-2">
+          <h2>教材例5-8：现金收支记账程序</h2>
+          <div class="grid2" style="align-items:start;">
+            <div>
+              <pre style="margin:0 auto;"><code class="language-c" data-line-numbers="1|3-6|8-11" data-trim="">double cash = 0.0;   /* Global balance variable */
+
+void income(double amount)
+{
+    cash += amount;
+}
+
+void expend(double amount)
+{
+    cash -= amount;
+}</code></pre>
+              <div class="bluebox" style="margin-top:12px;">
+                <strong>教材代码细节找错：</strong><br>
+                教材原例在从键盘读入 <code>double</code> 变量时错写成 <code>scanf("%f", &amp;value)</code>，必须纠正为 <code>%lf</code>！
+              </div>
+            </div>
+            <div class="card soft">
+              <h3>利弊深度剖析</h3>
+              <p class="good"><b>便利之处：</b><br>
+                <code>income</code> 与 <code>expend</code> 都不需要通过指针或复杂结构传参，直接读写公共余额 <code>cash</code>。
+              </p>
+              <p class="danger" style="margin-top:10px;"><b>致命风险：</b><br>
+                如果系统中扩展出 50 个函数，只要任何一个实习生不小心写了 <code>cash = 0;</code>，整个账户余额瞬间蒸发，几乎无法追踪是哪一行代码下的黑手！
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-3">
+          <h2>全局变量的本质：破坏函数独立性</h2>
+          <div class="path-grid">
+            <div class="path continue">
+              <h3>规范做法：显式参数与返回值传递</h3>
+              <pre><code class="language-c" data-trim="">balance = income(balance, 100.0);
+balance = expend(balance, 30.0);</code></pre>
+              <p class="small good">✓ 输入什么、输出什么一清二楚；函数无副作用，极其易测。</p>
+            </div>
+            <div class="path break">
+              <h3>滥用全局：隐式黑盒交互</h3>
+              <pre><code class="language-c" data-trim="">income(100.0);  /* Modifies global cash silently */
+expend(30.0);</code></pre>
+              <p class="small danger">✗ 模块间产生看不见的“强耦合纽带”，牵一发而动全身。</p>
+            </div>
+          </div>
+          <div class="quote" style="margin-top:20px;">
+            <strong>工程守则：</strong>不要把全局变量当成“省力不用写参数列表”的偷懒工具！若全局配置无需修改，必须加上 <code>const</code> 修饰！
+          </div>
+        </section>
+
+        <section id="sec-4-4">
+          <h2>AI 协作互动：全局变量的污染排查</h2>
+          <div class="card blue">
+            <h3>🤖 AI 协作互动：全局变量并发与调用副作用审计</h3>
+            <div class="prompt">
+              我正在维护一个包含了 double total=0.0 全局变量的 C 程序。多个函数 addRate(r)、clearTotal()、printReport() 都在读写它。请帮我分析：如果有两个任务同时调用该函数，或者在调用某个子函数时它内部偷偷执行了 clearTotal()，会导致什么隐藏 Bug？请提供一个防御性封装方案。
+            </div>
+            <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>观察 AI 如何解释“全局变量导致的多线程数据竞态（Race Condition）”与“隐蔽副作用”，加深对局部封装的敬畏。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 5：教材例5-7 & 例5-9 深度找错与代码审计 ==================== -->
+      <section id="sec-5-0">
+        <section class="module-cover-slide" id="sec-5-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例5-7 · 例5-9</div>
+            <div class="cover-title">经典教材代码审查：<br>找错、证伪与缺陷修复</div>
+            <div class="cover-subtitle">复数运算全局变量公式错误与 <code>static</code> 阶乘函数的致命假象。</div>
+            <div class="cover-tags">
+              <span class="pill">例5-7 复数乘法</span>
+              <span class="pill">例5-9 static 阶乘</span>
+              <span class="pill">缺陷证伪</span>
+              <span class="pill">最小测试用例</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-1a">
+          <h2>教材例5-7 题面描述与复数加乘</h2>
+          <div class="card blue" style="margin-bottom:18px;">
+            <h3>📋 教材例5-7 题目要求</h3>
+            <p class="small">使用全局变量在 <code>main</code> 与自定义函数之间共享数据，计算两个复数的和与积。输入两复数的实部与虚部，输出它们的和与积。</p>
+          </div>
+          <div class="grid2">
+            <div class="card soft">
+              <h3>复数加法法则</h3>
+              <p class="small">\((a + bi) + (c + di) = (a + c) + (b + d)i\)</p>
+              <pre><code class="language-c" data-trim="">result_real = real1 + real2;
+result_imag = imag1 + imag2;</code></pre>
+            </div>
+            <div class="card soft">
+              <h3>复数乘法法则（需特别小心！）</h3>
+              <p class="small">\((a + bi)(c + di) = (ac - bd) + (ad + bc)i\)</p>
+              <p class="small muted">因为 \(i^2 = -1\)，所以实部必须减去两虚部乘积！</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-2">
+          <h2>例5-7 深度找错：抓出教材原版经典 Bug</h2>
+          <div class="grid2" style="align-items:start;">
+            <div class="card warn">
+              <h3 class="danger">🚨 原教材课件的公式错误</h3>
+              <pre><code class="language-c" data-trim="">/* Buggy formula: mixed real and imaginary parts */
+result_real = real2 * imag1 - real1 * imag2;</code></pre>
+              <p class="small"><strong>测试打假：</strong>对于 \((1 + 2i) \times (3 + 4i)\)：<br>
+                正确实部为 \(1 \times 3 - 2 \times 4 = -5\)。<br>
+                原课件错码算出的实部却是 \(3 \times 2 - 1 \times 4 = 2\)，差了十万八千里！
+              </p>
+            </div>
+            <div class="card">
+              <h3 class="good">✓ 修复后的正确公式</h3>
+              <pre><code class="language-c" data-trim="">/* Correct math formula: (a+bi)(c+di) = (ac-bd) + (ad+bc)i */
+result_real = real1 * real2 - imag1 * imag2;
+result_imag = real1 * imag2 + imag1 * real2;</code></pre>
+              <p class="small muted">教训：全局变量名字长且相似，极易在编码时手滑敲错变量名而浑然不知！</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-3">
+          <h2>教材例5-9：用 static 变量计算阶乘</h2>
+          <div class="card blue" style="margin-bottom:18px;">
+            <h3>📋 教材例5-9 题目要求</h3>
+            <p class="small">输出 1 到 \(n\) 的阶乘表。要求定义和调用函数 <code>fact_s(n)</code> 计算 \(n!\)，其内部利用静态局部变量保留上一次计算的结果。</p>
+          </div>
+          <pre><code class="language-c" data-line-numbers="1|3|4-5" data-trim="">double fact_s(int n)
+{
+    static double f = 1.0;
+    f = f * n;
+    return f;
+}</code></pre>
+          <div class="quote">仔细端详这段 5 行代码：它真的能随时求任意正整数 \(n\) 的阶乘吗？</div>
+        </section>
+
+        <section id="sec-5-4">
+          <h2>例5-9 致命陷阱：它根本不是真正的阶乘函数！</h2>
+          <table class="compare">
+            <tr>
+              <th>调用序列</th>
+              <th>实际返回值序列</th>
+              <th>真正的阶乘 \(n!\)</th>
+              <th>诊断结论</th>
+            </tr>
+            <tr>
+              <td>按严格顺序调用<br><code>fact_s(1) → (2) → (3)</code></td>
+              <td><code>1.0 → 2.0 → 6.0</code></td>
+              <td><code>1 → 2 → 6</code></td>
+              <td><span class="good">表面巧合匹配</span>（每步恰好乘上了 \(n\)）</td>
+            </tr>
+            <tr>
+              <td>新程序直接算 3!<br>只调用 <code>fact_s(3)</code></td>
+              <td><strong><code>3.0</code></strong></td>
+              <td><strong><code>6</code></strong></td>
+              <td><span class="danger">彻底算错！</span>（\(1.0 \times 3 = 3\)）</td>
+            </tr>
+            <tr>
+              <td>同一个程序中算两次 3!<br><code>fact_s(3) → fact_s(3)</code></td>
+              <td><code>3.0 → 9.0</code></td>
+              <td><code>6 → 6</code></td>
+              <td><span class="danger">不可复现！</span>（第二次直接乘上去了）</td>
+            </tr>
+          </table>
+          <div class="bluebox" style="margin-top:16px;">
+            <strong>本质揭秘：</strong><code>fact_s(n)</code> 根本不是求 \(n!\)，它仅仅是“把传入的数乘到内部静态累乘器上”。一旦调用次序颠倒，满盘皆输！
+          </div>
+        </section>
+
+        <section id="sec-5-5">
+          <h2>AI 协作互动：为伪算法设计证伪测试用例</h2>
+          <div class="card blue">
+            <h3>🤖 AI 协作互动：设计最小测试序列刺破 static 伪算法</h3>
+            <div class="prompt">
+              教材例5-9 的函数定义为：double fact_s(int n) { static double f=1; f*=n; return f; }。请帮我设计一个仅有 2 行调用的 main 函数，证明它无法作为通用的阶乘函数复用，并用数学归纳法推演如果用户先调 fact_s(4) 再调 fact_s(2) 会产生何种荒谬的输出结果。
+            </div>
+            <p class="small muted" style="margin-top:12px;">💡 <b>课堂互动：</b>学生体会黑盒测试的威力——用事实说话，用最小测试用例推翻伪逻辑。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 6：课堂后测、全章总结与课后迁移 ==================== -->
+      <section id="sec-6-0">
+        <section class="module-cover-slide" id="sec-6-1">
+          <div class="modulecover">
+            <div class="cover-kicker">第3课时后测与全章总结</div>
+            <div class="cover-title">掌控变量，驾驭状态：<br>让程序行为可预测、可复现</div>
+            <div class="cover-subtitle">全章知识图谱大闭环：从接口封装、模块化解耦到内存生命周期管理。</div>
+            <div class="cover-tags">
+              <span class="pill">判定矩阵</span>
+              <span class="pill">最小测试</span>
+              <span class="pill">第五章全景图</span>
+              <span class="pill">第六章先导</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-6-2">
+          <h2>课堂后测：两道出口核心诊断题</h2>
+          <div class="grid2" style="align-items: start;">
+            <div class="card">
+              <h3>出口题一：变量属性判定矩阵</h3>
+              <table class="compare" style="font-size:22px;">
+                <tr><th>声明语句</th><th>作用域</th><th>存储期与跨调用保留</th></tr>
+                <tr><td><code>int a = 0;</code>（函数内）</td><td>函数/块内部</td><td>自动存储期，<strong>不保留</strong></td></tr>
+                <tr><td><code>static int b = 0;</code>（函数内）</td><td>函数/块内部</td><td>静态存储期，<strong>跨调用保留</strong></td></tr>
+                <tr><td><code>int c = 0;</code>（函数外）</td><td>整个文件向后可见</td><td>静态存储期，<strong>全程保留</strong></td></tr>
+              </table>
+              <p class="small muted" style="margin-top:8px;">追问：静态局部变量 <code>b</code> 属于全局变量吗？<strong>绝不是！</strong>它的作用域仅限函数内部！</p>
+            </div>
+            <div class="card soft">
+              <h3>出口题二：最小测试序列证伪</h3>
+              <p class="small">如何用最简单的两行代码证明 <code>fact_s(n)</code> 不是通用阶乘？</p>
+              <pre style="width:100%;"><code class="language-c" data-trim="">/* Test: call directly with n = 3 */
+double ans = fact_s(3);
+printf("%f\n", ans);   /* Prints 3.0 instead of 6.0! */</code></pre>
+              <div class="bluebox" style="margin-top:12px; font-size:22px;">
+                <strong>结论：</strong>通用函数必须是<strong>幂等、无害、调用独立</strong>的。
+              </div>
+            </div>
+          </div>
+          <aside class="notes">31:00—36:00。检验学生是否建立起对变量分类与测试可重复性的清醒认知。</aside>
+        </section>
+
+        <section id="sec-6-3">
+          <h2>第五章全景图谱：结构化程序设计三部曲</h2>
+          <div class="flow" style="margin-top:10px; margin-bottom:22px;">
+            <div class="step">5.1 封装计算<br><span class="tiny">接口契约 / 值传递 / 边界防错</span></div>
+            <div class="arrow">→</div>
+            <div class="step">5.2 拆解架构<br><span class="tiny">void 动作 / 单一职责 / 菜单集成</span></div>
+            <div class="arrow">→</div>
+            <div class="step">5.3 驾驭状态<br><span class="tiny">作用域 / 内存三区 / 消除隐蔽依赖</span></div>
+          </div>
+          <table class="compare">
+            <tr>
+              <th>设计维度</th>
+              <th>优秀实践（Best Practice）</th>
+              <th>反面教材（Bad Smell）</th>
+            </tr>
+            <tr>
+              <td><strong>接口设计</strong></td>
+              <td>输入输出明明白白，按值传递各司其职</td>
+              <td>依靠全局变量暗渡陈仓，形参列表形同虚设</td>
+            </tr>
+            <tr>
+              <td><strong>职责分配</strong></td>
+              <td>单一职责，计算不掺杂打印，高内聚低耦合</td>
+              <td>一个 300 行函数从输入到计算、打印一手包办</td>
+            </tr>
+            <tr>
+              <td><strong>状态管理</strong></td>
+              <td>状态显式传递，函数可独立单测、结果可复现</td>
+              <td>滥用 static 隐藏累加状态，调用顺序稍变即崩溃</td>
+            </tr>
+          </table>
+        </section>
+
+        <section id="sec-6-4">
+          <h2>课后挑战练习与第六章先导</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>课后挑战实战</h3>
+              <ul>
+                <li>纠正教材例5-7 复数乘法公式，并改为不用全局变量的结构化接口</li>
+                <li>将例5-9 的 <code>fact_s</code> 重构为不带任何隐藏静态变量的独立通用阶乘函数</li>
+                <li>为社区慢病健康助手实现一个带有 <code>reset()</code> 重置接口的测试安全的编号生成器</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>第六章先导：批量数据的组织</h3>
+              <p class="small">
+                如果我们的社区慢病管理系统不仅记录 1 次随访，而是要保存全社区 <strong>100 名慢病居民</strong>的一整年随访数据并排序：<br>
+                难道我们要声明 <code>bmi1, bmi2, ... bmi100</code> 吗？<br>
+                下周见——<strong>第六章：数组（批量同类数据的内存管理）</strong>！
+              </p>
+            </div>
+          </div>
+          <p class="center bigq">接口清晰，状态可测；函数有界，程序常青。</p>
+          <aside class="notes">37:00—40:00。全课收尾，完美衔接下一章数组知识点。</aside>
+        </section>
+      </section>
+
+    </div>
+  </div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script):not(aside)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
+        }
+      });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
+
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+        });
+      });
+
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
+      });
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
+
+</html>
+
+

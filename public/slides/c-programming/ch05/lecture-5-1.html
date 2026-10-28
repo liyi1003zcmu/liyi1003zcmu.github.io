@@ -1,0 +1,1394 @@
+<!DOCTYPE HTML>
+
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>程序设计基础：第5次课第1课时 函数定义与调用</title>
+  <meta content="第5次课第1课时：函数定义、调用、值传递与边界测试" name="description" />
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+  <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+  <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+  <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #2056a8;
+      --blue2: #2c7be5;
+      --cyan: #eaf4ff;
+      --ink: #1f2937;
+      --muted: #5b6573;
+      --green: #1d7a46;
+      --orange: #a65b00;
+      --red: #b42318;
+      --purple: #6d28d9;
+      --line: #d8e1ec;
+      --soft: #f7f9fc;
+    }
+
+    .reveal {
+      color: var(--ink);
+      font-size: 28px;
+    }
+
+    .reveal .slides section {
+      box-sizing: border-box;
+      text-align: left;
+      padding: 20px 28px;
+    }
+
+    .reveal .slides section.stack {
+      padding: 0;
+    }
+
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      color: #163f78;
+      text-transform: none;
+    }
+
+    .reveal h1 {
+      font-size: 76px;
+      line-height: 1.10;
+      margin: .10em 0 .24em;
+    }
+
+    .reveal h2 {
+      font-size: 50px;
+      line-height: 1.16;
+      margin: 0 0 24px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbe7f6;
+    }
+
+    .reveal h3 {
+      font-size: 32px;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+
+    .reveal p {
+      font-size: 28px;
+      line-height: 1.42;
+      margin: 12px 0;
+    }
+
+    .reveal ul,
+    .reveal ol {
+      margin: .25em 0 .25em 1.15em;
+    }
+
+    .reveal li {
+      font-size: 26px;
+      line-height: 1.40;
+      margin: 8px 0;
+    }
+
+    .reveal code,
+    .reveal pre code,
+    .reveal pre code.hljs,
+    .reveal pre .hljs,
+    code,
+    .mono {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-variant-ligatures: none !important;
+      font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+    }
+
+    .reveal :not(pre)>code {
+      font-size: 24px;
+      background: #f3f6fa;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #173d70;
+    }
+
+    .reveal pre {
+      width: 94%;
+      box-shadow: none;
+      font-size: 24px;
+      line-height: 1.32;
+      margin: 18px auto;
+    }
+
+    .reveal pre code {
+      max-height: 540px;
+      font-size: 1em;
+      line-height: 1.32;
+      padding: 18px 22px;
+      border-radius: 12px;
+      background: #fff !important;
+      color: #1f2937 !important;
+      border: 1px solid #d8e1ec;
+      box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+    }
+
+    .small {
+      font-size: 23px !important;
+      line-height: 1.38 !important;
+    }
+
+    .tiny {
+      font-size: 20px !important;
+      line-height: 1.36 !important;
+    }
+
+    .large {
+      font-size: 31px !important;
+      line-height: 1.36 !important;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .accent {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .danger {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .orange {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .purple {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center !important;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .lead {
+      max-width: 1350px;
+      margin: 0 auto 24px !important;
+      font-size: 34px !important;
+      line-height: 1.45 !important;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      box-sizing: border-box;
+      height: 100%;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 23px;
+      box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+    }
+
+    .card.soft {
+      background: var(--soft);
+    }
+
+    .card.blue {
+      background: #f4f8ff;
+      border-color: #c9d9ef;
+    }
+
+    .card.warn {
+      background: #fff8ed;
+      border-color: #f0d7b4;
+    }
+
+    .card.red {
+      background: #fff5f5;
+      border-color: #efc8c8;
+    }
+
+    .bluebox {
+      background: var(--cyan);
+      border-left: 6px solid var(--blue2);
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 26px;
+      line-height: 1.42;
+    }
+
+    .quote {
+      font-size: 29px;
+      line-height: 1.52;
+      padding: 26px 34px;
+      border-left: 7px solid var(--blue2);
+      background: var(--soft);
+      text-align: left;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #e8eef7;
+      color: #24405f;
+      font-size: 22px;
+      margin: 5px;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px 9px;
+      border: 1px solid #c6d5e8;
+      border-radius: 13px;
+      background: #fff;
+      font-size: 28px;
+      line-height: 1.20;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+    }
+
+    .arrow {
+      flex: 0 0 auto;
+      font-size: 34px;
+      color: #6683a6;
+    }
+
+    table.compare {
+      width: 100%;
+      margin: auto;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      border: 1px solid #d7dee8 !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      font-size: 27px;
+    }
+
+    table.compare th,
+    table.compare td {
+      border-right: 1px solid #d7dee8 !important;
+      border-bottom: 1px solid #d7dee8 !important;
+      border-top: none !important;
+      border-left: none !important;
+      padding: 12px 14px;
+    }
+
+    table.compare th:last-child,
+    table.compare td:last-child {
+      border-right: none !important;
+    }
+
+    table.compare tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    table.compare th {
+      background: #edf4fb;
+      color: #173d70;
+    }
+
+    .sectiontag {
+      color: #46709f;
+      font-size: 34px !important;
+      letter-spacing: .09em;
+    }
+
+    .title-meta {
+      font-size: 34px !important;
+      margin-top: 34px !important;
+    }
+
+    .bigq {
+      font-size: 42px !important;
+      color: #143b70;
+      font-weight: 700;
+      line-height: 1.26 !important;
+    }
+
+    .rule {
+      font-size: 31px !important;
+      font-weight: 700;
+      color: #163f78;
+      letter-spacing: .03em;
+    }
+
+    .modulecover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 720px;
+      padding: 55px 70px;
+      background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+      border: 1px solid #dbe7f6;
+      border-radius: 22px;
+      box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+    }
+
+    .modulecover .cover-kicker {
+      font-size: 27px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: #5c7da5;
+      margin-bottom: 16px;
+    }
+
+    .modulecover .cover-title {
+      font-size: 62px;
+      line-height: 1.16;
+      color: #163f78;
+      font-weight: 800;
+      margin: 0 0 18px;
+    }
+
+    .modulecover .cover-subtitle {
+      font-size: 31px;
+      color: #48627f;
+      line-height: 1.40;
+      max-width: 1120px;
+    }
+
+    .modulecover .cover-tags {
+      margin-top: 20px;
+    }
+
+    .modulecover .cover-tags .pill {
+      font-size: 27px;
+      background: #ddeafb;
+      color: #214c84;
+    }
+
+    .slide-label {
+      position: absolute;
+      top: 9px;
+      right: 24px;
+      z-index: 50;
+      max-width: 46%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 5px 10px;
+      border: 1px solid #cbd9ec;
+      border-radius: 999px;
+      background: #f4f8ff;
+      color: #375a82;
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 16px !important;
+      line-height: 1.15;
+      opacity: .92;
+      pointer-events: none;
+    }
+
+    .placeholder {
+      border: 2px dashed #9ab4cc;
+      border-radius: 16px;
+      padding: 20px;
+      background: #f8fbff;
+      color: #39566f;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .placeholder .title {
+      font-weight: 700;
+      color: #2056a8;
+      margin-bottom: 8px;
+      font-size: 27px;
+    }
+
+    .prompt-note {
+      font-size: 18px !important;
+      color: #6b7280 !important;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 42px;
+      row-gap: 4px;
+      margin-left: 1.1em !important;
+    }
+
+    .reveal .fragment.fade-up {
+      transform: translateY(18px);
+      transition: opacity .38s ease, transform .38s ease;
+      will-change: opacity, transform;
+    }
+
+    .reveal .fragment.fade-up.visible {
+      transform: translateY(0);
+    }
+
+    /* 白底、高对比、避免绿色语法高亮 */
+    .hljs {
+      background: #fff !important;
+      color: #1f2937 !important;
+    }
+
+    .hljs-keyword,
+    .hljs-built_in,
+    .hljs-type {
+      color: #2056a8 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-meta,
+    .hljs-preprocessor,
+    .hljs-title,
+    .hljs-function .hljs-title,
+    .hljs-name {
+      color: #6d28d9 !important;
+      font-weight: 700 !important;
+    }
+
+    .hljs-string,
+    .hljs-number,
+    .hljs-literal,
+    .hljs-params {
+      color: #a65b00 !important;
+    }
+
+    .hljs-comment {
+      color: #64748b !important;
+      font-style: italic !important;
+    }
+
+    .hljs-symbol,
+    .hljs-operator,
+    .hljs-punctuation {
+      color: #334155 !important;
+    }
+
+    /* Helper classes */
+    .tcm-badge {
+      display: inline-block;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: #edf4fb;
+      color: #173d70;
+      border: 1px solid #c6d5e8;
+      font-size: 24px !important;
+      margin: 5px;
+      font-weight: 700;
+    }
+
+    .data-strip {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .data-token {
+      min-width: 76px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #cbd8e6;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      box-shadow: 0 5px 12px rgba(31, 41, 55, .05);
+    }
+
+    .data-token.stop {
+      background: #fff5f5;
+      color: #b42318;
+    }
+
+    .data-token.skip {
+      background: #fff7ed;
+      color: #a65b00;
+    }
+
+    .formula {
+      font-size: 40px !important;
+      color: #173d70;
+      text-align: center !important;
+      margin: 20px 0 !important;
+    }
+
+    .code-small pre code {
+      max-height: 510px !important;
+      font-size: 22px !important;
+      line-height: 1.28 !important;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .path {
+      border-radius: 16px;
+      border: 1px solid #cbd8e6;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .path.break {
+      border-left: 8px solid #b42318;
+    }
+
+    .path.continue {
+      border-left: 8px solid #2c7be5;
+    }
+
+    .binary-line {
+      font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 40px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid #d8e1ec;
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .prompt {
+      background: #f7f7fb;
+      border-left: 6px solid #6d28d9;
+      padding: 18px 22px;
+      border-radius: 10px;
+      font-size: 22px;
+      line-height: 1.55;
+      text-align: left;
+      white-space: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ==================== 模块 1：课程导入与学习目标 ==================== -->
+      <section id="sec-1-0">
+        <section id="sec-1-1">
+          <p class="center sectiontag">程序设计基础 · 第5次课 · 第1课时</p>
+          <h1 class="center">函数（一）<br>函数定义与调用：封装可复用的规则</h1>
+          <p class="center title-meta">从社区慢病管理（体质指数 BMI 计算）到经典数值与判断函数，理解“接口设计、值传递与边界测试”</p>
+          <aside class="notes">0:00—1:00。将本课定位为已有分支、循环程序的结构化升级：当同一计算规则在多处出现时，用函数封装成独立模块。</aside>
+        </section>
+
+        <section id="sec-1-2">
+          <h2>本课核心问题</h2>
+          <p class="lead center">同样的体质指数（BMI）计算规则，要在程序里复制粘贴多少遍？</p>
+          <div class="grid3">
+            <div class="card">
+              <h3>旧代码困境</h3>
+              <p class="small">同一公式在多处重复书写，一旦规则调整，极易漏改或前后不一致。</p>
+            </div>
+            <div class="card soft">
+              <h3>今天推进</h3>
+              <p class="small">把相对独立的计算或判断封装为<strong>自定义函数</strong>，实现“一次定义，多次调用”。</p>
+            </div>
+            <div class="card">
+              <h3>核心机制</h3>
+              <p class="small">函数声明、函数定义、函数调用，以及实参到形参的<strong>单向值传递</strong>。</p>
+            </div>
+          </div>
+          <aside class="notes">1:00—3:00。贯穿案例：社区慢病健康管理助手（体质指数 BMI 评估）。基于居民身高、体重计算 BMI，作为慢病建档与随访的核心量化指标。</aside>
+        </section>
+
+        <section id="sec-1-3">
+          <h2>第1课时学习目标</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>知识目标</h3>
+              <ul>
+                <li>理解自定义函数的接口要素：函数名、形参列表、返回类型</li>
+                <li>区分<strong>函数定义</strong>、<strong>函数原型声明</strong>与<strong>函数调用</strong></li>
+                <li>理解实参向形参的“按值传递（Pass by Value）”与 <code>return</code> 的作用</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>能力目标</h3>
+              <ul>
+                <li>能将“根据身高与体重计算体质指数（BMI）”等慢病评估规则编写为独立函数</li>
+                <li>能完成数值计算型函数（例5-1、5-2）与判断型函数（例5-3）的设计</li>
+                <li>能结合 AI 协作审查函数边界条件，设计正常、边界与非法输入测试</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">3:00—5:00。以可观察的学习行为表述目标，提醒学生本课不仅要会写函数，还要会测边界。</aside>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 2：为什么需要函数 & 函数的定义与调用 ==================== -->
+      <section id="sec-2-0">
+        <section class="module-cover-slide" id="sec-2-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.1 / 函数的定义与调用</div>
+            <div class="cover-title">变化的是每次输入的数据，<br>不变的是背后的计算规则</div>
+            <div class="cover-subtitle">贯穿案例：将社区慢病管理中“由身高与体重计算体质指数”封装成可复用的 <code>calcBMI</code> 函数。</div>
+            <div class="cover-tags">
+              <span class="pill">函数接口</span>
+              <span class="pill">函数定义</span>
+              <span class="pill">原型声明</span>
+              <span class="pill">边界防御</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-2-2">
+          <h2>数据场景：社区慢病建档——计算体质指数（BMI）</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>社区慢病随访记录</h3>
+              <p>居民体检采集：体重 <code>70.0</code> kg，身高 <code>1.75</code> m。</p>
+              <p class="small muted">背景：体质指数（BMI）是社区高血压、糖尿病等慢病随访建档的核心指标。</p>
+            </div>
+            <div class="card soft">
+              <h3>体质指数计算公式</h3>
+              <p>统一按标准公式计算：</p>
+              <p class="bigq center"><code>70.0 ÷ (1.75 × 1.75) ≈ 22.86</code></p>
+            </div>
+          </div>
+          <pre><code class="language-c" data-trim="">double bmi1 = 70.0 / (1.75 * 1.75);
+double bmi2 = 82.0 / (1.80 * 1.80);
+double bmi3 = 55.0 / (1.60 * 1.60);</code></pre>
+          <div class="bluebox">思考：如果社区有数十位慢病居民随访数据，或者要统一增加“身高不能为0或负数”的合法性检查，直接复制表达式会遇到什么困难？</div>
+          <aside class="notes">5:00—7:00。让学生先独立说出至少一个修改困难：代码重复、漏改、规则不一致、缺少异常校验。</aside>
+        </section>
+
+        <section id="sec-2-3">
+          <h2>先不写代码：提取共同规律与接口四问</h2>
+          <div class="flow" style="margin-top: 10px; margin-bottom: 22px;">
+            <div class="step">输入体重 <code>weight</code><br>身高 <code>height</code></div>
+            <div class="arrow">→</div>
+            <div class="step">检查数据合法性<br>执行计算公式</div>
+            <div class="arrow">→</div>
+            <div class="step">返回体质指数 BMI<br><code>double</code></div>
+          </div>
+          <table class="compare">
+            <tr>
+              <th>接口设计问题</th>
+              <th>在本例中的约定</th>
+            </tr>
+            <tr>
+              <td>1. 函数叫什么名字？</td>
+              <td><code>calcBMI</code>（名称清晰表达单一职责）</td>
+            </tr>
+            <tr>
+              <td>2. 需要调用者提供什么输入（形参）？</td>
+              <td><code>double weight</code>（体重/kg）、<code>double height</code>（身高/m）</td>
+            </tr>
+            <tr>
+              <td>3. 向调用者交还什么结果（返回类型）？</td>
+              <td><code>double</code>（计算出的体质指数 BMI）</td>
+            </tr>
+            <tr>
+              <td>4. 输入不合法时如何响应？</td>
+              <td>若 <code>weight &lt;= 0</code> 或 <code>height &lt;= 0</code>，统一返回错误标识 <code>-1.0</code></td>
+            </tr>
+          </table>
+          <aside class="notes">7:00—9:30。强调写函数前先定“接口契约”：输入什么、输出什么、异常怎么约定。</aside>
+        </section>
+
+        <section id="sec-2-4">
+          <h2>第一次定义函数：把规则写成独立模块</h2>
+          <pre><code class="language-c" data-line-numbers="1|2-6|3-4|5" data-trim="">double calcBMI(double weight, double height)
+{
+    if (weight &lt;= 0 || height &lt;= 0)
+        return -1.0;
+    return weight / (height * height);
+}</code></pre>
+          <div class="grid2">
+            <div class="card">
+              <h3>函数首部（Header）</h3>
+              <ul>
+                <li><strong>返回类型</strong>：<code>double</code>（与返回值类型一致）</li>
+                <li><strong>函数名</strong>：<code>calcBMI</code></li>
+                <li><strong>形参表</strong>：<code>(double weight, double height)</code>，每个参数都必须单独写明类型</li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>函数体（Body）</h3>
+              <ul>
+                <li>先做<strong>边界卫语句</strong>校验，拒绝非正体重与非正身高（防止除以0）</li>
+                <li>再用平方除法计算，通过 <code>return</code> 把结果交还调用者</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">9:30—12:00。提醒学生：形参列表不能写成 (double weight, height)，每个形参都必须声明类型；函数首部后面没有分号。</aside>
+        </section>
+
+        <section id="sec-2-5">
+          <h2><code>main</code> 怎样使用一个自定义函数？</h2>
+          <pre><code class="language-c" data-line-numbers="1|3|5-7|11-16" data-trim="">#include &lt;stdio.h&gt;
+
+double calcBMI(double weight, double height);   /* 1. Function prototype */
+
+int main(void)
+{
+    double bmi = calcBMI(70.0, 1.75);           /* 2. Function call */
+    printf("BMI = %.2f\n", bmi);
+    return 0;
+}
+
+double calcBMI(double weight, double height)    /* 3. Function definition */
+{
+    if (weight &lt;= 0 || height &lt;= 0)
+        return -1.0;
+    return weight / (height * height);
+}</code></pre>
+          <div class="grid3">
+            <div class="card">
+              <h3>函数声明</h3>
+              <p class="small">告诉编译器函数的返回类型、名称和参数类型，<strong>末尾有分号</strong>。</p>
+            </div>
+            <div class="card blue">
+              <h3>函数调用</h3>
+              <p class="small">在 <code>main</code> 中给出实参 <code>(70.0, 1.75)</code>，启动函数并接收返回值。</p>
+            </div>
+            <div class="card soft">
+              <h3>函数定义</h3>
+              <p class="small">真正实现计算逻辑的代码块，<strong>首部末尾无分号</strong>。</p>
+            </div>
+          </div>
+          <aside class="notes">12:00—14:30。解释为什么函数定义放在 main 后面时，调用前需要函数原型声明。</aside>
+        </section>
+
+        <section id="sec-2-6">
+          <h2>边界测试与 AI 协作审查</h2>
+          <table class="compare">
+            <tr>
+              <th>测试类型</th>
+              <th><code>weight</code></th>
+              <th><code>height</code></th>
+              <th>期望返回</th>
+              <th>设计目的</th>
+            </tr>
+            <tr>
+              <td>正常数据</td>
+              <td><code>70.0</code></td>
+              <td><code>1.75</code></td>
+              <td><code>22.86</code></td>
+              <td>验证常规计算公式正确性</td>
+            </tr>
+            <tr>
+              <td>零值边界</td>
+              <td><code>0.0</code></td>
+              <td><code>1.75</code></td>
+              <td><code>-1.0</code></td>
+              <td>验证非正体重被合法拦截</td>
+            </tr>
+            <tr>
+              <td>除零边界</td>
+              <td><code>70.0</code></td>
+              <td><code>0.0</code></td>
+              <td><code>-1.0</code></td>
+              <td>拦截除以 0 的严重运行错误</td>
+            </tr>
+            <tr>
+              <td>非法负值</td>
+              <td><code>-5.0</code> / <code>70.0</code></td>
+              <td><code>1.75</code> / <code>-1.75</code></td>
+              <td><code>-1.0</code></td>
+              <td>暴露“只判断 <code>height == 0</code>”的漏洞</td>
+            </tr>
+          </table>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：让 AI 补充边界测试，不代写代码</h3>
+            <div class="prompt">
+              我正在设计 C 语言社区慢病体质指数计算函数 double calcBMI(double weight, double height)，约定输入合法时返回 BMI 指数，非法时返回 -1.0。我已经设计了 (70.0, 1.75)、(0, 1.75)、(70.0, 0) 三组测试。请只帮我检查是否遗漏了边界或极端测试数据，按【测试输入—预期返回—检验目的】列出，不要直接生成函数代码。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>学生先写出自己的测试表，再提问 AI 并逐条人工核验 AI 建议的测试点是否真正对应代码分支。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 3：参数传递与执行流程 ==================== -->
+      <section id="sec-3-0">
+        <section class="module-cover-slide" id="sec-3-1">
+          <div class="modulecover">
+            <div class="cover-kicker">5.1 / 参数传递与执行流</div>
+            <div class="cover-title">调用函数时，<br>数据是怎样进出的？</div>
+            <div class="cover-subtitle">理清实参到形参的单向值复制过程，消除“修改形参会改变实参”的常见误区。</div>
+            <div class="cover-tags">
+              <span class="pill">控制流跳转</span>
+              <span class="pill">实参与形参</span>
+              <span class="pill">单向值传递</span>
+              <span class="pill">return 机制</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-3-2">
+          <h2>一次函数调用的执行路线</h2>
+          <div class="flow">
+            <div class="step">1. <code>main</code> 暂停<br>遇到 <code>calcBMI(70.0, 1.75)</code></div>
+            <div class="arrow">→</div>
+            <div class="step">2. 实参复制给形参<br><code>70.0 → weight</code><br><code>1.75 → height</code></div>
+            <div class="arrow">→</div>
+            <div class="step">3. 执行函数体<br>算出 <code>22.86</code></div>
+            <div class="arrow">→</div>
+            <div class="step">4. <code>return</code> 返回<br>回到调用处赋给 <code>bmi</code></div>
+          </div>
+          <div class="quote" style="margin-top:28px;">函数执行完毕后，程序<strong>不会从头重新运行 <code>main</code></strong>，而是精确回到刚才调用它的位置继续往下走。</div>
+          <aside class="notes">16:00—17:30。让学生用手指跟踪代码执行位置：main 调用处 → 函数首部 → 函数体 return → main 调用处下一行。</aside>
+        </section>
+
+        <section id="sec-3-3">
+          <h2>认知冲突：在函数里修改形参，会影响原变量吗？</h2>
+          <pre><code class="language-c" data-line-numbers="1-4|6-11" data-trim="">void tryChange(double x)
+{
+    x = 100.0;
+}
+
+int main(void)
+{
+    double weight = 70.0;
+    tryChange(weight);
+    printf("%.1f\n", weight);
+    return 0;
+}</code></pre>
+          <p class="center bigq">先预测再解释：屏幕最终打印 <code>70.0</code> 还是 <code>100.0</code>？</p>
+          <div class="grid2">
+            <div class="card">
+              <h3><code>main</code> 的变量区</h3>
+              <p class="small"><code>weight</code> 始终保存在 <code>main</code> 自己的内存单元中，值为 <strong><code>70.0</code></strong>。</p>
+            </div>
+            <div class="card soft">
+              <h3><code>tryChange</code> 的形参区</h3>
+              <p class="small">形参 <code>x</code> 只是复制了一份 <code>70.0</code> 的<strong>副本</strong>；<code>x = 100.0</code> 只改了副本，函数结束即销毁。</p>
+            </div>
+          </div>
+          <aside class="notes">17:30—19:30。这是初学者最高频的误区之一。通过“复印件上涂改不影响原件”帮助建立直觉。</aside>
+        </section>
+
+        <section id="sec-3-4">
+          <h2>值传递（Pass by Value）的规则与边界</h2>
+          <div class="path-grid">
+            <div class="path continue">
+              <h3>实参（Actual Argument）</h3>
+              <ul>
+                <li>出现在<strong>函数调用</strong>圆括号中</li>
+                <li>可以是常量、变量或表达式，如 <code>calcBMI(w + 2.5, 1.75)</code></li>
+                <li>调用时必须已经有确定的值</li>
+              </ul>
+            </div>
+            <div class="path break">
+              <h3>形参（Formal Parameter）</h3>
+              <ul>
+                <li>出现在<strong>函数定义</strong>首部圆括号中</li>
+                <li>必须是变量名，用来接收实参传来的值</li>
+                <li>仅在函数被调用期间分配内存，返回后释放</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bluebox" style="margin-top:20px;">
+            <strong>值传递边界说明：</strong>本节讨论普通数值变量（<code>int</code>、<code>double</code>、<code>char</code>）作为参数，数据单向从实参传给形参；后续学习<strong>指针与数组</strong>时，再讨论如何让函数修改调用者的数据。
+          </div>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：值传递内存快照推演</h3>
+            <div class="prompt">
+              在 C 语言中，如果我写了一个交换函数 void swap_wrong(int a, int b) { int t = a; a = b; b = t; }，并在 main 中调用 swap_wrong(x, y)，为什么 x 和 y 的值并没有交换？请用【调用前—进入函数时—交换后—函数返回后】四步内存表帮我可视化解释。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>同桌对照 AI 生成的四步内存表，解释为什么“改了形参 a、b 却没改实参 x、y”。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 4：教材例5-1 & 例5-2 数值计算函数与复用 ==================== -->
+      <section id="sec-4-0">
+        <section class="module-cover-slide" id="sec-4-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例5-1 · 例5-2</div>
+            <div class="cover-title">把数学公式变成工具：<br>一次封装，多次组合调用</div>
+            <div class="cover-subtitle">从圆柱体体积 <code>cylinder(r, h)</code> 到五边形分割求面积 <code>area(x, y, z)</code>。</div>
+            <div class="cover-tags">
+              <span class="pill">cylinder</span>
+              <span class="pill">area</span>
+              <span class="pill">海伦公式</span>
+              <span class="pill">多次调用</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-1a">
+          <h2>教材例5-1 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              输入圆柱体的半径 \(r\) 和高 \(h\)，计算并输出圆柱体的体积 \(V = \pi r^2 h\)。<br>
+              要求定义和调用函数 <code>cylinder(r, h)</code> 计算圆柱体的体积。
+            </p>
+            <p class="formula" style="margin-top:24px; text-align:center; font-size:36px;">
+              \[V = \pi r^2 h\]
+            </p>
+          </div>
+        </section>
+
+        <section id="sec-4-2">
+          <h2>教材例5-1：圆柱体体积函数实现</h2>
+          <div class="grid2" style="align-items: start;">
+            <div>
+              <pre style="margin:0 auto;"><code class="language-c" data-line-numbers="1-2|4-11|13-18" data-trim="">#include &lt;stdio.h&gt;
+double cylinder(double r, double h);
+
+int main(void)
+{
+    double height, radius, volume;
+    scanf("%lf%lf", &amp;radius, &amp;height);
+    volume = cylinder(radius, height);
+    printf("Volume = %.3f\n", volume);
+    return 0;
+}
+
+double cylinder(double r, double h)
+{
+    double result;
+    result = 3.1415926 * r * r * h;
+    return result;
+}</code></pre>
+            </div>
+            <div class="card soft">
+              <h3>结构对照与检验</h3>
+              <ul>
+                <li><strong>对照 <code>calcBMI</code></strong>：同样是“两个数值参数 → 公式计算 → 返回 <code>double</code>”。</li>
+                <li><strong>参数对应</strong>：实参 <code>radius</code> 传给形参 <code>r</code>，<code>height</code> 传给 <code>h</code>，按<strong>位置顺序</strong>一一对应。</li>
+                <li><strong>预测结果</strong>：输入 <code>2.0 3.0</code>，输出 <code>Volume = 37.699</code>。</li>
+              </ul>
+            </div>
+          </div>
+          <aside class="notes">21:00—23:00。强调实参与形参名字可以不同（radius 对 r，height 对 h），只按位置顺序传递值。</aside>
+        </section>
+
+        <section id="sec-4-3">
+          <h2>教材例5-2 题面描述与几何分解</h2>
+          <div class="grid2" style="align-items: center;">
+            <div>
+              <div class="card blue" style="margin-bottom: 18px;">
+                <h3>📋 教材例5-2 题目要求</h3>
+                <p class="small">将一个五边形分割成三个三角形（如右图），输入各边长 \(a_1 \sim a_7\)，定义并调用计算三角形面积的函数 <code>area(x, y, z)</code>，求五边形面积。</p>
+              </div>
+              <div class="card soft">
+                <h3>海伦-秦九韶公式</h3>
+                <p class="small">已知三角形三边 \(x, y, z\)，半周长 \(p = \frac{x+y+z}{2}\)：</p>
+                <p class="formula">\[\text{area} = \sqrt{p(p-x)(p-y)(p-z)}\]</p>
+              </div>
+            </div>
+            <div class="center">
+              <img alt="五边形分割为三个三角形" src="./images/chap05/5-1.png"
+                style="max-height: 440px; border-radius: 12px; border: 1px solid #d8e1ec; padding: 14px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.06);" />
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-4-4">
+          <h2>教材例5-2：一个函数，被三组数据重复调用</h2>
+          <pre><code class="language-c" data-line-numbers="1-2|4|8-11|15-19" data-trim="">#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+double area(double x, double y, double z);
+
+int main(void)
+{
+    double a1, a2, a3, a4, a5, a6, a7, s;
+    scanf("%lf%lf%lf%lf%lf%lf%lf", &amp;a1, &amp;a2, &amp;a3, &amp;a4, &amp;a5, &amp;a6, &amp;a7);
+    s = area(a1, a5, a6) + area(a4, a6, a7) + area(a2, a3, a7);
+    printf("The area of the Pentagon is %.2f\n", s);
+    return 0;
+}
+
+double area(double x, double y, double z)
+{
+    double p = (x + y + z) / 2;
+    return sqrt(p * (p - x) * (p - y) * (p - z));
+}</code></pre>
+          <div class="quote">函数的复用价值：把“求一个三角形面积”写好并验证一次，就能用不同实参组合 <code>(a1,a5,a6)</code>、<code>(a4,a6,a7)</code>、<code>(a2,a3,a7)</code> 连续调用三次！</div>
+          <aside class="notes">23:00—25:00。引导学生观察第10行：函数调用本身就是一个表达式，可以直接参与加法运算。</aside>
+        </section>
+
+        <section id="sec-4-5">
+          <h2>深度追问：任意输入三个数都能算出面积吗？</h2>
+          <div class="grid2">
+            <div class="card warn">
+              <h3>潜在风险</h3>
+              <p class="small">如果输入的边长是 <code>1, 2, 10</code>，半周长 <code>p = 6.5</code>，则 <code>p - z = -3.5</code>，导致 <code>sqrt</code> 对负数开方，产生 <code>NaN</code>（非数值）！</p>
+            </div>
+            <div class="card soft">
+              <h3>几何合法性前提</h3>
+              <p class="small">三边均为正数，且满足<strong>任意两边之和大于第三边</strong>：</p>
+              <p class="small"><code>x &gt; 0 &amp;&amp; y &gt; 0 &amp;&amp; z &gt; 0 &amp;&amp; x + y &gt; z &amp;&amp; x + z &gt; y &amp;&amp; y + z &gt; x</code></p>
+            </div>
+          </div>
+          <div class="card blue" style="margin-top:16px;">
+            <h3>🤖 AI 协作互动：海伦公式函数的防御性改造</h3>
+            <div class="prompt">
+              教材例5-2的三角形面积函数 double area(double x, double y, double z) 直接计算海伦公式。如果用户输入了不能构成三角形的三边（如 1, 2, 5 或含负数），sqrt 会出现什么现象？请帮我为 area 函数设计前置合法性校验条件，并提供 3 组退化/非法三角形测试数据。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>对比“完全信任输入”与“在函数入口处校验参数”的差异，理解函数契约。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 5：教材例5-3 判断型函数设计 ==================== -->
+      <section id="sec-5-0">
+        <section class="module-cover-slide" id="sec-5-1">
+          <div class="modulecover">
+            <div class="cover-kicker">教材例5-3</div>
+            <div class="cover-title">函数不仅可以算数值，<br>还可以做“真假判断”</div>
+            <div class="cover-subtitle">设计判断型函数 <code>isSquare(n)</code>：用返回值 <code>1</code> 和 <code>0</code> 表达“是”与“否”。</div>
+            <div class="cover-tags">
+              <span class="pill">判断型函数</span>
+              <span class="pill">isSquare</span>
+              <span class="pill">减奇数法</span>
+              <span class="pill">0与负数边界</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-1a">
+          <h2>教材例5-3 题面描述</h2>
+          <div class="card blue" style="margin-top:24px; padding: 32px 40px; border-radius: 16px;">
+            <h3 style="color: #163f78; font-size: 32px; margin-bottom: 20px;">📋 题目要求</h3>
+            <p style="font-size: 30px; line-height: 1.6; color: #1f2937;">
+              定义一个判断完全平方数的函数 <code>isSquare(n)</code>，当 \(n\) 为完全平方数时返回 <code>1</code>，否则返回 <code>0</code>。<br>
+              <span class="muted small" style="font-size:24px; display:inline-block; margin-top:16px;">（注：不允许调用数学库函数 <code>sqrt</code>）</span>
+            </p>
+          </div>
+        </section>
+
+        <section id="sec-5-2">
+          <h2>不用 <code>sqrt</code>，怎样判断完全平方数？</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>思路A：枚举试乘</h3>
+              <p class="small">对于非负整数 \(n\)，让 \(i\) 从 \(0, 1, 2, \dots\) 递增，测试 \(i \times i\) 是否等于 \(n\)（当 \(i \times i > n\) 时停止）。</p>
+            </div>
+            <div class="card soft">
+              <h3>思路B：连续减奇数法（教材法）</h3>
+              <p class="small">利用数学性质：前 \(k\) 个连续正奇数之和等于 \(k^2\)：</p>
+              <p class="bigq center">\(1 + 3 + 5 + \dots + (2k-1) = k^2\)</p>
+            </div>
+          </div>
+          <div class="quote" style="margin-top:24px;">把 \(n\) 依次减去 \(1, 3, 5, 7, \dots\)，如果最终恰好减到 <code>0</code>，说明它是完全平方数！</div>
+          <aside class="notes">25:00—27:00。引导学生理解连续减奇数法：把 n 依次减去 1、3、5、7……如果正好减到 0，说明是完全平方数。</aside>
+        </section>
+
+        <section id="sec-5-3">
+          <h2>连续减奇数法：代码实现与过程跟踪</h2>
+          <div class="grid2" style="align-items: start;">
+            <div>
+              <pre style="margin:0 auto;"><code class="language-c" data-line-numbers="1|3-6|7-10" data-trim="">int isSquare(int n)
+{
+    int i;
+    for (i = 1; n &gt; 0; i = i + 2) {
+        n = n - i;
+    }
+    if (n == 0)
+        return 1;
+    else
+        return 0;
+}</code></pre>
+              <div class="bluebox" style="margin-top:12px;">思考：循环里修改了形参 <code>n</code>，会影响 <code>main</code> 里的原变量吗？（不会，因为是值传递！）</div>
+            </div>
+            <div>
+              <table class="compare">
+                <tr>
+                  <th>初始 <code>n</code></th>
+                  <th>依次减去的奇数 <code>i</code></th>
+                  <th>循环结束时 <code>n</code></th>
+                  <th>返回值</th>
+                </tr>
+                <tr>
+                  <td><code>9</code></td>
+                  <td><code>9-1=8 → 8-3=5 → 5-5=0</code></td>
+                  <td><code>0</code></td>
+                  <td><code>1</code>（是）</td>
+                </tr>
+                <tr>
+                  <td><code>10</code></td>
+                  <td><code>10-1=9 → 9-3=6 → 6-5=1 → 1-7=-6</code></td>
+                  <td><code>-6</code></td>
+                  <td><code>0</code>（否）</td>
+                </tr>
+                <tr>
+                  <td><code>0</code></td>
+                  <td><code>n &gt; 0</code> 不成立，循环 0 次</td>
+                  <td><code>0</code></td>
+                  <td><code>1</code>（\(0=0^2\)）</td>
+                </tr>
+                <tr>
+                  <td><code>-4</code></td>
+                  <td><code>n &gt; 0</code> 不成立，循环 0 次</td>
+                  <td><code>-4</code></td>
+                  <td><code>0</code>（否）</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-5-4">
+          <h2>判断型函数怎么在 <code>main</code> 中调用？</h2>
+          <pre><code class="language-c" data-line-numbers="1|3-7" data-trim="">int isSquare(int n);
+
+if (isSquare(n)) {
+    printf("%d is a square number.\n", n);
+} else {
+    printf("%d is not a square number.\n", n);
+}</code></pre>
+          <div class="card blue" style="margin-top:14px;">
+            <h3>🤖 AI 协作互动：两种无 <code>sqrt</code> 算法的对比与边界核验</h3>
+            <div class="prompt">
+              判断非负整数 n 是否为完全平方数（不用 sqrt），方法一是 for(i=1; n&gt;0; i+=2) n -= i; 判断 n==0；方法二是 for(i=0; i*i&lt;n; i++); 判断 i*i==n。请对比这两种方法在 n=0、n=-1 以及 n 接近 int 最大值（如 2147483647）时的安全性差异，指出哪种写法可能发生整数乘法溢出。
+            </div>
+            <p class="small muted" style="margin-top:8px;">💡 <b>课堂互动：</b>用 <code>-1, 0, 1, 15, 16</code> 五个测试值核验函数，并观察 AI 指出的 <code>i * i</code> 潜在溢出风险。</p>
+          </div>
+        </section>
+      </section>
+
+      <!-- ==================== 模块 6：课堂后测、总结与课后迁移 ==================== -->
+      <section id="sec-6-0">
+        <section class="module-cover-slide" id="sec-6-1">
+          <div class="modulecover">
+            <div class="cover-kicker">第1课时后测与总结</div>
+            <div class="cover-title">从“写一段代码”<br>到“设计一个可测试的函数”</div>
+            <div class="cover-subtitle">通过两道出口诊断题检验函数签名与边界防御，梳理自定义函数设计四步法。</div>
+            <div class="cover-tags">
+              <span class="pill">出口诊断</span>
+              <span class="pill">函数签名</span>
+              <span class="pill">边界修复</span>
+              <span class="pill">课后迁移</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-6-2">
+          <h2>课堂后测：两道出口诊断题</h2>
+          <div class="grid2" style="align-items: start;">
+            <div class="card" data-static style="min-height: 290px;">
+              <h3>出口题一：哪行函数首部合法？</h3>
+              <pre style="width:100%;"><code class="language-c" data-trim="">A. double calcBMI(double weight, height)
+B. double calcBMI(double weight, double height)
+C. calcBMI(double weight, double height)
+D. double calcBMI(double weight, double height);</code></pre>
+              <div class="fragment" data-fragment-index="0" style="margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: #eef7ee; border-left: 4px solid #2e7d32;">
+                <p class="small" style="margin: 0 0 4px 0; color: #1b5e20;"><strong>结论：选 B</strong></p>
+                <p class="small" style="margin: 0; color: #2e7d32; line-height: 1.5;">A 漏写第二个形参类型；C 漏写返回类型；D 末尾多了分号（变成了声明而非定义首部）。</p>
+              </div>
+            </div>
+            <div class="card soft" data-static style="min-height: 290px;">
+              <h3>出口题二：找出边界漏洞并修复</h3>
+              <pre style="width:100%;"><code class="language-c" data-trim="">double calcBMI(double weight, double height)
+{
+    if (height == 0) return -1.0;
+    return weight / (height * height);
+}</code></pre>
+              <div class="fragment" data-fragment-index="1" style="margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: #eef7ee; border-left: 4px solid #2e7d32;">
+                <p class="small" style="margin: 0 0 4px 0; color: #1b5e20;"><strong>暴露问题的测试输入：</strong><code>(70.0, -1.75)</code> 或 <code>(-5.0, 1.75)</code></p>
+                <p class="small" style="margin: 0; color: #2e7d32; line-height: 1.5;"><strong>修复建议：</strong>改为 <code>if (weight &lt;= 0 || height &lt;= 0) return -1.0;</code></p>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">31:00—36:00。题面先行展示，让学生独立思考作答；随后按键依次触发动画展示两题的答案与分析，并随机点两位学生说明为什么 D 不能作为函数定义首部、为什么只判 height &lt;= 0 或 height == 0 不够（还需校验 weight &lt;= 0 等边界）。</aside>
+        </section>
+
+        <section id="sec-6-3">
+          <h2>本课小结：两类有返回值函数的设计模式</h2>
+          <div class="flow" style="margin-top:10px; margin-bottom:22px;">
+            <div class="step">1. 识别重复规则</div>
+            <div class="arrow">→</div>
+            <div class="step">2. 明确接口契约<br><span class="tiny">参数、返回类型、异常约定</span></div>
+            <div class="arrow">→</div>
+            <div class="step">3. 编写声明与定义</div>
+            <div class="arrow">→</div>
+            <div class="step">4. 边界测试与核验</div>
+          </div>
+          <table class="compare">
+            <tr>
+              <th>函数类型</th>
+              <th>典型代表</th>
+              <th>返回类型与含义</th>
+              <th>调用方式</th>
+            </tr>
+            <tr>
+              <td><strong>数值计算型</strong></td>
+              <td><code>calcBMI(w, h)</code>、<code>cylinder(r, h)</code>、<code>area(x, y, z)</code></td>
+              <td><code>double</code> / <code>int</code>：计算出的具体数值（或错误码）</td>
+              <td>参与赋值、算术运算或直接作为 <code>printf</code> 参数</td>
+            </tr>
+            <tr>
+              <td><strong>条件判断型</strong></td>
+              <td><code>isSquare(n)</code></td>
+              <td><code>int</code>：返回 <code>1</code> 表示真（满足），<code>0</code> 表示假（不满足）</td>
+              <td>常直接放进 <code>if (isSquare(n))</code> 条件表达式中</td>
+            </tr>
+          </table>
+        </section>
+
+        <section id="sec-6-4">
+          <h2>课后迁移练习与下节预告</h2>
+          <div class="grid2">
+            <div class="card">
+              <h3>基础与教材练习</h3>
+              <ul>
+                <li>完成教材例5-1（圆柱体积）、例5-2（五边形面积）上机运行</li>
+                <li>用 <code>-1, 0, 1, 15, 16</code> 五组数据测试例5-3 <code>isSquare(n)</code></li>
+                <li>模仿 <code>isSquare(n)</code>，编写判断整数是否为偶数的函数 <code>even(n)</code></li>
+              </ul>
+            </div>
+            <div class="card soft">
+              <h3>AI 协作与进阶思考</h3>
+              <ul>
+                <li>为例5-2 的 <code>area(x, y, z)</code> 补全三角形三边合法性检查，记录一条 AI 测试建议与自己的验证结果</li>
+                <li><strong>下节悬念：</strong>如果一个函数只负责在屏幕上打印报告或数字金字塔，不需要返回任何数值，该怎么定义？</li>
+              </ul>
+            </div>
+          </div>
+          <p class="center bigq">写函数前，先定好“输入什么、交还什么、边界怎么处理”。</p>
+          <aside class="notes">37:00—40:00。总结全课，自然引出第2课时：无返回值函数 void 与多模块协调设计。</aside>
+        </section>
+      </section>
+
+    </div>
+  </div>
+  <script src="/vendor/reveal/reveal.js"></script>
+  <script src="/vendor/reveal/zoom/zoom.js"></script>
+  <script src="/vendor/reveal/notes/notes.js"></script>
+  <script src="/vendor/reveal/search/search.js"></script>
+  <script src="/vendor/reveal/markdown/markdown.js"></script>
+  <script src="/vendor/reveal/math/math.js"></script>
+  <script src="/vendor/reveal/highlight/highlight.js"></script>
+  <script>
+    /* 为每个实际展示页加上可定位标签。 */
+    document.querySelectorAll('.slides section').forEach((slide, idx) => {
+      if (slide.querySelector(':scope > section')) return;
+      if (!slide.id) slide.id = `slide-${idx + 1}`;
+      if (!slide.querySelector(':scope > .slide-label')) {
+        const label = document.createElement('div');
+        label.className = 'slide-label';
+        label.setAttribute('data-static', '');
+        label.textContent = `§ ${slide.id}`;
+        slide.prepend(label);
+      }
+    });
+
+    /* 为主要内容补齐渐入动画，并按每页的视觉阅读顺序统一编号。 */
+    document.querySelectorAll('.slides section').forEach(slide => {
+      if (slide.querySelector(':scope > section')) return;
+
+      const candidates = slide.querySelectorAll([
+        ':scope#sec-1-1 > *:not(script):not(aside)', ':scope > .card',
+        ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+        ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+        ':scope > .bluebox', ':scope > .quote',
+        ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+        ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+        ':scope > .pulsebar > *', ':scope > .scoreline > *', ':scope > .menu', ':scope > .switch-map > *',
+        ':scope > .placeholder', ':scope > .prompt', ':scope > .data-strip > .data-token', ':scope > .path-grid > .path', ':scope > .binary-line',
+        ':scope > pre', ':scope > .compare-code > *',
+        ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+      ].join(','));
+
+      candidates.forEach(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+          el.classList.add('fragment', 'fade-up');
+        }
+      });
+      slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
+
+      /* 流程图的箭头与它右侧的步骤同步出现。 */
+      slide.querySelectorAll('.flow').forEach(flow => {
+        flow.querySelectorAll('.step,.node').forEach(step => {
+          step.classList.add('fragment', 'fade-up');
+          const arrow = step.previousElementSibling;
+          if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+        });
+      });
+
+      /* 普通元素依次出现；流程箭头/步骤、时间线标签/说明成组出现。 */
+      const topLevelFragments = Array.from(slide.querySelectorAll('.fragment')).filter(el => {
+        const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+        return !parentFragment || !slide.contains(parentFragment);
+      });
+      const handled = new Set();
+      let order = 0;
+      topLevelFragments.forEach(el => {
+        if (handled.has(el)) return;
+        const parent = el.parentElement;
+        const isFlow = parent && parent.classList.contains('flow');
+        const isTimeline = parent && parent.classList.contains('timeline');
+
+        if (el.hasAttribute('data-fragment-index')) {
+          return;
+        }
+        if (isFlow && el.classList.contains('arrow') && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else if (isTimeline && el.nextElementSibling) {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+          if (!el.nextElementSibling.hasAttribute('data-fragment-index')) el.nextElementSibling.setAttribute('data-fragment-index', order);
+          handled.add(el.nextElementSibling);
+        } else {
+          if (!el.hasAttribute('data-fragment-index')) el.setAttribute('data-fragment-index', order);
+        }
+        order += 1;
+      });
+    });
+
+    Reveal.initialize({
+      width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+      controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+      keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+      fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+      autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+      previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+      display: 'block', pdfMaxPagesPerSlide: 1,
+      math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+    });
+  </script>
+</body>
+
+</html>
+
