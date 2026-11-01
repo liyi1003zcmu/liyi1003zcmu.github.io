@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-10-25
+updatedDate: 2026-11-01
 ---
 
 ## 课程简介
@@ -83,6 +83,9 @@ updatedDate: 2026-10-25
    - [第一讲：虚拟相机与观察变换](/slides/computer-graphics/ch05/lecture-5-1.html)
    - [第二讲：投影、视见体与成像](/slides/computer-graphics/ch05/lecture-5-2.html)
 6. **光照和着色**：Phong 光照模型、材质、光源、法向量与片元着色
+   - [第一讲：光照、光源与材质](/slides/computer-graphics/ch06/lecture-6-1.html)
+   - [第二讲：法向量与两大反射定律](/slides/computer-graphics/ch06/lecture-6-2.html)
+   - [第三讲：Phong 与 Blinn-Phong 局部光照模型](/slides/computer-graphics/ch06/lecture-6-3.html)
 7. **纹理映射**：纹理坐标、采样与滤波、环境映射与凹凸贴图
 8. **使用帧缓存（介绍）**：Alpha 混合、FBO 离屏渲染、图像后处理与拾取
 9. **层级建模方法（介绍）**：实例变换、树结构、递归遍历与场景图
@@ -90,7 +93,7 @@ updatedDate: 2026-10-25
 
 ## 课件资源
 
-第〇章课程概述以及第一至第五章已发布的课件均可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
+第〇章课程概述以及第一至第六章已发布的课件均可从上方章节目录直接打开，也可在[教学资源页](/resources/)按“计算机图形学”筛选。第一章课件中的视频暂以封面图占位，外链就绪后补充。
 
 ## Demo 与配套代码
 
@@ -141,6 +144,20 @@ updatedDate: 2026-10-25
 
 虚拟相机与观察矩阵、正交与透视投影两个互动显微镜保留在第五章对应课件中直接启动。
 
+### 第六章：光照和着色
+
+- 线框球面细分：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/wireSphere.js)
+- 旋转光照立方体：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedCube.js)
+- 立方体与光源独立旋转：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedCube2.js)
+- 球体顶点光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphere1.js)
+- 球体片元光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphere2.js)
+- 球体光照参数实验：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-6.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphere3.js)
+- 球体光照与材质：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-7.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphere4.js)
+- 眼坐标系球体光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-8.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphereEyeSpace.js)
+- 对象坐标系球体光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-9.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphereObjectSpace.js)
+
+光源与材质参数、法向量与漫反射两个互动显微镜保留在第六章对应课件中直接启动。
+
 ## 实验任务
 
 实验将围绕 WebGL 基础、二维与三维变换、观察与投影、光照着色、纹理映射及基础光栅算法逐步展开。每次实验必须按照统一要求完成邮件与课程平台双渠道提交，并检查压缩包命名、目录结构和运行入口。
@@ -163,6 +180,7 @@ updatedDate: 2026-10-25
 
 ## 更新记录
 
+- 2026-11-01：发布第六章三份在线课件、光照与法向量互动实验、配套图片及 9 个 WebGL 光照代码示例。
 - 2026-10-25：发布第五章两份在线课件、观察与投影互动实验、配套图片及正交/透视投影 WebGL 示例代码。
 - 2026-10-17：同步第四章四份在线课件及配套图片，更新第三、四讲内容并补充 WebGL2 变换流水线等互动实验。
 - 2026-10-16：发布第四章前两讲及 5 个 WebGL 2 几何变换 Demo；课件内教学仪器改为仅从对应课件启动。

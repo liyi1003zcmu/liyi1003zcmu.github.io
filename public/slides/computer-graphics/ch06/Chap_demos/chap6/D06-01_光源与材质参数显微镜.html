@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>D06-01 · 光源与材质参数显微镜 - 计算机图形学教学Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --navy: #153653;
+        --cyan: #11879b;
+        --slate: #597083;
+        --line: #dce6eb;
+        --pale: #e8f5f7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+      body {
+        background: #edf2f4;
+        font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', Arial, sans-serif;
+        color: var(--navy);
+      }
+      .stage {
+        position: absolute;
+        width: 1920px;
+        height: 1080px;
+        left: 50%;
+        top: 50%;
+        transform-origin: center center;
+        background: #fff;
+        display: grid;
+        grid-template-columns: 1246px 674px;
+        overflow: hidden;
+      }
+      .scene {
+        position: relative;
+        min-width: 0;
+        background: #fff;
+        overflow: hidden;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .scene-labels {
+        position: absolute;
+        left: 64px;
+        right: 64px;
+        bottom: 57px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        pointer-events: none;
+      }
+      .scene-label {
+        min-width: 180px;
+        padding: 10px 20px;
+        color: #385b70;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #dde8ec;
+        border-radius: 11px;
+        font-size: 24px;
+        letter-spacing: 1px;
+        text-align: center;
+      }
+      .scene-label:first-child {
+        margin-left: 85px;
+      }
+      .scene-label:last-child {
+        margin-right: 75px;
+      }
+      .view-tag {
+        position: absolute;
+        left: 45px;
+        top: 36px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--slate);
+        padding: 9px 16px;
+        font-size: 19px;
+        background: rgba(255, 255, 255, 0.92);
+        pointer-events: none;
+      }
+      .light-key {
+        position: absolute;
+        left: 46px;
+        bottom: 43px;
+        font-size: 17px;
+        color: var(--slate);
+        background: #fff;
+        padding: 5px 8px;
+        pointer-events: none;
+      }
+      .panel {
+        min-width: 0;
+        border-left: 2px solid #dde8ed;
+        background: #fcfdfd;
+        overflow: hidden;
+      }
+      .panel-inner {
+        padding: 24px 31px 22px 32px;
+        height: 100%;
+      }
+      .section-name {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 25px;
+        font-weight: 700;
+        margin: 0 0 9px;
+        height: 34px;
+      }
+      .section-name::before {
+        content: '';
+        width: 5px;
+        height: 23px;
+        border-radius: 2px;
+        background: var(--cyan);
+      }
+      .separator {
+        height: 1px;
+        background: var(--line);
+        margin: 8px 0 9px;
+      }
+      .choices {
+        display: grid;
+        gap: 8px;
+      }
+      .light-choices {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .mode-choices {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        user-select: none;
+      }
+      .choice {
+        height: 43px;
+        border: 1.5px solid #c7d9e0;
+        background: #fff;
+        border-radius: 10px;
+        color: var(--navy);
+        font-size: 21px;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+      }
+      .choice[aria-pressed='true'] {
+        border-color: var(--cyan);
+        background: var(--pale);
+        color: #086d7e;
+        font-weight: 700;
+      }
+      .choice:focus-visible,
+      #reset:focus-visible {
+        outline: 3px solid #71cad8;
+        outline-offset: 2px;
+      }
+      .group-label {
+        margin: 7px 0 2px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #557080;
+        height: 20px;
+      }
+      .control-row {
+        height: 34px;
+        display: grid;
+        grid-template-columns: 150px minmax(0, 1fr) 67px;
+        align-items: center;
+        gap: 10px;
+      }
+      .control-row label {
+        font-size: 19px;
+        white-space: nowrap;
+      }
+      .control-row output {
+        font-family: Consolas, ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        font-size: 18px;
+        color: var(--navy);
+      }
+      .control-row.unavailable {
+        opacity: 0.38;
+      }
+      input[type='range'] {
+        width: 100%;
+        height: 26px;
+        margin: 0;
+        background: transparent;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+      }
+      input[type='range']::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 10px;
+        background: #d7e5eb;
+      }
+      input[type='range']::-moz-range-track {
+        height: 6px;
+        border-radius: 10px;
+        background: #d7e5eb;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        background: var(--cyan);
+        box-shadow: 0 0 0 1.5px #3c8d9b;
+        margin-top: -6px;
+      }
+      input[type='range']::-moz-range-thumb {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        background: var(--cyan);
+        box-shadow: 0 0 0 1.5px #3c8d9b;
+      }
+      input[type='range']:disabled {
+        cursor: not-allowed;
+      }
+      .rgb-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .swatch {
+        width: 67px;
+        height: 18px;
+        border: 1px solid #a5b9c2;
+        border-radius: 5px;
+        background: #fff;
+      }
+      .bottom-line {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 10px;
+        height: 49px;
+      }
+      .hint {
+        color: var(--slate);
+        font-size: 18px;
+        white-space: nowrap;
+      }
+      .status {
+        color: #457685;
+        font-size: 17px;
+        margin-left: auto;
+        min-width: 125px;
+        text-align: right;
+        white-space: nowrap;
+      }
+      #reset {
+        height: 43px;
+        width: 94px;
+        border: 1.5px solid var(--cyan);
+        border-radius: 10px;
+        color: var(--cyan);
+        font-size: 20px;
+        background: white;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      #reset:hover {
+        background: var(--pale);
+      }
+      .error {
+        position: absolute;
+        z-index: 2;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 80%;
+        border: 1px solid #d7a7a7;
+        border-radius: 12px;
+        background: #fff8f8;
+        padding: 22px 30px;
+        color: #923737;
+        font-size: 24px;
+        text-align: center;
+        display: none;
+      }
+      .error.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" id="stage" aria-label="Phong 局部光照交互演示">
+      <section class="scene" aria-label="WebGL2 三维场景">
+        <canvas id="glCanvas" aria-label="固定相机下的青蓝色球体和蓝灰色手术钳"></canvas>
+        <div class="error" id="error" role="alert"></div>
+        <div class="view-tag">固定相机 · 正交投影</div>
+        <div class="scene-labels">
+          <div class="scene-label">球体</div>
+          <div class="scene-label">手术钳</div>
+        </div>
+        <div class="light-key">细线标记表示光源位置／方向</div>
+      </section>
+      <aside class="panel" aria-label="光源和材质控制">
+        <div class="panel-inner">
+          <h2 class="section-name">光源</h2>
+          <div class="choices light-choices" role="group" aria-label="光源类型">
+            <button class="choice" data-type="directional" aria-pressed="false">平行光</button>
+            <button class="choice" data-type="point" aria-pressed="true">点光源</button>
+            <button class="choice" data-type="spot" aria-pressed="false">聚光灯</button>
+          </div>
+          <div class="group-label">位置</div>
+          <div class="control-row" data-depend="position">
+            <label for="px">X</label
+            ><input id="px" data-key="px" type="range" min="-4.6" max="4.6" step="0.1" /><output
+              for="px"
+            ></output>
+          </div>
+          <div class="control-row" data-depend="position">
+            <label for="py">Y</label
+            ><input id="py" data-key="py" type="range" min="-3.6" max="3.6" step="0.1" /><output
+              for="py"
+            ></output>
+          </div>
+          <div class="control-row" data-depend="position">
+            <label for="pz">Z</label
+            ><input id="pz" data-key="pz" type="range" min="1.0" max="7.0" step="0.1" /><output
+              for="pz"
+            ></output>
+          </div>
+          <div class="group-label">光线传播方向</div>
+          <div class="control-row" data-depend="direction">
+            <label for="az">方位角</label
+            ><input id="az" data-key="az" type="range" min="-180" max="180" step="1" /><output
+              for="az"
+            ></output>
+          </div>
+          <div class="control-row" data-depend="direction">
+            <label for="elev">俯仰角</label
+            ><input id="elev" data-key="elev" type="range" min="-85" max="85" step="1" /><output
+              for="elev"
+            ></output>
+          </div>
+          <div class="group-label">聚光锥</div>
+          <div class="control-row" data-depend="spot">
+            <label for="inner">内锥半角</label
+            ><input id="inner" data-key="inner" type="range" min="3" max="59" step="1" /><output
+              for="inner"
+            ></output>
+          </div>
+          <div class="control-row" data-depend="spot">
+            <label for="outer">外锥半角</label
+            ><input id="outer" data-key="outer" type="range" min="4" max="60" step="1" /><output
+              for="outer"
+            ></output>
+          </div>
+          <div class="group-label rgb-heading">
+            <span>光源颜色 RGB</span
+            ><span class="swatch" id="swatch" aria-label="当前光源颜色"></span>
+          </div>
+          <div class="control-row">
+            <label for="lr">R</label
+            ><input id="lr" data-key="lr" type="range" min="0" max="1" step="0.01" /><output
+              for="lr"
+            ></output>
+          </div>
+          <div class="control-row">
+            <label for="lg">G</label
+            ><input id="lg" data-key="lg" type="range" min="0" max="1" step="0.01" /><output
+              for="lg"
+            ></output>
+          </div>
+          <div class="control-row">
+            <label for="lb">B</label
+            ><input id="lb" data-key="lb" type="range" min="0" max="1" step="0.01" /><output
+              for="lb"
+            ></output>
+          </div>
+          <div class="separator"></div>
+          <h2 class="section-name">材质与光照分量</h2>
+          <div class="control-row">
+            <label for="ambient">环境光强度</label
+            ><input
+              id="ambient"
+              data-key="ambient"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+            /><output for="ambient"></output>
+          </div>
+          <div class="control-row">
+            <label for="ka">环境反射 ka</label
+            ><input id="ka" data-key="ka" type="range" min="0" max="1" step="0.01" /><output
+              for="ka"
+            ></output>
+          </div>
+          <div class="control-row">
+            <label for="kd">漫反射 kd</label
+            ><input id="kd" data-key="kd" type="range" min="0" max="1" step="0.01" /><output
+              for="kd"
+            ></output>
+          </div>
+          <div class="control-row">
+            <label for="ks">镜面反射 ks</label
+            ><input id="ks" data-key="ks" type="range" min="0" max="1" step="0.01" /><output
+              for="ks"
+            ></output>
+          </div>
+          <div class="control-row">
+            <label for="shininess">高光指数</label
+            ><input
+              id="shininess"
+              data-key="shininess"
+              type="range"
+              min="1"
+              max="128"
+              step="1"
+            /><output for="shininess"></output>
+          </div>
+          <div class="separator"></div>
+          <h2 class="section-name">显示分量</h2>
+          <div class="choices mode-choices" role="group" aria-label="光照分量显示模式">
+            <button class="choice" data-mode="ambient" aria-pressed="false">仅环境光</button>
+            <button class="choice" data-mode="diffuse" aria-pressed="false">仅漫反射</button>
+            <button class="choice" data-mode="specular" aria-pressed="false">仅镜面反射</button>
+            <button class="choice" data-mode="all" aria-pressed="true">组合</button>
+          </div>
+          <div class="bottom-line">
+            <span class="hint">每次调整一个参数</span
+            ><span class="status" id="status" aria-live="polite">初始状态</span
+            ><button id="reset">重置</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      #version 300 es
+          precision highp float;
+          layout(location = 0) in vec3 aPosition;
+          layout(location = 1) in vec3 aNormal;
+          uniform mat4 uModel;
+          uniform mat4 uViewProjection;
+          uniform mat3 uNormalMatrix;
+          out vec3 vWorldPosition;
+          out vec3 vWorldNormal;
+          void main() {
+            vec4 world = uModel * vec4(aPosition, 1.0);
+            vWorldPosition = world.xyz;
+            vWorldNormal = normalize(uNormalMatrix * aNormal);
+            gl_Position = uViewProjection * world;
+          }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+      #version 300 es
+          precision highp float;
+          in vec3 vWorldPosition;
+          in vec3 vWorldNormal;
+          uniform vec3 uBaseColor;
+          uniform vec3 uCameraPosition;
+          uniform vec3 uLightColor;
+          uniform vec3 uLightPosition;
+          uniform vec3 uLightDirection; // 光线传播方向：从光源指向场景
+          uniform int uLightType;       // 0=平行，1=点，2=聚光
+          uniform int uMode;            // 0=环境，1=漫反射，2=镜面，3=组合
+          uniform float uAmbientIntensity;
+          uniform float uKa;
+          uniform float uKd;
+          uniform float uKs;
+          uniform float uShininess;
+          uniform float uSpotInnerCos;
+          uniform float uSpotOuterCos;
+          out vec4 outColor;
+
+          void main() {
+            vec3 N = normalize(vWorldNormal);
+            vec3 V = normalize(uCameraPosition - vWorldPosition);
+            vec3 L;
+            float falloff = 1.0;
+            if (uLightType == 0) {
+              L = normalize(-uLightDirection);
+            } else {
+              vec3 delta = uLightPosition - vWorldPosition;
+              float d = length(delta);
+              L = delta / max(d, 0.00001);
+              // 固定的适度距离衰减，只作用于直接光。
+              falloff = 1.0 / (1.0 + 0.04 * d + 0.012 * d * d);
+              if (uLightType == 2) {
+                float cosTheta = dot(normalize(vWorldPosition - uLightPosition), normalize(uLightDirection));
+                falloff *= smoothstep(uSpotOuterCos, uSpotInnerCos, cosTheta);
+              }
+            }
+
+            // 先在线性颜色空间内相加，最后转换回显示用 sRGB。
+            vec3 baseLinear = pow(uBaseColor, vec3(2.2));
+            vec3 ambientTerm = uAmbientIntensity * uKa * baseLinear; // 固定白色环境光
+            float ndotl = max(dot(N, L), 0.0);
+            vec3 diffuseTerm = uKd * ndotl * baseLinear * uLightColor * falloff;
+            vec3 specularTerm = vec3(0.0);
+            if (ndotl > 0.0) {
+              vec3 R = reflect(-L, N); // Phong 反射向量，而非 Blinn 半程向量
+              float highlight = pow(max(dot(normalize(R), V), 0.0), uShininess);
+              specularTerm = uKs * highlight * uLightColor * falloff; // 不染基础色
+            }
+            vec3 linearColor;
+            if      (uMode == 0) linearColor = ambientTerm;
+            else if (uMode == 1) linearColor = diffuseTerm;
+            else if (uMode == 2) linearColor = specularTerm;
+            else                 linearColor = ambientTerm + diffuseTerm + specularTerm;
+            outColor = vec4(pow(max(linearColor, vec3(0.0)), vec3(1.0 / 2.2)), 1.0);
+          }
+    </script>
+    <script id="marker-vertex" type="x-shader/x-vertex">
+      #version 300 es
+          precision highp float;
+          layout(location = 0) in vec3 aPosition;
+          uniform mat4 uModel;
+          uniform mat4 uViewProjection;
+          void main() { gl_Position = uViewProjection * uModel * vec4(aPosition, 1.0); }
+    </script>
+    <script id="marker-fragment" type="x-shader/x-fragment">
+      #version 300 es
+          precision highp float;
+          uniform vec4 uMarkerColor;
+          out vec4 outColor;
+          void main() { outColor = uMarkerColor; }
+    </script>
+    <script>
+      (() => {
+        'use strict';
+        const BASE = {
+          type: 'point',
+          px: -3.7,
+          py: 3.0,
+          pz: 4.7,
+          az: 37,
+          elev: -28,
+          inner: 18,
+          outer: 27,
+          lr: 1,
+          lg: 1,
+          lb: 1,
+          ambient: 0.2,
+          ka: 0.3,
+          kd: 0.7,
+          ks: 0.35,
+          shininess: 32,
+          mode: 'all',
+        };
+        const state = { ...BASE };
+        const $ = (s) => document.querySelector(s);
+        const stage = $('#stage'),
+          canvas = $('#glCanvas'),
+          error = $('#error'),
+          status = $('#status');
+        let renderer = null,
+          pending = false;
+
+        function fitStage() {
+          const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+        fitStage();
+        window.addEventListener('resize', () => {
+          fitStage();
+          requestDraw();
+        });
+
+        const names = {
+          px: '光源位置 X',
+          py: '光源位置 Y',
+          pz: '光源位置 Z',
+          az: '方位角',
+          elev: '俯仰角',
+          inner: '内锥半角',
+          outer: '外锥半角',
+          lr: '光源 R',
+          lg: '光源 G',
+          lb: '光源 B',
+          ambient: '环境光强度',
+          ka: 'ka',
+          kd: 'kd',
+          ks: 'ks',
+          shininess: 'shininess',
+        };
+        const angles = new Set(['az', 'elev', 'inner', 'outer']);
+        function formatValue(key, value) {
+          if (angles.has(key)) return `${value.toFixed(0)}°`;
+          if (key === 'shininess') return value.toFixed(0);
+          if (['px', 'py', 'pz'].includes(key)) return value.toFixed(1);
+          return value.toFixed(2);
+        }
+        function refreshButtons() {
+          document
+            .querySelectorAll('[data-type]')
+            .forEach((btn) =>
+              btn.setAttribute('aria-pressed', String(btn.dataset.type === state.type)),
+            );
+          document
+            .querySelectorAll('[data-mode]')
+            .forEach((btn) =>
+              btn.setAttribute('aria-pressed', String(btn.dataset.mode === state.mode)),
+            );
+        }
+        function updateLimits() {
+          const inner = $('#inner'),
+            outer = $('#outer');
+          inner.max = String(state.outer - 1);
+          outer.min = String(state.inner + 1);
+        }
+        function updateAvailability() {
+          document.querySelectorAll('[data-depend]').forEach((row) => {
+            const kind = row.dataset.depend;
+            const active =
+              kind === 'position'
+                ? state.type !== 'directional'
+                : kind === 'direction'
+                  ? state.type !== 'point'
+                  : state.type === 'spot';
+            row.classList.toggle('unavailable', !active);
+            row.querySelector('input').disabled = !active;
+          });
+        }
+        function refreshControls() {
+          document.querySelectorAll('input[data-key]').forEach((input) => {
+            const key = input.dataset.key;
+            input.value = state[key];
+            input.closest('.control-row').querySelector('output').textContent = formatValue(
+              key,
+              state[key],
+            );
+          });
+          updateLimits();
+          refreshButtons();
+          updateAvailability();
+          const rgb = ['lr', 'lg', 'lb'].map((k) => Math.round(state[k] * 255));
+          $('#swatch').style.backgroundColor = `rgb(${rgb.join(',')})`;
+        }
+        document.querySelectorAll('input[data-key]').forEach((input) => {
+          input.addEventListener('input', () => {
+            const key = input.dataset.key;
+            if (input.disabled) return;
+            const value = Number(input.value);
+            if (key === 'inner' && value >= state.outer) {
+              input.value = state.outer - 1;
+            }
+            if (key === 'outer' && value <= state.inner) {
+              input.value = state.inner + 1;
+            }
+            state[key] = Number(input.value);
+            input.closest('.control-row').querySelector('output').textContent = formatValue(
+              key,
+              state[key],
+            );
+            if (key === 'inner' || key === 'outer') updateLimits();
+            if (['lr', 'lg', 'lb'].includes(key)) {
+              const rgb = ['lr', 'lg', 'lb'].map((k) => Math.round(state[k] * 255));
+              $('#swatch').style.backgroundColor = `rgb(${rgb.join(',')})`;
+            }
+            status.textContent = `已调整：${names[key]}`;
+            requestDraw();
+          });
+        });
+        document.querySelectorAll('[data-type]').forEach((btn) =>
+          btn.addEventListener('click', () => {
+            state.type = btn.dataset.type;
+            refreshButtons();
+            updateAvailability();
+            status.textContent = `已选择：${btn.textContent}`;
+            requestDraw();
+          }),
+        );
+        document.querySelectorAll('[data-mode]').forEach((btn) =>
+          btn.addEventListener('click', () => {
+            state.mode = btn.dataset.mode;
+            refreshButtons();
+            status.textContent = `已选择：${btn.textContent}`;
+            requestDraw();
+          }),
+        );
+        $('#reset').addEventListener('click', () => {
+          Object.assign(state, BASE);
+          refreshControls();
+          status.textContent = '已重置';
+          requestDraw();
+        });
+        refreshControls();
+
+        function requestDraw() {
+          if (!renderer || pending) return;
+          pending = true;
+          requestAnimationFrame(() => {
+            pending = false;
+            renderer.draw();
+          });
+        }
+        function showError(message) {
+          error.textContent = message;
+          error.classList.add('show');
+        }
+
+        const vec = {
+          add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+          sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+          scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+          dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+          cross: (a, b) => [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+          ],
+          norm(a) {
+            const d = Math.hypot(...a);
+            return d ? a.map((v) => v / d) : [0, 0, 1];
+          },
+        };
+        const identity = () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        function matMul(a, b) {
+          const o = new Float32Array(16);
+          for (let c = 0; c < 4; c++)
+            for (let r = 0; r < 4; r++) {
+              let x = 0;
+              for (let k = 0; k < 4; k++) x += a[k * 4 + r] * b[c * 4 + k];
+              o[c * 4 + r] = x;
+            }
+          return o;
+        }
+        function trs(t, s = [1, 1, 1]) {
+          return new Float32Array([
+            s[0],
+            0,
+            0,
+            0,
+            0,
+            s[1],
+            0,
+            0,
+            0,
+            0,
+            s[2],
+            0,
+            t[0],
+            t[1],
+            t[2],
+            1,
+          ]);
+        }
+        function cylinderBetween(a, b, radius) {
+          const y = vec.norm(vec.sub(b, a));
+          const helper = Math.abs(vec.dot(y, [0, 0, 1])) > 0.95 ? [1, 0, 0] : [0, 0, 1];
+          const x = vec.norm(vec.cross(helper, y)),
+            z = vec.norm(vec.cross(x, y));
+          const h = Math.hypot(...vec.sub(b, a)),
+            m = vec.scale(vec.add(a, b), 0.5);
+          return new Float32Array([
+            x[0] * radius,
+            x[1] * radius,
+            x[2] * radius,
+            0,
+            y[0] * h,
+            y[1] * h,
+            y[2] * h,
+            0,
+            z[0] * radius,
+            z[1] * radius,
+            z[2] * radius,
+            0,
+            m[0],
+            m[1],
+            m[2],
+            1,
+          ]);
+        }
+        // 3×3 法线矩阵 = transpose(inverse(mat3(model)))，包含非均匀缩放。
+        function normalMatrix(m) {
+          const a = [m[0], m[1], m[2]],
+            b = [m[4], m[5], m[6]],
+            c = [m[8], m[9], m[10]];
+          const ca = vec.cross(b, c),
+            cb = vec.cross(c, a),
+            cc = vec.cross(a, b);
+          const det = vec.dot(a, ca);
+          const f = Math.abs(det) > 1e-10 ? 1 / det : 1;
+          return new Float32Array([...vec.scale(ca, f), ...vec.scale(cb, f), ...vec.scale(cc, f)]);
+        }
+        function ortho(l, r, b, t, n, f) {
+          return new Float32Array([
+            2 / (r - l),
+            0,
+            0,
+            0,
+            0,
+            2 / (t - b),
+            0,
+            0,
+            0,
+            0,
+            -2 / (f - n),
+            0,
+            -(r + l) / (r - l),
+            -(t + b) / (t - b),
+            -(f + n) / (f - n),
+            1,
+          ]);
+        }
+        function lookAt(eye, target, up) {
+          const z = vec.norm(vec.sub(eye, target));
+          const x = vec.norm(vec.cross(up, z)),
+            y = vec.cross(z, x);
+          return new Float32Array([
+            x[0],
+            y[0],
+            z[0],
+            0,
+            x[1],
+            y[1],
+            z[1],
+            0,
+            x[2],
+            y[2],
+            z[2],
+            0,
+            -vec.dot(x, eye),
+            -vec.dot(y, eye),
+            -vec.dot(z, eye),
+            1,
+          ]);
+        }
+        function lightDirection() {
+          const a = (state.az * Math.PI) / 180,
+            e = (state.elev * Math.PI) / 180;
+          return vec.norm([Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)]);
+        }
+
+        function sphereMesh(lat = 48, lon = 64) {
+          const p = [],
+            n = [],
+            idx = [];
+          for (let i = 0; i <= lat; i++) {
+            const theta = (Math.PI * i) / lat;
+            for (let j = 0; j <= lon; j++) {
+              const phi = (2 * Math.PI * j) / lon;
+              const v = [
+                Math.sin(theta) * Math.cos(phi),
+                Math.cos(theta),
+                Math.sin(theta) * Math.sin(phi),
+              ];
+              p.push(...v);
+              n.push(...v);
+            }
+          }
+          for (let i = 0; i < lat; i++)
+            for (let j = 0; j < lon; j++) {
+              const a = i * (lon + 1) + j,
+                b = a + 1,
+                c = a + lon + 1,
+                d = c + 1;
+              idx.push(a, b, c, b, d, c);
+            }
+          return { p, n, idx };
+        }
+        function cylinderMesh(segments = 32) {
+          const p = [],
+            n = [],
+            idx = [];
+          for (let i = 0; i <= segments; i++) {
+            const a = (i * 2 * Math.PI) / segments,
+              x = Math.cos(a),
+              z = Math.sin(a);
+            p.push(x, -0.5, z, x, 0.5, z);
+            n.push(x, 0, z, x, 0, z);
+          }
+          for (let i = 0; i < segments; i++) {
+            const a = i * 2,
+              c = a + 2;
+            idx.push(a, a + 1, c, c, a + 1, c + 1);
+          }
+          for (const [y, ny] of [
+            [0.5, 1],
+            [-0.5, -1],
+          ]) {
+            const center = p.length / 3;
+            p.push(0, y, 0);
+            n.push(0, ny, 0);
+            for (let i = 0; i <= segments; i++) {
+              const a = (i * 2 * Math.PI) / segments;
+              p.push(Math.cos(a), y, Math.sin(a));
+              n.push(0, ny, 0);
+            }
+            for (let i = 0; i < segments; i++) {
+              if (ny > 0) idx.push(center, center + i + 2, center + i + 1);
+              else idx.push(center, center + i + 1, center + i + 2);
+            }
+          }
+          return { p, n, idx };
+        }
+        function torusMesh(major = 1, minor = 0.2, nAround = 64, nTube = 16) {
+          const p = [],
+            n = [],
+            idx = [];
+          for (let i = 0; i <= nAround; i++) {
+            const u = (i * 2 * Math.PI) / nAround,
+              cu = Math.cos(u),
+              su = Math.sin(u);
+            for (let j = 0; j <= nTube; j++) {
+              const v = (j * 2 * Math.PI) / nTube,
+                cv = Math.cos(v),
+                sv = Math.sin(v);
+              p.push((major + minor * cv) * cu, (major + minor * cv) * su, minor * sv);
+              n.push(cv * cu, cv * su, sv);
+            }
+          }
+          for (let i = 0; i < nAround; i++)
+            for (let j = 0; j < nTube; j++) {
+              const a = i * (nTube + 1) + j,
+                b = a + 1,
+                c = a + nTube + 1,
+                d = c + 1;
+              idx.push(a, c, b, b, c, d);
+            }
+          return { p, n, idx };
+        }
+
+        function initRenderer() {
+          const gl = canvas.getContext('webgl2', {
+            alpha: false,
+            antialias: true,
+            depth: true,
+            premultipliedAlpha: false,
+          });
+          if (!gl) throw Error('当前浏览器不支持 WebGL2，请使用新版 Chrome、Edge 或 Firefox。');
+          function compile(type, src) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, src);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              const log = gl.getShaderInfoLog(shader);
+              gl.deleteShader(shader);
+              throw Error('着色器编译失败：' + log);
+            }
+            return shader;
+          }
+          function program(vsId, fsId) {
+            const vs = compile(gl.VERTEX_SHADER, $('#' + vsId).textContent.trimStart());
+            const fs = compile(gl.FRAGMENT_SHADER, $('#' + fsId).textContent.trimStart());
+            const p = gl.createProgram();
+            gl.attachShader(p, vs);
+            gl.attachShader(p, fs);
+            gl.linkProgram(p);
+            gl.deleteShader(vs);
+            gl.deleteShader(fs);
+            if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+              throw Error('着色器链接失败：' + gl.getProgramInfoLog(p));
+            return p;
+          }
+          const phong = program('vertex-shader', 'fragment-shader');
+          const marker = program('marker-vertex', 'marker-fragment');
+          const uniforms = {};
+          for (const name of [
+            'uModel',
+            'uViewProjection',
+            'uNormalMatrix',
+            'uBaseColor',
+            'uCameraPosition',
+            'uLightColor',
+            'uLightPosition',
+            'uLightDirection',
+            'uLightType',
+            'uMode',
+            'uAmbientIntensity',
+            'uKa',
+            'uKd',
+            'uKs',
+            'uShininess',
+            'uSpotInnerCos',
+            'uSpotOuterCos',
+          ])
+            uniforms[name] = gl.getUniformLocation(phong, name);
+          const mu = {};
+          for (const name of ['uModel', 'uViewProjection', 'uMarkerColor'])
+            mu[name] = gl.getUniformLocation(marker, name);
+          const meshes = {};
+          function uploadMesh(name, data) {
+            const vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+            const position = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, position);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.p), gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+            const normal = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normal);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.n), gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+            const index = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data.idx), gl.STATIC_DRAW);
+            gl.bindVertexArray(null);
+            meshes[name] = { vao, count: data.idx.length };
+          }
+          // 顶点着色器显式绑定 location=0/1，避免不同驱动下自动分配位置不一致。
+          uploadMesh('sphere', sphereMesh());
+          uploadMesh('cylinder', cylinderMesh());
+          uploadMesh('torus', torusMesh());
+
+          const markerVao = gl.createVertexArray(),
+            markerBuffer = gl.createBuffer();
+          gl.bindVertexArray(markerVao);
+          gl.bindBuffer(gl.ARRAY_BUFFER, markerBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * 6000, gl.DYNAMIC_DRAW);
+          gl.enableVertexAttribArray(0);
+          gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+          gl.bindVertexArray(null);
+          gl.enable(gl.DEPTH_TEST);
+          gl.depthFunc(gl.LEQUAL);
+          gl.clearColor(1, 1, 1, 1);
+          gl.disable(gl.CULL_FACE);
+          const cam = [0, 0, 12.0];
+          const view = lookAt(cam, [0, 0, 0], [0, 1, 0]);
+          const projection = ortho(-5.22, 5.22, -4.52, 4.52, 0.1, 50);
+          const vp = matMul(projection, view);
+          const sphereBase = [17 / 255, 135 / 255, 155 / 255];
+          const forcepsBase = [89 / 255, 112 / 255, 131 / 255];
+          const modeId = { ambient: 0, diffuse: 1, specular: 2, all: 3 };
+          const typeId = { directional: 0, point: 1, spot: 2 };
+
+          function drawMesh(name, model) {
+            gl.uniformMatrix4fv(uniforms.uModel, false, model);
+            gl.uniformMatrix3fv(uniforms.uNormalMatrix, false, normalMatrix(model));
+            const mesh = meshes[name];
+            gl.bindVertexArray(mesh.vao);
+            gl.drawElements(gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
+          }
+          function drawForceps() {
+            gl.uniform3fv(uniforms.uBaseColor, forcepsBase);
+            const segment = (a, b, r) => drawMesh('cylinder', cylinderBetween(a, b, r));
+            const ball = (p, r) => drawMesh('sphere', trs(p, [r, r, r]));
+            // 以环、交叉手柄、铰链、钳嘴构造固定的三维止血钳几何。
+            drawMesh('torus', trs([1.56, -2.53, 0.13], [0.57, 0.67, 0.62]));
+            drawMesh('torus', trs([3.59, -2.53, -0.13], [0.57, 0.67, 0.62]));
+            segment([1.81, -1.96, 0.13], [2.67, 0.15, 0.16], 0.135);
+            segment([3.34, -1.96, -0.13], [2.67, 0.15, -0.16], 0.135);
+            segment([2.67, 0.15, 0.16], [2.13, 2.68, 0.13], 0.118);
+            segment([2.67, 0.15, -0.16], [3.1, 2.68, -0.12], 0.118);
+            segment([2.13, 2.68, 0.13], [2.08, 3.05, 0.12], 0.1);
+            segment([3.1, 2.68, -0.12], [3.05, 3.05, -0.12], 0.1);
+            ball([2.08, 3.05, 0.12], 0.107);
+            ball([3.05, 3.05, -0.12], 0.107);
+            // 细小钳口纹理，以圆柱的三维曲面呈现，不使用贴图。
+            for (let i = 0; i < 5; i++) {
+              const y = 2.27 + i * 0.11;
+              segment([2.11, y, 0.14], [2.24, y + 0.02, 0.14], 0.025);
+              segment([3.0, y, -0.11], [3.12, y + 0.02, -0.11], 0.025);
+            }
+            segment([2.52, -0.15, 0.18], [2.8, -0.15, 0.18], 0.055);
+            segment([2.55, -0.28, -0.16], [2.78, -0.28, -0.16], 0.055);
+            // 铰链轴、铰链端盖；两臂在 z 方向略错开，以体现层次。
+            segment([2.67, 0.15, -0.35], [2.67, 0.15, 0.35], 0.265);
+            ball([2.67, 0.15, 0.39], 0.18);
+            ball([2.67, 0.15, -0.39], 0.18);
+          }
+
+          // 线框标记直接使用真实光源位置、传播方向和外锥半角。
+          function markerSegments() {
+            const segments = [];
+            const line = (a, b) => segments.push(...a, ...b);
+            const pos = [state.px, state.py, state.pz],
+              d = lightDirection();
+            const rings = (p, r) => {
+              for (let axis = 0; axis < 3; axis++)
+                for (let i = 0; i < 40; i++) {
+                  const t = (i * Math.PI) / 20,
+                    t2 = ((i + 1) * Math.PI) / 20;
+                  const point = (a) => {
+                    if (axis === 0) return vec.add(p, [0, r * Math.cos(a), r * Math.sin(a)]);
+                    if (axis === 1) return vec.add(p, [r * Math.cos(a), 0, r * Math.sin(a)]);
+                    return vec.add(p, [r * Math.cos(a), r * Math.sin(a), 0]);
+                  };
+                  line(point(t), point(t2));
+                }
+            };
+            const arrow = (start, direction, length) => {
+              const tip = vec.add(start, vec.scale(direction, length));
+              line(start, tip);
+              const helper = Math.abs(vec.dot(direction, [0, 0, 1])) > 0.94 ? [0, 1, 0] : [0, 0, 1];
+              const side = vec.norm(vec.cross(direction, helper));
+              const other = vec.norm(vec.cross(direction, side));
+              const back = vec.add(tip, vec.scale(direction, -0.24));
+              for (const axis of [side, vec.scale(side, -1), other, vec.scale(other, -1)])
+                line(tip, vec.add(back, vec.scale(axis, 0.12)));
+            };
+            if (state.type === 'directional') {
+              const anchor = [-4.32, 3.27, 3.0];
+              rings(anchor, 0.16);
+              arrow(anchor, d, 1.15);
+              // 第二束平行光线显示传播方向；与位置滑块完全无关。
+              const offset = [0.26, -0.25, 0];
+              line(vec.add(anchor, offset), vec.add(vec.add(anchor, offset), vec.scale(d, 0.9)));
+            } else {
+              rings(pos, 0.205);
+              if (state.type === 'spot') {
+                arrow(pos, d, 1.35);
+                const len = 1.83,
+                  radius = Math.tan((state.outer * Math.PI) / 180) * len;
+                const h = Math.abs(vec.dot(d, [0, 1, 0])) > 0.94 ? [1, 0, 0] : [0, 1, 0];
+                const e1 = vec.norm(vec.cross(d, h)),
+                  e2 = vec.norm(vec.cross(d, e1));
+                const base = vec.add(pos, vec.scale(d, len));
+                const rim = (t) =>
+                  vec.add(
+                    base,
+                    vec.add(
+                      vec.scale(e1, radius * Math.cos(t)),
+                      vec.scale(e2, radius * Math.sin(t)),
+                    ),
+                  );
+                for (let i = 0; i < 24; i++) {
+                  line(rim((i * Math.PI) / 12), rim(((i + 1) * Math.PI) / 12));
+                  if (i % 6 === 0) line(pos, rim((i * Math.PI) / 12));
+                }
+              }
+            }
+            return new Float32Array(segments);
+          }
+          function drawMarker() {
+            const lines = markerSegments();
+            gl.useProgram(marker);
+            gl.uniformMatrix4fv(mu.uViewProjection, false, vp);
+            gl.uniformMatrix4fv(mu.uModel, false, identity());
+            gl.disable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            if (state.type !== 'directional') {
+              // 一个很小的非受光球芯，使点光源／聚光灯标记确实呈现为球体。
+              gl.uniformMatrix4fv(
+                mu.uModel,
+                false,
+                trs([state.px, state.py, state.pz], [0.1, 0.1, 0.1]),
+              );
+              gl.uniform4f(mu.uMarkerColor, 0.8, 0.9, 0.94, 0.94);
+              gl.bindVertexArray(meshes.sphere.vao);
+              gl.drawElements(gl.TRIANGLES, meshes.sphere.count, gl.UNSIGNED_SHORT, 0);
+              gl.uniformMatrix4fv(mu.uModel, false, identity());
+            }
+            gl.uniform4f(mu.uMarkerColor, 21 / 255, 54 / 255, 83 / 255, 0.85);
+            gl.bindVertexArray(markerVao);
+            gl.bindBuffer(gl.ARRAY_BUFFER, markerBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, lines, gl.DYNAMIC_DRAW);
+            gl.lineWidth(1);
+            gl.drawArrays(gl.LINES, 0, lines.length / 3);
+            gl.disable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+          }
+          function draw() {
+            // CSS transform 的缩放不改变相机与投影，仅调整像素密度。
+            const w = canvas.clientWidth,
+              h = canvas.clientHeight;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const pw = Math.round(w * dpr),
+              ph = Math.round(h * dpr);
+            if (canvas.width !== pw || canvas.height !== ph) {
+              canvas.width = pw;
+              canvas.height = ph;
+            }
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(phong);
+            gl.uniformMatrix4fv(uniforms.uViewProjection, false, vp);
+            gl.uniform3fv(uniforms.uCameraPosition, cam);
+            gl.uniform3fv(uniforms.uLightPosition, [state.px, state.py, state.pz]);
+            gl.uniform3fv(uniforms.uLightDirection, lightDirection());
+            gl.uniform3fv(uniforms.uLightColor, [state.lr, state.lg, state.lb]);
+            gl.uniform1i(uniforms.uLightType, typeId[state.type]);
+            gl.uniform1i(uniforms.uMode, modeId[state.mode]);
+            gl.uniform1f(uniforms.uAmbientIntensity, state.ambient);
+            gl.uniform1f(uniforms.uKa, state.ka);
+            gl.uniform1f(uniforms.uKd, state.kd);
+            gl.uniform1f(uniforms.uKs, state.ks);
+            gl.uniform1f(uniforms.uShininess, state.shininess);
+            gl.uniform1f(uniforms.uSpotInnerCos, Math.cos((state.inner * Math.PI) / 180));
+            gl.uniform1f(uniforms.uSpotOuterCos, Math.cos((state.outer * Math.PI) / 180));
+            gl.uniform3fv(uniforms.uBaseColor, sphereBase);
+            drawMesh('sphere', trs([-2.47, 0.12, 0], [1.49, 1.49, 1.49]));
+            drawForceps();
+            drawMarker();
+            gl.bindVertexArray(null);
+          }
+          return { draw };
+        }
+        try {
+          renderer = initRenderer();
+          renderer.draw();
+        } catch (e) {
+          console.error(e);
+          showError(String(e.message || e).slice(0, 240));
+        }
+        canvas.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+          renderer = null;
+          showError('WebGL 绘图上下文已丢失，请刷新页面。 ');
+        });
+      })();
+    </script>
+  </body>
+</html>

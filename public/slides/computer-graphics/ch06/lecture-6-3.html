@@ -1,0 +1,3482 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 6-3 · Phong 与 Blinn-Phong 局部光照模型</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      /* KaTeX 渲染优化与消除白色底框修复 */
+      /* 1. 强制隐藏 KaTeX 的无障碍辅助文本与 MathML，防止缺少样式或特殊内核下暴露成白块 */
+      .katex-html + .get-mathml,
+      .katex .katex-mathml,
+      .katex-mathml {
+        display: none !important;
+        position: absolute !important;
+        padding: 0 !important;
+        border: 0 !important;
+        height: 1px !important;
+        width: 1px !important;
+        overflow: hidden !important;
+        clip: rect(1px, 1px, 1px, 1px) !important;
+      }
+
+      /* 2. 彻底隔离 KaTeX 公式内部元素，防止 reveal.js / question-card 样式污染产生白底框或多重边框 */
+      .reveal .katex,
+      .reveal .katex *,
+      .reveal .katex span,
+      .reveal .katex-display,
+      .reveal .katex-display *,
+      .reveal .slides span.katex,
+      .reveal .slides span.katex * {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        outline: none !important;
+      }
+
+      .reveal .katex {
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+
+      .reveal .katex .frac-line {
+        border-color: currentColor !important;
+        background-color: currentColor !important;
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 600px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 5 additions: all new pages retain the Chapter 4 design tokens. */
+      .reveal .slides section {
+        box-sizing: border-box;
+      }
+
+      .reveal .slides section:not(.stack) {
+        text-align: left;
+      }
+
+      .reveal .slides section > .eyebrow,
+      .reveal .slides section > h2 {
+        flex-shrink: 0;
+      }
+
+      .reveal .slides section h2 {
+        font-size: 1.43em;
+        line-height: 1.19;
+        margin: 0.06em 0 0.34em;
+      }
+
+      .reveal .slides .lead {
+        max-width: 1350px !important;
+      }
+
+      .reveal .slides .sublead {
+        font-size: 0.67em !important;
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .card {
+        padding: 22px 25px;
+      }
+
+      .reveal .slides .card p,
+      .reveal .slides .card li {
+        font-size: 0.61em;
+        line-height: 1.45;
+        margin: 0.12em 0;
+      }
+
+      .reveal .slides .card .mini {
+        font-size: 0.51em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .card h3 {
+        font-size: 0.82em;
+        margin: 0 0 0.3em;
+      }
+
+      .reveal .slides .flow {
+        margin: 15px 0 8px;
+        gap: 9px;
+      }
+
+      .reveal .slides .flow .node {
+        font-size: 0.55em;
+        padding: 15px 18px;
+        min-width: 150px;
+      }
+
+      .reveal .slides .flow .arrow {
+        font-size: 0.75em;
+      }
+
+      .reveal .slides .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .reveal .slides .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .stack-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .reveal .slides .stage {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 13px 20px;
+        text-align: center;
+        font-size: 0.57em;
+      }
+
+      .reveal .slides .stage strong {
+        display: block;
+        color: var(--cyan);
+      }
+
+      .reveal .slides .formula {
+        background: #eef5fb;
+        border-left: 6px solid var(--blue);
+        border-radius: 15px;
+        padding: 19px 26px;
+        font-size: 0.93em;
+        text-align: center;
+        letter-spacing: 0.02em;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .formula small {
+        display: block;
+        font-size: 0.54em;
+        margin-top: 6px;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+
+      .reveal .slides .note-strip {
+        background: #f0f6fc;
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        border-radius: 16px;
+        padding: 14px 20px;
+        font-size: 0.59em;
+        line-height: 1.5;
+        margin-top: 15px;
+      }
+
+      .reveal .slides .note-strip.warn {
+        background: #fff8ee;
+        border-color: rgba(154, 93, 0, 0.25);
+      }
+
+      .reveal .slides .note-strip.ok {
+        background: #eef9f4;
+        border-color: rgba(30, 138, 100, 0.23);
+      }
+
+      .reveal .slides .item-list {
+        display: grid;
+        gap: 12px;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: white;
+        border: 1px solid var(--line);
+        padding: 13px 19px;
+        border-radius: 15px;
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .item .number {
+        background: #e9f3fb;
+        color: #176ea7;
+        font-weight: 800;
+        border-radius: 12px;
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .reveal .slides .item b {
+        color: var(--cyan);
+      }
+
+      .reveal .slides .item span.desc {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .media-placeholder {
+        width: 100%;
+        min-height: 290px;
+        background: repeating-linear-gradient(
+          135deg,
+          #f2f6fb,
+          #f2f6fb 14px,
+          #edf3f9 14px,
+          #edf3f9 28px
+        );
+        border: 2px dashed rgba(21, 125, 184, 0.4);
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 11px;
+        padding: 26px 30px;
+        margin: 14px auto;
+      }
+
+      .reveal .slides .media-placeholder.compact {
+        min-height: 230px;
+      }
+
+      .reveal .slides .media-placeholder .media-id {
+        background: #dfeef9;
+        border: 1px solid #bedbed;
+        border-radius: 999px;
+        color: #165d8c;
+        font-size: 0.43em;
+        padding: 7px 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+
+      .reveal .slides .media-placeholder .media-title {
+        font-size: 0.89em;
+        font-weight: 780;
+        color: #173b63;
+      }
+
+      .reveal .slides .media-placeholder .media-description {
+        max-width: 1100px;
+        font-size: 0.56em;
+        color: #5e7287;
+        line-height: 1.45;
+      }
+
+      .reveal .slides .media-placeholder.demo {
+        background: linear-gradient(135deg, #eff8fc, #ecf3fc);
+        border-color: #2f89b9;
+      }
+
+      .reveal .slides .media-placeholder.demo .media-id {
+        background: #d5eefa;
+      }
+
+      .reveal .slides .media-placeholder .link-hint {
+        color: #1975ae;
+        font-size: 0.48em;
+        font-weight: 700;
+      }
+
+      .reveal .slides pre {
+        box-shadow: none;
+        margin: 15px auto;
+        width: 100%;
+        background: #172d46;
+        color: #f5f8ff;
+        border-radius: 18px;
+        padding: 20px 24px;
+        border: 1px solid #35506b;
+        font-size: 0.55em;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .reveal .slides pre code {
+        background: transparent;
+        color: inherit;
+        font-size: 1em;
+        line-height: 1.5;
+        max-height: none;
+        padding: 0;
+      }
+
+      .reveal .slides table {
+        font-size: 0.56em;
+      }
+
+      .reveal .slides th,
+      .reveal .slides td {
+        padding: 0.5em 0.6em;
+      }
+
+      .reveal .slides .question-card {
+        border: 2px solid rgba(47, 100, 200, 0.23);
+        border-left: 8px solid var(--blue);
+        background: #f6f9ff;
+        padding: 20px 24px;
+        border-radius: 18px;
+        font-size: 0.72em;
+        line-height: 1.48;
+      }
+
+      .reveal .slides .question-card .answers {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 0.83em;
+      }
+
+      .reveal .slides .question-card .answers > span {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 9px 13px;
+      }
+
+      .reveal .slides .tiny {
+        font-size: 0.51em !important;
+        color: var(--muted);
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .summary-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .reveal .slides .summary-list .item {
+        padding: 14px 19px;
+      }
+
+      .reveal .slides .title-slide .eyebrow {
+        font-size: 0.45em;
+      }
+
+      .reveal .slides .title-slide h1 {
+        font-size: 2.05em;
+      }
+
+      .reveal .slides .title-slide .lead {
+        font-size: 0.87em !important;
+      }
+
+      .reveal .slides .title-flow .chip {
+        font-size: 0.5em;
+      }
+
+      .reveal .slides .activity {
+        padding: 16px 22px;
+        margin-top: 16px;
+      }
+
+      .reveal .slides .activity p {
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .slide-no {
+        right: 6px;
+        top: 0;
+      }
+
+      .reveal .slides section.present > .eyebrow:not(.fragment),
+      .reveal .slides section.active-slide > .eyebrow:not(.fragment) {
+        animation: chapter5Fade 0.3s both;
+      }
+
+      .reveal .slides section.present > h2:not(.fragment),
+      .reveal .slides section.active-slide > h2:not(.fragment) {
+        animation: chapter5Fade 0.45s 0.08s both;
+      }
+
+      @keyframes chapter5Fade {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .reveal .slides .flow-marker {
+        display: inline-block;
+        font-weight: 800;
+        font-size: 0.8em;
+        color: var(--cyan);
+        padding: 0 8px;
+      }
+
+      .reveal .slides .two-col .media-placeholder {
+        min-height: 240px;
+      }
+
+      .reveal .slides .grid3 .card {
+        padding: 18px 20px;
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261101" rel="stylesheet" />
+    <style>
+      /* 全局标题与文字层级优化：消除标题过大与视口压迫感 */
+      .reveal h1 {
+        font-size: 1.65em !important;
+        line-height: 1.15 !important;
+        margin: 0.12em 0 0.28em !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      .reveal h2 {
+        font-size: 1.18em !important;
+        line-height: 1.22 !important;
+        margin: 0.06em 0 0.3em !important;
+        letter-spacing: -0.02em !important;
+        color: #14345e !important;
+      }
+
+      .reveal h3 {
+        font-size: 0.85em !important;
+        line-height: 1.25 !important;
+        margin: 0.12em 0 0.32em !important;
+      }
+
+      .reveal h4 {
+        font-size: 0.7em !important;
+        line-height: 1.28 !important;
+        margin: 0.1em 0 0.28em !important;
+        color: var(--blue) !important;
+      }
+
+      .reveal .lead {
+        font-size: 0.62em !important;
+        line-height: 1.48 !important;
+        color: #475569 !important;
+        margin-bottom: 12px !important;
+        max-width: 1350px !important;
+      }
+
+      .reveal .sublead {
+        font-size: 0.52em !important;
+        line-height: 1.42 !important;
+        color: var(--muted) !important;
+      }
+
+      .reveal .eyebrow {
+        font-size: 0.38em !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        color: var(--cyan) !important;
+        margin-bottom: 0.25em !important;
+      }
+
+      .reveal .quote {
+        font-size: 0.64em !important;
+        line-height: 1.42 !important;
+      }
+
+      /* 上标与下标定位修复（避免 reset.css baseline 抹平） */
+      .reveal sub,
+      .reveal sup {
+        font-size: 0.72em !important;
+        line-height: 0 !important;
+        position: relative !important;
+        vertical-align: baseline !important;
+      }
+
+      .reveal sup {
+        top: -0.48em !important;
+        margin-left: 1px;
+      }
+
+      .reveal sub {
+        bottom: -0.22em !important;
+        margin-left: 1px;
+      }
+
+      /* 代码块与行号视觉增强：大教室投影清晰字号(~32px)、行距1.68、行号分割线与精致卡片质感 */
+      .reveal pre {
+        width: 100% !important;
+        font-size: 0.72em !important;
+        /* 基准44px下为 31.7px，80人教室清晰可辨 */
+        line-height: 1.68 !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(30, 56, 96, 0.18) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 26px rgba(31, 56, 88, 0.08) !important;
+        margin: 16px auto !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .reveal pre code {
+        display: block !important;
+        padding: 18px 24px !important;
+        overflow-x: auto !important;
+        background: #ffffff !important;
+        color: #1e293b !important;
+        font-family:
+          'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 1em !important;
+        /* 与 pre 字号严格一致，杜绝嵌套复合缩小 */
+        line-height: 1.68 !important;
+        tab-size: 2 !important;
+      }
+
+      /* 内部表格、单元格、行号与代码行全部继承统一字号，防止多层 em 嵌套缩减 */
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln,
+      .reveal pre code tr,
+      .reveal pre code td,
+      .reveal pre code .hljs-ln-code,
+      .reveal pre code .hljs-ln-numbers,
+      .reveal pre code .hljs-ln-line,
+      .reveal pre code span {
+        font-family: inherit !important;
+        font-size: 1em !important;
+        line-height: 1.68 !important;
+      }
+
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      .reveal pre code table.hljs-ln td {
+        border: 0 !important;
+        padding: 2px 0 !important;
+        vertical-align: middle !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-numbers {
+        min-width: 48px !important;
+        padding-right: 18px !important;
+        margin-right: 0 !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        text-align: right !important;
+        border-right: 2px solid rgba(21, 125, 184, 0.25) !important;
+        user-select: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code .hljs-ln-code {
+        padding-left: 20px !important;
+        white-space: pre !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code tr:hover td {
+        background: rgba(21, 125, 184, 0.05) !important;
+      }
+
+      .media-shell {
+        height: 440px !important;
+        margin-top: 10px !important;
+      }
+
+      .card {
+        padding: 16px 20px !important;
+      }
+
+      .card p,
+      .card li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .activity p,
+      .activity li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .question p {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+      }
+
+      /* 第六章只增补教学内容组件；其余样式沿用第五章原课件。 */
+      .reveal .lesson-list {
+        max-width: 1290px;
+        margin: 16px auto;
+      }
+
+      .reveal .lesson-list li {
+        font-size: 0.62em;
+        line-height: 1.45;
+        margin: 10px 0;
+      }
+
+      .reveal .lesson-formula {
+        margin: 18px auto;
+        width: max-content;
+        max-width: 94%;
+        padding: 19px 38px;
+        font-size: 0.79em;
+        font-weight: 650;
+        color: #153653;
+        background: #eef8fa;
+        border: 2px solid #c8e4e9;
+        border-radius: 15px;
+        text-align: center;
+      }
+
+      .reveal .lesson-demo {
+        margin: 16px auto;
+        padding: 25px 34px;
+        max-width: 1190px;
+        border: 2px dashed #11879b;
+        background: #f4fbfc;
+        border-radius: 17px;
+        text-align: center;
+      }
+
+      .reveal .lesson-demo h3 {
+        color: #153653;
+        font-size: 0.88em !important;
+      }
+
+      .reveal .lesson-demo p {
+        color: #475569;
+        font-size: 0.57em;
+      }
+
+      .reveal .lesson-demo-link {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        background: #153653;
+        color: white !important;
+        font-size: 0.47em;
+        text-decoration: none;
+      }
+
+      .reveal .lesson-compare {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 20px;
+        max-width: 1320px;
+        margin: 12px auto;
+      }
+
+      .reveal .lesson-compare-item {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .reveal .lesson-compare-item .media-shell {
+        height: 305px !important;
+        margin-top: 0 !important;
+      }
+
+      .reveal .lesson-compare-item p {
+        font-size: 0.48em;
+        text-align: center;
+        margin: 8px 0;
+      }
+
+      .reveal .lesson-compare .media-placeholder {
+        padding: 20px;
+      }
+
+      .course-logo-placeholder {
+        position: fixed;
+        top: 10px;
+        right: 18px;
+        z-index: 18;
+        color: #7c93a6;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px dashed #b1c4d1;
+        border-radius: 7px;
+        padding: 5px 11px;
+        font:
+          600 12px/1.2 'Microsoft YaHei',
+          sans-serif;
+      }
+
+      /* sec-6-1 大字号清晰投影代码块，确保 struct 完整同屏呈现（与 Lecture_6_2_2026.html sec-6-2 保持统一） */
+      #sec-6-1 {
+        padding-top: 15px !important;
+      }
+      #sec-6-1 h2 {
+        margin-bottom: 0.18em !important;
+      }
+      #sec-6-1 pre {
+        height: 515px !important;
+        max-height: 515px !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        margin: 8px auto 10px !important;
+        border: 1px solid rgba(30, 56, 96, 0.2) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 8px 24px rgba(31, 56, 88, 0.08) !important;
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+      }
+      #sec-6-1 pre::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      #sec-6-1 pre::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+      }
+      #sec-6-1 pre::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 8px;
+      }
+      #sec-6-1 pre::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      #sec-6-1 pre code {
+        max-height: none !important;
+        padding: 8px 18px !important;
+        background: #ffffff !important;
+      }
+
+      #sec-6-1 pre code,
+      #sec-6-1 pre code.hljs,
+      #sec-6-1 pre code table,
+      #sec-6-1 pre code table.hljs-ln,
+      #sec-6-1 pre code tr,
+      #sec-6-1 pre code td,
+      #sec-6-1 pre code .hljs-ln-code,
+      #sec-6-1 pre code .hljs-ln-numbers,
+      #sec-6-1 pre code .hljs-ln-line,
+      #sec-6-1 pre code span {
+        font-size: 0.96em !important;
+        line-height: 1.1 !important;
+        font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', 'Menlo', monospace !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+      #sec-6-1 pre code td.hljs-ln-numbers {
+        padding-right: 16px !important;
+        color: #94a3b8 !important;
+        border-right: 1px solid #e2e8f0 !important;
+        user-select: none;
+      }
+      #sec-6-1 pre code td.hljs-ln-code {
+        padding-left: 16px !important;
+      }
+      #sec-6-1 .note-strip {
+        margin-top: 10px !important;
+      }
+
+      @media print {
+        .course-logo-placeholder {
+          display: none !important;
+        }
+
+        .reveal .title-slide h1 {
+          max-width: 86% !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="course-logo-placeholder">学院 LOGO · 占位</div>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 6 · 03</div>
+            <h1>Phong 与 Blinn-Phong 局部光照模型</h1>
+            <p class="lead fragment fade-up">从分量叠加到半角优化，构建工业级经典着色模型</p>
+            <div class="title-flow">
+              <span class="chip fragment fade-up">环境光分量</span
+              ><span class="chip fragment fade-up">完整Phong方程</span
+              ><span class="chip fragment fade-up">Blinn-Phong半角优化</span
+              ><span class="chip fragment fade-up">材质调配与显微镜</span
+              ><span class="chip fragment fade-up">Uniform数据架构</span>
+            </div>
+            <!--div class="note-strip fragment fade-up">第6章 · 光照与着色　｜　第一次课 · 主题一：光如何塑造物体外观　｜　<span
+              class="current-date">YYYY-MM-DD</span>　｜　40分钟</div-->
+          </div>
+          <aside class="notes">
+            第6章第3课时，独立40分钟教学单元。本课将前两节课的光学分量整合成完整模型，并深入现代工业标准
+            Blinn-Phong 的 GPU 算力优化逻辑。
+          </aside>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" data-timing="lesson">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · Synthesis Problem</div>
+            <h2>有了环境、漫反射与高光，如何组装成统一的光学模型？</h2>
+            <p class="lead fragment fade-up">
+              前两节课我们掌握了环境底色 \(I_a\)、漫反射 \(I_d\) 与镜面反射
+              \(I_s\)。物体表面的最终颜色由谁主导？
+            </p>
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 390px !important; margin: 10px auto !important"
+            >
+              <img
+                src="./images/chap06/ch06-R06-07.png"
+                alt="R06-07 · 材质反射三属性分量分解与合成"
+                data-fallback="R06-07 · 材质反射三属性分量分解与合成"
+                data-prompt="Phong光照模型三分量累加教学示意图"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              三大光学分量各司其职：环境光防死黑、漫反射定形体、镜面光斑显光泽。
+            </div>
+            <aside class="notes">
+              【本组时间建议】Bridge-in 回顾与合成：约4分钟，包含本组2页。
+              【讲授提示】回顾前两节课：6-1讲了环境光与宏观输入，6-2讲了漫反射和镜面高光两大定律。本节课的任务就是把它们合成一个具有工业实战价值的完整光照模型。
+            </aside>
+          </section>
+          <section id="sec-2-2" data-timing="lesson">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Predict · Model Combination</div>
+            <h2>预测：早期图形学为什么采用简单的加权线性相加？</h2>
+            <div class="question-card fragment fade-up">
+              <div class="q">
+                Bui Tuong Phong 提出将环境光、漫反射与镜面反射直接线性叠加（\(I = I_a + I_d +
+                I_s\)），主要出于什么考量？
+              </div>
+              <div class="answers">
+                <span>A. 严格符合麦克斯韦电磁方程组与能量守恒定律</span>
+                <span>B. 计算极简、GPU 运算极其飞快，且视觉效果惊人逼真</span>
+                <span>C. 真实光学世界中不同频率的光子数量天然线性相加</span>
+                <span>D. 没有物理考虑，完全是数学巧合</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>正确答案：B</strong>　Phong 模型是经典的<strong
+                >经验近似模型（Empirical Model）</strong
+              >，用最少算力换取了极高视觉逼真度。
+            </div>
+            <aside class="notes">
+              【课堂题解析】Phong模型不是严格的物理光学模拟（能量并不守恒），而是一种工程经验近似。它的伟大之处在于形式极其简单，却能让人眼感知到栩栩如生的三维光泽。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" data-timing="lesson">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Formula · Phong Model</div>
+            <h2>经典 Phong 局部光照完整方程</h2>
+            <div class="lesson-formula fragment fade-up">
+              \[I = \underbrace{k_a I_a}_{\text{环境反射}} + \underbrace{k_d I_L \max(0,
+              \hat{\mathbf{n}}\cdot\hat{\mathbf{l}})}_{\text{Lambert漫反射}} + \underbrace{k_s I_L
+              [\max(0, \hat{\mathbf{r}}\cdot\hat{\mathbf{v}})]^n}_{\text{Phong镜面反射}}\]
+            </div>
+            <div class="three-col" style="margin-top: 12px">
+              <div class="card fragment fade-up" style="border-top: 4px solid var(--slate)">
+                <h3>① 环境光分量 \(I_a\)</h3>
+                <p>
+                  模拟房间内漫射散射光；无论朝向如何，为暗部提供保底明度，<strong>消除死黑</strong>。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="border-top: 4px solid var(--navy)">
+                <h3>② 漫反射分量 \(I_d\)</h3>
+                <p>
+                  由法线与光线点乘决定；刻画平缓的阴阳明暗过渡，<strong>呈现固有色与立体形体</strong>。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="border-top: 4px solid var(--cyan)">
+                <h3>③ 镜面高光分量 \(I_s\)</h3>
+                <p>
+                  由反射角与视线点乘主导；沿反射锥集中出射，<strong>呈现高光耀斑与光滑质感</strong>。
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】经典Phong方程：约8分钟，包含3页原课与3页图示。
+              【讲授提示】让学生逐项审视公式：每一项都有其对应的物理反射系数（ka, kd,
+              ks）和光源输入项，结构高度匀称。
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-3-1，不改动教师已编辑的原页 -->
+          <section id="sec-3-1-fig" data-timing="lesson" data-visual-companion="sec-3-1">
+            <span class="slide-no">#sec-3-1-fig</span>
+            <div class="eyebrow">Figure R06-11 · Component Sum</div>
+            <h2>一图拆解 Phong：环境＋漫反＋高光</h2>
+            <p class="lead fragment fade-up">
+              在相同模型、相同视角下，把三项反射分量分别展示，再展示逐项合成后的效果。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 435px !important; margin: 10px auto !important"
+            >
+              <img
+                src="./images/chap06/ch06-R06-11.png"
+                alt="R06-11 · Phong 三项分量与合成效果分解图"
+                data-fallback="Phong 三项分量与合成效果分解图"
+                data-purpose="直观拆解环境光Ia、漫反射Id、镜面高光Is三项分量并展示最终合成的Phong光照模型效果"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>合成方程：</strong><span>\(I = I_a + I_d + I_s\)</span>；RGB
+              分量可逐通道累加，最后还要考虑输出颜色范围。
+            </div>
+            <aside class="notes">
+              【图 R06-11
+              教学图解】在相同模型与视角下，逐一拆解环境光（Ia，基础无方向底色）、漫反射（Id，立体轮廓与明暗）、镜面高光（Is，光滑高光斑），最终合成完整的真实感三维光照模型。讲解建议约40秒。
+            </aside>
+          </section>
+
+          <section id="sec-3-2" data-timing="lesson">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Multiple Lights · Linear Superposition</div>
+            <h2>多光源照射下的光照累加法则</h2>
+            <p class="lead fragment fade-up">
+              真实场景中往往存在多个主灯、补光灯与环境光，整体出射光强满足线性叠加：
+            </p>
+            <div class="lesson-formula fragment fade-up">
+              \[I = k_a I_a + \sum_{m=1}^{M} \left( k_d I_{L,m} \max(0,
+              \hat{\mathbf{n}}\cdot\hat{\mathbf{l}}_m) + k_s I_{L,m} [\max(0,
+              \hat{\mathbf{r}}_m\cdot\hat{\mathbf{v}})]^n \right)\]
+            </div>
+            <div class="two-col" style="margin-top: 10px">
+              <div class="card fragment fade-up">
+                <h3>环境光的单次性</h3>
+                <p>全局环境光通常在着色器中只计入一次，代表整个环境空间的基底漫射。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>直接光源的独立累加</h3>
+                <p>
+                  每个点光源或方向光分别计算自己的入射向量 \(\mathbf{l}_m\) 与反射向量
+                  \(\mathbf{r}_m\)，加权累加后输出。
+                </p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>RGB 向量运算：</strong>上述公式在 GLSL 中对 R、G、B 三个通道独立并行计算。
+            </div>
+            <aside class="notes">
+              【讲授重点】在现代着色器中，多光源计算通过一个 for
+              循环遍历所有活跃光源完成累加，结构非常直观。
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-3-2，不改动教师已编辑的原页 -->
+          <section id="sec-3-2-fig" data-timing="lesson" data-visual-companion="sec-3-2">
+            <span class="slide-no">#sec-3-2-fig</span>
+            <div class="eyebrow">Figure R06-12 · Multiple Lights</div>
+            <h2>两盏灯各算一次：为什么要逐灯累加？</h2>
+            <p class="lead fragment fade-up">
+              固定一个表面点 P：蓝灯与暖灯分别产生自己的 L、R 和 RGB 贡献，结果由着色器加总。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 430px !important; margin: 10px auto !important"
+            >
+              <img
+                src="./images/chap06/ch06-R06-12.png"
+                alt="R06-12 · 多光源逐灯独立计算与线性叠加图解"
+                data-fallback="多光源逐灯独立计算与线性叠加图解"
+                data-purpose="直观展示同一点P面对多光源(冷暖双灯)时各光源独立计算漫反射与高光并线性求和"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>公式组织：</strong>环境光通常只加一次；每个光源各自计算漫反射与镜面反射，再按
+              RGB 通道求和。
+            </div>
+            <aside class="notes">
+              【图 R06-12 教学图解】直观呈现多光源照射下的线性叠加机理：每个光源各自独立计算入射向量
+              L_m、反射向量 R_m 以及对应的漫反射与高光项，全局环境光单次计入，最终在片元着色器中按
+              RGB 累加合成。讲解约45秒。
+            </aside>
+          </section>
+
+          <section id="sec-3-3" data-timing="lesson">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">Physics vs Empirical</div>
+            <h2>经验模型的物理本质与局限</h2>
+            <div class="two-col" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="border-left: 5px solid var(--green)">
+                <h3 style="color: var(--green)">工程优势：为什么 50 年不衰？</h3>
+                <p>
+                  ① 纯局部代数计算，没有任何跨三角形的射线追踪，耗时极低；<br />②
+                  片元着色器天然并行计算，能轻松跑满 144Hz 实时帧率；<br />③
+                  参数直观，非常易于艺术家和程序员直观调节。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="border-left: 5px solid var(--amber)">
+                <h3 style="color: #b45309">物理局限：它忽略了什么？</h3>
+                <p>
+                  ① <strong>不守恒</strong>：\(k_a+k_d+k_s\)
+                  随意调大可能导致反射能量超过入射能量；<br />②
+                  <strong>无阴影</strong>：被其他物体挡住的光线依然会照亮表面（需额外 Shadow
+                  Map）；<br />③
+                  <strong>无菲涅尔效应</strong>：掠射角反光急剧增强的物理现象无法自然呈现。
+                </p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              Phong 模型是图形学的伟大基石；之后的高级物理渲染（PBR）正是在其基础上做物理修正。
+            </div>
+            <aside class="notes">
+              【讲授提示】让学生明白“实用主义”在计算机科学中的价值：虽然有物理缺陷，但能在 1970
+              年代的简陋硬件上实现惊艳效果，这就是工程智慧。
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-3-3，不改动教师已编辑的原页 -->
+          <section id="sec-3-3-fig" data-timing="lesson" data-visual-companion="sec-3-3">
+            <span class="slide-no">#sec-3-3-fig</span>
+            <div class="eyebrow">Old Asset · Scope</div>
+            <h2>局部与全局：光照路径差异比公式更重要</h2>
+            <p class="lead fragment fade-up">
+              Phong 可以计算光源到当前表面的直接贡献，却不会自动生成光在表面之间反弹造成的间接照明。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 435px !important; margin: 10px auto !important"
+              data-source="Lecture_5_x.html"
+            >
+              <img
+                src="./images/chap06/ch06-local-vs-global.jpg"
+                alt="局部光照与全局光照比较图"
+                data-fallback="局部光照与全局光照比较图"
+                data-purpose="复用去年 Lecture_5_1.html 直接光与多次反射示意"
+                data-prompt="复用上一年度课件原图：./images/chap06/ch06-local-vs-global.jpg；请将原素材文件放回该相对路径（无需重新生成）。"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>读图找缺口：</strong>直接光源 → 表面 → 眼睛可由局部模型近似；表面 → 表面 →
+              眼睛的多次反射需要额外算法。
+            </div>
+            <aside class="notes">
+              【旧素材复用】Lecture_5_1.html，原始
+              src=./images/chap05/ch05-local-vs-global.jpg。指出旧图中的反弹光线路径，避免把经验光照和全局光照概念混淆。建议约35秒。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" data-timing="lesson">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Performance Bottleneck · Reflection Vector</div>
+            <h2>传统 Phong 模型的 GPU 算力痛点</h2>
+            <p class="lead fragment fade-up">
+              为什么 Jim Blinn 在 1977 年提出了对 Phong 模型的重大改良？
+            </p>
+            <div class="two-col" style="margin-top: 14px">
+              <div class="card fragment fade-up" style="border-left: 5px solid var(--navy)">
+                <h3 style="color: var(--navy)">痛点一 · 算力开销沉重</h3>
+                <p>
+                  求反射向量 \(\hat{\mathbf{r}} =
+                  2(\hat{\mathbf{n}}\cdot\hat{\mathbf{l}})\hat{\mathbf{n}} - \hat{\mathbf{l}}\)
+                  需要在每个片元执行一次点积、一次标量与向量乘法、一次向量减法。在早期 GPU
+                  和移动设备上极其昂贵。
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="border-left: 5px solid var(--amber)">
+                <h3 style="color: #b45309">痛点二 · 视角突变与锐利裁切</h3>
+                <p>
+                  当视线 \(\mathbf{v}\) 与反射向量 \(\mathbf{r}\) 夹角大于 90° 时，点积直接截断为
+                  0；在粗糙材质的大高光区域边缘，容易出现不自然的高光生硬切边。
+                </p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              能否不计算反射向量 \(\mathbf{r}\)，也能精准度量视线与光线的对称关系？
+            </div>
+            <aside class="notes">
+              【本组时间建议】Blinn-Phong模型改进：约9分钟，包含3页原课与3页图示。
+              【讲授提示】引导学生思考数学转化：既然 v 对准 r 时最亮，那什么向量对准法线 n 时最亮？
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-4-1，不改动教师已编辑的原页 -->
+          <section id="sec-4-1-fig" data-timing="lesson" data-visual-companion="sec-4-1">
+            <span class="slide-no">#sec-4-1-fig</span>
+            <div class="eyebrow" style="margin-bottom: 0.25em">
+              Figure &amp; Derivation · Reflection Geometry
+            </div>
+            <h2 style="margin: 0.04em 0 0.16em; font-size: 1.35em">
+              反射向量 R 的几何推导：从投影到公式
+            </h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin: 0 0 0.22em; font-size: 0.72em !important; line-height: 1.3 !important"
+            >
+              依据理想反射定律与向量投影，推导传统 Phong 镜面反射向量 \(\hat{\mathbf{r}}\)
+              的标准代数表达式：
+            </p>
+
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.82fr 1.38fr;
+                gap: 14px;
+                margin-top: 4px;
+                align-items: stretch;
+              "
+            >
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 8px 10px;
+                  border-radius: 14px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="images/chap06/ch06-idealrlt.png"
+                  alt="反射向量 R 的几何构造与推导图"
+                  style="max-height: 195px; max-width: 100%; object-fit: contain"
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.44em;
+                    color: var(--muted);
+                    margin-top: 4px;
+                    text-align: center;
+                    line-height: 1.2;
+                  "
+                >
+                  <strong>几何关系：</strong>单位向量
+                  \(\hat{\mathbf{l}}\)（入射光反向）、\(\hat{\mathbf{n}}\)（表面法线）、\(\hat{\mathbf{r}}\)（反射线）
+                </div>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 5px;
+                  justify-content: space-between;
+                "
+              >
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 5px 12px; border-radius: 10px; border-left: 4px solid var(--blue)"
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--blue);
+                      line-height: 1.15;
+                    "
+                  >
+                    ① 正投影 · 求法向分量
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    单位入射向量 \(\hat{\mathbf{l}}\) 在法线 \(\hat{\mathbf{n}}\) 上的标量正投影为
+                    \(\cos\theta = \hat{\mathbf{n}}\cdot\hat{\mathbf{l}}\)，沿法向分量为：
+                    <span
+                      style="
+                        display: block;
+                        text-align: center;
+                        margin-top: 1px;
+                        font-weight: 700;
+                        color: #14345e;
+                        font-size: 0.9em;
+                      "
+                      >\(\mathbf{l}_{\parallel} =
+                      (\hat{\mathbf{n}}\cdot\hat{\mathbf{l}})\hat{\mathbf{n}}\)</span
+                    >
+                  </p>
+                </div>
+
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 5px 12px; border-radius: 10px; border-left: 4px solid var(--cyan)"
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--cyan);
+                      line-height: 1.15;
+                    "
+                  >
+                    ② 几何对称 · 中点与平行四边形
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    由反射定律，\(\hat{\mathbf{l}}\) 与 \(\hat{\mathbf{r}}\)
+                    构成菱形，其连线中点恰好落在法向投影分量端点：
+                    <span
+                      style="
+                        display: block;
+                        text-align: center;
+                        margin-top: 1px;
+                        font-weight: 700;
+                        color: #14345e;
+                        font-size: 0.9em;
+                      "
+                      >\(\frac{\hat{\mathbf{l}} + \hat{\mathbf{r}}}{2} =
+                      (\hat{\mathbf{n}}\cdot\hat{\mathbf{l}})\hat{\mathbf{n}} \iff \hat{\mathbf{l}}
+                      + \hat{\mathbf{r}} =
+                      2(\hat{\mathbf{n}}\cdot\hat{\mathbf{l}})\hat{\mathbf{n}}\)</span
+                    >
+                  </p>
+                </div>
+
+                <div
+                  class="card fragment fade-up"
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 10px;
+                    border-left: 4px solid var(--green);
+                  "
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--green);
+                      line-height: 1.15;
+                    "
+                  >
+                    ③ 移项解算 · 反射向量公式
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    移项解出 \(\hat{\mathbf{r}}\)，即得标准反射计算公式（对应着色器
+                    <code>reflect(-l, n)</code>）：
+                    <span
+                      style="
+                        display: block;
+                        text-align: center;
+                        margin-top: 1px;
+                        font-weight: 800;
+                        color: var(--green);
+                        font-size: 0.95em;
+                      "
+                      >\(\hat{\mathbf{r}} = 2(\hat{\mathbf{n}}\cdot\hat{\mathbf{l}})\hat{\mathbf{n}}
+                      - \hat{\mathbf{l}}\)</span
+                    >
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.5em !important;
+                line-height: 1.35 !important;
+              "
+            >
+              <strong>计算代价：</strong>求 \(\hat{\mathbf{r}}\) 需 1 次点积、1 次数乘与 1
+              次减法，片元着色器逐像素计算负担重，这启发了 Blinn-Phong 采用半角向量
+              \(\hat{\mathbf{h}}\)。
+            </div>
+            <aside class="notes">
+              【推导思路点拨】① 让学生观察法向投影：l 在 n 方向上的投影长度是 n·l，向量是 (n·l)n；②
+              依据几何对称，l 和 r 的中点恰好在投影端点，即 (l+r)/2 = (n·l)n；③ 移项解得 r = 2(n·l)n
+              - l。强调该推导为着色器 reflect() 的底层数学原理，随后引出逐片元计算 r 的算力代价与
+              Blinn-Phong 的半角优化。讲解约60秒。
+            </aside>
+          </section>
+
+          <section id="sec-4-2" data-timing="lesson">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow" style="margin-bottom: 0.25em">
+              Innovation &amp; Geometry · Halfway Vector
+            </div>
+            <h2 style="margin: 0.04em 0 0.16em; font-size: 1.35em">
+              半角向量 H：Blinn-Phong 的核心创新
+            </h2>
+            <p
+              class="lead fragment fade-up"
+              style="margin: 0 0 0.22em; font-size: 0.72em !important; line-height: 1.3 !important"
+            >
+              将“视线对准反射线（\(\hat{\mathbf{v}}\approx\hat{\mathbf{r}}\)）”巧妙转化为“法线对准半角方向（\(\hat{\mathbf{n}}\approx\hat{\mathbf{h}}\)）”：
+            </p>
+
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.82fr 1.38fr;
+                gap: 14px;
+                margin-top: 4px;
+                align-items: stretch;
+              "
+            >
+              <!-- 左栏：图解与几何构造 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 8px 10px;
+                  border-radius: 14px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="images/chap06/ch06-halfvec.png"
+                  alt="Blinn-Phong 半角向量 H 几何构造图"
+                  style="max-height: 195px; max-width: 100%; object-fit: contain"
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.44em;
+                    color: var(--muted);
+                    margin-top: 4px;
+                    text-align: center;
+                    line-height: 1.2;
+                  "
+                >
+                  <strong>几何构造：</strong>单位向量 \(\hat{\mathbf{l}}\) 与 \(\hat{\mathbf{v}}\)
+                  模长均为 1，向量和 \(\hat{\mathbf{l}}+\hat{\mathbf{v}}\)
+                  沿菱形对角线（天然角平分线）
+                </div>
+              </div>
+
+              <!-- 右栏：定义计算、物理等价与度量优势 -->
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 5px;
+                  justify-content: space-between;
+                "
+              >
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 5px 12px; border-radius: 10px; border-left: 4px solid var(--blue)"
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--blue);
+                      line-height: 1.15;
+                    "
+                  >
+                    ① 代数定义与高效计算
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    \(\hat{\mathbf{h}}\) 为入射光反向 \(\hat{\mathbf{l}}\) 与视线
+                    \(\hat{\mathbf{v}}\) 的<strong>单位角平分线向量</strong>：
+                    <span
+                      style="
+                        display: block;
+                        text-align: center;
+                        margin: 1px 0;
+                        font-weight: 700;
+                        color: #14345e;
+                        font-size: 0.92em;
+                      "
+                    >
+                      \(\hat{\mathbf{h}} = \operatorname{normalize}(\hat{\mathbf{l}} +
+                      \hat{\mathbf{v}}) = \frac{\hat{\mathbf{l}} +
+                      \hat{\mathbf{v}}}{\|\hat{\mathbf{l}} + \hat{\mathbf{v}}\|}\)
+                    </span>
+                    只需 1 次加法与 1
+                    次归一化；若视点与光源位于无穷远（平行光），\(\hat{\mathbf{h}}\) 全局恒定！
+                  </p>
+                </div>
+
+                <div
+                  class="card fragment fade-up"
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 10px;
+                    border-left: 4px solid var(--green);
+                  "
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--green);
+                      line-height: 1.15;
+                    "
+                  >
+                    ② 光学物理等价性
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    由几何对称，当微观法线与半角向量重合（\(\hat{\mathbf{n}}=\hat{\mathbf{h}}\)）时，入射角必等于反射角，入射光<strong>完美镜面反射入人眼</strong>，高光达到极大值！
+                  </p>
+                </div>
+
+                <div
+                  class="card fragment fade-up"
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 10px;
+                    border-left: 4px solid var(--amber);
+                  "
+                >
+                  <h3
+                    style="
+                      font-size: 0.62em;
+                      margin: 0 0 1px;
+                      color: var(--amber);
+                      line-height: 1.15;
+                    "
+                  >
+                    ③ 高光度量与视觉优势
+                  </h3>
+                  <p style="margin: 0; font-size: 0.5em; line-height: 1.25">
+                    用 \(\max(0, \hat{\mathbf{n}}\cdot\hat{\mathbf{h}})\)
+                    近似度量高光：峰值方向一致且过渡平滑，彻底避免了夹角大于 90° 时的生硬切边伪影。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip ok fragment fade-up"
+              style="
+                margin-top: 6px !important;
+                padding: 6px 14px !important;
+                font-size: 0.5em !important;
+                line-height: 1.35 !important;
+              "
+            >
+              <strong>思路飞跃：</strong
+              >从“求反射线追踪视线”转变为“构造角平分线比对法线”，不仅大幅削减片元算力开销，而且为现代微表面理论（PBR）奠定了坚实基石。
+            </div>
+            <aside class="notes">
+              【教学重点】引导学生用菱形法则理解：单位向量 l 和 v 模长均为
+              1，形成的平行四边形必为菱形，菱形对角线平分内角，因此归一化后正是角平分线方向
+              h。当且仅当 n 对准 h 时，视线恰好处于理想反射光路上（v 对准
+              r），高光达到峰值。相比经典 Phong 省去了昂贵的反射向量计算。建议讲解约90秒。
+            </aside>
+          </section>
+
+          <section id="sec-4-3" data-timing="lesson">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Formula · Blinn-Phong</div>
+            <h2>Blinn-Phong 高光计算方程与工业优势</h2>
+            <div class="lesson-formula fragment fade-up">
+              \[I_{s,\text{Blinn}} = k_s I_L [\max(0,
+              \hat{\mathbf{n}}\cdot\hat{\mathbf{h}})]^{\beta}\]
+            </div>
+            <div class="three-col" style="margin-top: 10px">
+              <div class="card fragment fade-up">
+                <h3>① 便于优化与复用</h3>
+                <p>
+                  无需计算复杂的反射向量 \(\mathbf{r}\)；当视点与光源处于无穷远时，<strong
+                    >\(\mathbf{h}\) 在整个网格面上为常数向量</strong
+                  >！
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>② 高光过渡更平滑</h3>
+                <p>
+                  \(\mathbf{n}\cdot\mathbf{h}\) 随视点变化平缓，避免了 90°
+                  截断突变硬边，大高光表现更加真实自然。
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>③ 经典实时渲染方案</h3>
+                <p>
+                  通常取指数 \(\beta \approx 2n \sim 4n\) 即可匹配传统 Phong 的光斑大小。<strong
+                    >OpenGL、Direct3D 与 WebGL 均不规定默认光照模型，须由着色器实现。</strong
+                  >
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              【讲授重点】Blinn-Phong 是经典实时渲染的常用高光近似之一，但不能说 WebGL
+              默认采用它，也不能将它等同于现代引擎使用的 PBR。对同一高光宽度，β 与 n
+              需根据角度关系经验调节，并无全域精确对应。
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-4-3，不改动教师已编辑的原页 -->
+          <section id="sec-4-3-fig" data-timing="lesson" data-visual-companion="sec-4-3">
+            <span class="slide-no">#sec-4-3-fig</span>
+            <div class="eyebrow">Figure R06-13 · Model Comparison</div>
+            <h2>同一光照条件：R·V 与 N·H 是两种高光近似</h2>
+            <p class="lead fragment fade-up">
+              两幅几何图使用同一表面、光源、相机与法线；唯一的区别是传统 Phong 测量 R·V，Blinn-Phong
+              测量 N·H。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 430px !important; margin: 10px auto !important"
+            >
+              <img
+                src="./images/chap06/ch06-R06-13.png"
+                alt="R06-13 · Phong 与 Blinn-Phong 两种高光点乘几何对比图"
+                data-fallback="Phong 与 Blinn-Phong 两种高光点乘几何对比图"
+                data-purpose="直观对比传统 Phong (R·V) 与 Blinn-Phong (N·H) 在相同表面几何条件下的高光计算机理"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>严谨比较：</strong>峰值对齐条件相同，但余弦幂的函数曲线不同；指数 n 与 β
+              需要按目标高光宽度调节，并非严格等价。
+            </div>
+            <aside class="notes">
+              【图 R06-13 教学图解】直观并排对比传统 Phong 与 Blinn-Phong
+              在相同光照与视点条件下的几何机理：左栏呈现经典 Phong 计算反射线 R 与视线 V 的夹角点积
+              (R·V)^n；右栏呈现 Blinn-Phong 计算法线 N 与半角向量 H 的夹角点积
+              (N·H)^β。引导学生观察两者峰值对齐条件一致，但角度曲线不同。讲解约50秒。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" data-timing="lesson">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Interactive Demo · D06-01</div>
+            <h2>D06-01 · 局部光照与材质参数显微镜</h2>
+            <div
+              class="grid2 fragment fade-up"
+              style="gap: 20px; align-items: stretch; margin-top: 14px; margin-bottom: 12px"
+            >
+              <!-- 左侧：Demo 启动卡片与核心功能概览 -->
+              <div
+                class="card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  background: linear-gradient(135deg, #ffffff, #f4f9fd);
+                  border: 1px solid var(--line);
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 8px;
+                    "
+                  >
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.42em;
+                        padding: 0.3em 0.8em;
+                        background: #e0f2fe;
+                        color: var(--cyan);
+                        border: 1px solid rgba(2, 132, 199, 0.25);
+                      "
+                      >D06-01 · 教学实验台</span
+                    >
+                    <span class="small" style="font-size: 0.46em; color: var(--muted)"
+                      >WebGL2 + GLSL ES 3.00 + 局部光照渲染</span
+                    >
+                  </div>
+                  <h3 style="margin: 0 0 8px 0; font-size: 0.92em; color: #14345e">
+                    光源与材质参数显微镜
+                  </h3>
+                  <p
+                    style="font-size: 0.56em; line-height: 1.5; color: #475569; margin: 0 0 10px 0"
+                  >
+                    固定同一个球体与器械模型及相机视角，独立调控光源与材质属性，实时观察光照分量与明暗高光响应。
+                  </p>
+                  <div
+                    style="
+                      background: #ffffff;
+                      border: 1px solid var(--line);
+                      border-radius: 12px;
+                      padding: 10px 14px;
+                      margin-bottom: 14px;
+                    "
+                  >
+                    <div style="font-size: 0.52em; line-height: 1.6; color: #1e293b">
+                      <div>
+                        🔹
+                        <strong>分量独显与合成</strong
+                        >：支持仅环境光、仅漫反射、仅镜面反射或完整组合叠加渲染
+                      </div>
+                      <div>
+                        🔹 <strong>材质分量解构</strong>：环境反射 \(k_a\)、漫反射 \(k_d\)、镜面反射
+                        \(k_s\) 与高光指数 \(n\)
+                      </div>
+                      <div>
+                        🔹 <strong>光源多维调控</strong>：平行光 / 点光源 / 聚光灯、位置方位角与 RGB
+                        光谱能量
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <a
+                    class="demo-btn"
+                    href="./Chap_demos/chap6/D06-01_光源与材质参数显微镜.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                      width: 100%;
+                      min-height: 52px;
+                      font-size: 0.64em;
+                      font-weight: 800;
+                      border-radius: 14px;
+                      box-shadow: 0 8px 20px rgba(2, 132, 199, 0.22);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 8px;
+                    "
+                  >
+                    <span>▶ 启动交互 Demo：光源与材质参数显微镜</span>
+                    <span style="font-size: 0.8em; opacity: 0.85">↗</span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- 右侧：课堂观察任务面板 -->
+              <div
+                class="activity card"
+                style="
+                  padding: 18px 22px;
+                  border-radius: 18px;
+                  border-left: 6px solid var(--green);
+                  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #ffffff);
+                  border-top: 1px solid var(--line);
+                  border-right: 1px solid var(--line);
+                  border-bottom: 1px solid var(--line);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  margin-top: 0;
+                "
+              >
+                <div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span class="tag" style="color: var(--green); font-size: 0.46em"
+                      >课堂观察任务</span
+                    >
+                    <span class="timer" style="font-size: 0.5em">4 min</span>
+                  </div>
+                  <h3 style="margin: 0 0 10px 0; font-size: 0.92em; color: #14345e">
+                    带着问题观察与验证
+                  </h3>
+
+                  <ol
+                    class="step-list"
+                    style="margin: 0; padding-left: 1.8em; font-size: 0.84em; line-height: 1.55"
+                  >
+                    <li style="margin-bottom: 8px">
+                      <strong>独显单项分量</strong
+                      >：依次切换“仅环境光”、“仅漫反射”、“仅镜面反射”，观察它们各自单独渲染时的视觉效果。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>调大高光指数 n</strong>：把指数从 4 拖到
+                      128，观察高光白斑如何从大范围弥散变为集中锐利的光点。
+                    </li>
+                    <li style="margin-bottom: 8px">
+                      <strong>关闭漫反射（kd=0）</strong
+                      >：观察只保留高光的纯黑球体，体会镜面反射与漫反射的独立性。
+                    </li>
+                    <li>
+                      <strong>全项组合复原</strong
+                      >：同时开启三项分量，观察真实塑料球与手术钳器械的立体质感。
+                    </li>
+                  </ol>
+                </div>
+                <div
+                  style="
+                    font-size: 0.48em;
+                    color: var(--muted);
+                    border-top: 1px dashed var(--line);
+                    padding-top: 8px;
+                  "
+                >
+                  💡 核心验证：三个分量互不干扰，线性叠加后呈现出完整的材质外观。
+                </div>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】显微镜实验与参数调配：约9分钟，包含3页原课与1页图示。
+              【实验引导】请学生在操作时注意观察高光与漫反射的关系，尤其是当仅保留高光时，物体像一个擦得极亮的黑曜石球。
+            </aside>
+          </section>
+          <section id="sec-5-2" data-timing="lesson">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Material Engineering · Presets</div>
+            <h2>参数调配：常见材质的光学特征</h2>
+            <p class="lead fragment fade-up">
+              通过设置不同的 \(k_a, k_d, k_s, n\) 组合，可以精确仿真现实生活中的各类质感：
+            </p>
+            <div class="three-col" style="margin-top: 10px">
+              <div class="card fragment fade-up">
+                <h3 style="color: var(--navy)">塑料 / 涂漆木器</h3>
+                <p>
+                  <strong>固有漫反射 + 白色高光</strong><br />\(k_d\)
+                  较高（表现物体红/蓝颜色），\(k_s\) 适中且高光为白色，\(n \approx 16 \sim 64\)。
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3 style="color: #b45309">金属 (Gold/Copper)</h3>
+                <p>
+                  <strong>无漫反射 + 彩色镜面高光</strong><br />\(k_d \approx 0\)，\(k_s\)
+                  极高且高光带有金属自身颜色（金色/铜色），\(n \ge 128\)。
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3 style="color: var(--slate)">粉笔 / 粗糙陶土</h3>
+                <p>
+                  <strong>纯朗伯漫反射体</strong><br />\(k_d\) 较高呈现灰白色，\(k_s \approx 0\)
+                  完全没有高光耀斑，表面哑光柔和。
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              【讲授提示】让学生体会金属与非金属（电介质）的最大区别：非金属表面的高光直接反射光源颜色（通常为白色），而金属表面的高光会被金属表面自由电子吸收并染上金属固有色！
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-5-2，不改动教师已编辑的原页 -->
+          <section id="sec-5-2-fig" data-timing="lesson" data-visual-companion="sec-5-2">
+            <span class="slide-no">#sec-5-2-fig</span>
+            <div class="eyebrow">Old Asset · Material Gallery</div>
+            <h2>同一茶壶、不同参数：材质视觉对照</h2>
+            <p class="lead fragment fade-up">
+              保持几何形体不变，只改变材质的漫反射色、镜面反射色和高光指数；观察从哑光到光泽的外观变化。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 435px !important; margin: 10px auto !important"
+              data-source="Lecture_5_x.html"
+            >
+              <img
+                src="./images/chap06/ch06-teapotarray.png"
+                alt="多个茶壶材质参数对比图"
+                data-fallback="多个茶壶材质参数对比图"
+                data-purpose="复用去年 Lecture_5_2.html 材质参数阵列"
+                data-prompt="复用上一年度课件原图：./images/chap06/ch06-teapotarray.png；请将原素材文件放回该相对路径（无需重新生成）。"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>观察任务：</strong>哪一个主要由 kd
+              决定主体颜色？哪个出现窄而亮的高光？不能只凭高光大小唯一判断真实材料。
+            </div>
+            <aside class="notes">
+              【旧素材复用】Lecture_5_2.html，原始
+              src=./images/chap06/ch06-teapotarray.png。建议讲解约35秒；让学生从茶壶阵列挑出‘陶土感/塑料感/金属感’，再回参数表讨论经验模型的局限。
+            </aside>
+          </section>
+          <!-- 材质参数配置表：承接 sec-5-2 与 sec-5-2-fig -->
+          <section id="sec-5-2-table" data-timing="lesson" data-visual-companion="sec-5-2">
+            <span class="slide-no">#sec-5-2-table</span>
+            <div class="eyebrow" style="margin-bottom: 0.3em">
+              Authoritative Presets · OpenGL Material Library
+            </div>
+            <h2 style="margin: 0.04em 0 0.18em; font-size: 1.38em">
+              典型材质参数配置表（OpenGL 经典经验库）
+            </h2>
+            <p
+              class="lead"
+              style="margin: 0 0 0.25em; font-size: 0.72em !important; line-height: 1.35 !important"
+            >
+              工业界经典标准（OpenGL Red
+              Book）汇总的典型材质光学参数，展示金属、宝石与电介质的各分量配置：
+            </p>
+
+            <table
+              style="
+                width: 100%;
+                font-size: 0.5em;
+                border-collapse: collapse;
+                margin-top: 8px;
+                background: #ffffff;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+                table-layout: fixed;
+              "
+            >
+              <thead>
+                <tr style="background: #153653; color: #ffffff; text-align: left">
+                  <th style="padding: 8px 10px; width: 14%; color: #ffffff; background: #153653">
+                    典型材质
+                  </th>
+                  <th style="padding: 8px 10px; width: 10%; color: #ffffff; background: #153653">
+                    物理分类
+                  </th>
+                  <th style="padding: 8px 10px; width: 17%; color: #ffffff; background: #153653">
+                    环境反射 <i>k</i><sub>a</sub> (RGB)
+                  </th>
+                  <th style="padding: 8px 10px; width: 17%; color: #ffffff; background: #153653">
+                    漫反射 <i>k</i><sub>d</sub> (RGB)
+                  </th>
+                  <th style="padding: 8px 10px; width: 17%; color: #ffffff; background: #153653">
+                    镜面高光 <i>k</i><sub>s</sub> (RGB)
+                  </th>
+                  <th style="padding: 8px 10px; width: 11%; color: #ffffff; background: #153653">
+                    高光指数 <i>n</i> / &beta;
+                  </th>
+                  <th style="padding: 8px 10px; width: 14%; color: #ffffff; background: #153653">
+                    光学视觉特征
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px solid var(--line); background: #ffffff">
+                  <td style="padding: 6px 10px; font-weight: 700; color: #b45309">黄金 (Gold)</td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: #b45309;
+                        background: #fef3c7;
+                        border-color: #fde68a;
+                      "
+                      >贵金属</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.247, 0.200, 0.075)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.752, 0.606, 0.226)
+                  </td>
+                  <td
+                    style="
+                      padding: 6px 10px;
+                      font-family: Consolas, monospace;
+                      color: #b45309;
+                      font-weight: 700;
+                    "
+                  >
+                    (0.628, 0.556, 0.366)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 51.2
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 128)</span>
+                  </td>
+                  <td style="padding: 6px 10px">高光带暖黄，金属反射强烈</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--line); background: #f8fafc">
+                  <td style="padding: 6px 10px; font-weight: 700; color: #475569">白银 (Silver)</td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: #475569;
+                        background: #f1f5f9;
+                        border-color: #cbd5e1;
+                      "
+                      >贵金属</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.192, 0.192, 0.192)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.508, 0.508, 0.508)
+                  </td>
+                  <td
+                    style="
+                      padding: 6px 10px;
+                      font-family: Consolas, monospace;
+                      color: #475569;
+                      font-weight: 700;
+                    "
+                  >
+                    (0.508, 0.508, 0.508)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 51.2
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 128)</span>
+                  </td>
+                  <td style="padding: 6px 10px">全波段均匀反射，呈银白光泽</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--line); background: #ffffff">
+                  <td style="padding: 6px 10px; font-weight: 700; color: #92400e">黄铜 (Brass)</td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: #92400e;
+                        background: #fef3c7;
+                        border-color: #fde68a;
+                      "
+                      >合金</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.329, 0.224, 0.027)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.780, 0.569, 0.114)
+                  </td>
+                  <td
+                    style="
+                      padding: 6px 10px;
+                      font-family: Consolas, monospace;
+                      color: #92400e;
+                      font-weight: 700;
+                    "
+                  >
+                    (0.992, 0.941, 0.808)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 27.9
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 80)</span>
+                  </td>
+                  <td style="padding: 6px 10px">高光极强带浅金，光斑相对宽广</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--line); background: #f8fafc">
+                  <td style="padding: 6px 10px; font-weight: 700; color: var(--green)">
+                    翡翠 (Emerald)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: var(--green);
+                        background: #ecfdf5;
+                        border-color: #a7f3d0;
+                      "
+                      >宝石矿物</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.022, 0.175, 0.022)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.076, 0.614, 0.076)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.633, 0.728, 0.633)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 76.8
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 200)</span>
+                  </td>
+                  <td style="padding: 6px 10px">翠绿漫反射基底，高光锐利晶亮</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--line); background: #ffffff">
+                  <td style="padding: 6px 10px; font-weight: 700; color: var(--cyan)">
+                    青色塑料 (Cyan Plastic)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: var(--cyan);
+                        background: #ecfeff;
+                        border-color: #a5f3fc;
+                      "
+                      >电介质</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.000, 0.100, 0.060)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.000, 0.510, 0.510)
+                  </td>
+                  <td
+                    style="
+                      padding: 6px 10px;
+                      font-family: Consolas, monospace;
+                      color: var(--blue);
+                      font-weight: 700;
+                    "
+                  >
+                    (0.502, 0.502, 0.502)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 32.0
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 90)</span>
+                  </td>
+                  <td style="padding: 6px 10px">非金属典型：高光为纯白光源色</td>
+                </tr>
+                <tr style="background: #f8fafc">
+                  <td style="padding: 6px 10px; font-weight: 700; color: var(--slate)">
+                    黑色橡胶 (Black Rubber)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <span
+                      class="pill"
+                      style="
+                        font-size: 0.85em;
+                        padding: 1px 6px;
+                        color: var(--slate);
+                        background: #f1f5f9;
+                        border-color: #cbd5e1;
+                      "
+                      >哑光体</span
+                    >
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.020, 0.020, 0.020)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.010, 0.010, 0.010)
+                  </td>
+                  <td style="padding: 6px 10px; font-family: Consolas, monospace">
+                    (0.400, 0.400, 0.400)
+                  </td>
+                  <td style="padding: 6px 10px">
+                    <i>n</i> = 10.0
+                    <span style="color: var(--muted); font-size: 0.88em">(&beta; &asymp; 25)</span>
+                  </td>
+                  <td style="padding: 6px 10px">反射率与指数均低，光斑弥散柔和</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div
+              class="note-strip"
+              style="
+                margin-top: 8px !important;
+                padding: 7px 16px !important;
+                font-size: 0.52em !important;
+                line-height: 1.4 !important;
+              "
+            >
+              <strong>参数配置经验规律：</strong>① <strong>金属 vs 电介质</strong>：非金属表面高光
+              <i>k</i><sub>s</sub> 呈中性灰白色，金属高光被其自由电子吸收而带有金属固有色；②
+              <strong>高光指数</strong
+              >：粗糙表面指数低（光斑大），抛光表面指数高（光斑锐）。Blinn-Phong 指数取 &beta;
+              &asymp; 2<i>n</i> ~ 4<i>n</i>。
+            </div>
+            <aside class="notes">
+              【教学提示】经典的 OpenGL Red Book
+              材质参数表是图形学参数调配的经典试金石：让学生重点对比黄金（金属）与塑料（电介质）的高光颜色
+              ks 差异——塑料高光只反映白光光源（各分量相等），而黄金的高光 ks
+              本身带有暖黄特征；再对比橡胶（n=10，极小光斑弥散）与翡翠（n=76.8，极紧凑光斑）。讲解约60秒。
+            </aside>
+          </section>
+
+          <section id="sec-5-3" data-timing="lesson">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Troubleshooting · Visual Artifacts</div>
+            <h2>现象反推与光照排错</h2>
+            <div class="question-card fragment fade-up">
+              <div class="q">
+                三维场景渲染出来表面完全没有高光亮斑，应优先排查哪些几何与参数原因？
+              </div>
+              <div class="answers">
+                <span>A. 材质高光反射系数 \(k_s\) 是否被误设为 0</span>
+                <span>B. 相机视线 \(\mathbf{v}\) 是否与反射光锥夹角过大（没对准高光）</span>
+                <span
+                  >C. 该表面点是否处于背向光源的阴影面（\(\mathbf{n}\cdot\mathbf{l}\le 0\)）</span
+                >
+                <span>D. 以上三项均需严格逐一排查</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>正确答案：D</strong
+              >　高光计算是乘法链路，系数为零、几何错位或背光保护都会导致高光缺失。
+            </div>
+            <aside class="notes">
+              【课堂题解析】三项都是着色器调试中的经典高频
+              bug。先让学生思考并回答，再总结工程排错树。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" data-timing="lesson">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Implementation · GLSL Structure</div>
+            <h2>WebGL2 中的 Uniform 结构体设计</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-glsl" data-trim="" data-line-numbers="">#version 300 es
+// 光源属性结构体
+struct Light {
+    vec3 position;  // 世界坐标位置
+    vec3 ambient;   // 环境光 RGB 强度
+    vec3 diffuse;   // 漫反射 RGB 强度
+    vec3 specular;  // 镜面高光 RGB 强度
+};
+// 材质属性结构体
+struct Material {
+    vec3 ka;        // 环境反射系数
+    vec3 kd;        // 漫反射系数（固有色）
+    vec3 ks;        // 镜面反射系数
+    float shininess;// Blinn-Phong 高光指数
+}; 
+
+uniform Light uLight;
+uniform Material uMaterial;</code></pre>
+            <div class="note-strip fragment fade-up">
+              <strong>结构清晰化：</strong>使用 GLSL 结构体（struct）组织 Uniform，代码与 CPU
+              侧场景数据完美映射。
+            </div>
+            <aside class="notes">
+              【本组时间建议】着色器架构与局限：约6分钟，包含3页原课与1页图示。
+              【讲授提示】向学生展示良好代码工程实践：不要散落一地的单个 uniform float/vec3，用
+              struct 封装是大型图形渲染引擎的标准做法。
+            </aside>
+          </section>
+          <section id="sec-6-2" data-timing="lesson">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Limits · Local Illumination</div>
+            <h2>局部光照模型能做什么，不能做什么？</h2>
+            <div class="two-col" style="margin-top: 14px">
+              <div class="card fragment fade-up">
+                <h3>可以局部近似解释与渲染</h3>
+                <p>
+                  ① 单个表面的朝向与明暗变化；<br />② 光滑材质的高光耀斑与视点移动效应；<br />③
+                  材质颜色与光源颜色的光谱乘积。
+                </p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>不能自动处理的全局现象</h3>
+                <p>
+                  ① <strong>投射阴影</strong>：被前面茶壶挡住的桌子依然被光照亮（需 Shadow
+                  Map）；<br />②
+                  <strong>相互反射</strong>：红色墙面无法将红光漫射弹射到白色地板上；<br />③
+                  <strong>透明折射</strong>：玻璃器皿内部的折射与焦散光斑。
+                </p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              区分“局部光照（Local）”与“全局光照（Global）”，清楚工程近似的边界所在。
+            </div>
+            <aside class="notes">
+              【讲授重点】明确课程边界：本章重点是局部光照（可编程流水线直接支持），全局光照属于光线追踪和实时高级渲染专题。
+            </aside>
+          </section>
+          <!-- 插图补充页：承接 sec-6-2，不改动教师已编辑的原页 -->
+          <section id="sec-6-2-fig" data-timing="lesson" data-visual-companion="sec-6-2">
+            <span class="slide-no">#sec-6-2-fig</span>
+            <div class="eyebrow">Old Asset · Local vs Global</div>
+            <h2>Phong 的边界：有光就一定亮吗？</h2>
+            <p class="lead fragment fade-up">
+              只判断表面法线与光源方向无法得知光线是否被遮挡，也无法模拟多次反弹。
+            </p>
+
+            <div
+              class="media-shell fragment fade-up"
+              style="height: 435px !important; margin: 10px auto !important"
+              data-source="Lecture_5_x.html"
+            >
+              <img
+                src="./images/chap06/ch06-global-illu.png"
+                alt="多次反射全局光照现象"
+                data-fallback="多次反射全局光照现象"
+                data-purpose="复用去年 Lecture_5_1.html 全局间接照明图"
+                data-prompt="复用上一年度课件原图：./images/chap06/ch06-global-illu.png；请将原素材文件放回该相对路径（无需重新生成）。"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              <strong>辨识检查：</strong
+              >投射阴影要加入可见性判定；间接光照需额外计算，全局照明并不是多加一盏灯。
+            </div>
+            <aside class="notes">
+              【旧素材复用】Lecture_5_1.html，原始 src=./images/chap05/ch05-global-illu.png。已在
+              sec-3-3
+              后安排局部/全局对照图；这里补一张全局反弹效果作为工程边界的印象强化。建议约30秒。
+            </aside>
+          </section>
+
+          <section id="sec-6-3" data-timing="lesson">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Transfer · MED × CG</div>
+            <h2>迁移应用：医学三维可视化中的光照调优</h2>
+            <p class="lead fragment fade-up">
+              在医学解剖三维重建（如胸腔骨骼或微创手术器械）中，如何设置光照参数？
+            </p>
+            <div class="two-col" style="margin-top: 10px">
+              <div class="card fragment fade-up">
+                <h3 style="color: var(--navy)">骨骼与软组织</h3>
+                <p>
+                  <strong>强调漫反射，抑制强高光</strong><br />骨质表面具有微孔粗糙度，设置高
+                  \(k_d\)、低 \(k_s\) 与低 \(n\)。若高光过强，反光白斑会遮挡微细骨折裂隙！
+                </p>
+              </div>
+              <div class="card fragment fade-up" style="border-left: 5px solid var(--cyan)">
+                <h3 style="color: var(--cyan)">手术镊与钛合金器械</h3>
+                <p>
+                  <strong>强调镜面高光，突出锋利金属轮廓</strong><br />器械表面抛光精密，设置高
+                  \(k_s\) 与高 \(n\)（128以上），借助狭窄耀斑凸显手术器械的空间走向与刃口金属感。
+                </p>
+              </div>
+            </div>
+            <aside class="notes">
+              【讲授提示】将图形学数学模型与医疗专业背景结合，让学生直观感受到参数调配对医疗诊断与手术可视化的现实价值。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" data-timing="lesson">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">Summary · 120 Minutes Closure</div>
+            <h2>第一单元知识大闭环：从物理到像素</h2>
+            <div class="flow" style="margin-top: 16px">
+              <span class="node fragment fade-up"
+                >6-1 宏观三要素<br /><small>光源 · 材质 · 观察者</small></span
+              >
+              <span class="arrow fragment fade-up">→</span>
+              <span class="node fragment fade-up"
+                >6-2 微观两大定律<br /><small>Lambert 漫反 + 镜面高光</small></span
+              >
+              <span class="arrow fragment fade-up">→</span>
+              <span class="node primary fragment fade-up"
+                >6-3 模型合成与工程<br /><small>Phong累加 + Blinn半角</small></span
+              >
+            </div>
+            <div class="note-strip fragment fade-up" style="margin-top: 18px">
+              <strong>承上启下：</strong
+              >现在我们能精准计算<strong>某一个几何点</strong>的光照；但三维网格由成千上万多边形组成，这些光照计算究竟应该在何时、何处执行？
+            </div>
+            <aside class="notes">
+              【本组时间建议】总结与Exit Ticket：约4分钟。
+              【讲授提示】回顾前三节课的递进关系，给学生一个非常清晰的认知地图，然后抛出下节课的核心问题。
+            </aside>
+          </section>
+          <section id="sec-7-2" data-timing="lesson">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Check for Understanding</div>
+            <h2>Exit Ticket · 必须分清的“两个Phong”</h2>
+            <div class="question-card fragment fade-up">
+              <div class="q">
+                “Phong 光照模型 (Phong Illumination Model)” 与 “Phong 着色算法 (Phong Shading)”
+                是一回事吗？
+              </div>
+              <div class="answers">
+                <span>A. 是完全相同的同义词，只是英文翻译不同</span>
+                <span
+                  >B. 完全不同：前者是一个点上的光学计算公式；后者是片元级法向量插值着色策略</span
+                >
+                <span>C. 前者已经完全被废弃，后者是现代 GPU 渲染的通用名称</span>
+                <span>D. 前者只能在 CPU 计算，后者只能在 GPU 片元着色器计算</span>
+              </div>
+            </div>
+            <div class="note-strip ok fragment fade-up">
+              <strong>正确答案：B</strong
+              >　前者回答“如何计算一点的反射”，后者回答“网格面内何时计算光照”（下一课 6-4 核心！）。
+            </div>
+            <aside class="notes">
+              【课堂题解析】B。这是几乎所有初学者和面试中最高频混淆的概念！下一课（6-4）将正式对比
+              Flat、Gouraud 与 Phong 着色三种算法。
+            </aside>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      document.querySelectorAll('.current-date').forEach((el) => {
+        el.textContent = new Date().toLocaleDateString('sv-SE');
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        defaultTiming: 120,
+        totalTime: 2400,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+        katex: {
+          version: 'latest',
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true },
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        },
+      });
+    </script>
+  </body>
+</html>

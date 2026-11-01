@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D06-02 · 法向量与漫反射显微镜 - 计算机图形学教学Demo</title>
+
+    <style>
+      :root {
+        --navy: #153653;
+        --cyan: #11879b;
+        --green: #2d9b66;
+        --orange: #df8737;
+        --slate: #597083;
+        --line: #dbe6eb;
+        --soft: #f5f9fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+        background: #edf2f4;
+        color: var(--navy);
+      }
+
+      .stage {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: center center;
+        display: grid;
+        grid-template-columns: 1248px 672px;
+        background: white;
+        overflow: hidden;
+      }
+
+      .scene {
+        position: relative;
+        overflow: hidden;
+        background: white;
+      }
+
+      #diagram {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .unit-circle {
+        stroke: #d9e4e9;
+        stroke-width: 2;
+        stroke-dasharray: 9 9;
+        fill: none;
+      }
+
+      .surface {
+        stroke: #7893a1;
+        stroke-width: 7;
+        stroke-linecap: round;
+      }
+
+      .vector {
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      #nVector {
+        stroke: var(--green);
+        stroke-width: 12;
+      }
+      #lVector {
+        stroke: var(--cyan);
+        stroke-width: 8;
+      }
+
+      .vector-label {
+        font-size: 32px;
+        font-weight: bold;
+        paint-order: stroke;
+        stroke: white;
+        stroke-width: 9px;
+        stroke-linejoin: round;
+      }
+
+      #nLabel {
+        fill: var(--green);
+      }
+      #lLabel {
+        fill: var(--cyan);
+      }
+
+      .arc {
+        fill: none;
+        stroke: var(--orange);
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+
+      #angleLabel {
+        fill: var(--orange);
+        font-size: 29px;
+        font-weight: bold;
+        text-anchor: middle;
+        paint-order: stroke;
+        stroke: white;
+        stroke-width: 8px;
+        stroke-linejoin: round;
+      }
+
+      .handle {
+        fill: white;
+        stroke-width: 5;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .handle:active {
+        cursor: grabbing;
+      }
+      #nHandle {
+        stroke: var(--green);
+      }
+      #lHandle {
+        stroke: var(--cyan);
+      }
+
+      .side-label {
+        fill: #8ca0ab;
+        font-size: 23px;
+        text-anchor: middle;
+      }
+
+      .point-label {
+        font-size: 28px;
+        font-weight: bold;
+        fill: var(--navy);
+      }
+
+      .fixed-tag {
+        position: absolute;
+        top: 38px;
+        left: 42px;
+        padding: 12px 20px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--slate);
+        font-size: 22px;
+        background: white;
+        pointer-events: none;
+      }
+
+      .panel {
+        border-left: 2px solid var(--line);
+        background: #fcfdfd;
+        padding: 35px 37px;
+        overflow: hidden;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 25px;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+
+      .section-heading::before {
+        content: '';
+        width: 5px;
+        height: 25px;
+        border-radius: 2px;
+        background: var(--cyan);
+      }
+
+      .mode-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 10px;
+        transition:
+          background-color 0.12s,
+          border-color 0.12s;
+      }
+
+      .mode-button {
+        height: 58px;
+        background: white;
+        border: 2px solid #cbdce3;
+        font-size: 21px;
+        color: var(--navy);
+      }
+
+      .mode-button.active {
+        background: #e8f5f7;
+        border-color: var(--cyan);
+        color: #087485;
+        font-weight: bold;
+      }
+
+      .lock-info {
+        margin-top: 13px;
+        font-size: 20px;
+        color: var(--slate);
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--line);
+        margin: 24px 0;
+      }
+
+      .slider-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      #directionValue {
+        color: var(--cyan);
+        font-size: 30px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      input[type='range'] {
+        display: block;
+        width: 100%;
+        height: 32px;
+        margin: 17px 0 8px;
+        accent-color: var(--cyan);
+        cursor: pointer;
+      }
+
+      .small-note {
+        font-size: 18px;
+        color: var(--slate);
+      }
+
+      .preset-title {
+        margin: 26px 0 12px;
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      .preset-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .preset {
+        height: 48px;
+        border: 1.5px solid #c7d9e0;
+        background: white;
+        color: var(--navy);
+        font-size: 22px;
+      }
+
+      .preset:hover,
+      .preset.active {
+        border-color: var(--cyan);
+        background: #e8f5f7;
+      }
+
+      .formulas {
+        display: grid;
+        gap: 14px;
+        padding: 3px 0;
+      }
+
+      .formula {
+        font-family: 'Times New Roman', serif;
+        font-size: 35px;
+        color: var(--navy);
+        text-align: center;
+      }
+
+      .vec-letter {
+        position: relative;
+        display: inline-block;
+        font-weight: bold;
+        font-style: italic;
+      }
+
+      .vec-letter::after {
+        content: '→';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -15px;
+        font-size: 19px;
+        font-style: normal;
+        text-align: center;
+      }
+
+      .values {
+        margin-top: 22px;
+        display: grid;
+        gap: 5px;
+      }
+
+      .value-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 8px 3px;
+        border-bottom: 1px solid #e8eff2;
+      }
+
+      .value-row span {
+        font-size: 23px;
+        color: var(--slate);
+      }
+
+      .value-row strong {
+        font-size: 35px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #dotValue {
+        color: var(--cyan);
+      }
+      #dotValue.negative {
+        color: var(--orange);
+      }
+      #intensityValue {
+        color: var(--cyan);
+      }
+
+      .bar-heading {
+        font-size: 21px;
+        font-weight: bold;
+        margin-top: 22px;
+      }
+
+      .bar-svg {
+        display: block;
+        width: 100%;
+        height: 94px;
+      }
+
+      .bar-background {
+        fill: #e9eff2;
+      }
+      .bar-positive {
+        fill: var(--cyan);
+      }
+      .bar-negative {
+        fill: var(--orange);
+      }
+
+      .bar-tick {
+        stroke: #7893a1;
+        stroke-width: 2;
+      }
+
+      .bar-text {
+        fill: var(--slate);
+        font-size: 20px;
+        text-anchor: middle;
+      }
+
+      .status {
+        margin-top: 14px;
+        min-height: 49px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 23px;
+        color: #197d69;
+        background: #eff8f4;
+        border-radius: 10px;
+      }
+
+      .status.backlit {
+        color: #a65c19;
+        background: #fff5e8;
+      }
+
+      .status.grazing {
+        color: var(--slate);
+        background: #f0f4f6;
+      }
+
+      .bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 22px;
+      }
+
+      .drag-hint {
+        font-size: 20px;
+        color: var(--slate);
+      }
+
+      #reset {
+        width: 112px;
+        height: 48px;
+        background: white;
+        border: 2px solid var(--cyan);
+        color: var(--cyan);
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      #reset:hover {
+        background: #e8f5f7;
+      }
+
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #75c7d5;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main id="stage" class="stage">
+      <section class="scene" aria-label="单位向量与表面示意">
+        <div class="fixed-tag">单位向量 ｜ 固定坐标视图</div>
+
+        <svg
+          id="diagram"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1248 1080"
+          aria-label="可拖动的单位法线N、光源方向L以及二者夹角"
+        >
+          <defs>
+            <marker
+              id="arrowN"
+              markerWidth="31"
+              markerHeight="31"
+              refX="26"
+              refY="15.5"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M2 3 L28 15.5 L2 28 Z" fill="#2D9B66" />
+            </marker>
+
+            <marker
+              id="arrowL"
+              markerWidth="24"
+              markerHeight="24"
+              refX="20"
+              refY="12"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M2 2 L22 12 L2 22 Z" fill="#11879B" />
+            </marker>
+          </defs>
+
+          <!-- 法线背侧半圆区域 -->
+          <path id="backside" fill="#EBF1F4" />
+
+          <!-- 单位圆 -->
+          <circle class="unit-circle" cx="620" cy="530" r="275" />
+
+          <!-- 与N保持垂直的表面 -->
+          <line id="surface" class="surface" />
+
+          <!-- 两个等长单位向量 -->
+          <line id="nVector" class="vector" marker-end="url(#arrowN)" />
+
+          <line id="lVector" class="vector" marker-end="url(#arrowL)" />
+
+          <!-- 夹角弧与实时标注 -->
+          <path id="angleArc" class="arc" />
+          <text id="angleLabel"></text>
+
+          <!-- 向量标签 -->
+          <text id="nLabel" class="vector-label">N</text>
+          <text id="lLabel" class="vector-label">L</text>
+
+          <!-- 表面两侧提示 -->
+          <text id="frontLabel" class="side-label">表面外侧</text>
+          <text id="backLabel" class="side-label">表面背侧</text>
+
+          <!-- 公共起点 -->
+          <circle cx="620" cy="530" r="9" fill="#153653" />
+          <text x="641" y="562" class="point-label">P</text>
+
+          <!-- 当前可动向量的拖动端点 -->
+          <circle id="nHandle" class="handle" r="15" />
+          <circle id="lHandle" class="handle" r="15" />
+        </svg>
+      </section>
+
+      <aside class="panel">
+        <div class="section-heading">操作模式</div>
+
+        <div class="mode-buttons">
+          <button id="modeN" class="mode-button active" aria-pressed="true">固定 N，改变 L</button>
+
+          <button id="modeL" class="mode-button" aria-pressed="false">固定 L，改变 N</button>
+        </div>
+
+        <div id="lockInfo" class="lock-info">N 已锁定 · 当前调节 L</div>
+
+        <div class="divider"></div>
+
+        <div class="slider-header">
+          <label for="directionSlider">方向角</label>
+          <span id="directionValue">30.0°</span>
+        </div>
+
+        <input type="range" id="directionSlider" min="0" max="360" value="30" step="0.1" />
+
+        <div class="small-note">屏幕右方为 0°，逆时针为正</div>
+
+        <div class="preset-title">夹角预设</div>
+
+        <div class="preset-buttons">
+          <button class="preset" data-angle="0">0°</button>
+          <button class="preset" data-angle="60">60°</button>
+          <button class="preset" data-angle="90">90°</button>
+          <button class="preset" data-angle="120">120°</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="formulas">
+          <div class="formula">
+            <span class="vec-letter">n</span>
+            ·
+            <span class="vec-letter">l</span>
+            = cos θ
+          </div>
+          <div class="formula">
+            I = max(0,
+            <span class="vec-letter">n</span>
+            ·
+            <span class="vec-letter">l</span>)
+          </div>
+        </div>
+
+        <div class="values">
+          <div class="value-row">
+            <span>夹角 θ</span>
+            <strong id="thetaValue">60.0°</strong>
+          </div>
+
+          <div class="value-row">
+            <span>点积 n · l</span>
+            <strong id="dotValue">0.500</strong>
+          </div>
+
+          <div class="value-row">
+            <span>漫反射亮度 I</span>
+            <strong id="intensityValue">0.500</strong>
+          </div>
+        </div>
+
+        <div class="bar-heading">点积（−1 ～ 1）</div>
+
+        <svg class="bar-svg" id="dotBar" viewBox="0 0 530 94" aria-label="双向点积数值条">
+          <rect class="bar-background" x="42" y="22" width="444" height="27" rx="5" />
+
+          <rect id="negativeFill" class="bar-negative" x="264" y="22" width="0" height="27" />
+
+          <rect id="positiveFill" class="bar-positive" x="264" y="22" width="0" height="27" />
+
+          <line class="bar-tick" x1="264" y1="13" x2="264" y2="57" />
+          <line class="bar-tick" x1="42" y1="50" x2="42" y2="58" />
+          <line class="bar-tick" x1="486" y1="50" x2="486" y2="58" />
+
+          <text class="bar-text" x="42" y="84">−1</text>
+          <text class="bar-text" x="264" y="84">0</text>
+          <text class="bar-text" x="486" y="84">1</text>
+        </svg>
+
+        <div class="bar-heading">漫反射亮度（0 ～ 1）</div>
+
+        <svg
+          class="bar-svg"
+          id="intensityBar"
+          viewBox="0 0 530 94"
+          aria-label="朗伯漫反射亮度数值条"
+        >
+          <rect class="bar-background" x="42" y="22" width="444" height="27" rx="5" />
+
+          <rect id="intensityFill" class="bar-positive" x="42" y="22" width="222" height="27" />
+
+          <line class="bar-tick" x1="42" y1="50" x2="42" y2="58" />
+          <line class="bar-tick" x1="486" y1="50" x2="486" y2="58" />
+
+          <text class="bar-text" x="42" y="84">0</text>
+          <text class="bar-text" x="486" y="84">1</text>
+        </svg>
+
+        <div id="status" class="status">正向受光：I = n · l</div>
+
+        <div class="bottom">
+          <div class="drag-hint">拖动箭头或调整方向角</div>
+          <button id="reset">重置</button>
+        </div>
+      </aside>
+    </main>
+
+    <script>
+      (() => {
+        'use strict';
+
+        /* ===================================================
+     一、固定几何参数
+     =================================================== */
+
+        const CX = 620;
+        const CY = 530;
+
+        const VECTOR_LENGTH = 275;
+        const SURFACE_HALF_LENGTH = 345;
+        const BACK_RADIUS = 345;
+        const ARC_RADIUS = 145;
+
+        const DEG = Math.PI / 180;
+
+        const $ = (id) => document.getElementById(id);
+
+        const stage = $('stage');
+        const svg = $('diagram');
+
+        /* ===================================================
+     二、状态
+
+     角度统一使用数学角度：
+     0°   向右
+     90°  向上
+     180° 向左
+     270° 向下
+
+     mode = "moveL": 固定 N
+     mode = "moveN": 固定 L
+     =================================================== */
+
+        const state = {
+          mode: 'moveL',
+          nAngle: 90,
+          lAngle: 30,
+        };
+
+        let dragging = false;
+        let draggingPointerId = null;
+
+        /* ===================================================
+     三、数学工具
+     =================================================== */
+
+        function normalizeAngle(angle) {
+          return ((angle % 360) + 360) % 360;
+        }
+
+        function clamp(value, min, max) {
+          return Math.max(min, Math.min(max, value));
+        }
+
+        /*
+         * 数学坐标系：
+         * x = cos(a)
+         * y = sin(a)
+         *
+         * SVG 坐标系的 y 轴向下，
+         * 绘制时使用 screenY = CY - length * sin(a)。
+         */
+        function unit(angle) {
+          const radians = angle * DEG;
+
+          return {
+            x: Math.cos(radians),
+            y: Math.sin(radians),
+          };
+        }
+
+        function pointOnVector(angle, length = VECTOR_LENGTH) {
+          const u = unit(angle);
+
+          return {
+            x: CX + length * u.x,
+            y: CY - length * u.y,
+          };
+        }
+
+        function vectorDot(nAngle, lAngle) {
+          const n = unit(nAngle);
+          const l = unit(lAngle);
+
+          const raw = n.x * l.x + n.y * l.y;
+
+          return clamp(raw, -1, 1);
+        }
+
+        function calculate() {
+          const dot = vectorDot(state.nAngle, state.lAngle);
+
+          const theta = Math.acos(dot) / DEG;
+
+          const intensity = Math.max(0, dot);
+
+          return { dot, theta, intensity };
+        }
+
+        /*
+         * 角度显示采用反余弦得到的结果，
+         * 不直接取绝对方向角之差。
+         *
+         * 显示数值非常接近 0 时规范为 0，
+         * 避免出现 -0.000。
+         */
+        function format3(value) {
+          const clean = Math.abs(value) < 0.0005 ? 0 : value;
+          return clean.toFixed(3);
+        }
+
+        function formatAngle(angle) {
+          const clean = Math.abs(angle) < 0.00005 ? 0 : angle;
+          return clean.toFixed(1) + '°';
+        }
+
+        /*
+         * 有符号最短角度差：
+         * 范围 [-180°, 180°)。
+         *
+         * 正数：从 N 到 L 逆时针
+         * 负数：从 N 到 L 顺时针
+         *
+         * 恰好 180° 时统一取 -180°，
+         * 消除半圆绘制方向的不确定性。
+         */
+        function signedAngleDifference(from, to) {
+          return ((to - from + 540) % 360) - 180;
+        }
+
+        /* ===================================================
+     四、SVG 绘制辅助
+     =================================================== */
+
+        function setLine(id, x1, y1, x2, y2) {
+          const el = $(id);
+
+          el.setAttribute('x1', x1);
+          el.setAttribute('y1', y1);
+          el.setAttribute('x2', x2);
+          el.setAttribute('y2', y2);
+        }
+
+        function setPosition(id, x, y) {
+          const el = $(id);
+
+          el.setAttribute('x', x);
+          el.setAttribute('y', y);
+        }
+
+        function setCirclePosition(id, x, y) {
+          const el = $(id);
+
+          el.setAttribute('cx', x);
+          el.setAttribute('cy', y);
+        }
+
+        /*
+         * 绘制法线背侧半圆。
+         *
+         * N 指向表面外侧。
+         * N+90° 到 N+270° 对应法线反方向的半平面。
+         *
+         * 直接构造多边形，避免 SVG arc 大弧标志带来的
+         * 方向歧义。
+         */
+        function updateBackside() {
+          const points = [`M ${CX} ${CY}`];
+
+          const start = state.nAngle + 90;
+          const steps = 48;
+
+          for (let i = 0; i <= steps; i++) {
+            const angle = start + (180 * i) / steps;
+            const p = pointOnVector(angle, BACK_RADIUS);
+
+            points.push(`L ${p.x} ${p.y}`);
+          }
+
+          points.push('Z');
+
+          $('backside').setAttribute('d', points.join(' '));
+        }
+
+        /*
+         * 表面方向始终与 N 垂直。
+         */
+        function updateSurface() {
+          const tangentAngle = state.nAngle - 90;
+
+          const a = pointOnVector(tangentAngle, SURFACE_HALF_LENGTH);
+
+          const b = pointOnVector(tangentAngle + 180, SURFACE_HALF_LENGTH);
+
+          setLine('surface', a.x, a.y, b.x, b.y);
+
+          const front = pointOnVector(state.nAngle, 382);
+          const back = pointOnVector(state.nAngle + 180, 382);
+
+          setPosition('frontLabel', front.x, front.y);
+          setPosition('backLabel', back.x, back.y);
+        }
+
+        /*
+         * 绘制 0°～180° 的较小夹角。
+         *
+         * 0°：不画弧线。
+         * 180°：绘制稳定的半圆。
+         */
+        function updateArc(theta) {
+          const arc = $('angleArc');
+          const label = $('angleLabel');
+
+          let signed = signedAngleDifference(state.nAngle, state.lAngle);
+
+          if (theta < 0.005) {
+            arc.setAttribute('d', '');
+
+            const p = pointOnVector(state.nAngle, 170);
+            const direction = unit(state.nAngle + 90);
+
+            setPosition('angleLabel', p.x + 48 * direction.x, p.y - 48 * direction.y);
+
+            label.textContent = 'θ = 0.0°';
+            return;
+          }
+
+          if (Math.abs(theta - 180) < 0.00005) {
+            signed = -180;
+          }
+
+          const steps = Math.max(8, Math.ceil(theta / 3));
+
+          const commands = [];
+
+          for (let i = 0; i <= steps; i++) {
+            const a = state.nAngle + (signed * i) / steps;
+            const p = pointOnVector(a, ARC_RADIUS);
+
+            commands.push(`${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);
+          }
+
+          arc.setAttribute('d', commands.join(' '));
+
+          const midAngle = state.nAngle + signed / 2;
+          const p = pointOnVector(midAngle, ARC_RADIUS + 52);
+
+          setPosition('angleLabel', p.x, p.y + 8);
+
+          label.textContent = 'θ = ' + formatAngle(theta);
+        }
+
+        /*
+         * 标签动态避让。
+         *
+         * 接近重合时，将 N、L 分别放置在箭头两侧。
+         */
+        function labelPoint(angle, isN, theta) {
+          const endpoint = pointOnVector(angle);
+          const u = unit(angle);
+
+          if (theta < 24) {
+            return {
+              x: endpoint.x + u.x * 30 + (isN ? -67 : 67),
+              y: endpoint.y - u.y * 30 + (isN ? -17 : 27),
+            };
+          }
+
+          const sideAngle = angle + (isN ? 90 : -90);
+          const side = unit(sideAngle);
+
+          return {
+            x: endpoint.x + u.x * 33 + side.x * 27,
+            y: endpoint.y - u.y * 33 - side.y * 27,
+          };
+        }
+
+        function updateVectors(theta) {
+          const nEnd = pointOnVector(state.nAngle);
+          const lEnd = pointOnVector(state.lAngle);
+
+          setLine('nVector', CX, CY, nEnd.x, nEnd.y);
+
+          setLine('lVector', CX, CY, lEnd.x, lEnd.y);
+
+          const nLabelPoint = labelPoint(state.nAngle, true, theta);
+
+          const lLabelPoint = labelPoint(state.lAngle, false, theta);
+
+          setPosition('nLabel', nLabelPoint.x, nLabelPoint.y);
+
+          setPosition('lLabel', lLabelPoint.x, lLabelPoint.y);
+
+          /*
+           * 当两个向量重合：
+           * 绿色 N 作为较宽底线，
+           * 青蓝色 L 作为较细上层线。
+           */
+          $('nVector').setAttribute('stroke-width', theta < 0.005 ? 14 : 12);
+
+          $('lVector').setAttribute('stroke-width', theta < 0.005 ? 7 : 8);
+
+          setCirclePosition('nHandle', nEnd.x, nEnd.y);
+          setCirclePosition('lHandle', lEnd.x, lEnd.y);
+
+          /*
+           * 只有当前可动向量具有拖拽端点。
+           * 锁定向量不响应鼠标和触摸。
+           */
+          const moveN = state.mode === 'moveN';
+
+          $('nHandle').style.display = moveN ? '' : 'none';
+          $('lHandle').style.display = moveN ? 'none' : '';
+        }
+
+        /* ===================================================
+     五、数值与数值条
+     =================================================== */
+
+        function updateBars(dot, intensity) {
+          const half = 222;
+          const full = 444;
+          const center = 264;
+
+          if (dot >= 0) {
+            $('positiveFill').setAttribute('x', center);
+            $('positiveFill').setAttribute('width', dot * half);
+
+            $('negativeFill').setAttribute('x', center);
+            $('negativeFill').setAttribute('width', 0);
+          } else {
+            const width = -dot * half;
+
+            $('negativeFill').setAttribute('x', center - width);
+
+            $('negativeFill').setAttribute('width', width);
+
+            $('positiveFill').setAttribute('x', center);
+            $('positiveFill').setAttribute('width', 0);
+          }
+
+          /*
+           * 亮度条只允许非负宽度。
+           * 背光时宽度严格为 0，浅灰底槽仍保留。
+           */
+          $('intensityFill').setAttribute('width', clamp(intensity * full, 0, full));
+        }
+
+        function updateStatus(dot) {
+          const el = $('status');
+
+          el.className = 'status';
+
+          if (dot < -0.000001) {
+            el.textContent = '背光：亮度为 0';
+            el.classList.add('backlit');
+          } else if (Math.abs(dot) <= 0.000001) {
+            el.textContent = '掠射：点积为 0，亮度为 0';
+            el.classList.add('grazing');
+          } else {
+            el.textContent = '正向受光：I = n · l';
+          }
+        }
+
+        function updateReadings(result) {
+          $('thetaValue').textContent = formatAngle(result.theta);
+
+          $('dotValue').textContent = format3(result.dot);
+
+          $('intensityValue').textContent = format3(result.intensity);
+
+          $('dotValue').classList.toggle('negative', result.dot < -0.000001);
+
+          updateBars(result.dot, result.intensity);
+          updateStatus(result.dot);
+        }
+
+        /* ===================================================
+     六、方向滑块和控制状态
+     =================================================== */
+
+        function movableAngle() {
+          return state.mode === 'moveL' ? state.lAngle : state.nAngle;
+        }
+
+        function setMovableAngle(angle) {
+          const normalized = normalizeAngle(angle);
+
+          if (state.mode === 'moveL') {
+            state.lAngle = normalized;
+          } else {
+            state.nAngle = normalized;
+          }
+
+          render();
+        }
+
+        function updateControls(theta) {
+          const moving = movableAngle();
+
+          $('directionSlider').value = moving;
+          $('directionValue').textContent = formatAngle(moving);
+
+          const moveL = state.mode === 'moveL';
+
+          $('modeN').classList.toggle('active', moveL);
+          $('modeL').classList.toggle('active', !moveL);
+
+          $('modeN').setAttribute('aria-pressed', String(moveL));
+
+          $('modeL').setAttribute('aria-pressed', String(!moveL));
+
+          $('lockInfo').textContent = moveL
+            ? 'N 已锁定 · 当前调节 L'
+            : 'L 已锁定 · 当前调节 N，表面随 N 旋转';
+
+          /*
+           * 当前夹角与某个预设接近时标记该按钮。
+           * 仅用于显示，不改变任何参数。
+           */
+          document.querySelectorAll('.preset').forEach((btn) => {
+            const preset = Number(btn.dataset.angle);
+
+            btn.classList.toggle('active', Math.abs(theta - preset) < 0.05);
+          });
+        }
+
+        /* ===================================================
+     七、统一渲染入口
+     =================================================== */
+
+        function render() {
+          const result = calculate();
+
+          updateBackside();
+          updateSurface();
+          updateVectors(result.theta);
+          updateArc(result.theta);
+
+          updateReadings(result);
+          updateControls(result.theta);
+        }
+
+        /* ===================================================
+     八、模式切换
+     =================================================== */
+
+        function changeMode(nextMode) {
+          if (state.mode === nextMode) return;
+
+          dragging = false;
+          draggingPointerId = null;
+
+          if (nextMode === 'moveN') {
+            /*
+             * 从模式一切换到模式二：
+             *
+             * L 保持原方向；
+             * N 保持原方向；
+             * 只更换哪一个向量可以移动。
+             */
+            state.mode = 'moveN';
+          } else {
+            /*
+             * 从模式二切换回模式一：
+             *
+             * 将 N 和 L 整体刚性旋转同一个角度，
+             * 使 N 恢复到 90°。
+             *
+             * N 与 L 的相对角度不变，
+             * 因此点积和漫反射亮度不变。
+             */
+            const rotation = 90 - state.nAngle;
+
+            state.nAngle = normalizeAngle(state.nAngle + rotation);
+
+            state.lAngle = normalizeAngle(state.lAngle + rotation);
+
+            state.mode = 'moveL';
+          }
+
+          render();
+        }
+
+        $('modeN').addEventListener('click', () => {
+          changeMode('moveL');
+        });
+
+        $('modeL').addEventListener('click', () => {
+          changeMode('moveN');
+        });
+
+        /* ===================================================
+     九、方向角滑块
+     =================================================== */
+
+        $('directionSlider').addEventListener('input', (event) => {
+          setMovableAngle(Number(event.target.value));
+        });
+
+        /* ===================================================
+     十、预设夹角
+     =================================================== */
+
+        function applyPreset(theta) {
+          /*
+           * 预设表示两个向量之间的夹角，
+           * 不是绝对方向角。
+           *
+           * 始终将可动向量放在固定向量
+           * 顺时针一侧。
+           */
+          if (state.mode === 'moveL') {
+            state.lAngle = normalizeAngle(state.nAngle - theta);
+          } else {
+            state.nAngle = normalizeAngle(state.lAngle - theta);
+          }
+
+          render();
+        }
+
+        document.querySelectorAll('.preset').forEach((button) => {
+          button.addEventListener('click', () => {
+            applyPreset(Number(button.dataset.angle));
+          });
+        });
+
+        /* ===================================================
+     十一、SVG 鼠标与触摸拖拽
+     =================================================== */
+
+        /*
+         * 将客户端坐标转换为 SVG 坐标。
+         *
+         * 使用 SVG 变换矩阵逆矩阵，
+         * 保证页面缩放后拖拽方向仍然准确。
+         */
+        function clientToSVG(event) {
+          const point = svg.createSVGPoint();
+
+          point.x = event.clientX;
+          point.y = event.clientY;
+
+          const matrix = svg.getScreenCTM();
+
+          if (!matrix) return null;
+
+          return point.matrixTransform(matrix.inverse());
+        }
+
+        function pointerToAngle(event) {
+          const p = clientToSVG(event);
+
+          if (!p) return null;
+
+          const dx = p.x - CX;
+
+          /*
+           * SVG y 轴向下，因此取负号。
+           */
+          const dy = CY - p.y;
+
+          const distance = Math.hypot(dx, dy);
+
+          /*
+           * 接近 P 时保留原方向，
+           * 避免出现零向量或随机角度。
+           */
+          if (distance < 35) return null;
+
+          return normalizeAngle(Math.atan2(dy, dx) / DEG);
+        }
+
+        function startDrag(event, vectorName) {
+          const allowed =
+            (state.mode === 'moveL' && vectorName === 'L') ||
+            (state.mode === 'moveN' && vectorName === 'N');
+
+          if (!allowed) return;
+
+          event.preventDefault();
+
+          dragging = true;
+          draggingPointerId = event.pointerId;
+
+          svg.setPointerCapture(event.pointerId);
+
+          const angle = pointerToAngle(event);
+
+          if (angle !== null) {
+            setMovableAngle(angle);
+          }
+        }
+
+        $('lHandle').addEventListener('pointerdown', (event) => {
+          startDrag(event, 'L');
+        });
+
+        $('nHandle').addEventListener('pointerdown', (event) => {
+          startDrag(event, 'N');
+        });
+
+        svg.addEventListener('pointermove', (event) => {
+          if (!dragging) return;
+
+          if (event.pointerId !== draggingPointerId) return;
+
+          event.preventDefault();
+
+          const angle = pointerToAngle(event);
+
+          if (angle !== null) {
+            setMovableAngle(angle);
+          }
+        });
+
+        function stopDrag(event) {
+          if (event.pointerId !== draggingPointerId) return;
+
+          dragging = false;
+
+          if (svg.hasPointerCapture(event.pointerId)) {
+            svg.releasePointerCapture(event.pointerId);
+          }
+
+          draggingPointerId = null;
+        }
+
+        svg.addEventListener('pointerup', stopDrag);
+        svg.addEventListener('pointercancel', stopDrag);
+        svg.addEventListener('lostpointercapture', () => {
+          dragging = false;
+          draggingPointerId = null;
+        });
+
+        /* ===================================================
+     十二、重置
+     =================================================== */
+
+        function reset() {
+          dragging = false;
+          draggingPointerId = null;
+
+          state.mode = 'moveL';
+          state.nAngle = 90;
+          state.lAngle = 30;
+
+          render();
+        }
+
+        $('reset').addEventListener('click', reset);
+
+        /* ===================================================
+     十三、16:9 等比例适配
+     =================================================== */
+
+        function fitStage() {
+          const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+
+          stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+
+        window.addEventListener('resize', fitStage);
+
+        /* ===================================================
+     十四、初始化与数学自检
+     =================================================== */
+
+        function verifyMathematics() {
+          const cases = [
+            [0, 1, 1],
+            [60, 0.5, 0.5],
+            [90, 0, 0],
+            [120, -0.5, 0],
+            [180, -1, 0],
+          ];
+
+          const tolerance = 1e-10;
+
+          for (const [theta, expectedDot, expectedI] of cases) {
+            const n = 90;
+            const l = normalizeAngle(n - theta);
+
+            const dot = vectorDot(n, l);
+            const intensity = Math.max(0, dot);
+
+            if (
+              Math.abs(dot - expectedDot) > tolerance ||
+              Math.abs(intensity - expectedI) > tolerance
+            ) {
+              console.error('朗伯计算自检未通过：', theta, dot, intensity);
+
+              return false;
+            }
+          }
+
+          return true;
+        }
+
+        verifyMathematics();
+        fitStage();
+        reset();
+      })();
+    </script>
+  </body>
+</html>
