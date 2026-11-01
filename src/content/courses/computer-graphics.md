@@ -141,6 +141,10 @@ updatedDate: 2026-11-01
 
 - 立方体正交投影视图：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-1.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/orthoproj.js)
 - 立方体透视投影视图：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-2.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/persproj.js)
+- 正交投影参数实验：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-3.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/ortho2.js)
+- 透视投影按钮实验：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-4.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/perspective.js)
+- 透视投影按钮实验（二）：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-5.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/perspective1.js)
+- 透视投影参数实验：[运行 Demo](/slides/computer-graphics/code-demos/chap5/chap5-demo-6.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch05/perspective2.js)
 
 虚拟相机与观察矩阵、正交与透视投影两个互动显微镜保留在第五章对应课件中直接启动。
 
@@ -180,6 +184,7 @@ updatedDate: 2026-11-01
 
 ## 更新记录
 
+- 2026-11-01：补充第五章 4 个正交与透视投影 WebGL 示例及配套源码。
 - 2026-11-01：发布第六章三份在线课件、光照与法向量互动实验、配套图片及 9 个 WebGL 光照代码示例。
 - 2026-10-25：发布第五章两份在线课件、观察与投影互动实验、配套图片及正交/透视投影 WebGL 示例代码。
 - 2026-10-17：同步第四章四份在线课件及配套图片，更新第三、四讲内容并补充 WebGL2 变换流水线等互动实验。

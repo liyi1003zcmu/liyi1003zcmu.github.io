@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>第五章 Demo 5：透视投影按钮实验（二）</title>
+    <link rel="stylesheet" href="../demo.css?v=20261101" />
+  </head>
+
+  <body>
+    <p></p>
+    <button id="Button1">Increase Z</button>
+    <button id="Button2">Decrease Z</button>
+    <button id="Button3">Increase R</button>
+    <button id="Button4">Decrease R</button>
+
+    <p></p>
+    <button id="Button5">Increase theta</button>
+    <button id="Button6">Decrease theta</button>
+    <button id="Button7">Increase phi</button>
+    <button id="Button8">Decrease phi</button>
+    <p></p>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      #version 300 es
+
+      in vec4 aPosition;
+      in vec4 aColor;
+      out vec4 vColor;
+
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      void main()
+      {
+          gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+          vColor = aColor;
+      }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+      #version 300 es
+
+      precision mediump float;
+
+      in vec4 vColor;
+      out vec4 fColor;
+
+      void main()
+      {
+          fColor = vColor;
+      }
+    </script>
+
+    <script src="../js/common/initShaders.js"></script>
+    <script src="../js/common/MVnew.js"></script>
+    <script src="../js/ch05/perspective1.js"></script>
+
+    <canvas id="gl-canvas" width="512" height="512"> 您的浏览器不支持 HTML5 Canvas 元素 </canvas>
+  </body>
+</html>
