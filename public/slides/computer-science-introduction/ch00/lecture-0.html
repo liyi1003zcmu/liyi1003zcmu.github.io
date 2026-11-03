@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Hello, World! —— 大学四年，我的成长系统升级计划</title>
+
+    <!-- 使用站点内置 Reveal.js，避免课件运行依赖第三方 CDN。 -->
+    <link rel="stylesheet" href="/vendor/reveal/reset.css?v=20261103" />
+    <link rel="stylesheet" href="/vendor/reveal/reveal.css?v=20261103" />
+    <link rel="stylesheet" href="/vendor/reveal/theme/white.css?v=20261103" id="theme" />
+    <link rel="stylesheet" href="/vendor/reveal/highlight/monokai.css?v=20261103" />
+
+    <style>
+      /* ================= 教室投影白底高对比度定制样式 ================= */
+      :root {
+        --r-background-color: #f8fafc;
+        --r-main-font:
+          'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+        --r-heading-font: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        --r-code-font: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        --r-main-font-size: 30px;
+        --r-main-color: #0f172a;
+        --r-heading-color: #0369a1;
+        --r-link-color: #0284c7;
+
+        --accent-blue: #0284c7;
+        --accent-green: #16a34a;
+        --accent-amber: #d97706;
+        --accent-rose: #dc2626;
+        --accent-purple: #7c3aed;
+        --card-bg: #ffffff;
+        --card-border: #cbd5e1;
+        --card-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+      }
+
+      .reveal {
+        background-color: var(--r-background-color);
+        color: var(--r-main-color);
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3,
+      .reveal h4 {
+        text-transform: none;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.35em;
+      }
+      .reveal h1 {
+        font-size: 2.05em;
+        color: #0369a1;
+      }
+      .reveal h2 {
+        font-size: 1.45em;
+        color: #0f172a;
+        border-bottom: 4px solid var(--accent-blue);
+        display: inline-block;
+        padding-bottom: 4px;
+        margin-bottom: 16px;
+      }
+      .reveal h3 {
+        font-size: 1.1em;
+        color: #0284c7;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .reveal p,
+      .reveal li {
+        line-height: 1.55;
+        margin-bottom: 0.35em;
+      }
+
+      /* 栅格布局 */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: stretch;
+        text-align: left;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        align-items: stretch;
+        text-align: left;
+      }
+      .grid-4 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 14px;
+        align-items: stretch;
+        text-align: left;
+      }
+      .grid-3-2 {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+        text-align: left;
+        width: 100%;
+      }
+      .grid-3-2 > .card {
+        flex: 0 0 calc((100% - 34px) / 3);
+        box-sizing: border-box;
+      }
+
+      /* 卡片体系 */
+      .card {
+        background: var(--card-bg);
+        border: 2px solid var(--card-border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: var(--card-shadow);
+      }
+      .card-blue {
+        border-color: #7dd3fc;
+        background: #f0f9ff;
+      }
+      .card-green {
+        border-color: #86efac;
+        background: #f0fdf4;
+      }
+      .card-amber {
+        border-color: #fde68a;
+        background: #fffbeb;
+      }
+      .card-rose {
+        border-color: #fecdd3;
+        background: #fff1f2;
+      }
+      .card-purple {
+        border-color: #ddd6fe;
+        background: #f5f3ff;
+      }
+
+      /* 徽章体系 */
+      .badge {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-size: 0.65em;
+        font-weight: 800;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .badge-blue {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1.5px solid #0284c7;
+      }
+      .badge-green {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1.5px solid #16a34a;
+      }
+      .badge-amber {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1.5px solid #d97706;
+      }
+      .badge-rose {
+        background: #ffe4e6;
+        color: #be123c;
+        border: 1.5px solid #dc2626;
+      }
+      .badge-purple {
+        background: #ede9fe;
+        color: #6d28d9;
+        border: 1.5px solid #7c3aed;
+      }
+
+      /* 教师讲义/提示卡条 (高亮显眼，辅助课堂推进) */
+      .teacher-tip {
+        background: #eff6ff;
+        border-left: 5px solid #0284c7;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 0.72em;
+        color: #1e40af;
+        margin-top: 14px;
+        text-align: left;
+      }
+      .teacher-tip strong {
+        color: #1d4ed8;
+        font-weight: 800;
+      }
+
+      /* 互动反馈卡片 */
+      .interactive-panel {
+        border: 2.5px dashed var(--accent-green);
+        background: #f0fdf4;
+        border-radius: 12px;
+        padding: 16px 20px;
+        text-align: left;
+      }
+
+      /* 代码块与行号定制 (适配 Reveal.js highlight 插件) */
+      .reveal pre {
+        width: 100%;
+        font-size: 0.75em;
+        line-height: 1.45;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        margin: 8px 0;
+        background: #ffffff;
+      }
+      .reveal pre code {
+        font-family: var(--r-code-font);
+        padding: 12px 14px;
+        tab-size: 4;
+        overflow-x: auto;
+      }
+      .reveal pre code table.hljs-ln {
+        width: 100%;
+        border-collapse: collapse;
+        border: none;
+        margin: 0;
+      }
+      .reveal pre code table.hljs-ln tr,
+      .reveal pre code table.hljs-ln td {
+        border: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+      }
+      .reveal pre code td.hljs-ln-numbers {
+        text-align: right;
+        color: #94a3b8 !important;
+        padding-right: 12px !important;
+        border-right: 1.5px solid #cbd5e1 !important;
+        user-select: none;
+        vertical-align: top;
+        white-space: nowrap;
+        min-width: 24px;
+        font-variant-numeric: tabular-nums;
+      }
+      .reveal pre code td.hljs-ln-code {
+        padding-left: 12px !important;
+        vertical-align: top;
+        white-space: pre;
+      }
+      p code,
+      li code {
+        background: #e2e8f0;
+        color: #0369a1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.88em;
+      }
+
+      /* 外部链接按钮 */
+      .link-pill {
+        display: inline-block;
+        background: #0284c7;
+        color: #ffffff !important;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.72em;
+        text-decoration: none;
+        margin: 3px 4px 3px 0;
+        box-shadow: 0 2px 5px rgba(2, 132, 199, 0.2);
+        transition: all 0.2s ease;
+      }
+      .link-pill:hover {
+        background: #0369a1;
+        transform: translateY(-2px);
+      }
+
+      .highlight-text {
+        color: var(--accent-amber);
+        font-weight: 800;
+      }
+      .danger-text {
+        color: var(--accent-rose);
+        font-weight: 800;
+      }
+      .success-text {
+        color: var(--accent-green);
+        font-weight: 800;
+      }
+      .purple-text {
+        color: var(--accent-purple);
+        font-weight: 800;
+      }
+      .small-note {
+        font-size: 0.68em;
+        color: #64748b;
+      }
+
+      .timeline-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        font-size: 0.62em;
+        font-weight: 700;
+        color: #64748b;
+      }
+      .timeline-step {
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: #e2e8f0;
+      }
+      .timeline-step.active {
+        background: #0284c7;
+        color: #ffffff;
+      }
+
+      /* 直接嵌入课件的信息图与互动控件：不依赖外部图片或脚本 */
+      .concept-visual {
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 20px;
+        margin: 10px 0;
+      }
+      .concept-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        text-align: center;
+      }
+      .concept-node {
+        background: #eff6ff;
+        border: 2px solid #7dd3fc;
+        border-radius: 14px;
+        padding: 12px 18px;
+        font-weight: 700;
+        min-width: 160px;
+      }
+      .concept-node.positive {
+        background: #f0fdf4;
+        border-color: #86efac;
+      }
+      .concept-node.caution {
+        background: #fffbeb;
+        border-color: #fde68a;
+      }
+      .concept-arrow {
+        color: #0284c7;
+        font-size: 1.45em;
+        font-weight: 800;
+      }
+      .diagram-caption {
+        color: #475569;
+        font-size: 0.64em;
+        line-height: 1.45;
+        margin: 6px 0 0;
+      }
+      .demo-button {
+        cursor: pointer;
+        border: 2px solid #0284c7;
+        border-radius: 9px;
+        background: #eff6ff;
+        color: #075985;
+        padding: 8px 14px;
+        font: inherit;
+        font-size: 0.76em;
+        font-weight: 700;
+        margin: 4px;
+      }
+      .demo-button:hover,
+      .demo-button:focus-visible {
+        background: #bae6fd;
+        outline: 3px solid #7dd3fc;
+        outline-offset: 2px;
+      }
+      .demo-result {
+        border-radius: 10px;
+        background: white;
+        border: 1.5px solid #cbd5e1;
+        padding: 12px 16px;
+        margin-top: 12px;
+        min-height: 80px;
+        font-size: 0.75em;
+        line-height: 1.5;
+        text-align: left;
+      }
+      .speaker-hint {
+        font-size: 0.64em;
+        color: #475569;
+      }
+      .reveal .slides section > .grid-2,
+      .reveal .slides section > .grid-3,
+      .reveal .slides section > .grid-4,
+      .reveal .slides section > .grid-3-2 {
+        width: 100%;
+      }
+      @media print {
+        .demo-button {
+          box-shadow: none;
+        }
+        .teacher-tip {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- ==================== 0. 破冰与自检导入 (10分钟) ==================== -->
+        <section>
+          <!-- 0.1 封面 -->
+          <section>
+            <span class="badge badge-blue">SYSTEM UPGRADE</span>
+            <h1><code>Hello, World!</code></h1>
+            <h3 style="color: #334155">大学四年，我的成长系统升级计划</h3>
+
+            <div
+              class="card card-blue fragment"
+              data-fragment-index="1"
+              style="
+                max-width: 960px;
+                margin: 25px auto 0 auto;
+                text-align: left;
+                font-size: 0.85em;
+              "
+            >
+              <p style="margin: 0"><code>[student@university ~]$ ./my_growth_plan --start</code></p>
+              <p style="margin: 6px 0 0 0" class="fragment success-text" data-fragment-index="2">
+                ✓ 已安装：好奇心、学习机会、正在积累的程序设计能力
+              </p>
+              <p style="margin: 6px 0 0 0" class="fragment" data-fragment-index="3">
+                → 待持续升级：学习方法、合作交流、独立判断与创造表达
+              </p>
+            </div>
+
+            <p class="fragment speaker-hint" data-fragment-index="4">
+              一起聊聊大学四年可以怎样逐步升级
+            </p>
+            <aside class="notes">
+              开场：大家正在学习 C
+              语言，这门课会完整训练基本的程序设计能力。借用计算机系统升级这个比喻，大学四年不只是在知识上增加功能，也会逐步学会提问、合作、判断和创造。请学生分享一件入学以来学会的新事物。
+            </aside>
+          </section>
+
+          <!-- 0.2 学习状态观察 -->
+          <section>
+            <h2>进入大学后，你的学习方式有什么变化？</h2>
+            <div class="grid-2" style="font-size: 0.82em">
+              <div class="card card-amber fragment fade-up">
+                <h3 class="highlight-text">⚙️ 正在建立的能力</h3>
+                <ul>
+                  <li class="fragment">学程序设计：把一个想法分解成可执行的步骤；</li>
+                  <li class="fragment">学数学与专业基础：从公式、模型中理解规律；</li>
+                  <li class="fragment">做练习与小项目：发现“听懂了”和“能独立做出来”还有距离。</li>
+                </ul>
+              </div>
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">🔎 值得留意的学习习惯</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>遇到问题</strong>：是否知道怎样寻求帮助、与同学讨论？
+                  </li>
+                  <li class="fragment">
+                    <strong>使用 AI</strong>：是否会先想一想、再核验得到的答案？
+                  </li>
+                  <li class="fragment">
+                    <strong>课余探索</strong>：有没有给自己留一点时间了解课堂以外的技术与生活？
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 0.3 成为更优秀的自己：大学重构五大核心任务 -->
+          <section>
+            <h2>大学四年值得升级的“五种能力”</h2>
+            <div class="grid-3-2" style="font-size: 0.76em">
+              <div class="card card-blue fragment fade-up">
+                <h3 style="color: #0369a1">1. 沟通与协作 (Network)</h3>
+                <p>遇到问题能说清楚，与老师、同学交换思路，在合作中学会倾听。</p>
+                <aside class="notes">你不找我，我不找你</aside>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">2. 独立思考 (CPU)</h3>
+                <p>不急于接受现成答案，能够解释原因，并通过证据检查结论。</p>
+                <aside class="notes">豆包说的？</aside>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3 class="highlight-text">3. 拓展视野 (WAN)</h3>
+                <p>认识课堂以外的开源项目、研究方向与真实社会问题。</p>
+                <aside class="notes">不要只看教材</aside>
+              </div>
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">4. 保持好奇 (Sensor)</h3>
+                <p>在分数之外，保留提问题、做实验、探索不同可能的兴趣。</p>
+                <aside class="notes">遇事多问一个“为什么”</aside>
+              </div>
+              <div class="card card-purple fragment fade-up">
+                <h3 class="purple-text">5. 记录与表达 (I/O)</h3>
+                <p>用笔记、博客、项目仓库或作品展示，留下自己的学习过程。</p>
+                <aside class="notes">建立自己的成长档案</aside>
+              </div>
+            </div>
+
+            <div
+              class="card fragment fade-up"
+              style="
+                margin-top: 16px;
+                background: #f1f5f9;
+                font-size: 0.78em;
+                text-align: left;
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                flex-wrap: wrap;
+              "
+            >
+              <h3 style="color: #334155; margin: 0; white-space: nowrap">🎯 四年后的期待</h3>
+              <p style="margin: 0; color: #334155">
+                有扎实的专业基础，也能与人合作、独立判断，并找到感兴趣的发展方向。
+              </p>
+            </div>
+          </section>
+
+          <!-- 0.4 80分钟路线图 -->
+          <section>
+            <h2>从基础能力到自主成长</h2>
+            <div class="timeline-bar">
+              <span class="timeline-step active">01 导入</span>
+              <span class="timeline-step">02 学习与沟通</span>
+              <span class="timeline-step">03 四年发展拓扑</span>
+              <span class="timeline-step">04 AI与独立思考</span>
+              <span class="timeline-step">05 算力与个人基站</span>
+              <span class="timeline-step">06 编译人生</span>
+            </div>
+
+            <div class="grid-2" style="font-size: 0.8em">
+              <div class="card fragment fade-up">
+                <h3><span class="badge badge-blue">模块 1</span> 学习与沟通</h3>
+                <p>通过 C 语言打好程序设计基础；练习把问题说清楚、把合作做扎实。</p>
+                <p class="small-note">⚡ 互动 1：怎样提出一个有效的问题？</p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3><span class="badge badge-green">模块 2</span> 四年成长与知识地图</h3>
+                <p>了解课程知识如何连接项目实践、跨学科探索与毕业去向。</p>
+                <p class="small-note">⚡ 互动 2：一个循环判断题</p>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3><span class="badge badge-amber">模块 3</span> AI 与判断力</h3>
+                <p>学会提问、验证、记录使用过程，保留自己的思考与责任。</p>
+                <p class="small-note">⚡ 互动 3：给一段 AI 代码做测试</p>
+              </div>
+              <div class="card card-purple fragment fade-up">
+                <h3><span class="badge badge-purple">模块 4</span> 注意力与个人作品</h3>
+                <p>理解推荐算法与自己的选择；试着把学习成果变成可分享的作品。</p>
+                <p class="small-note">⚡ 互动 4：为推荐程序增加用户友好的规则</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================== 1. 学习方式与沟通总线 (18分钟) ==================== -->
+        <section>
+          <!-- 1.1 C语言与程序设计基础 -->
+          <section>
+            <span class="badge badge-blue">PART 01</span>
+            <h2>从 C 语言开始，建立程序设计的基本能力</h2>
+            <div class="grid-2" style="font-size: 0.82em; margin-top: 15px">
+              <div class="card card-blue fragment fade-up">
+                <h3 style="color: #0369a1">🎯 学完 C 语言，希望具备什么能力？</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>表达问题</strong>：用数据、条件、循环表达解决思路；
+                  </li>
+                  <li class="fragment">
+                    <strong>组织程序</strong>：逐步掌握函数、数组、指针、结构体及文件操作；
+                  </li>
+                  <li class="fragment">
+                    <strong>检验结果</strong>：能够独立编写、调试和测试一个有实际用途的小程序。
+                  </li>
+                </ul>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">🧠 为什么从 C 语言入手？</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>观察程序如何运行</strong>：理解变量、数据表示和内存的基本关系；
+                  </li>
+                  <li class="fragment">
+                    <strong>建立逻辑习惯</strong>：练习分解问题、处理边界、跟踪程序状态；
+                  </li>
+                  <li class="fragment">
+                    <strong>为后续学习打底</strong
+                    >：学习新语言时，可以迁移算法、调试和问题分析方法。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 1.2 稳定的练习与反馈 -->
+          <section>
+            <h2>编程能力是怎样慢慢练出来的？</h2>
+            <div class="grid-2" style="font-size: 0.8em">
+              <div class="card fragment fade-up">
+                <h3>只看例题，容易出现的情况</h3>
+                <p>看讲解时感觉理解了，换一组输入或稍改题目，就不知道下一步怎么写。</p>
+                <p class="small-note">关键差别：理解一个例子，不等于能够独立解决新问题。</p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">写一写、测一测、改一改</h3>
+                <p>
+                  通过<strong>变量状态追踪、循环边界判断、错误定位</strong>反复练习，逐步建立对程序行为的直觉。
+                </p>
+                <p class="small-note success-text">
+                  建议：把练习分散到每周，短时间但持续动手，并复盘错误。
+                </p>
+              </div>
+            </div>
+            <div
+              class="card card-amber fragment fade-up"
+              style="margin-top: 14px; font-size: 0.78em"
+            >
+              <p style="margin: 0">
+                <strong>💡 一个类比：</strong
+                >学编程有点像学乐器：看懂示范很有帮助，但手上真正练过、遇到错误后调整，才会逐渐熟练。
+              </p>
+            </div>
+          </section>
+
+          <!-- 1.3 有效沟通 -->
+          <section>
+            <h2>学习不必一直处于“单机模式”</h2>
+            <div class="grid-2" style="font-size: 0.82em">
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">🤔 可能遇到的情形</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>不确定何时提问</strong>：觉得问题太简单，担心打扰老师或同学；
+                  </li>
+                  <li class="fragment">
+                    <strong>难以描述问题</strong>：知道程序不对，却说不清预期、实际结果与尝试；
+                  </li>
+                  <li class="fragment">
+                    <strong>合作经验较少</strong>：小组任务中还在学习分工与交流。
+                  </li>
+                </ul>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">🌱 可以逐步养成的习惯</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>问得具体</strong>：说明目标、现象、错误信息和已尝试的方法；
+                  </li>
+                  <li class="fragment">
+                    <strong>合作互助</strong>：可以结对分析程序，也尊重各自独立完成的部分；
+                  </li>
+                  <li class="fragment">
+                    <strong>保持联系</strong>：通过课后答疑、课程群和项目交流慢慢建立学习网络。
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="teacher-tip fragment fade-up">
+              <strong>课堂小建议：</strong
+              >不必一开始就擅长社交；一次具体的提问、一次认真倾听，都是有效沟通的起点。
+            </div>
+          </section>
+
+          <!-- 1.4 内嵌信息图 01 -->
+          <section>
+            <h2>独立思考与合作可以并存</h2>
+            <div class="concept-visual">
+              <div class="grid-2" style="font-size: 0.75em">
+                <div class="card card-amber fragment fade-up">
+                  <h3>独立尝试</h3>
+                  <div class="concept-flow">
+                    <div class="concept-node caution">阅读题目</div>
+                    <span class="concept-arrow">→</span>
+                    <div class="concept-node caution">动手实验</div>
+                  </div>
+                  <p class="diagram-caption">形成自己的理解，记录具体卡点。</p>
+                </div>
+                <div class="card card-green fragment fade-up">
+                  <h3>交流与反馈</h3>
+                  <div class="concept-flow">
+                    <div class="concept-node positive">描述问题</div>
+                    <span class="concept-arrow">↔</span>
+                    <div class="concept-node positive">讨论验证</div>
+                  </div>
+                  <p class="diagram-caption">来自老师、同学或可信资料的反馈，让思路更完整。</p>
+                </div>
+              </div>
+              <div class="concept-flow fragment" style="font-size: 0.8em; margin-top: 16px">
+                <div class="concept-node">修正方案</div>
+                <span class="concept-arrow">→</span>
+                <div class="concept-node positive">独立复现并说明理由</div>
+              </div>
+            </div>
+            <aside class="notes">
+              配图风格建议01：蓝绿色线性流程信息图，左边“独立尝试”，右边“交流反馈”，底部回到“复现与反思”；可用像素图标、简洁角色头像点缀，但不要暗示性格内向就是缺点。16:9白底，1600×900，中文大字号。
+            </aside>
+          </section>
+
+          <!-- 1.5 互动 1：有效提问 -->
+          <section>
+            <span class="badge badge-blue">INTERACTIVE 01 </span>
+            <h2>互动 1：怎样提出一个有效的问题？</h2>
+            <div class="grid-2">
+              <div>
+                <p style="font-size: 0.78em; margin-bottom: 4px">
+                  编写 C 语言时遇到程序运行异常，准备向老师或同学请教：
+                </p>
+                <pre><code class="language-c" data-trim data-line-numbers>#include &lt;stdio.h&gt;
+int main() {
+    int score;
+    printf("请输入成绩: ");
+    scanf("%d", score);
+    printf("成绩为: %d\n", score);
+    return 0;
+}</code></pre>
+                <div style="font-size: 0.76em; margin-top: 6px">
+                  <p class="fragment" data-fragment-index="1">
+                    <strong>A. 简短求助</strong>：“老师，我的代码运行有问题，可以帮我看看吗？”
+                  </p>
+                  <p class="fragment" data-fragment-index="2">
+                    <strong>B. 只说明现象</strong>：“输入成绩后程序异常退出，我不确定原因。”
+                  </p>
+                  <p class="fragment success-text" data-fragment-index="3">
+                    <strong>C. 补充必要信息</strong>：“老师您好，我用
+                    <code>scanf</code>
+                    输入成绩时程序异常。我附上代码与运行现象，尝试检查了格式说明符，想请您帮忙看看。”
+                  </p>
+                </div>
+              </div>
+              <div class="interactive-panel fragment" data-fragment-index="4">
+                <h3>选择一种说法，看看还能补充什么</h3>
+                <button type="button" class="demo-button" data-demo="ask" data-choice="A">A</button>
+                <button type="button" class="demo-button" data-demo="ask" data-choice="B">B</button>
+                <button type="button" class="demo-button" data-demo="ask" data-choice="C">C</button>
+                <div class="demo-result" id="ask-result" aria-live="polite"></div>
+                <!--p class="small-note">知识提示：<code>scanf("%d", &amp;score)</code> 要提供变量地址；“值与地址”的细节可以留到指针学习时理解。</p-->
+              </div>
+            </div>
+          </section>
+
+          <!-- 1.6 可选的自学资源 -->
+          <section>
+            <h2>想继续探索？这三个资源可以慢慢看</h2>
+            <div class="grid-3" style="font-size: 0.8em">
+              <div class="card fragment fade-up">
+                <h3>🧭 1. CS 自学指南</h3>
+                <p>汇总课程与实验资源。可以按自己基础选择，不需要一口气学完。</p>
+                <a class="link-pill" href="https://csdiy.wiki/" target="_blank"
+                  >🔗 访问 csdiy.wiki</a
+                >
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3>🛠️ 2. MIT《缺失的一课》</h3>
+                <p>认识命令行、Git 和编辑器等开发工具，适合作为进阶补充。</p>
+                <a class="link-pill" href="https://missing-semester-cn.github.io/" target="_blank"
+                  >🔗 访问 missing-semester</a
+                >
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3>📖 3. 《提问的智慧》</h3>
+                <p>了解技术社区里如何提供上下文、描述尝试并礼貌沟通。</p>
+                <a
+                  class="link-pill"
+                  href="https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md"
+                  target="_blank"
+                  >🔗 阅读《提问的智慧》</a
+                >
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================== 2. 大学四年发展拓扑 (18分钟) ==================== -->
+        <section>
+          <!-- 2.1 真实的四年成长拓扑 -->
+          <section>
+            <span class="badge badge-green">PART 02</span>
+            <h2>大学四年的成长地图：不同阶段可以做什么？</h2>
+            <p class="small-note">这是供参考的路线，不是所有人都必须完成的统一时间表。</p>
+            <div class="grid-4" style="font-size: 0.72em; margin-top: 15px">
+              <div class="card card-blue fragment fade-up">
+                <h3 style="color: #0369a1">大一：筑牢底座</h3>
+                <p>• 掌握程序设计基础</p>
+                <p>• 学好数学和英语</p>
+                <p>• 开始学习调试、Git 等工具</p>
+                <p>• 用笔记或小作品记录成长</p>
+                <p class="small-note">关键词：学习习惯与基本功</p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">大二：专业核心与早期实战</h3>
+                <p>• 学习数据结构、算法、计算机组成等</p>
+                <p>• 尝试课程项目、竞赛或学生团队</p>
+                <p>• 了解实验室与研究方向</p>
+                <p>• 探索 AI 与不同领域的结合应用</p>
+                <p class="small-note">关键词：从知识走向实践</p>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3 class="highlight-text">大三：综合深耕与大工程</h3>
+                <p>• 学习操作系统、网络、数据库等</p>
+                <p>• 做结构更完整的综合项目</p>
+                <p>• 选择医工交叉或其他兴趣方向</p>
+                <p>• 整理能说明自己思考过程的作品</p>
+                <p class="small-note">关键词：综合与选择</p>
+              </div>
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">大四：系统交付与未来上线</h3>
+                <p>• 完成毕业设计与系统性总结</p>
+                <p>• 根据需要参加实习或求职</p>
+                <p>• 准备研究生阶段学习或其他选择</p>
+                <p>• 学会评价自己的能力与兴趣</p>
+                <p class="small-note">关键词：总结、规划与下一步</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2.2 实践路径多元选择 -->
+          <section>
+            <h2>课程之外的实践：找到适合自己的入口</h2>
+            <div class="grid-3" style="font-size: 0.78em">
+              <div class="card card-blue fragment fade-up">
+                <h3>🏆 1. 竞赛与挑战题</h3>
+                <p>
+                  喜欢算法的同学，可以尝试程序设计竞赛或校内训练。它们能帮助练习问题分析、测试与时间管理。
+                </p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3>🔬 2. 科研与项目实践</h3>
+                <p>
+                  对研究感兴趣，可以先参加讲座、阅读入门材料，了解老师的方向；具备基础后，再询问是否有合适的参与机会。
+                </p>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3>🤖 3. 跨学科与创新项目</h3>
+                <p>
+                  从校园服务、健康数据展示或学习辅助工具等小场景出发，理解真实需求与数据伦理，再逐步扩展系统。
+                </p>
+              </div>
+            </div>
+            <div class="teacher-tip fragment fade-up">
+              <strong>想一想：</strong
+              >不是每个人都需要比赛获奖或提前进实验室。哪一种实践更能让你愿意持续投入？
+            </div>
+          </section>
+
+          <!-- 2.3 保持技术好奇心，打破小圈子 -->
+          <section>
+            <h2>保持好奇：为自己打开更多窗口</h2>
+            <div class="grid-2" style="font-size: 0.82em">
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">🔍 为什么需要不同的信息来源？</h3>
+                <ul>
+                  <li class="fragment">课程学习很重要，但课堂例题不代表真实问题的全部；</li>
+                  <li class="fragment">只看熟悉的平台，可能反复接触同一类观点；</li>
+                  <li class="fragment">了解不同技术和职业路径，有助于作出自己的选择。</li>
+                </ul>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">🌍 可以尝试的四扇窗</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>开源项目</strong>：浏览 GitHub 上一个感兴趣的项目及其 README；
+                  </li>
+                  <li class="fragment">
+                    <strong>学术讲座</strong>：选一个听得懂一部分的主题，记录一个问题；
+                  </li>
+                  <li class="fragment">
+                    <strong>跨学科交流</strong>：看看计算机如何服务健康、医学或其他领域；
+                  </li>
+                  <li class="fragment">
+                    <strong>学生社团与工作坊</strong>：和不同背景的人一起完成小任务。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2.4 知识地图 -->
+          <section>
+            <h2>知识地图：基础课程如何连接真实应用？</h2>
+            <div class="concept-visual" style="font-size: 0.78em">
+              <div class="concept-flow fragment">
+                <div class="concept-node positive">
+                  智能应用 / 跨学科系统<br /><small>面向真实问题</small>
+                </div>
+              </div>
+              <div class="concept-flow fragment"><span class="concept-arrow">↑</span></div>
+              <div class="grid-3 fragment">
+                <div class="concept-node">算法与数据结构</div>
+                <div class="concept-node">操作系统 / 网络 / 数据库</div>
+                <div class="concept-node">计算机组成与体系结构</div>
+              </div>
+              <div class="concept-flow fragment">
+                <span class="concept-arrow">↑ 相互支撑 ↑</span>
+              </div>
+              <div class="concept-flow fragment">
+                <div class="concept-node caution">程序设计 + 数学基础 + 解决问题的方法</div>
+              </div>
+              <!--p class="diagram-caption fragment">知识并非严格的“五层阶梯”：课程相互联系，实际学习和项目实践也会交叉进行。</p-->
+            </div>
+            <p class="small-note">
+              可以用
+              <a href="https://roadmap.sh/computer-science" target="_blank"
+                >Computer Science Roadmap</a
+              >
+              浏览更多主题；它是一张参考地图，不是必修清单。
+            </p>
+            <aside class="notes">
+              配图风格建议02：路线地图或“技能生态地图”，大块用课程主题，小块插入编译器、数据库、移动应用等简洁插画，箭头表示相互支撑而非单一路径。避免“DAG依赖树”这种不准确混用。16:9白底大字号，青蓝主色。
+            </aside>
+          </section>
+
+          <!-- 2.5 互动 2：循环跟踪 -->
+          <section>
+            <span class="badge badge-green">INTERACTIVE 02 </span>
+            <h2>互动 2：用纸和笔跟踪一个循环</h2>
+            <p style="font-size: 0.8em; margin-top: -8px">
+              不用复杂算法。先独立写下答案，再和旁边同学对照。
+            </p>
+            <div class="grid-2">
+              <div>
+                <div class="card fragment fade-up" style="padding: 14px; margin-bottom: 12px">
+                  <h4 style="margin: 0 0 6px 0; color: #0369a1">题目 1：循环边界</h4>
+                  <pre><code class="language-c" data-trim data-line-numbers>int sum = 0;
+for (int i = 1; i &lt;= 5; i += 2) {
+    sum += i;
+}
+printf("%d\n", sum);</code></pre>
+                  <p class="small-note" style="margin: 0">A: 9　B: 15　C: 6</p>
+                </div>
+                <div class="card fragment fade-up" style="padding: 14px">
+                  <h4 style="margin: 0 0 6px 0; color: #d97706">题目 2：先判断再执行</h4>
+                  <pre><code class="language-c" data-trim data-line-numbers>int n = 7, count = 0;
+while (n &gt; 0) {
+    n -= 3;
+    count++;
+}
+printf("%d\n", count);</code></pre>
+                  <p class="small-note" style="margin: 0">A: 2　B: 3　C: 4</p>
+                </div>
+              </div>
+
+              <div class="interactive-panel fragment fade-up">
+                <h3>点击查看变量变化</h3>
+                <button type="button" class="demo-button" data-demo="loop" data-choice="1">
+                  题目 1
+                </button>
+                <button type="button" class="demo-button" data-demo="loop" data-choice="2">
+                  题目 2
+                </button>
+                <div class="demo-result" id="loop-result" aria-live="polite"></div>
+                <!--p class="small-note">课堂方法：列一张“循环轮次—变量值”表，比只凭直觉可靠。</p-->
+              </div>
+            </div>
+          </section>
+
+          <!-- 2.6 循环优化案例 -->
+          <section>
+            <h2>同样的结果，为什么有的程序少做很多步？</h2>
+            <div class="grid-2" style="font-size: 0.78em">
+              <div>
+                <p><strong>代码 A：找到答案后仍继续检查</strong></p>
+                <pre
+                  class="fragment fade-up"
+                  data-fragment-index="1"
+                ><code class="language-c" data-trim data-line-numbers>// 判断正整数 n 是否是素数
+int is_prime = 1;
+for (int i = 2; i &lt; n; i++) {
+    if (n % i == 0) {
+        is_prime = 0;
+    }
+}</code></pre>
+                <p class="danger-text fragment fade-up" data-fragment-index="3">
+                  若输入 <code>n = 100</code>，检查到
+                  <code>i = 2</code> 时已知道它不是素数，但循环仍继续。
+                </p>
+              </div>
+              <div>
+                <p><strong>代码 B：发现因子后结束检查</strong></p>
+                <pre
+                  class="fragment fade-up"
+                  data-fragment-index="2"
+                ><code class="language-c" data-trim data-line-numbers>int is_prime = 1;
+for (int i = 2; i &lt;= n / i; i++) {
+    if (n % i == 0) {
+        is_prime = 0;
+        break;
+    }
+}</code></pre>
+                <p class="success-text fragment fade-up" data-fragment-index="4">
+                  ✔ 输入 <code>n = 100</code> 时，B 只需尝试 <code>i = 2</code>，A
+                  则会继续遍历其余候选值。
+                </p>
+              </div>
+            </div>
+            <div
+              class="card card-blue fragment fade-up"
+              data-fragment-index="5"
+              style="margin-top: 12px; font-size: 0.76em"
+            >
+              <p style="margin: 0">
+                <strong>💡 思考：</strong>这里同时做了两种优化：找到因子就
+                <code>break</code>；只检查到平方根附近。请比较它们各自减少了什么工作量。（此示例假设
+                <code>n ≥ 2</code>）
+              </p>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================== 3. AI时代与独立思考 (18分钟) ==================== -->
+        <section>
+          <!-- 3.1 AI与独立判断 -->
+          <section>
+            <span class="badge badge-amber">PART 03</span>
+            <h2>AI 可以帮忙，但判断和学习仍属于自己</h2>
+            <div class="grid-2" style="font-size: 0.82em; margin-top: 15px">
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">🔎 使用 AI 时容易忽略什么？</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>跳过理解</strong>：直接复制答案，遇到题目变化便无法调整；
+                  </li>
+                  <li class="fragment">
+                    <strong>忽略错误</strong>：生成的解释或代码可能看起来合理，却含有逻辑问题；
+                  </li>
+                  <li class="fragment">
+                    <strong>缺少记录</strong
+                    >：忘记自己怎样提问、验证，最后也说不清为什么采用某个方案。
+                  </li>
+                </ul>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">✔ 有效的人机协作是什么样？</h3>
+                <ul>
+                  <li class="fragment">
+                    <strong>请 AI 提供思路</strong>：解释概念、列举边界情况、辅助定位问题；
+                  </li>
+                  <li class="fragment">
+                    <strong>自己做实验</strong>：编译运行、对比预期结果，检查关键判断；
+                  </li>
+                  <li class="fragment">
+                    <strong>能说明取舍</strong>：知道采用了什么建议、为什么采用、还有哪些局限。
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3.2 课程AI使用规范 -->
+          <section>
+            <h2>一套可执行的 AI 协作方法</h2>
+            <div class="grid-3" style="font-size: 0.78em">
+              <div class="card card-rose fragment fade-up">
+                <h3 class="danger-text">① 明确任务与规则</h3>
+                <p>
+                  先读懂题目，确认课程允许 AI 协助到什么程度；需要独立完成的部分，要按照要求完成。
+                </p>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3 class="highlight-text">② 保留自己的初始想法</h3>
+                <p>先写简要思路或程序草稿，再向 AI 询问解释、可替代方案或可能的错误。</p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">③ 验证、修改并留下证据</h3>
+                <p>对 AI 的建议进行编译、运行和边界测试，记录“采纳了什么、为什么、结果如何”。</p>
+              </div>
+            </div>
+            <div class="teacher-tip fragment fade-up">
+              <strong>判断标准：</strong>提交的程序应符合课程规定，关键逻辑能解释、结果经过核验，AI
+              的参与过程可追溯。
+            </div>
+          </section>
+
+          <!-- 3.3 内嵌信息图 03 -->
+          <section>
+            <h2>AI 协作中的关键一环：检验</h2>
+            <div class="concept-visual">
+              <h3 style="margin: 0 0 16px">一条可以反复使用的学习流程</h3>
+              <div class="concept-flow" style="font-size: 0.78em">
+                <div class="concept-node fragment">理解问题<br /><small>自己的思路</small></div>
+                <span class="concept-arrow">→</span>
+                <div class="concept-node fragment">
+                  寻求 AI 协助<br /><small>解释 / 建议</small>
+                </div>
+                <span class="concept-arrow">→</span>
+                <div class="concept-node positive fragment">
+                  运行与测试<br /><small>证据核验</small>
+                </div>
+                <span class="concept-arrow">→</span>
+                <div class="concept-node positive fragment">
+                  修改并记录<br /><small>理由 / 局限</small>
+                </div>
+              </div>
+              <div
+                class="card card-amber fragment"
+                style="font-size: 0.72em; margin-top: 22px; text-align: center"
+              >
+                如果测试没有通过，就回到问题分析与方案修改；不是让 AI 重写到“看起来能用”为止。
+              </div>
+            </div>
+            <aside class="notes">
+              配图风格建议03：四站循环路线，站点采用蓝绿卡片与小图标（问题气泡、AI对话、试管/测试、笔记本），明确一条反馈箭头从“测试不通过”返回前一阶段。避免用“脑萎缩”或贬损性人物对照。白底，手绘线条点缀但逻辑关系精准。
+            </aside>
+          </section>
+
+          <!-- 3.4 互动 3：测试 AI 代码 -->
+          <section>
+            <span class="badge badge-amber">INTERACTIVE 03 · 10 MINS</span>
+            <h2>互动 3：给一段 AI 代码设计测试</h2>
+            <div class="grid-2">
+              <div>
+                <p style="font-size: 0.76em; margin-bottom: 4px">
+                  题目：<em>“用 switch-case 返回某年某月的天数。”</em> 假设 AI
+                  给出以下程序，是否可以直接使用？
+                </p>
+                <pre><code class="language-c" data-trim data-line-numbers>int get_days(int year, int month) {
+    int days = 0, is_leap = 0;
+    if (year % 4 == 0) { // 判断闰年？
+        is_leap = 1;
+    }
+    switch (month) {
+        case 1: case 3: case 5:
+        case 7: case 8: case 10: case 12:
+            days = 31;
+        case 4: case 6: case 9: case 11:
+            days = 30;
+            break;
+        case 2:
+            if (is_leap = 1) days = 29;
+            else days = 28;
+            break;
+        default: days = -1;
+    }
+    return days;
+}</code></pre>
+                <p
+                  style="font-size: 0.74em; color: #b45309; margin: 4px 0 0 0"
+                  class="fragment"
+                  data-fragment-index="1"
+                >
+                  🕵️ <strong>先提测试数据</strong>：用 2024 年 1 月、2023 年 2 月、1900 年 2
+                  月分别检验，能发现什么？
+                </p>
+              </div>
+
+              <div class="interactive-panel fragment" data-fragment-index="2">
+                <h3>测试数据模拟器</h3>
+                <button type="button" class="demo-button" data-demo="test" data-choice="2024-01">
+                  2024 年 1 月
+                </button>
+                <button type="button" class="demo-button" data-demo="test" data-choice="2023-02">
+                  2023 年 2 月
+                </button>
+                <button type="button" class="demo-button" data-demo="test" data-choice="1900-02">
+                  1900 年 2 月
+                </button>
+                <div class="demo-result" id="test-result" aria-live="polite"></div>
+                <div style="font-size: 0.7em; line-height: 1.45">
+                  <p class="fragment" data-fragment-index="3">
+                    <strong>原因 1：</strong>31 天的 <code>case</code> 缺少
+                    <code>break</code>，会覆盖成 30。
+                  </p>
+                  <p class="fragment" data-fragment-index="4">
+                    <strong>原因 2：</strong><code>if (is_leap = 1)</code> 是赋值而非比较，平年的 2
+                    月也得到 29。
+                  </p>
+                  <p class="fragment" data-fragment-index="5">
+                    <strong>原因 3：</strong>只按“能被 4 整除”判断闰年不完整，世纪年还要检查是否能被
+                    400 整除。
+                  </p>
+                  <p class="fragment small-note" data-fragment-index="6">
+                    注意：一个测试用例可能同时受到多个 Bug 影响；修复一个问题后要重新测试。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3.5 工程师级高质量 Prompt 模板 -->
+          <section>
+            <h2>把 AI 当学习伙伴：三个可复用的提问方式</h2>
+            <div class="grid-3" style="font-size: 0.78em">
+              <div class="card fragment fade-up">
+                <h3>1. 扮演苏格拉底助教</h3>
+                <pre><code class="language-markdown" data-trim data-line-numbers>我正在用 C 语言练习 while 循环。
+这是我的代码与报错信息。
+请先不要给出完整源码，
+用问题引导我检查循环变量为什么没有递增。</code></pre>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3>2. 边界测试助手</h3>
+                <pre><code class="language-markdown" data-trim data-line-numbers>我已经写好了这个素数判断循环。
+请作为极端刁钻的测试员，
+请检查当输入 0、1 或负数时，
+我的程序分支是否会发生异常？</code></pre>
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3>3. 逻辑流程推演</h3>
+                <pre><code class="language-markdown" data-trim data-line-numbers>我不理解这段嵌套 switch 的跳转逻辑。
+请用单步跟踪的方式，
+按步骤列出变量的变化并解释跳转顺序。</code></pre>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================== 4. 注意力与个人作品 (12分钟) ==================== -->
+        <section>
+          <!-- 4.1 注意力与推荐机制 -->
+          <section>
+            <span class="badge badge-purple">PART 04</span>
+            <h2>注意力也是资源：怎样更主动地使用数字工具？</h2>
+            <div class="card card-rose fragment fade-up" style="margin-bottom: 16px">
+              <h3 class="danger-text" style="margin: 0 0 6px 0">
+                📱 为什么有时会刷着刷着忘了时间？
+              </h3>
+              <p style="margin: 0; font-size: 0.86em">
+                连续推荐、自动播放和个性化排序，让获取下一条内容的成本很低。平台设计会影响我们的使用习惯；我们也可以主动设置边界与目标。
+              </p>
+            </div>
+            <div class="grid-2" style="font-size: 0.8em">
+              <div class="card fragment fade-up">
+                <h3>🧭 先观察自己的使用情况</h3>
+                <p>
+                  什么时候是有明确目的的信息搜索？什么时候只是随手打开？试着观察一周的使用时段，给学习、运动、休息留下更稳定的空间。
+                </p>
+              </div>
+              <div class="card card-purple fragment fade-up">
+                <h3>💻 给自己留一段创造时间</h3>
+                <p>
+                  把一个编程疑问写成笔记，把小程序整理到仓库，或者制作一张思路图。输出不必公开，也不必追求流量；让学习留下看得见的成果即可。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4.2 作品与表达 -->
+          <section>
+            <h2>学习过程可以留下怎样的作品？</h2>
+            <div class="grid-3" style="font-size: 0.78em">
+              <div class="card card-blue fragment fade-up">
+                <h3>📁 1. 项目与代码仓库</h3>
+                <p>把一个可运行的小程序、说明文档和测试样例整理好，能展示你怎样从问题走向实现。</p>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3>✍️ 2. 学习笔记或博客</h3>
+                <p>
+                  试着用自己的话解释一个概念、记录一个 Bug
+                  的排查过程；写出来时，也更容易发现自己尚未理解的地方。
+                </p>
+              </div>
+              <div class="card card-purple fragment fade-up">
+                <h3>🎨 3. 演示、图解与创意实验</h3>
+                <p>
+                  可以让 AI
+                  帮助构思页面、润色说明或生成插图，再亲自核对内容与版权使用要求，完成自己的表达。
+                </p>
+              </div>
+            </div>
+            <div class="teacher-tip fragment fade-up">
+              <strong>可选实践：</strong>选一个自己满意的 C 语言小程序，为它添加
+              README（用途、输入、输出、运行方式、测试记录）。愿意分享的同学，再尝试发布到代码仓库或静态网页。
+            </div>
+          </section>
+
+          <!-- 4.3 信息图 04 注意力与选择 -->
+          <section>
+            <h2>同样的半小时，可以怎样安排？</h2>
+            <div class="concept-visual" style="font-size: 0.78em">
+              <div class="grid-2">
+                <div class="card card-amber fragment">
+                  <h3>没有明确目标时</h3>
+                  <div class="concept-flow">
+                    <div class="concept-node caution">打开应用</div>
+                    <span class="concept-arrow">→</span>
+                    <div class="concept-node caution">持续推荐</div>
+                  </div>
+                  <p class="diagram-caption">
+                    容易忘记最初想做什么。不是“有害大脑”的判定，只是在提醒关注时间与选择。
+                  </p>
+                </div>
+                <div class="card card-green fragment">
+                  <h3>有明确目标时</h3>
+                  <div class="concept-flow">
+                    <div class="concept-node positive">选定小任务</div>
+                    <span class="concept-arrow">→</span>
+                    <div class="concept-node positive">专注尝试</div>
+                  </div>
+                  <p class="diagram-caption">完成后记录结果，再决定继续、休息或娱乐。</p>
+                </div>
+              </div>
+              <div class="concept-flow fragment" style="margin-top: 16px">
+                <div class="concept-node">设置提醒 / 关闭自动播放 / 安排休息</div>
+              </div>
+            </div>
+            <aside class="notes">
+              配图风格建议04：一张可比较的“双路径故事板”。左边是无目标刷内容，右边是半小时完成一个微任务；同一位学生的不同选择，用平面插画和手机/电脑图标表现，避免把脑部MRI或神经激活图作为未经证实的因果证据。16:9白底，橙/绿区分流程。
+            </aside>
+          </section>
+
+          <!-- 4.4 为用户设计选择 -->
+          <section>
+            <span class="badge badge-rose">INTERACTIVE 04</span>
+            <h2>互动 4：为推荐程序增加一个友好的分支</h2>
+            <div class="grid-2">
+              <div>
+                <p style="font-size: 0.78em; margin-bottom: 4px">
+                  下面是为了讨论而简化的 C 风格伪代码，并非真实平台的推荐算法：
+                </p>
+                <pre><code class="language-c" data-trim data-line-numbers>while (user_wants_to_watch) {
+    play_video();
+    watch_minutes += 5; // 假设每段 5 分钟
+    // 在这里补充提醒或选择逻辑
+}</code></pre>
+                <p
+                  style="font-size: 0.78em; color: #b45309"
+                  class="fragment"
+                  data-fragment-index="1"
+                >
+                  🎤
+                  <strong>小组讨论：</strong
+                  >什么时候提醒？提醒后交给谁决定？如果用户暂时不想被打扰怎么办？
+                </p>
+              </div>
+
+              <div class="interactive-panel fragment" data-fragment-index="2">
+                <h3>三种产品设计，哪一种更合适？</h3>
+                <button type="button" class="demo-button" data-demo="ethics" data-choice="remind">
+                  30 分钟后提醒
+                </button>
+                <button type="button" class="demo-button" data-demo="ethics" data-choice="choice">
+                  提醒后允许选择
+                </button>
+                <button type="button" class="demo-button" data-demo="ethics" data-choice="force">
+                  到时直接关闭
+                </button>
+                <div class="demo-result" id="ethics-result" aria-live="polite"></div>
+                <!--p class="small-note">可以从 <code>if (watch_minutes &gt;= 30)</code> 开始，进一步讨论“提醒一次”还是“反复弹窗”。</p-->
+              </div>
+            </div>
+          </section>
+
+          <!-- 4.5 拓展体验 -->
+          <section>
+            <h2>课外探索：游戏、技术伦理与真实问题</h2>
+            <div class="grid-3" style="font-size: 0.8em">
+              <div class="card fragment fade-up">
+                <h3>🕹️ 1. 从游戏认识计算机</h3>
+                <p>
+                  <strong>《Turing Complete》</strong
+                  >：用逐步搭建逻辑电路的方式理解数字系统，适合感兴趣的同学。
+                </p>
+                <a class="link-pill" href="https://turingcomplete.game/" target="_blank"
+                  >🔗 访问图灵完备游戏</a
+                >
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3>🛡️ 2. 想一想技术如何影响人</h3>
+                <p>
+                  Center for Humane Technology 讨论数字产品设计、注意力与社会影响；可作为延伸阅读。
+                </p>
+                <a class="link-pill" href="https://www.humanetech.com/" target="_blank"
+                  >🔗 Center for Humane Tech</a
+                >
+              </div>
+              <div class="card card-amber fragment fade-up">
+                <h3>🏥 3. 从身边问题找项目题材</h3>
+                <p>
+                  例如健康数据可视化、校园服务或科学信息检索。先认识需求、数据保护与验证方法，再思考实现。
+                </p>
+                <p class="small-note">想一想：技术好用之外，还应当对谁负责？</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ==================== 5. 回顾与总结 (4分钟) ==================== -->
+        <section>
+          <!-- 5.1 可执行的成长建议 -->
+          <section>
+            <span class="badge badge-green">SUMMARY</span>
+            <h2>从今天开始，可以尝试的几个小行动</h2>
+            <div class="grid-2" style="font-size: 0.8em">
+              <div class="card card-blue fragment fade-up">
+                <h3 style="color: #0369a1">让学习更扎实</h3>
+                <ul>
+                  <li class="fragment">□ 为 C 语言练习留出稳定的上机时间；</li>
+                  <li class="fragment">□ 遇到一个 Bug，记录原因、修复和测试过程；</li>
+                  <li class="fragment">□ 找一位老师或同学，认真交流一个具体问题；</li>
+                  <li class="fragment">□ 用自己的话解释一个本周学到的概念。</li>
+                </ul>
+              </div>
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text">让视野更开阔</h3>
+                <ul>
+                  <li class="fragment">□ 使用 AI 时，至少独立核验一项关键结论；</li>
+                  <li class="fragment">□ 选择一次技术讲座、社团活动或开源项目浏览；</li>
+                  <li class="fragment">□ 整理并保存一个自己的小作品；</li>
+                  <li class="fragment">□ 给休息、运动和非屏幕活动留些时间。</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5.2 资源和成长代码 -->
+          <section>
+            <h2>把大学四年看作一个不断更新的程序</h2>
+            <div class="grid-2" style="font-size: 0.78em; margin-top: 10px">
+              <div class="card card-green fragment fade-up">
+                <h3 class="success-text" style="margin-top: 0">📦 想继续了解的资源</h3>
+                <ul style="list-style: none; padding-left: 0; line-height: 1.7">
+                  <li>
+                    🧭 <strong>北大 CS 自学指南：</strong>
+                    <a href="https://csdiy.wiki/" target="_blank">csdiy.wiki</a>
+                  </li>
+                  <li>
+                    🛠️ <strong>MIT 缺失的一课：</strong>
+                    <a href="https://missing-semester-cn.github.io/" target="_blank"
+                      >missing-semester-cn.github.io</a
+                    >
+                  </li>
+                  <li>
+                    🗺️ <strong>CS 技能全景树：</strong>
+                    <a href="https://roadmap.sh/computer-science" target="_blank"
+                      >roadmap.sh/computer-science</a
+                    >
+                  </li>
+                  <li>
+                    📘 <strong>Hello 算法动画书：</strong>
+                    <a href="https://www.hello-algo.com/" target="_blank">hello-algo.com</a>
+                  </li>
+                  <li>
+                    🧱 <strong>从与非门到俄罗斯方块：</strong>
+                    <a href="https://www.nand2tetris.org/" target="_blank">nand2tetris.org</a>
+                  </li>
+                  <li>
+                    🤖 <strong>开发者提示词工程：</strong>
+                    <a
+                      href="https://github.com/datawhalechina/prompt-engineering-for-developers"
+                      target="_blank"
+                      >Datawhale 提示词中文教程</a
+                    >
+                  </li>
+                  <li>
+                    🕹️ <strong>图灵完备手搓系统：</strong>
+                    <a href="https://turingcomplete.game/" target="_blank">turingcomplete.game</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="card fragment fade-up">
+                <h3 style="color: #0369a1; margin-top: 0">💻 一段真的可以运行的 C 语言代码</h3>
+                <pre><code class="language-c" data-trim data-line-numbers>#include &lt;stdio.h&gt;
+int main(void) {
+    for (int year = 1; year &lt;= 4; year++) {
+        printf("第 %d 年：", year);
+        if (year == 1) {
+            puts("打基础，学会提问");
+        } else if (year == 4) {
+            puts("做总结，选择方向");
+        } else {
+            puts("多尝试，积累作品");
+        }
+    }
+    return 0;
+}</code></pre>
+                <p class="small-note" style="margin-top: 8px">
+                  这段程序只是比喻。真实的大学生活有很多分支，每个人都能调整自己的路径。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5.3 结束致谢与Q&A -->
+          <section>
+            <h1><code>return 0;</code></h1>
+            <h3
+              class="fragment fade-up"
+              data-fragment-index="1"
+              style="color: #0284c7; margin-top: 20px"
+            >
+              大学四年，不必一次写对；愿你在尝试与修正中持续成长。
+            </h3>
+            <div
+              class="card card-blue fragment fade-up"
+              data-fragment-index="2"
+              style="max-width: 650px; margin: 30px auto; padding: 20px"
+            >
+              <h4 style="margin: 0 0 10px 0; color: #0369a1">💬 自由交流与提问(Q&A)</h4>
+              <!--p style="margin:0; font-size:0.85em;">• 如果现在不知道对什么方向感兴趣，怎么办？</p>
+          <p style="margin:4px 0; font-size:0.85em;">• 怎样向老师、同学提出一个具体的问题？</p>
+          <p style="margin:4px 0; font-size:0.85em;">• 第一个值得保留的 C 语言小作品可以做什么？</p-->
+            </div>
+            <div class="teacher-tip fragment fade-up" data-fragment-index="3">
+              <strong>今天带走一件事：</strong
+              >选一个适合自己的小目标，认真做、记下来、过段时间再回头看。
+            </div>
+            <aside class="notes">
+              收尾时可留下课程答疑渠道；鼓励学生在纸上写下一件本周愿意尝试的小行动。大学阶段有不同节奏，不把竞赛、保研、就业薪资或公开博客设为唯一评价标准。
+            </aside>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <!-- Reveal.js 核心脚本及插件 -->
+    <script src="/vendor/reveal/reveal.js?v=20261103"></script>
+    <script src="/vendor/reveal/highlight/highlight.js?v=20261103"></script>
+    <script src="/vendor/reveal/math/math.js?v=20261103"></script>
+    <script src="/vendor/reveal/notes/notes.js?v=20261103"></script>
+    <script>
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.05,
+        minScale: 0.2,
+        maxScale: 2.0,
+        hash: true,
+        center: true,
+        slideNumber: 'c/t',
+        transition: 'fade',
+        plugins: [RevealHighlight, RevealMath.KaTeX, RevealNotes],
+      });
+
+      // 四处课堂互动直接在本文件内运行，无须额外的 iframe 或 Demo 文件。
+      (function () {
+        const responses = {
+          ask: {
+            A: 'A 可以作为沟通的开始，但还不够具体。可以补上：题目要求、代码片段、实际结果和已经尝试过的检查。',
+            B: 'B 说明了现象，已经比只说“报错”更有效。如果再提供代码及输入数据，帮助会更直接。',
+            C: 'C 提供了有用的上下文。可以继续补上输入样例、编译警告与预期结果。这里 scanf 的第二个参数应写为 &score。',
+          },
+          loop: {
+            1: '题目 1：i 依次为 1、3、5；sum 依次为 1、4、9。下一次 i=7，不满足 i<=5，结束。答案 A：9。',
+            2: '题目 2：n 依次变为 4、1、-2，count 依次变为 1、2、3。下一次检查 n>0 为假，结束。答案 B：3。',
+          },
+          test: {
+            '2024-01':
+              '2024 年 1 月：正确值是 31；这段程序返回 30。原因：31 天的 case 组后缺少 break，结果被后面的 days=30 覆盖。',
+            '2023-02':
+              '2023 年 2 月：正确值是 28；这段程序返回 29。原因：if (is_leap = 1) 把赋值误当作条件比较，使判断始终为真。',
+            '1900-02':
+              '1900 年 2 月：正确值是 28；这段程序返回 29。它同时包含赋值误用和闰年规则不完整两处问题。先修复赋值，再测试 1900、2000 等世纪年，才能单独验证闰年规则。',
+          },
+          ethics: {
+            remind:
+              '仅在 30 分钟时提醒：比较容易实现，但用户可能需要自主决定下一步。还要考虑提醒太频繁是否会造成打扰。',
+            choice:
+              '提醒后提供“继续观看 / 休息一下 / 本次不再提醒”的选项：兼顾知情与自主选择，适合进一步讨论默认值与可访问性。',
+            force:
+              '到时强制退出：在特定的家长控制或用户主动设置的模式下可能合适；作为所有人的默认行为，则可能限制合理使用。',
+          },
+        };
+        document.querySelectorAll('.demo-button[data-demo]').forEach(function (button) {
+          button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const demo = button.dataset.demo;
+            const choice = button.dataset.choice;
+            const target = document.getElementById(demo + '-result');
+            if (target && responses[demo] && responses[demo][choice]) {
+              target.textContent = responses[demo][choice];
+              button.parentElement.querySelectorAll('.demo-button').forEach(function (item) {
+                item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+              });
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

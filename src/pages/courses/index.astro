@@ -4,6 +4,17 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import CourseCard from '@/components/CourseCard.astro';
 const courses = (await getCollection('courses')).sort((a, b) => a.data.order - b.data.order);
+const introductionCourseSlugs = new Set(['computer-science-introduction']);
+const courseSections = [
+  {
+    title: '导论课',
+    courses: courses.filter(({ data }) => introductionCourseSlugs.has(data.slug)),
+  },
+  {
+    title: '其他课程',
+    courses: courses.filter(({ data }) => !introductionCourseSlugs.has(data.slug)),
+  },
+].filter(({ courses }) => courses.length > 0);
 ---
 
 <BaseLayout title="课程教学" description="课程介绍、教学目标、章节安排与配套资源。"
@@ -13,6 +24,22 @@ const courses = (await getCollection('courses')).sort((a, b) => a.data.order - b
       <h1>我的课程列表</h1><p>
         这些都是我正在上的课，所有的课程资料、课件、实验、参考资料等都会整理发布在此。希望能对大家有所帮助，也欢迎大家提出意见和建议。
       </p>
-    </header><div class="grid grid-3">{courses.map((course) => <CourseCard {course} />)}</div>
+    </header>{
+      courseSections.map((section) => (
+        <section class="page-section" aria-labelledby={`course-category-${section.title}`}>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">课程类别</p>
+              <h2 id={`course-category-${section.title}`}>{section.title}</h2>
+            </div>
+          </div>
+          <div class="grid grid-3">
+            {section.courses.map((course) => (
+              <CourseCard {course} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
   </div></BaseLayout
 >
