@@ -1,0 +1,3141 @@
+<!DOCTYPE HTML>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>程序设计基础：第6次课第1课时 数据的表示与存储</title>
+    <meta content="第6次课第1课时：数据的表示与存储、进制转换、原反补码、IEEE 754浮点体系与字符编码" name="description" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+    <style>
+        :root {
+
+            --blue: #2056a8;
+
+            --blue2: #2c7be5;
+
+            --cyan: #eaf4ff;
+
+            --ink: #1f2937;
+
+            --muted: #5b6573;
+
+            --green: #1d7a46;
+
+            --orange: #a65b00;
+
+            --red: #b42318;
+
+            --purple: #6d28d9;
+
+            --line: #d8e1ec;
+
+            --soft: #f7f9fc;
+
+        }
+
+
+
+        .reveal {
+
+            color: var(--ink);
+
+            font-size: 28px;
+
+        }
+
+
+
+        .reveal .slides section {
+
+            box-sizing: border-box;
+
+            text-align: left;
+
+            padding: 20px 28px;
+
+        }
+
+
+
+        .reveal .slides section.stack {
+
+            padding: 0;
+
+        }
+
+
+
+        .reveal h1,
+
+        .reveal h2,
+
+        .reveal h3 {
+
+            color: #163f78;
+
+            text-transform: none;
+
+        }
+
+
+
+        .reveal h1 {
+
+            font-size: 76px;
+
+            line-height: 1.10;
+
+            margin: .10em 0 .24em;
+
+        }
+
+
+
+        .reveal h2 {
+
+            font-size: 50px;
+
+            line-height: 1.16;
+
+            margin: 0 0 24px;
+
+            padding-bottom: 10px;
+
+            border-bottom: 2px solid #dbe7f6;
+
+        }
+
+
+
+        .reveal h3 {
+
+            font-size: 32px;
+
+            line-height: 1.22;
+
+            margin: 0 0 14px;
+
+        }
+
+
+
+        .reveal p {
+
+            font-size: 28px;
+
+            line-height: 1.42;
+
+            margin: 12px 0;
+
+        }
+
+
+
+        .reveal ul,
+
+        .reveal ol {
+
+            margin: .25em 0 .25em 1.15em;
+
+        }
+
+
+
+        .reveal li {
+
+            font-size: 26px;
+
+            line-height: 1.40;
+
+            margin: 8px 0;
+
+        }
+
+
+
+        .reveal code,
+
+        .reveal pre code,
+
+        .reveal pre code.hljs,
+
+        .reveal pre .hljs,
+
+        code,
+
+        .mono {
+
+            font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+
+            font-variant-ligatures: none !important;
+
+            font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+
+        }
+
+
+
+        .reveal :not(pre)>code {
+
+            font-size: 24px;
+
+            background: #f3f6fa;
+
+            padding: 2px 7px;
+
+            border-radius: 5px;
+
+            color: #173d70;
+
+        }
+
+
+
+        .reveal pre {
+
+            width: 94%;
+
+            box-shadow: none;
+
+            font-size: 24px;
+
+            line-height: 1.32;
+
+            margin: 18px auto;
+
+        }
+
+
+
+        .reveal pre code {
+
+            max-height: 540px;
+
+            font-size: 1em;
+
+            line-height: 1.32;
+
+            padding: 18px 22px;
+
+            border-radius: 12px;
+
+            background: #fff !important;
+
+            color: #1f2937 !important;
+
+            border: 1px solid #d8e1ec;
+
+            box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+
+        }
+
+
+
+        .small {
+
+            font-size: 23px !important;
+
+            line-height: 1.38 !important;
+
+        }
+
+
+
+        .tiny {
+
+            font-size: 20px !important;
+
+            line-height: 1.36 !important;
+
+        }
+
+
+
+        .large {
+
+            font-size: 31px !important;
+
+            line-height: 1.36 !important;
+
+        }
+
+
+
+        .muted {
+
+            color: var(--muted);
+
+        }
+
+
+
+        .accent {
+
+            color: var(--blue);
+
+            font-weight: 700;
+
+        }
+
+
+
+        .danger {
+
+            color: var(--red);
+
+            font-weight: 700;
+
+        }
+
+
+
+        .good {
+
+            color: var(--green);
+
+            font-weight: 700;
+
+        }
+
+
+
+        .orange {
+
+            color: var(--orange);
+
+            font-weight: 700;
+
+        }
+
+
+
+        .purple {
+
+            color: var(--purple);
+
+            font-weight: 700;
+
+        }
+
+
+
+        .center {
+
+            text-align: center !important;
+
+        }
+
+
+
+        .left {
+
+            text-align: left !important;
+
+        }
+
+
+
+        .lead {
+
+            max-width: 1350px;
+
+            margin: 0 auto 24px !important;
+
+            font-size: 34px !important;
+
+            line-height: 1.45 !important;
+
+        }
+
+
+
+        .grid2 {
+
+            display: grid;
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            gap: 28px;
+
+            align-items: stretch;
+
+        }
+
+
+
+        .grid3 {
+
+            display: grid;
+
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+
+            gap: 22px;
+
+            align-items: stretch;
+
+        }
+
+
+
+        .grid4 {
+
+            display: grid;
+
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+
+            gap: 18px;
+
+            align-items: stretch;
+
+        }
+
+
+
+        .card {
+
+            box-sizing: border-box;
+
+            height: 100%;
+
+            background: #fff;
+
+            border: 1px solid var(--line);
+
+            border-radius: 16px;
+
+            padding: 20px 23px;
+
+            box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+
+        }
+
+
+
+        .card.soft {
+
+            background: var(--soft);
+
+        }
+
+
+
+        .card.blue {
+
+            background: #f4f8ff;
+
+            border-color: #c9d9ef;
+
+        }
+
+
+
+        .card.warn {
+
+            background: #fff8ed;
+
+            border-color: #f0d7b4;
+
+        }
+
+
+
+        .card.red {
+
+            background: #fff5f5;
+
+            border-color: #efc8c8;
+
+        }
+
+
+
+        .bluebox {
+
+            background: var(--cyan);
+
+            border-left: 6px solid var(--blue2);
+
+            padding: 16px 20px;
+
+            border-radius: 12px;
+
+            font-size: 26px;
+
+            line-height: 1.42;
+
+        }
+
+
+
+        .quote {
+
+            font-size: 29px;
+
+            line-height: 1.52;
+
+            padding: 26px 34px;
+
+            border-left: 7px solid var(--blue2);
+
+            background: var(--soft);
+
+            text-align: left;
+
+            border-radius: 0 14px 14px 0;
+
+        }
+
+
+
+        .pill {
+
+            display: inline-block;
+
+            padding: 7px 14px;
+
+            border-radius: 999px;
+
+            background: #e8eef7;
+
+            color: #24405f;
+
+            font-size: 22px;
+
+            margin: 5px;
+
+        }
+
+
+
+        .flow {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            flex-wrap: nowrap;
+
+            gap: 12px;
+
+            margin-top: 26px;
+
+        }
+
+
+
+        .step {
+
+            flex: 1 1 0;
+
+            min-width: 0;
+
+            padding: 16px 9px;
+
+            border: 1px solid #c6d5e8;
+
+            border-radius: 13px;
+
+            background: #fff;
+
+            font-size: 28px;
+
+            line-height: 1.20;
+
+            text-align: center;
+
+            font-weight: 700;
+
+            box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+
+        }
+
+
+
+        .arrow {
+
+            flex: 0 0 auto;
+
+            font-size: 34px;
+
+            color: #6683a6;
+
+        }
+
+
+
+        table.compare {
+
+            width: 100%;
+
+            margin: auto;
+
+            border-collapse: separate !important;
+
+            border-spacing: 0 !important;
+
+            border: 1px solid #d7dee8 !important;
+
+            border-radius: 12px !important;
+
+            overflow: hidden;
+
+            font-size: 27px;
+
+        }
+
+
+
+        table.compare th,
+
+        table.compare td {
+
+            border-right: 1px solid #d7dee8 !important;
+
+            border-bottom: 1px solid #d7dee8 !important;
+
+            border-top: none !important;
+
+            border-left: none !important;
+
+            padding: 12px 14px;
+
+        }
+
+
+
+        table.compare th:last-child,
+
+        table.compare td:last-child {
+
+            border-right: none !important;
+
+        }
+
+
+
+        table.compare tr:last-child td {
+
+            border-bottom: none !important;
+
+        }
+
+
+
+        table.compare th {
+
+            background: #edf4fb;
+
+            color: #173d70;
+
+        }
+
+
+
+        .sectiontag {
+
+            color: #46709f;
+
+            font-size: 34px !important;
+
+            letter-spacing: .09em;
+
+        }
+
+
+
+        .title-meta {
+
+            font-size: 34px !important;
+
+            margin-top: 34px !important;
+
+        }
+
+
+
+        .bigq {
+
+            font-size: 42px !important;
+
+            color: #143b70;
+
+            font-weight: 700;
+
+            line-height: 1.26 !important;
+
+        }
+
+
+
+        .rule {
+
+            font-size: 31px !important;
+
+            font-weight: 700;
+
+            color: #163f78;
+
+            letter-spacing: .03em;
+
+        }
+
+
+
+        .modulecover {
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: flex-start;
+
+            min-height: 720px;
+
+            padding: 55px 70px;
+
+            background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+
+            border: 1px solid #dbe7f6;
+
+            border-radius: 22px;
+
+            box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+
+        }
+
+
+
+        .modulecover .cover-kicker {
+
+            font-size: 27px;
+
+            letter-spacing: .10em;
+
+            text-transform: uppercase;
+
+            color: #5c7da5;
+
+            margin-bottom: 16px;
+
+        }
+
+
+
+        .modulecover .cover-title {
+
+            font-size: 62px;
+
+            line-height: 1.16;
+
+            color: #163f78;
+
+            font-weight: 800;
+
+            margin: 0 0 18px;
+
+        }
+
+
+
+        .modulecover .cover-subtitle {
+
+            font-size: 31px;
+
+            color: #48627f;
+
+            line-height: 1.40;
+
+            max-width: 1120px;
+
+        }
+
+
+
+        .modulecover .cover-tags {
+
+            margin-top: 20px;
+
+        }
+
+
+
+        .modulecover .cover-tags .pill {
+
+            font-size: 27px;
+
+            background: #ddeafb;
+
+            color: #214c84;
+
+        }
+
+
+
+        .slide-label {
+
+            position: absolute;
+
+            top: 9px;
+
+            right: 24px;
+
+            z-index: 50;
+
+            max-width: 46%;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            padding: 5px 10px;
+
+            border: 1px solid #cbd9ec;
+
+            border-radius: 999px;
+
+            background: #f4f8ff;
+
+            color: #375a82;
+
+            font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+
+            font-size: 16px !important;
+
+            line-height: 1.15;
+
+            opacity: .92;
+
+            pointer-events: none;
+
+        }
+
+
+
+        .placeholder {
+
+            border: 2px dashed #9ab4cc;
+
+            border-radius: 16px;
+
+            padding: 20px;
+
+            background: #f8fbff;
+
+            color: #39566f;
+
+            text-align: center;
+
+            min-height: 220px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+        }
+
+
+
+        .placeholder .title {
+
+            font-weight: 700;
+
+            color: #2056a8;
+
+            margin-bottom: 8px;
+
+            font-size: 27px;
+
+        }
+
+
+
+        .prompt-note {
+
+            font-size: 18px !important;
+
+            color: #6b7280 !important;
+
+        }
+
+
+
+        .summary-grid {
+
+            display: grid;
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            column-gap: 42px;
+
+            row-gap: 4px;
+
+            margin-left: 1.1em !important;
+
+        }
+
+
+
+        .reveal .fragment.fade-up {
+
+            transform: translateY(18px);
+
+            transition: opacity .38s ease, transform .38s ease;
+
+            will-change: opacity, transform;
+
+        }
+
+
+
+        .reveal .fragment.fade-up.visible {
+
+            transform: translateY(0);
+
+        }
+
+
+
+        /* 白底、高对比、避免绿色语法高亮 */
+
+        .hljs {
+
+            background: #fff !important;
+
+            color: #1f2937 !important;
+
+        }
+
+
+
+        .hljs-keyword,
+
+        .hljs-built_in,
+
+        .hljs-type {
+
+            color: #2056a8 !important;
+
+            font-weight: 700 !important;
+
+        }
+
+
+
+        .hljs-meta,
+
+        .hljs-preprocessor,
+
+        .hljs-title,
+
+        .hljs-function .hljs-title,
+
+        .hljs-name {
+
+            color: #6d28d9 !important;
+
+            font-weight: 700 !important;
+
+        }
+
+
+
+        .hljs-string,
+
+        .hljs-number,
+
+        .hljs-literal,
+
+        .hljs-params {
+
+            color: #a65b00 !important;
+
+        }
+
+
+
+        .hljs-comment {
+
+            color: #64748b !important;
+
+            font-style: italic !important;
+
+        }
+
+
+
+        .hljs-symbol,
+
+        .hljs-operator,
+
+        .hljs-punctuation {
+
+            color: #334155 !important;
+
+        }
+
+
+
+        /* Helper classes */
+
+        .tcm-badge {
+
+            display: inline-block;
+
+            padding: 7px 14px;
+
+            border-radius: 999px;
+
+            background: #edf4fb;
+
+            color: #173d70;
+
+            border: 1px solid #c6d5e8;
+
+            font-size: 24px !important;
+
+            margin: 5px;
+
+            font-weight: 700;
+
+        }
+
+
+
+        .data-strip {
+
+            display: flex;
+
+            gap: 14px;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+
+            margin: 20px 0;
+
+        }
+
+
+
+        .data-token {
+
+            min-width: 76px;
+
+            padding: 14px 18px;
+
+            border-radius: 14px;
+
+            background: #fff;
+
+            border: 1px solid #cbd8e6;
+
+            text-align: center;
+
+            font-size: 32px;
+
+            font-weight: 800;
+
+            box-shadow: 0 5px 12px rgba(31, 41, 55, .05);
+
+        }
+
+
+
+        .data-token.stop {
+
+            background: #fff5f5;
+
+            color: #b42318;
+
+        }
+
+
+
+        .data-token.skip {
+
+            background: #fff7ed;
+
+            color: #a65b00;
+
+        }
+
+
+
+        .formula {
+
+            font-size: 40px !important;
+
+            color: #173d70;
+
+            text-align: center !important;
+
+            margin: 20px 0 !important;
+
+        }
+
+
+
+        .code-small pre code {
+
+            max-height: 510px !important;
+
+            font-size: 22px !important;
+
+            line-height: 1.28 !important;
+
+        }
+
+
+
+        .path-grid {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 24px;
+
+            align-items: stretch;
+
+        }
+
+
+
+        .path {
+
+            border-radius: 16px;
+
+            border: 1px solid #cbd8e6;
+
+            background: #fff;
+
+            padding: 20px;
+
+        }
+
+
+
+        .path.break {
+
+            border-left: 8px solid #b42318;
+
+        }
+
+
+
+        .path.continue {
+
+            border-left: 8px solid #2c7be5;
+
+        }
+
+
+
+        .binary-line {
+
+            font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+
+            font-size: 40px;
+
+            text-align: center;
+
+            background: #fff;
+
+            border: 1px solid #d8e1ec;
+
+            border-radius: 12px;
+
+            padding: 18px;
+
+        }
+
+
+
+        .prompt {
+
+            background: #f7f7fb;
+
+            border-left: 6px solid #6d28d9;
+
+            padding: 18px 22px;
+
+            border-radius: 10px;
+
+            font-size: 22px;
+
+            line-height: 1.55;
+
+            text-align: left;
+
+            white-space: normal;
+
+        }
+
+
+        .c-code {
+            background: #F6F8FA !important;
+            border: 2px solid #D8E3EA;
+            border-radius: 12px;
+            margin: 0 !important;
+            padding: 16px 20px !important;
+            box-shadow: none !important;
+            line-height: 1.33 !important;
+            max-height: 585px;
+            overflow: auto;
+            text-align: left !important
+        }
+
+        .c-code code {
+            font-family: Consolas, "SFMono-Regular", "Source Code Pro", monospace !important;
+            font-size: 27px !important;
+            color: #223445 !important;
+            line-height: 1.38 !important;
+            background: transparent !important;
+            white-space: pre !important
+        }
+
+        .data-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 29px;
+            line-height: 1.4;
+            text-align: center;
+            background: white
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #C8D9E2;
+            padding: 11px 10px
+        }
+
+        .data-table th {
+            background: #EAF3F7;
+            color: #173D59;
+            font-weight: 700
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #F9FBFC
+        }
+
+        .equation {
+            font-family: Consolas, monospace;
+            font-size: 39px;
+            color: var(--ink);
+            background: #F7FAFC;
+            border: 1px solid #D9E6ED;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-align: center
+        }
+
+        .callout {
+            border-left: 7px solid var(--teal);
+            background: #F2F9FA;
+            padding: 16px 24px;
+            border-radius: 0 12px 12px 0;
+            font-size: 34px
+        }
+
+        .callout.warn {
+            border-color: #D49D2F;
+            background: #FFF9EE
+        }
+
+        .callout.bad {
+            border-color: #C65B5B;
+            background: #FFF6F6
+        }
+
+        .interactive {
+            border: 2px solid #BDD6DF;
+            background: linear-gradient(#F9FCFD, #FFF);
+            border-radius: 15px;
+            padding: 17px 22px;
+            color: var(--ink);
+            font-size: 27px;
+            min-height: 300px;
+            box-sizing: border-box
+        }
+
+        .interactive .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 25px
+        }
+
+        .interactive button,
+        .qbox button {
+            border: 1px solid #8DBAC7;
+            background: #E8F5F7;
+            color: #124D5D;
+            padding: 8px 17px;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            font-family: inherit
+        }
+
+        .interactive button:hover,
+        .qbox button:hover {
+            background: #C7E8EF
+        }
+
+        .interactive button:focus-visible,
+        .qbox button:focus-visible {
+            outline: 4px solid #E5AC41
+        }
+
+        .interactive input,
+        .interactive select,
+        .interactive textarea {
+            font-family: Consolas, Arial, sans-serif;
+            font-size: 25px;
+            border: 1.5px solid #9AB9C7;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--ink);
+            background: white
+        }
+
+        .interactive input[type=range] {
+            width: 250px;
+            accent-color: var(--teal)
+        }
+
+        .interactive input[type=number] {
+            width: 165px
+        }
+
+        .interactive textarea {
+            width: 94%;
+            height: 66px;
+            resize: vertical;
+            font-size: 24px
+        }
+
+        .interactive .screen {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 1fr 1fr
+        }
+
+        .interactive .readout {
+            background: white;
+            border: 1px solid #D5E3E9;
+            border-radius: 8px;
+            padding: 13px 16px;
+            font-size: 26px;
+            line-height: 1.36
+        }
+
+        .interactive .readout b {
+            color: var(--teal)
+        }
+
+        .interactive .explain {
+            font-size: 24px;
+            color: var(--muted);
+            margin-top: 12px
+        }
+
+        .bits {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow: hidden
+        }
+
+        .bit {
+            min-width: 31px;
+            max-width: 43px;
+            flex: 1;
+            background: #EDF4F8;
+            color: #284257;
+            border: 1px solid #C8D8E2;
+            border-radius: 5px;
+            text-align: center;
+            font: 700 29px Consolas, monospace;
+            padding: 7px 0
+        }
+
+        .bit.one {
+            background: #CBE8EE;
+            border-color: #67AEBB;
+            color: #07495A
+        }
+
+        .bit.sign {
+            background: #EBDDF0;
+            border-color: #AB87BA;
+            color: #5F326B
+        }
+
+        .bit.exp {
+            background: #DEECFF;
+            border-color: #83ABDA;
+            color: #204F91
+        }
+
+        .bit.frac {
+            background: #E2F4E7;
+            border-color: #9ACCA8;
+            color: #27633C
+        }
+
+        .bit.hot {
+            background: #F8DDB1;
+            border-color: #CF974A
+        }
+
+        .bit-label {
+            font-size: 21px;
+            color: var(--muted);
+            margin: 4px 0 8px
+        }
+
+        .bitrow {
+            display: grid;
+            grid-template-columns: 180px 1fr 175px;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0
+        }
+
+        .ieee-field {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0
+        }
+
+        .ieee-field>label {
+            width: 95px;
+            flex: none;
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 22px
+        }
+
+        .ieee-field .bits {
+            flex: 1;
+            gap: 2px
+        }
+
+        .interactive[data-demo="ieee"] .ieee-field .bit {
+            min-width: 15px;
+            max-width: none;
+            font-size: 20px;
+            padding: 5px 0
+        }
+
+        .bitrow .rowname {
+            font-weight: 750;
+            font-size: 28px
+        }
+
+        .bitrow .rowhint {
+            font-size: 23px;
+            color: var(--muted)
+        }
+
+        .qbox {
+            background: #F4FAFC;
+            border: 2px solid #B5D3DF;
+            border-radius: 12px;
+            padding: 18px 22px;
+            font-size: 32px
+        }
+
+        .qbox .answer {
+            background: white;
+            border-left: 5px solid var(--teal);
+            padding: 12px 20px;
+            margin-top: 12px;
+            font-size: 29px
+        }
+
+        .qbox button {
+            margin-top: 12px
+        }
+
+        .steps {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px
+        }
+
+        .steps span {
+            flex: 1;
+            text-align: center;
+            background: #E7F2F6;
+            border-radius: 9px;
+            padding: 18px 8px;
+            font-size: 30px;
+            font-weight: 700
+        }
+
+        .offline-bar button {
+            border: 1px solid #95B9C5;
+            border-radius: 5px;
+            color: #153653;
+            background: white;
+            padding: 5px 14px;
+            cursor: pointer
+        }
+
+        /* 8位二进制位权与数值严格垂直对齐展示看板 */
+        .bit-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin: 6px 0 2px;
+        }
+
+        .bit-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            border: 1.5px solid #d8e2ec;
+            border-radius: 9px;
+            padding: 8px 4px 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .bit-col:hover {
+            border-color: #2056a8;
+            background: #f0f6ff;
+            transform: translateY(-2px);
+        }
+
+        .bit-col.active {
+            background: #eaf3ff;
+            border-color: #4b8de8;
+            box-shadow: 0 3px 8px rgba(32, 86, 168, 0.15);
+        }
+
+        .bit-col .col-pos {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .bit-col .col-weight {
+            font-size: 15px;
+            color: #1e3a8a;
+            text-align: center;
+            line-height: 1.15;
+            margin-bottom: 6px;
+        }
+
+        .bit-col .col-weight .col-w-num {
+            font-weight: 700;
+            font-size: 18px;
+            color: #0f4c81;
+        }
+
+        .bit-col .bit-btn {
+            width: 100%;
+            max-width: 56px;
+            height: 52px;
+            background: #ffffff;
+            color: #334155;
+            border: 2px solid #cbd5e1;
+            border-radius: 7px;
+            font: 700 28px Consolas, monospace;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.15s ease;
+            pointer-events: none;
+        }
+
+        .bit-col.active .bit-btn {
+            background: #2056a8;
+            color: #ffffff;
+            border-color: #164082;
+            box-shadow: 0 3px 6px rgba(32, 86, 168, 0.25);
+        }
+
+        .bit-col .col-val {
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 5px;
+            color: #94a3b8;
+            font-family: Consolas, monospace;
+        }
+
+        .bit-col.active .col-val {
+            color: #059669;
+        }
+
+
+
+        /* === 交互组件与后置说明卡片防重叠优化 === */
+        .interactive {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            clear: both !important;
+            min-height: 0 !important;
+            padding: 14px 20px !important;
+            font-size: 23px !important;
+            margin-bottom: 14px !important;
+            position: relative !important;
+            z-index: 2 !important;
+            overflow: visible !important;
+        }
+
+        section>.card,
+        .interactive+.card,
+        .interactive+.bluebox,
+        .interactive+.quote,
+        .interactive+.grid2,
+        .interactive+.grid3 {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            box-sizing: border-box !important;
+            clear: both !important;
+            margin-top: 14px !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        .interactive+.grid2,
+        .interactive+.grid3 {
+            display: grid !important;
+        }
+
+        .interactive+.grid2>.card,
+        .interactive+.grid3>.card {
+            height: 100% !important;
+        }
+
+        .interactive+.card p,
+        .interactive+.bluebox,
+        .interactive+.quote {
+            font-size: 21px !important;
+            line-height: 1.4 !important;
+        }
+
+        .interactive+.card {
+            padding: 14px 20px !important;
+        }
+
+        .interactive+.bluebox {
+            padding: 12px 18px !important;
+        }
+
+        .interactive+.quote {
+            padding: 14px 22px !important;
+        }
+
+        /* === 交互组件控件容器与防Reveal.js冲突强化 === */
+        .interactive {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            clear: both !important;
+            min-height: 0 !important;
+            padding: 12px 18px !important;
+            font-size: 22px !important;
+            margin-bottom: 12px !important;
+            position: relative !important;
+            z-index: 5 !important;
+            overflow: visible !important;
+            background: linear-gradient(#F9FCFD, #FFF);
+            border: 2px solid #BDD6DF;
+            border-radius: 14px;
+        }
+
+        .reveal .interactive .demo-controls,
+        .reveal .interactive .controls,
+        .interactive .demo-controls,
+        .interactive .controls {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 10px 14px !important;
+            align-items: center !important;
+            margin-bottom: 12px !important;
+            font-size: 22px !important;
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            width: 100% !important;
+            pointer-events: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 10 !important;
+        }
+
+        .reveal .interactive button,
+        .reveal .interactive .demo-controls button,
+        .reveal .interactive .controls button,
+        .interactive button {
+            display: inline-flex !important;
+            position: static !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            border: 1.5px solid #8DBAC7 !important;
+            background: #E8F5F7 !important;
+            color: #124D5D !important;
+            padding: 6px 14px !important;
+            border-radius: 7px !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            font-family: inherit !important;
+            line-height: 1.3 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .reveal .interactive button:hover,
+        .interactive button:hover {
+            background: #2056a8 !important;
+            color: #ffffff !important;
+            border-color: #2056a8 !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .reveal .interactive button:active,
+        .interactive button:active {
+            transform: translateY(1px) !important;
+        }
+
+        .interactive .demo-controls input,
+        .interactive .demo-controls select,
+        .interactive input,
+        .interactive select {
+            position: static !important;
+            display: inline-block !important;
+            font-family: 'Cascadia Code', Consolas, monospace !important;
+            font-size: 21px !important;
+            border: 1.5px solid #9AB9C7 !important;
+            border-radius: 7px !important;
+            padding: 5px 10px !important;
+            color: var(--ink) !important;
+            background: white !important;
+            pointer-events: auto !important;
+            box-sizing: border-box !important;
+        }
+
+        .interactive .demo-controls label,
+        .interactive label {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-size: 21px !important;
+            font-weight: 500 !important;
+        }
+
+        .interactive input[type=range] {
+            width: 200px !important;
+            accent-color: var(--teal) !important;
+            cursor: pointer !important;
+        }
+
+        /* 8位板子高紧凑垂直对齐 */
+        .bit-board {
+            display: grid !important;
+            grid-template-columns: repeat(8, 1fr) !important;
+            gap: 8px !important;
+            margin: 4px 0 2px !important;
+        }
+
+        .bit-col {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            background: #f8fafc !important;
+            border: 1.5px solid #d8e2ec !important;
+            border-radius: 8px !important;
+            padding: 6px 3px 5px !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            transition: all 0.15s ease !important;
+        }
+
+        .bit-col .col-pos {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            margin-bottom: 2px !important;
+        }
+
+        .bit-col .col-weight {
+            font-size: 15px !important;
+            line-height: 1.15 !important;
+            text-align: center !important;
+            color: #334155 !important;
+            margin-bottom: 4px !important;
+        }
+
+        .bit-col .col-w-num {
+            font-weight: 700 !important;
+            color: #2056a8 !important;
+            font-family: Consolas, monospace !important;
+        }
+
+        .bit-col .bit-btn {
+            width: 44px !important;
+            height: 38px !important;
+            border-radius: 6px !important;
+            font: 700 24px Consolas, monospace !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .bit-col.active .bit-btn {
+            background: #2056a8 !important;
+            color: #ffffff !important;
+            border-color: #164082 !important;
+            box-shadow: 0 2px 5px rgba(32, 86, 168, 0.25) !important;
+        }
+
+        .bit-col .col-val {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            margin-top: 3px !important;
+            color: #94a3b8 !important;
+            font-family: Consolas, monospace !important;
+        }
+
+        .bit-col.active .col-val {
+            color: #059669 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- ==================== 模块 1：课程导入与核心问题 ==================== -->
+            <section id="sec-1-0">
+                <section id="sec-1-1">
+                    <p class="center sectiontag">程序设计基础 · 第6次课 · 第1课时</p>
+                    <h1 class="center">数据类型与表达式（一）<br />数据的表示与存储：内存底层的位与码</h1>
+                    <p class="center title-meta">从硬件位权展开、原反补码到 IEEE 754 浮点体系，理解“计算机如何存储与解释数据”</p>
+                    <aside class="notes">0:00—1:00。本课定位：从宏观语法下沉到硬件存储本质，解释为什么会有类型、为什么会有溢出、为什么浮点数计算会有精度偏差。</aside>
+                </section>
+                <section id="sec-1-2">
+                    <h2>本课核心问题</h2>
+                    <p class="lead center">同样是内存里的 8 个 bit，为什么能解释出完全不同的结果？</p>
+                    <div class="grid3">
+                        <div class="card">
+                            <h3>现实认知冲突</h3>
+                            <p class="small">为什么 <code>11111111</code> 既能代表 <code>-1</code>，又能代表 <code>255</code>？为什么
+                                <code>0.1 + 0.2</code> 在计算机里不等于 <code>0.3</code>？</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>今天核心推进</h3>
+                            <p class="small">剥开 C 语言类型的语法外衣，看透二进制、符号位、补码以及浮点数 IEEE 754 科学编码机制。</p>
+                        </div>
+                        <div class="card">
+                            <h3>底层核心机制</h3>
+                            <p class="small">二进制按权展开、补码加法硬件归一化、指数移码偏置，以及浮点有限尾数带来的舍入误差。</p>
+                        </div>
+                    </div>
+                    <aside class="notes">1:00—3:00。引出本课脉络：位串是客观存在的硬件状态，类型是赋予位串的解释规则。</aside>
+                </section>
+                <section id="sec-1-3">
+                    <h2>第1课时学习目标</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>知识目标</h3>
+                            <ul>
+                                <li>理解二进制位权原理与十进制、十六进制的双向转换</li>
+                                <li>掌握有符号整数的<strong>原码、反码、补码</strong>定义与补码加法溢出</li>
+                                <li>理解 IEEE 754 浮点数三要素（符号位、移码指数、尾数）与精度限制</li>
+                                <li>掌握字符与整数的 ASCII 映射关系及常见转义字符</li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3>能力目标</h3>
+                            <ul>
+                                <li>能手算 8 位有符号数的原反补码并准确预测边界溢出范围（<code>-128 ~ 127</code>）</li>
+                                <li>能用 <code>fabs(a - b) &lt; eps</code> 编写规范的浮点数安全近似比较逻辑</li>
+                                <li>能借助 AI 协作推演整型溢出边界，避免由于类型选用不当导致的隐蔽 Bug</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <aside class="notes">3:00—5:00。明确本课要求：不仅要记住名词，更要具备在纸上和代码里推演位级行为的能力。</aside>
+                </section>
+            </section>
+            <!-- ==================== 模块 2：进位计数制与内存最小单位 ==================== -->
+            <section id="sec-2-0">
+                <section class="module-cover-slide" id="sec-2-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.1 / 进位计数制与位权展开</div>
+                        <div class="cover-title">从物理开关到信息表示：<br />比特、字节与十六进制</div>
+                        <div class="cover-subtitle">计算机一切信息的最小物理单位只有 0 和 1，按权展开是理解一切进位制的通用钥匙。</div>
+                        <div class="cover-tags">
+                            <span class="pill">比特 Bit</span>
+                            <span class="pill">字节 Byte</span>
+                            <span class="pill">按权展开</span>
+                            <span class="pill">十六进制 0x</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-2-2">
+                    <h2>先看最小单位：0 和 1（比特与字节）</h2>
+                    <div class="bluebox center" style="margin-bottom:20px;">
+                        <code>1 bit（位）= 1 个二进制开关（0 或 1）</code>　　<code>8 bits = 1 Byte（字节，内存最小寻址单位）</code>
+                    </div>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>单个比特的局限</h3>
+                            <p class="small">1 个 bit 只能记录 2 种状态（如高低电平、对与错）。面对现实世界纷繁复杂的数值，必须将多个 bit 捆绑使用。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>8位字节的丰富表达</h3>
+                            <p class="small">8 个 bit 排成一排，可以构成 \(2^8 = 256\) 种截然不同的 0/1
+                                状态组合。内存中的每一个字节都有唯一的<strong>物理内存地址</strong>。</p>
+                        </div>
+                    </div>
+                    <div class="quote" style="margin-top:18px;">
+                        在内存中，一切数据（无论是居民的血压数值、还是字符姓名）在物理芯片上都只是一串由高低电平构成的 0 和 1。
+                    </div>
+                </section>
+                <section id="sec-2-3">
+                    <h2>动手拨动 8 个二进制位：体验位权展开</h2>
+                    <div class="interactive" data-demo="binary"></div>
+                    <div class="card blue" data-static="" style="margin-top:14px;">
+                        <p class="small">💡 <b>操作提示：</b>从右往左位权依次为 2⁰=1, 2¹=2, 2²=4, 2³=8, 2⁴=16, 2⁵=32, 2⁶=64,
+                            2⁷=128。尝试将第 7、5、3、1 位设为 1，观察十六进制与十进制结果。</p>
+                    </div>
+                </section>
+                <section id="sec-2-4">
+                    <h2>进位计数制：十进制、二进制、八进制与十六进制</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>进制类型</th>
+                            <th>基数与数码</th>
+                            <th>C 语言前缀表示</th>
+                            <th>十进制 10</th>
+                            <th>十进制 16</th>
+                            <th>应用场景</th>
+                        </tr>
+                        <tr>
+                            <td><strong>十进制</strong></td>
+                            <td>基数 10，逢十进一（0~9）</td>
+                            <td>无前缀（默认），如 <code>16</code></td>
+                            <td><code>10</code></td>
+                            <td><code>16</code></td>
+                            <td>人类日常思维与常规输出</td>
+                        </tr>
+                        <tr>
+                            <td><strong>二进制</strong></td>
+                            <td>基数 2，逢二进一（0, 1）</td>
+                            <td><code>0b</code> / <code>0B</code>（C99扩展）</td>
+                            <td><code>0b1010</code></td>
+                            <td><code>0b10000</code></td>
+                            <td>硬件底层位串直接对应</td>
+                        </tr>
+                        <tr>
+                            <td><strong>八进制</strong></td>
+                            <td>基数 8，逢八进一（0~7）</td>
+                            <td>以数字 <code>0</code> 开头</td>
+                            <td><code>012</code></td>
+                            <td><code>020</code></td>
+                            <td>传统文件权限、历史系统</td>
+                        </tr>
+                        <tr>
+                            <td><strong>十六进制</strong></td>
+                            <td>基数 16，逢十六进一（0~9, A~F）</td>
+                            <td>以 <code>0x</code> 或 <code>0X</code> 开头</td>
+                            <td><code>0xA</code></td>
+                            <td><code>0x10</code></td>
+                            <td>内存地址表示、位掩码排版</td>
+                        </tr>
+                    </table>
+                    <div class="bluebox" style="margin-top:16px;">
+                        <strong>为什么程序员钟爱十六进制？</strong> 因为 1 位十六进制数正好对应 4 位二进制（半字节，Nibble），8 位刚好写成 2 位十六进制（如
+                        <code>0xFB</code>），紧凑且绝不丢失位结构。
+                    </div>
+                </section>
+            </section>
+            <!-- ==================== 模块 3：符号位与有符号整数编码 ==================== -->
+            <section id="sec-3-0">
+                <section class="module-cover-slide" id="sec-3-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.1 / 整数编码与硬件运算</div>
+                        <div class="cover-title">负号藏在哪里？<br />补码如何让减法变成加法</div>
+                        <div class="cover-subtitle">为了让计算机只用加法器就能完成减法，并消除 +0 与 -0 的冗余，补码应运而生。</div>
+                        <div class="cover-tags">
+                            <span class="pill">符号位</span>
+                            <span class="pill">原码</span>
+                            <span class="pill">反码</span>
+                            <span class="pill">补码</span>
+                            <span class="pill">补码加法溢出</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-2">
+                    <h2>一个问题：负号存在哪里？</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>纸面上的数学写法</h3>
+                            <p class="large center danger"><code>-5</code></p>
+                            <p class="small muted">人类使用专门的符号 <code>-</code> 标识负数，使用数字 <code>5</code> 标识绝对值大小。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>机器的物理现实</h3>
+                            <p class="large center accent"><code>[ ? ] 0 0 0 0 1 0 1</code></p>
+                            <p class="small muted">内存电路上只有 0 和 1，无法存入第三种“减号”形状的符号！</p>
+                        </div>
+                    </div>
+                    <div class="quote" style="margin-top:20px;">
+                        <strong>工程妥协：</strong>牺牲最高位（最左侧的一位）作为<strong>符号位（Sign Bit）</strong>：约定 <code>0</code>
+                        代表正数，<code>1</code> 代表负数。
+                    </div>
+                </section>
+                <section id="sec-3-3">
+                    <h2>原码与反码：负数的最初尝试与局限</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>原码（Sign-Magnitude）</h3>
+                            <p class="small">最高位作符号位，其余各位为数值的绝对值：</p>
+                            <p class="formula"><code>+5 → 00000101</code>　　<code>-5 → 10000101</code></p>
+                            <p class="tiny danger"><strong>致命缺陷：</strong>零有两种编码：<code>+0 (00000000)</code> 与
+                                <code>-0 (10000000)</code>；且无法直接用普通加法器做减法！</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>反码（Ones' Complement）</h3>
+                            <p class="small">正数反码与原码相同；负数符号位为 1，数值位按位取反：</p>
+                            <p class="formula"><code>+5 → 00000101</code>　　<code>-5 → 11111010</code></p>
+                            <p class="tiny danger"><strong>局限：</strong>依然存在 <code>+0 (00000000)</code> 与
+                                <code>-0 (11111111)</code> 的二义性，跨零计算需要循环进位。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-4">
+                    <h2>补码的诞生：加1让减法彻底转化为加法</h2>
+                    <div class="flow" style="margin-top:10px; margin-bottom:18px;">
+                        <div class="step">原码表示 <code>-5</code><br /><code>10000101</code></div>
+                        <div class="arrow">→</div>
+                        <div class="step">数值位取反（反码）<br /><code>11111010</code></div>
+                        <div class="arrow">→</div>
+                        <div class="step">末位加 1（补码）<br /><code>11111011</code></div>
+                    </div>
+                    <div class="grid2">
+                        <div class="card blue">
+                            <h3>硬件革命：减法变成加法</h3>
+                            <p class="small">在补码体系下，\(A - B = A + (-B)_{\text{补}}\)。CPU
+                                内部只需要设计结构极为简单高效的<strong>加法器</strong>，无需专门的减法器硬件！</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>消除零的二义性</h3>
+                            <p class="small"><code>+0</code> 的补码是 <code>00000000</code>；<code>-0</code> 取反加 1 后为
+                                <code>[1]00000000</code>（溢出进位丢弃），同样归一为 <code>00000000</code>！</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-5">
+                    <h2>四种编码横向比较器（交互演练）</h2>
+                    <div class="interactive" data-demo="encodings"></div>
+                    <div class="bluebox" data-static="" style="margin-top:14px;">
+                        观察体会：对于正数，原码、反码、补码三者完全相同；而对于负数，三者呈现出精巧的位演化规律。
+                    </div>
+                </section>
+                <section id="sec-3-6">
+                    <h2>四种编码的核心差异对比总结</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>编码方案</th>
+                            <th><code>+5</code> 的 8 位表示</th>
+                            <th><code>-5</code> 的 8 位表示</th>
+                            <th>零的编码情况</th>
+                            <th>运算硬件要求</th>
+                        </tr>
+                        <tr>
+                            <td><strong>原码</strong></td>
+                            <td><code>00000101</code></td>
+                            <td><code>10000101</code></td>
+                            <td>存在 <code>+0</code> 与 <code>-0</code> 两种表示</td>
+                            <td>符号与绝对值需分开处理，减法器复杂</td>
+                        </tr>
+                        <tr>
+                            <td><strong>反码</strong></td>
+                            <td><code>00000101</code></td>
+                            <td><code>11111010</code></td>
+                            <td>存在 <code>+0</code> 与 <code>-0</code> 两种表示</td>
+                            <td>加减法需设计循环进位端</td>
+                        </tr>
+                        <tr>
+                            <td><strong>补码（现代标准）</strong></td>
+                            <td><code>00000101</code></td>
+                            <td><code>11111011</code></td>
+                            <td><strong>零只有唯一的 <code>00000000</code></strong></td>
+                            <td><strong>统一使用加法器，运算效率极高</strong></td>
+                        </tr>
+                    </table>
+                </section>
+                <section id="sec-3-7">
+                    <h2>补码为什么能表示 -128？不对称区间之谜</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>8位原码/反码的取值范围</h3>
+                            <p class="center large danger"><code>-127 ～ +127</code></p>
+                            <p class="small">由于 <code>+0</code> 与 <code>-0</code> 重复占用了 2 个编码位置，因此 256 个状态只能表示 255
+                                个独立数值。</p>
+                        </div>
+                        <div class="card blue">
+                            <h3>8位补码的取值范围</h3>
+                            <p class="center large good"><code>-128 ～ +127</code></p>
+                            <p class="small">因为零只有唯一编码，多出来的一个位串 <code>10000000</code> 在数学上恰好被定义为最小负数
+                                <strong>-128</strong>！</p>
+                        </div>
+                    </div>
+                    <div class="quote" style="margin-top:20px;">
+                        <strong>重要推论：</strong>任何 \(n\) 位补码整数表示的范围都是不对称的：\([-2^{n-1}, \; 2^{n-1}-1]\)。负数总是比正数多一个！
+                    </div>
+                </section>
+                <section id="sec-3-8">
+                    <h2>补码加法：让机器只做自然溢出的位加法</h2>
+                    <div class="interactive" data-demo="addition"></div>
+                    <div class="card soft" data-static="" style="margin-top:14px;">
+                        <p class="small">试一试：<code>5 + (-5)</code> 产生进位溢出，低 8 位自然保留 <code>0</code>；而
+                            <code>127 + 1</code> 会发生什么？符号位从 0 翻转为 1，产生严重的整型溢出（变成 -128）！</p>
+                    </div>
+                </section>
+                <section id="sec-3-9">
+                    <h2>有符号与无符号：解释规则变了</h2>
+                    <div class="bluebox center" style="margin-bottom:18px;">
+                        同样是内存中的 <code>11111111₂ (0xFF)</code>：<br />
+                        若作为 <strong><code>signed char</code></strong> 解释，它是补码 <strong><code>-1</code></strong>；<br />
+                        若作为 <strong><code>unsigned char</code></strong> 解释，它是纯无符号正数 <strong><code>255</code></strong>。
+                    </div>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>有符号类型（默认）</h3>
+                            <ul>
+                                <li>最高位解释为符号位（0正1负）</li>
+                                <li>采用补码运算，支持负数表达</li>
+                                <li><code>char: -128 ~ 127</code></li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3>无符号类型（unsigned）</h3>
+                            <ul>
+                                <li>所有位均作为绝对数值位参与位权展开</li>
+                                <li>只能表示非负数，正数范围翻倍</li>
+                                <li><code>unsigned char: 0 ~ 255</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-10">
+                    <h2>实际 C 语言整数类型的存储大小（sizeof）</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>C 数据类型</th>
+                            <th>典型字节数</th>
+                            <th>总位数</th>
+                            <th>有符号取值范围</th>
+                            <th>无符号取值范围</th>
+                        </tr>
+                        <tr>
+                            <td><code>char</code></td>
+                            <td>1 Byte</td>
+                            <td>8 bits</td>
+                            <td>-128 ~ 127</td>
+                            <td>0 ~ 255</td>
+                        </tr>
+                        <tr>
+                            <td><code>short [int]</code></td>
+                            <td>2 Bytes</td>
+                            <td>16 bits</td>
+                            <td>-32,768 ~ 32,767</td>
+                            <td>0 ~ 65,535</td>
+                        </tr>
+                        <tr>
+                            <td><code>int</code></td>
+                            <td>4 Bytes</td>
+                            <td>32 bits</td>
+                            <td>约 -21.47 亿 ~ +21.47 亿</td>
+                            <td>0 ~ 约 42.94 亿</td>
+                        </tr>
+                        <tr>
+                            <td><code>long long</code></td>
+                            <td>8 Bytes</td>
+                            <td>64 bits</td>
+                            <td>约 \(-9.22 \times 10^{18} \sim 9.22 \times 10^{18}\)</td>
+                            <td>0 ~ 约 \(1.84 \times 10^{19}\)</td>
+                        </tr>
+                    </table>
+                    <p class="small muted center">注：各类型具体大小由编译器与系统 ABI 决定，C 标准仅规定
+                        <code>sizeof(short) &lt;= sizeof(int) &lt;= sizeof(long)</code>。</p>
+                </section>
+                <section id="sec-3-11">
+                    <h2>🤖 AI 协作互动：整型溢出与符号位翻转推演</h2>
+                    <div class="card blue">
+                        <h3>🤖 课堂实战：让 AI 推演整型溢出的微观时序</h3>
+                        <div class="prompt">
+                            我正在学习 C 语言整数补码。有一段循环代码：for (signed char c = 120; c &lt;= 130; c++) printf("%d ",
+                            c);。请不要直接修改代码，帮我逐步推演：当 c 达到 127 后执行 c++，底层的 8 位补码发生了什么变化？为什么循环条件 c &lt;= 130
+                            永远无法打破并导致死循环？请按【内存位变化—补码解释—逻辑后果】提供分析。
+                        </div>
+                        <p class="small muted" style="margin-top:10px;">💡 <b>课堂互动：</b>同桌两人对照推演表，直观体会 127 变成 -128
+                            的反转灾难，理解为什么循环控制变量不能用范围过小的整型。</p>
+                    </div>
+                </section>
+            </section>
+            <!-- ==================== 模块 4：实数的计算机表示：IEEE 754 浮点体系 ==================== -->
+            <section id="sec-4-0">
+                <section class="module-cover-slide" id="sec-4-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.1 / 实数的存储：IEEE 754</div>
+                        <div class="cover-title">有限的比特，<br />如何表示无限连续的实数？</div>
+                        <div class="cover-subtitle">定点数走向浮点数：科学记数法的二进制映射与移码指数机制。</div>
+                        <div class="cover-tags">
+                            <span class="pill">科学记数法</span>
+                            <span class="pill">IEEE 754 标准</span>
+                            <span class="pill">移码 Bias</span>
+                            <span class="pill">float / double</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-2">
+                    <h2>从整数走向小数：十进制小数转二进制</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>整数部分：除 2 取余法</h3>
+                            <p class="small">从低位到高位逆序排列余数：</p>
+                            <p class="formula">
+                                <code>13 ÷ 2 = 6 ... 1</code><br /><code>6 ÷ 2 = 3 ... 0</code><br /><code>3 ÷ 2 = 1 ... 1</code><br /><code>1 ÷ 2 = 0 ... 1</code><br />得
+                                <strong><code>13₁₀ = 1101₂</code></strong></p>
+                        </div>
+                        <div class="card soft">
+                            <h3>小数部分：乘 2 取整法</h3>
+                            <p class="small">从高位到低位顺序列出整数部分：</p>
+                            <p class="formula">
+                                <code>0.25 × 2 = 0.5 ... 取整 0</code><br /><code>0.50 × 2 = 1.0 ... 取整 1</code><br />小数部分清零，结束！<br />得
+                                <strong><code>0.25₁₀ = 0.01₂</code></strong></p>
+                        </div>
+                    </div>
+                    <div class="bluebox center" style="margin-top:18px;">
+                        组合得到定点实数：<strong><code>13.25₁₀ = 1101.01₂</code></strong>
+                    </div>
+                </section>
+                <section id="sec-4-3">
+                    <h2>动手把十进制小数改写成二进制（交互实验）</h2>
+                    <div class="interactive" data-demo="fraction"></div>
+                    <div class="card soft" data-static="" style="margin-top:14px;">
+                        <p class="small">思考：先试 <code>13.25</code> 与 <code>0.625</code>，它们很快乘 2 归零；再试
+                            <strong><code>0.1</code></strong>，为什么它一直乘 2 却永远无法清零？</p>
+                    </div>
+                </section>
+                <section id="sec-4-4">
+                    <h2>浮点数的三部分架构：符号、指数与尾数</h2>
+                    <div class="quote center" style="margin-bottom:16px;">
+                        任何一个二进制实数都可以规格化为类似科学记数法的形式：<br />
+                        \[V = (-1)^S \times (1.M) \times 2^{E - \text{Bias}}\]
+                    </div>
+                    <div class="grid3">
+                        <div class="card" style="background:#f4f8ff; border-color:#c9d9ef;">
+                            <h3>1. 符号位 \(S\)</h3>
+                            <p class="small"><strong>1 bit</strong>：<code>0</code> 代表正数，<code>1</code> 代表负数。决定整体数值的正负方向。
+                            </p>
+                        </div>
+                        <div class="card" style="background:#fff8ed; border-color:#f0d7b4;">
+                            <h3>2. 阶码/指数 \(E\)</h3>
+                            <p class="small">保存经“移码（Bias）”偏移后的幂次，决定数值的<strong>覆盖范围与数量级</strong>。</p>
+                        </div>
+                        <div class="card" style="background:#eafaf1; border-color:#b7ebc9;">
+                            <h3>3. 尾数 \(M\)</h3>
+                            <p class="small">保存规格化后小数点后的小数位（最高位 1 隐含不存），决定数值的<strong>精度与分辨率</strong>。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-5">
+                    <h2>为什么浮点指数需要“移码（Bias）”？</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>如果指数也用补码</h3>
+                            <p class="small">指数既有正（如 \(2^3\)），也有负（如 \(2^{-5}\)）。如果用补码存储，负指数最高位为
+                                1，直接比较大小极其麻烦，硬件需要复杂的符号判断。</p>
+                        </div>
+                        <div class="card blue">
+                            <h3>移码：加上一个固定偏置值</h3>
+                            <p class="small">单精度 float 偏置 <code>Bias = 127</code>。真实指数是 <code>3</code>，存储时加上 127 变成
+                                <code>130 (10000010)</code>；真实指数是 <code>-2</code>，存为 <code>125 (01111101)</code>。</p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:18px;">
+                        <strong>移码的精妙之处：</strong>将所有可能的指数全部平移为<strong>非负整数</strong>！比较两个浮点数大小时，硬件直接像整数一样逐位比对，极大简化电路设计。
+                    </div>
+                </section>
+                <section id="sec-4-6">
+                    <h2>单精度 float 与双精度 double：字段横向对比</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>规格类型</th>
+                            <th>总位数</th>
+                            <th>符号位 S</th>
+                            <th>阶码指数 E (Bias)</th>
+                            <th>尾数字段 M</th>
+                            <th>有效十进制精度</th>
+                            <th>数值绝对值范围</th>
+                        </tr>
+                        <tr>
+                            <td><strong><code>float</code><br />(单精度 binary32)</strong></td>
+                            <td>32 bits (4B)</td>
+                            <td>1 bit</td>
+                            <td>8 bits (Bias = 127)</td>
+                            <td>23 bits (实含24位有效)</td>
+                            <td><strong>约 6 ~ 7 位</strong></td>
+                            <td>\(\approx 1.18 \times 10^{-38} \sim 3.40 \times 10^{38}\)</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>double</code><br />(双精度 binary64)</strong></td>
+                            <td>64 bits (8B)</td>
+                            <td>1 bit</td>
+                            <td>11 bits (Bias = 1023)</td>
+                            <td>52 bits (实含53位有效)</td>
+                            <td><strong>约 15 ~ 17 位</strong></td>
+                            <td>\(\approx 2.23 \times 10^{-308} \sim 1.79 \times 10^{308}\)</td>
+                        </tr>
+                    </table>
+                    <p class="small muted center">C 语言默认浮点字面量（如 <code>3.14</code>）均为 <code>double</code> 类型；若要指定为 float
+                        需加后缀 <code>3.14f</code>。</p>
+                </section>
+                <section id="sec-4-7">
+                    <h2>IEEE 754 位级观察器（动态拆解实验）</h2>
+                    <div class="interactive" data-demo="ieee"></div>
+                    <div class="card soft" data-static="" style="margin-top:14px;">
+                        <p class="small">输入任意数值，观察 32 位与 64 位下符号位、指数移码、尾数有效位的分布切片。</p>
+                    </div>
+                </section>
+                <section id="sec-4-8">
+                    <h2>实战拆解：将 13.25 编码为单精度 IEEE 754</h2>
+                    <div class="flow" style="margin-bottom:18px;">
+                        <div class="step">写出二进制<br /><code>1101.01₂</code></div>
+                        <div class="arrow">→</div>
+                        <div class="step">科学规格化<br /><code>1.10101₂ × 2³</code></div>
+                        <div class="arrow">→</div>
+                        <div class="step">求阶码移码<br /><code>3 + 127 = 130</code></div>
+                        <div class="arrow">→</div>
+                        <div class="step">组合 32 位位串<br /><code>S | E | M</code></div>
+                    </div>
+                    <table class="compare">
+                        <tr>
+                            <th>分段</th>
+                            <th>字段含义</th>
+                            <th>推导计算</th>
+                            <th>最终存储二进制</th>
+                        </tr>
+                        <tr>
+                            <td><strong>S 符号</strong></td>
+                            <td>正数符号为 0</td>
+                            <td>正数</td>
+                            <td><code>0</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>E 指数</strong></td>
+                            <td>8 位移码 (Bias=127)</td>
+                            <td>\(3 + 127 = 130\)</td>
+                            <td><code>10000010</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>M 尾数</strong></td>
+                            <td>23 位（去掉隐含前导1）</td>
+                            <td>后跟 <code>10101</code>，右补零至23位</td>
+                            <td><code>10101000000000000000000</code></td>
+                        </tr>
+                    </table>
+                    <p class="center large" style="margin-top:14px;">
+                        最终拼成：<code>0 10000010 10101000000000000000000</code>（十六进制 <code>0x41540000</code>）</p>
+                </section>
+                <section id="sec-4-9">
+                    <h2>数值范围与表示精度：由阶码和尾数独立决定</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>范围（由阶码决定）</h3>
+                            <p class="small">阶码指数决定了该数值在数轴上的<strong>宏观跨度数量级</strong>（能表示多大如 \(10^{38}\)，或多小如
+                                \(10^{-38}\)）。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>精度（由尾数决定）</h3>
+                            <p class="small">尾数的有效位数决定了邻近两个可分辨数值之间的<strong>微观刻度分辨率</strong>。float 超过 7 位十进制数就会发生舍入变形！
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:20px;">
+                        <strong>常见误区：</strong>“float 范围比 int 大，所以精度一定比 int 高”——<strong>错误！</strong> float 虽然范围远超 32
+                        位整型，但其有效数字只有 24 位，表示大整数时会丢失个位甚至低多位精度！
+                    </div>
+                </section>
+                <section id="sec-4-10">
+                    <h2>为什么 0.1 无法在二进制浮点中精确存储？</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>十进制视角的 0.1</h3>
+                            <p class="small">在十进制中，\(0.1 = \frac{1}{10}\)，因为分母 10 是基数 10 的质因数，所以它是一位有限小数。</p>
+                        </div>
+                        <div class="card warn">
+                            <h3>二进制视角的 0.1</h3>
+                            <p class="small">在二进制中，分母 10 包含质因数 5，无法表示为 \(2^k\) 的有限和：</p>
+                            <p class="formula"><code>0.1₁₀ = 0.0001100110011...₂</code>（无限循环）</p>
+                        </div>
+                    </div>
+                    <div class="quote" style="margin-top:18px;">
+                        因为 float 只有 23 位尾数，double 只有 52 位尾数，<strong>无限循环小数必须被截断舍入</strong>。因此，计算机中存入的并不是严格的 0.1，而是一个极其逼近
+                        0.1 的近似值！
+                    </div>
+                </section>
+            </section>
+            <!-- ==================== 模块 5：浮点比较陷阱与字符编码 ==================== -->
+            <section id="sec-5-0">
+                <section class="module-cover-slide" id="sec-5-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.1 / 浮点判断与字符编码</div>
+                        <div class="cover-title">绝对相等是幻觉，<br />字符本质也是整数</div>
+                        <div class="cover-subtitle">浮点数判断必须引入误差容限 epsilon；字符在内存中本质是 ASCII 整数编码。</div>
+                        <div class="cover-tags">
+                            <span class="pill">== 比较陷阱</span>
+                            <span class="pill">fabs 容限</span>
+                            <span class="pill">ASCII 编码</span>
+                            <span class="pill">转义字符</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-2">
+                    <h2>认知冲突：为什么计算后的浮点数不宜直接 ==？</h2>
+                    <pre><code class="language-c" data-trim="">double a = 0.1 + 0.2;
+if (a == 0.3) {
+    printf("相等\n");
+} else {
+    printf("不相等！实际 a = %.17f\n", a);
+}</code></pre>
+                    <div class="grid2" style="margin-top:16px;">
+                        <div class="card warn">
+                            <h3>屏幕运行输出</h3>
+                            <p class="large danger"><code>不相等！实际 a = 0.30000000000000004</code></p>
+                            <p class="small">因为 0.1 和 0.2 底层都被截断微量舍入，二者相加后比 0.3 多了 \(4 \times 10^{-17}\)！</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>工程规范法则</h3>
+                            <p class="small">在任何严谨的工业级软件（如医疗仪器、航天飞行控制）中：<br /><strong>绝对禁止对计算产生的浮点数直接使用 <code>==</code>
+                                    或 <code>!=</code> 进行判定！</strong></p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-3">
+                    <h2>浮点比较容差实验（调整 Epsilon 验证）</h2>
+                    <div class="interactive" data-demo="tolerance"></div>
+                    <div class="bluebox" data-static="" style="margin-top:14px;">
+                        引入容差门限：只要二者差值的绝对值小于一个极小的阈值（如 \(10^{-6}\)），我们就认为在工程上它们“相等”。
+                    </div>
+                </section>
+                <section id="sec-5-4">
+                    <h2>正确比较两个浮点数：引入精度门限</h2>
+                    <pre><code class="language-c" data-line-numbers="1|3|6|8-11" data-trim="">#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+const double EPS = 1e-6;   /* 定义允许的工程误差容限 0.000001 */
+
+int main(void)
+{
+    double a = 0.1 + 0.2;
+    double target = 0.3;
+
+    if (fabs(a - target) &lt; EPS) {
+        printf("工程判定：数值在容差内相等！\n");
+    }
+    return 0;
+}</code></pre>
+                    <div class="quote">记住模式：<code>fabs(a - b) &lt; 1e-6</code> 是处理浮点比较的通用解法。</div>
+                </section>
+                <section id="sec-5-5">
+                    <h2>字符也是编码：从数字回到其他类型</h2>
+                    <div class="interactive" data-demo="ascii"></div>
+                    <div class="grid2" data-static="" style="margin-top:12px;">
+                        <div class="card" data-static="" style="padding:10px 16px;">
+                            <h3 style="font-size:22px; margin-bottom:4px;">ASCII 码的核心映射</h3>
+                            <p class="small" style="font-size:19px; line-height:1.35; margin:0;"><code>'0'</code> 是
+                                <strong>48</strong>，<code>'A'</code> 是 <strong>65</strong>，<code>'a'</code> 是
+                                <strong>97</strong>。<br />大小写字母间距为 <strong>32</strong>（<code>'a' - 'A' = 32</code>）。</p>
+                        </div>
+                        <div class="card soft" data-static="" style="padding:10px 16px;">
+                            <h3 style="font-size:22px; margin-bottom:4px;">字符变量的本质</h3>
+                            <p class="small" style="font-size:19px; line-height:1.35; margin:0;">在 C 语言中
+                                <code>char</code> 就是 <strong>1 字节整数</strong>。<br /><code>'A' + 1</code> 精确得到整数
+                                <code>66</code>，以 <code>%c</code> 输出即为 <code>'B'</code>！</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-6">
+                    <h2>字符常量、转义字符与常见常量类型</h2>
+                    <div class="grid3">
+                        <div class="card">
+                            <h3>字符 vs 字符串</h3>
+                            <p class="small"><code>'A'</code> 是字符常量（占1字节）；<br /><code>"A"</code> 是字符串（末尾含隐含的
+                                <code>'\0'</code> 结束符，占2字节）。二者绝不能混淆！</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>常见转义字符</h3>
+                            <p class="small"><code>'\n'</code>：换行（ASCII
+                                10）<br /><code>'\t'</code>：横向制表跳格（Tab）<br /><code>'\\'</code>：反斜杠本身<br /><code>'\''</code>：单引号字符
+                            </p>
+                        </div>
+                        <div class="card">
+                            <h3>字面量类型后缀</h3>
+                            <p class="small"><code>100</code>：int 型常量<br /><code>100L</code>：long
+                                型常量<br /><code>3.14</code>：double 型常量<br /><code>3.14f</code>：float 型常量</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-7">
+                    <h2>慢病随访数据输出：格式说明符与类型的严格匹配</h2>
+                    <pre><code class="language-c" data-trim="">int sbp = 128;             /* 收缩压：整型 */
+unsigned int id = 10025;   /* 居民档案号：无符号整型 */
+float temp = 36.6f;        /* 体温：单精度浮点 */
+double bmi = 22.86;        /* BMI指数：双精度浮点 */
+char grade = 'A';          /* 慢病风险等级：字符型 */
+
+printf("档案号:%u | 血压:%d mmHg | 体温:%.1f ℃ | BMI:%.2f | 评级:%c\n",
+       id, sbp, temp, bmi, grade);</code></pre>
+                    <div class="bluebox" style="margin-top:16px;">
+                        <strong>格式符必须与变量内存类型严格一致：</strong><code>%d</code> 对应 int，<code>%u</code> 对应
+                        unsigned，<code>%f</code> / <code>%lf</code> 对应浮点，<code>%c</code> 对应 char。
+                    </div>
+                </section>
+            </section>
+            <!-- ==================== 模块 6：课时小结与课堂检验 ==================== -->
+            <section id="sec-6-0">
+                <section class="module-cover-slide" id="sec-6-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">第1课时总结 / 课堂检验</div>
+                        <div class="cover-title">从物理位到逻辑类型：<br />构筑安全高效的程序基础</div>
+                        <div class="cover-subtitle">一切类型皆为解释规则。理解底层存储，才能避开溢出与精度黑洞。</div>
+                        <div class="cover-tags">
+                            <span class="pill">知识图谱</span>
+                            <span class="pill">课堂检验</span>
+                            <span class="pill">课后延伸</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-2">
+                    <h2>第1课时全景小结：一张图串起所有概念</h2>
+                    <div class="grid3">
+                        <div class="card">
+                            <h3 class="accent">1. 整数与补码</h3>
+                            <ul>
+                                <li>最小单位是 0/1 位与 8 位字节</li>
+                                <li>现代计算机整数统一采用<strong>补码</strong>存储</li>
+                                <li>补码消除了双零，把减法统一为加法</li>
+                                <li>8 位补码范围：<code>-128 ～ +127</code></li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3 class="purple">2. 实数与 IEEE 754</h3>
+                            <ul>
+                                <li>浮点三要素：符号位、阶码、尾数</li>
+                                <li>阶码采用<strong>移码</strong>，便于快速硬件比对</li>
+                                <li>0.1 无法在二进制有限位中精确表示</li>
+                                <li>浮点比较禁止用 <code>==</code>，需用 <code>fabs &lt; eps</code></li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3 class="good">3. 字符与规范</h3>
+                            <ul>
+                                <li>字符本质也是小整数（ASCII 码）</li>
+                                <li>注意单引号 <code>'A'</code> 与双引号 <code>"A"</code> 的区别</li>
+                                <li>输出时类型与格式说明符（<code>%d, %u, %f, %c</code>）必须严格匹配</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-3">
+                    <h2>Exit Ticket · 课堂检验</h2>
+                    <div class="qbox">
+                        <div class="prompt">
+                            <b>【诊断题一】</b> 8 位二进制补码 <code>11111011</code> 表示的真值是多少？<br />
+                            <b>【诊断题二】</b> 为什么 <code>double a = 0.1 + 0.2; if (a == 0.3)</code> 的判断结果常常为假？<br />
+                            <b>【诊断题三】</b> <code>float</code> 和 <code>double</code> 在内存结构与有效精度上有何本质差别？
+                        </div>
+                        <button class="reveal-answer" style="margin-top:14px;">显示答案与解析</button>
+                        <div class="answer" hidden=""
+                            style="margin-top:14px; background:#f4f8ff; padding:18px; border-radius:12px; border:1px solid #c9d9ef;">
+                            <p class="small"><b>① 解析：</b>最高位为 1 是负数。补码取反加 1 还原绝对值：<code>11111011</code> 符号不变数值取反为
+                                <code>10000100</code>，再加 1 得 <code>10000101</code>（原码 -5）。因此代表整数 <b>-5</b>。</p>
+                            <p class="small"><b>② 解析：</b>因为 0.1 和 0.2 在二进制中均为无限循环小数，截断存储产生微小舍入误差，相加后结果为
+                                <code>0.30000000000000004</code>，与严格的 0.3 不完全相等。工程上必须用
+                                <code>fabs(a - 0.3) &lt; 1e-6</code>。</p>
+                            <p class="small"><b>③ 解析：</b>float 占 32 位（1符号+8阶码+23尾数），有效数字约 6~7 位；double 占 64
+                                位（1符号+11阶码+52尾数），有效数字约 15~17 位，精度和覆盖范围均大幅超越 float。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-4">
+                    <h2>课后巩固与第2课时先导</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>课后实战任务</h3>
+                            <ul>
+                                <li>在本地 IDE 中编写程序，用 <code>sizeof</code> 打印本机各类型字节数</li>
+                                <li>尝试用 <code>printf("%.20f", 0.1)</code> 观察 0.1 在内存中的真实展开近似值</li>
+                                <li>写一段程序验证 8 位补码 127 + 1 发生溢出变为 -128 的全过程</li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3>第2课时悬念：类型转换与除法截断</h3>
+                            <p class="small">
+                                我们已经清楚了解了数据的存储结构：<br />
+                                但如果在算术计算中把 <code>int</code> 和 <code>double</code> 混合在一起，会发生什么？<br />
+                                为什么 <code>5 / 2</code> 算出来等于 <code>2</code> 而不是 <code>2.5</code>？<br />
+                                下节见——<strong>第2课时：类型转换与表达式求值！</strong>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+        /* 交互组件驱动脚本 */
+        (function () {
+            const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+            const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+            const safe = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const binary = (v, width = 8) => ((v >>> 0).toString(2).padStart(width, '0')).slice(-width);
+            const bits = (value, cls = '', hot = -1) => Array.from(value).map((ch, i) => '<span class="bit ' + (ch === '1' ? 'one ' : '') + cls + (i === hot ? ' hot' : '') + '">' + ch + '</span>').join('');
+            const bind = (root, sel, type, listener) => root.querySelector(sel)?.addEventListener(type, listener);
+            const html = (root, sel, content) => { const el = root.querySelector(sel); if (el) el.innerHTML = content; };
+            const val = (root, sel) => root.querySelector(sel)?.value;
+            $$('.reveal-answer').forEach(b => b.addEventListener('click', () => { const a = b.parentElement.querySelector('.answer'); a.hidden = !a.hidden; b.textContent = a.hidden ? '揭示答案' : '收起答案' }));
+            const demos = {};
+
+            demos.binary = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>无符号整数 <input type="range" min="0" max="255" value="13" class="n"></label>'
+                    + '<input type="number" class="numeric" min="0" max="255" value="13" style="width:105px;">'
+                    + '<button type="button" class="zero">清零 (0)</button>'
+                    + '<button type="button" class="example">示例 (173)</button>'
+                    + '<button type="button" class="all-ones">全置1 (255)</button>'
+                    + '</div>'
+                    + '<div class="readout" style="padding:10px 14px;">'
+                    + '<div class="bit-board"></div>'
+                    + '<div class="bit-hint center" style="margin-top:6px; font-size:15px; color:#5a6d82;">👆 垂直对齐看板：上方为幂次与位权，中间为点击翻转的二进制位，下方为实时贡献值</div>'
+                    + '</div>'
+                    + '<div class="screen" style="margin-top:10px;">'
+                    + '<div class="readout result" style="padding:10px 14px; font-size:22px;"></div>'
+                    + '<div class="readout sum" style="padding:10px 14px; font-size:22px;"></div>'
+                    + '</div>';
+                let n = 13;
+                const weights = [128, 64, 32, 16, 8, 4, 2, 1];
+                const powers = ['2⁷', '2⁶', '2⁵', '2⁴', '2³', '2²', '2¹', '2⁰'];
+                const update = () => {
+                    n = clamp(Number.isFinite(n) ? Math.trunc(n) : 0, 0, 255);
+                    root.querySelector('.n').value = n;
+                    root.querySelector('.numeric').value = n;
+                    const binStr = binary(n, 8);
+                    let boardHtml = '';
+                    for (let i = 0; i < 8; i++) {
+                        const bitVal = binStr[i];
+                        const pos = 7 - i;
+                        const weight = weights[i];
+                        const isActive = bitVal === '1';
+                        const contrib = isActive ? '+' + weight : '0';
+                        boardHtml += '<div class="bit-col ' + (isActive ? 'active' : '') + '" data-p="' + pos + '" title="点击翻转 Bit ' + pos + '（位权 ' + weight + '）">'
+                            + '<div class="col-pos">Bit ' + pos + '</div>'
+                            + '<div class="col-weight">' + powers[i] + '<br><span class="col-w-num">' + weight + '</span></div>'
+                            + '<button type="button" class="bit-btn ' + (isActive ? 'one' : '') + '">' + bitVal + '</button>'
+                            + '<div class="col-val">' + contrib + '</div>'
+                            + '</div>';
+                    }
+                    html(root, '.bit-board', boardHtml);
+                    html(root, '.result', '十进制 <b>' + n + '</b> · 十六进制 <b>0x' + (n < 16 ? '0' : '') + n.toString(16).toUpperCase() + '</b> · 八进制 <b>0' + n.toString(8).padStart(3, '0') + '</b> · 二进制 <b>' + binStr + '</b>');
+                    const activeTerms = [];
+                    for (let i = 0; i < 8; i++) {
+                        if (binStr[i] === '1') activeTerms.push(weights[i]);
+                    }
+                    const sumExpr = activeTerms.length > 0 ? activeTerms.join(' + ') : '0';
+                    html(root, '.sum', '位权展开和：' + sumExpr + ' = <b>' + n + '</b>');
+                };
+                bind(root, '.n', 'input', e => { n = +e.target.value; update(); });
+                bind(root, '.numeric', 'input', e => { n = +e.target.value; update(); });
+                bind(root, '.numeric', 'change', e => { n = +e.target.value; update(); });
+                bind(root, '.zero', 'click', () => { n = 0; update(); });
+                bind(root, '.example', 'click', () => { n = 173; update(); });
+                bind(root, '.all-ones', 'click', () => { n = 255; update(); });
+                bind(root, '.bit-board', 'click', e => {
+                    const col = e.target.closest('.bit-col');
+                    if (col && col.dataset.p !== undefined) {
+                        n = n ^ (1 << +col.dataset.p);
+                        update();
+                    }
+                });
+                update();
+            };
+
+            demos.encodings = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>整数 x <input class="n" type="range" min="-128" max="127" value="-5"></label>'
+                    + '<input class="numeric" type="number" min="-128" max="127" value="-5" style="width:105px;">'
+                    + '<button type="button" class="set" data-value="-5">−5</button>'
+                    + '<button type="button" class="set" data-value="0">0</button>'
+                    + '<button type="button" class="set" data-value="-128">−128</button>'
+                    + '<button type="button" class="negative-zero">对照负零</button>'
+                    + '<button type="button" class="next">逐步演示</button>'
+                    + '<button type="button" class="reset">全显/重置</button>'
+                    + '</div>'
+                    + '<div class="readout trace" style="margin-bottom:8px; padding:10px 14px; font-size:22px;"></div>'
+                    + '<div class="rows"></div>'
+                    + '<div class="explain" style="margin-top:8px; font-size:20px;">所有行均为 8 位教学模型。这里“偏移码”采用 bias=128；IEEE 754 指数另采用 127/1023 偏置值。</div>';
+                let n = -5, step = 4, negativeZero = false;
+                const update = () => {
+                    n = clamp(Math.trunc(n) || 0, -128, 127);
+                    root.querySelector('.n').value = n;
+                    root.querySelector('.numeric').value = n;
+                    const a = Math.abs(n), positive = binary(a), negative = n < 0;
+                    const raw = negativeZero ? '10000000' : n >= -127 ? (negative ? '1' + binary(a, 7) : positive) : null;
+                    const ones = negativeZero ? '11111111' : n >= -127 ? (negative ? binary((~a) & 255) : positive) : null;
+                    const twos = negativeZero ? '00000000' : binary(n & 255), bias = binary(n + 128);
+                    const rows = [
+                        ['原码', raw, n === -128 ? '超出可表示范围' : '符号位＋绝对值'],
+                        ['反码', ones, n === -128 ? '超出可表示范围' : '负数编码逐位取反'],
+                        ['补码', twos, negativeZero ? '负零合并为零' : negative ? '负数按位取反再加1' : '正数保持不变'],
+                        ['偏移码（+128）', bias, '整数值 + 128 后编码']
+                    ];
+                    html(root, '.trace', '当前 <b>x=' + (negativeZero ? '−0（原码/反码的另一编码）' : n) + '</b> · 幅值 <b>' + binary(a) + '</b> · 演示步骤 <b>' + step + '/4</b>');
+                    html(root, '.rows', rows.map((r, i) => '<div class="bitrow" style="opacity:' + (i < step ? 1 : .18) + '; transition: opacity 0.2s ease;"><div class="rowname">' + r[0] + '</div><div class="bits">' + (r[1] ? Array.from(r[1]).map((b, j) => '<span class="bit ' + (b === '1' ? 'one ' : '') + (j === 0 ? 'sign' : '') + '">' + b + '</span>').join('') : '<span class="bad">不可表示</span>') + '</div><div class="rowhint">' + r[2] + '</div></div>').join(''));
+                };
+                bind(root, '.n', 'input', e => { n = +e.target.value; negativeZero = false; step = 4; update(); });
+                bind(root, '.numeric', 'input', e => { n = +e.target.value; negativeZero = false; step = 4; update(); });
+                bind(root, '.numeric', 'change', e => { n = +e.target.value; negativeZero = false; step = 4; update(); });
+                $$('.set', root).forEach(b => b.addEventListener('click', () => { n = +b.dataset.value; negativeZero = false; step = 4; update(); }));
+                bind(root, '.negative-zero', 'click', () => { n = 0; negativeZero = true; step = 4; update(); });
+                bind(root, '.next', 'click', () => { step = step < 4 ? step + 1 : 1; update(); });
+                bind(root, '.reset', 'click', () => { n = -5; negativeZero = false; step = 4; update(); });
+                update();
+            };
+
+            demos.addition = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>操作数 A <input class="a" type="number" min="-128" max="127" value="5" style="width:100px;"></label>'
+                    + '<label>操作数 B <input class="b" type="number" min="-128" max="127" value="-5" style="width:100px;"></label>'
+                    + '<button type="button" class="next">推进一位</button>'
+                    + '<button type="button" class="all">显示全部结果</button>'
+                    + '<button type="button" class="reset">重置进位</button>'
+                    + '</div>'
+                    + '<div class="rows"></div>'
+                    + '<div class="readout outcome" style="padding:10px 14px; font-size:22px; margin-top:8px;"></div>';
+                let pos = 0;
+                function upd() {
+                    const a = clamp(Math.trunc(+val(root, '.a')) || 0, -128, 127), b = clamp(Math.trunc(+val(root, '.b')) || 0, -128, 127), ua = a & 255, ub = b & 255, low = (ua + ub) & 255, sign = low >= 128 ? low - 256 : low, overflow = a + b < -128 || a + b > 127;
+                    let carry = 0; const trace = [];
+                    for (let k = 0; k < 8; k++) {
+                        const abit = (ua >> k) & 1, bbit = (ub >> k) & 1, cin = carry, t = abit + bbit + cin;
+                        carry = t >> 1;
+                        trace.push('第' + k + '位：' + abit + ' + ' + bbit + ' + 进位' + cin + ' → 结果' + (t & 1) + '、新进位' + carry);
+                    }
+                    const r = [['A：' + a, binary(ua)], ['B：' + b, binary(ub)], ['低8位结果', binary(low)]];
+                    html(root, '.rows', r.map((x, i) => '<div class="bitrow"><div class="rowname">' + x[0] + '</div><div class="bits">' + (i === 2 ? Array.from(x[1]).map((ch, j) => '<span class="bit ' + (j >= 8 - pos ? (ch === '1' ? 'one ' : '') + 'hot' : '') + '">' + (j >= 8 - pos ? ch : '·') + '</span>').join('') : bits(x[1])) + '</div><div class="rowhint">' + (i === 2 ? pos + '/8 位' : '补码编码') + '</div></div>').join(''));
+                    html(root, '.outcome', pos === 8 ? '数学和 <b>' + (a + b) + '</b>；8位补码结果 <b>' + sign + '</b>。' + (overflow ? '<span class="bad">超出8位有符号范围（发生溢出）。</span>' : '<span class="good">未发生溢出。</span>') : pos > 0 ? trace[pos - 1] : '点击“推进一位”，从最低位开始观察逐位相加与进位。');
+                }
+                $$('input', root).forEach(x => {
+                    x.addEventListener('input', () => { pos = 0; upd(); });
+                    x.addEventListener('change', () => { pos = 0; upd(); });
+                });
+                bind(root, '.next', 'click', () => { pos = Math.min(8, pos + 1); upd(); });
+                bind(root, '.all', 'click', () => { pos = 8; upd(); });
+                bind(root, '.reset', 'click', () => { pos = 0; upd(); });
+                upd();
+            };
+
+            function fractionBinary(x, max = 28) {
+                let i = Math.floor(x), f = x - i, ib = i.toString(2), fb = '', residual = f;
+                for (let p = 0; p < max; p++) {
+                    residual *= 2;
+                    let bit = Math.floor(residual + 1e-13);
+                    fb += bit;
+                    residual -= bit;
+                    if (residual < 1e-14) { break; }
+                }
+                return { ib, fb, terminated: residual < 1e-14 };
+            }
+            demos.fraction = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>十进制数 <select class="n" style="min-width:140px;">'
+                    + '<option value="13.25">13.25</option>'
+                    + '<option value="0.625">0.625</option>'
+                    + '<option value="5.75">5.75</option>'
+                    + '<option value="0.1">0.1</option>'
+                    + '<option value="1.5">1.5</option>'
+                    + '<option value="10.2">10.2</option>'
+                    + '</select></label>'
+                    + '<button type="button" class="set-f" data-v="13.25">13.25</button>'
+                    + '<button type="button" class="set-f" data-v="0.625">0.625</button>'
+                    + '<button type="button" class="set-f" data-v="0.1">0.1 (无限循环)</button>'
+                    + '<button type="button" class="set-f" data-v="5.75">5.75</button>'
+                    + '<button type="button" class="next">下一阶段</button>'
+                    + '<button type="button" class="all">全部展开</button>'
+                    + '</div>'
+                    + '<div class="readout lines" style="padding:12px 18px; font-size:23px; line-height:1.5;"></div>'
+                    + '<div class="explain" style="margin-top:8px; font-size:20px;">整数部分用除2取余，纯小数部分用乘2取整；重复的小数二进制位意味着有限位不能精确编码。</div>';
+                let stage = 4;
+                function upd() {
+                    const valStr = val(root, '.n') || '13.25';
+                    const n = parseFloat(valStr) || 0;
+                    const b = fractionBinary(n);
+                    const binaryText = b.ib + '.' + b.fb + (b.terminated ? '' : '…');
+                    const first = n.toString();
+                    const normalized = n === 0 ? '0' : (b.ib.length > 1 ? '1.' + b.ib.slice(1) + b.fb + ' × 2^' + (b.ib.length - 1) : '需把小数中首个1移至小数点前');
+                    const rows = [
+                        '① 十进制：<b>' + first + '</b>',
+                        '② 整数部分：<b>' + b.ib + '₂</b>',
+                        '③ 小数部分：<b>0.' + b.fb + (b.terminated ? '' : '…') + '₂</b>' + (b.terminated ? ' <span class="good">(有限位精确终止)</span>' : ' <span class="bad">(乘2永远不归零，产生无限循环)</span>'),
+                        '④ 合并：<b>' + binaryText + '₂</b>'
+                    ];
+                    if (n >= 1) rows.push('规范化：<b>' + normalized + '</b>');
+                    html(root, '.lines', rows.slice(0, stage + 1).map(x => '<div style="margin:8px 0">' + x + '</div>').join(''));
+                }
+                bind(root, '.n', 'change', () => { stage = 4; upd(); });
+                bind(root, '.n', 'input', () => { stage = 4; upd(); });
+                $$('.set-f', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.n').value = b.dataset.v;
+                    stage = 4;
+                    upd();
+                }));
+                bind(root, '.next', 'click', () => { stage = stage >= 4 ? 0 : stage + 1; upd(); });
+                bind(root, '.all', 'click', () => { stage = 4; upd(); });
+                upd();
+            };
+
+            function ieee(value, bitsTotal) {
+                const buf = new ArrayBuffer(8), dv = new DataView(buf);
+                let raw; let stored; let width = bitsTotal === 32 ? 32 : 64;
+                if (width === 32) {
+                    dv.setFloat32(0, value, false);
+                    raw = dv.getUint32(0, false).toString(2).padStart(32, '0');
+                    stored = dv.getFloat32(0, false);
+                } else {
+                    dv.setFloat64(0, value, false);
+                    raw = (dv.getUint32(0, false).toString(2).padStart(32, '0') + dv.getUint32(4, false).toString(2).padStart(32, '0'));
+                    stored = dv.getFloat64(0, false);
+                }
+                const eWidth = width === 32 ? 8 : 11, bias = width === 32 ? 127 : 1023;
+                const eInt = parseInt(raw.slice(1, 1 + eWidth), 2);
+                const f = raw.slice(1 + eWidth);
+                let kind = eInt === 0 ? (f.includes('1') ? '非正规数' : '零') : eInt === (2 ** eWidth - 1) ? (f.includes('1') ? 'NaN' : '无穷大') : '正规数';
+                const realExp = eInt === 0 ? 1 - bias : eInt === 2 ** eWidth - 1 ? '特殊编码' : eInt - bias;
+                return { raw, stored, sign: raw[0], exp: raw.slice(1, 1 + eWidth), frac: f, bias, eInt, realExp, kind };
+            }
+            demos.ieee = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>输入任意数值 <input class="n" type="number" step="any" value="13.25" style="width:140px;"></label>'
+                    + '<button type="button" class="set" data-v="0.1">0.1</button>'
+                    + '<button type="button" class="set" data-v="0.2">0.2</button>'
+                    + '<button type="button" class="set" data-v="13.25">13.25</button>'
+                    + '<button type="button" class="set" data-v="16777217">2²⁴+1 (精度截断)</button>'
+                    + '<button type="button" class="set" data-v="0">0.0</button>'
+                    + '<button type="button" class="set" data-v="-13.25">-13.25</button>'
+                    + '</div>'
+                    + '<div class="compare"></div>';
+                function upd() {
+                    const valStr = val(root, '.n');
+                    const n = valStr === '' || isNaN(+valStr) ? 0 : +valStr;
+                    html(root, '.compare', [32, 64].map(w => {
+                        const x = ieee(n, w);
+                        return '<div class="readout" style="margin:8px 0; padding:10px 16px;">'
+                            + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
+                            + '<b>' + (w === 32 ? '单精度 float (32位)' : '双精度 double (64位)') + '</b>'
+                            + '<span class="muted" style="font-size:18px;">1位符号 + ' + (w === 32 ? '8' : '11') + '位指数 + ' + (w === 32 ? '23' : '52') + '位尾数</span>'
+                            + '</div>'
+                            + '<div class="ieee-field"><label>符号位</label><div class="bits">' + bits(x.sign, 'sign') + '</div></div>'
+                            + '<div class="ieee-field"><label>指数位</label><div class="bits">' + bits(x.exp, 'exp') + '</div></div>'
+                            + '<div class="ieee-field"><label>尾数字段</label><div class="bits">' + bits(x.frac, 'frac') + '</div></div>'
+                            + '<div class="micro mono" style="font-size:18px; margin-top:4px;">s=' + x.sign + '　E=' + x.eInt + '　bias=' + x.bias + '　实际指数=' + x.realExp + '　类型=' + x.kind + '</div>'
+                            + '<div class="small" style="font-size:19px; margin-top:4px;">二进制存储还原后：<b>' + x.stored.toPrecision(w === 32 ? 9 : 17) + '</b></div>'
+                            + '</div>';
+                    }).join('') + '<div class="explain" style="margin-top:6px; font-size:19px;">图示标注：<span style="color:#7c3aed; font-weight:bold;">紫色</span> 符号位　<span style="color:#2563eb; font-weight:bold;">蓝色</span> 指数位　<span style="color:#059669; font-weight:bold;">绿色</span> 尾数位。展示的是底层真实 IEEE 754 位模式。</div>');
+                }
+                bind(root, '.n', 'input', upd);
+                bind(root, '.n', 'change', upd);
+                $$('.set', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.n').value = b.dataset.v;
+                    upd();
+                }));
+                upd();
+            };
+
+            demos.tolerance = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>比较情境 <select class="mode" style="min-width:240px;">'
+                    + '<option value="a">0.1 + 0.2 与 0.3</option>'
+                    + '<option value="b">(1/10) * 10 与 1</option>'
+                    + '<option value="c">10⁹ 与 10⁹ + 0.0001</option>'
+                    + '<option value="d">0 与 1e-10</option>'
+                    + '</select></label>'
+                    + '<button type="button" class="set-m" data-m="a">0.1+0.2 vs 0.3</button>'
+                    + '<button type="button" class="set-m" data-m="b">(1/10)*10 vs 1</button>'
+                    + '<label style="margin-left:6px;">绝对容差 10^<input class="power" type="range" min="-16" max="-2" value="-9" style="width:160px;"></label>'
+                    + '<span class="tol mono" style="font-weight:bold; color:var(--teal); font-size:22px;"></span>'
+                    + '</div>'
+                    + '<div class="screen" style="margin-top:10px;">'
+                    + '<div class="readout operands" style="padding:12px 16px; font-size:22px; line-height:1.5;"></div>'
+                    + '<div class="readout result" style="padding:12px 16px; font-size:22px; line-height:1.5;"></div>'
+                    + '</div>'
+                    + '<div class="explain" style="margin-top:8px; font-size:20px;">绝对容差适合已知数值尺度的任务；数量级变化很大时，应根据问题设计绝对+相对容差。精确整数和明确的离散状态仍可使用 ==。</div>';
+                function upd() {
+                    const mode = val(root, '.mode') || 'a';
+                    const pairs = { a: [0.1 + 0.2, 0.3], b: [(1 / 10) * 10, 1], c: [1000000000, 1000000000.0001], d: [0, 1e-10] };
+                    const [a, b] = pairs[mode];
+                    const pow = +val(root, '.power');
+                    const e = 10 ** pow;
+                    const d = Math.abs(a - b);
+                    html(root, '.tol', 'ε = ' + e.toExponential(0));
+                    html(root, '.operands', '左值计算：<b>' + a.toPrecision(17) + '</b><hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">右值常量：<b>' + b.toPrecision(17) + '</b><hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">直接 == 比较：<b class="' + (a === b ? 'good' : 'bad') + '">' + (a === b ? 'true (相等)' : 'false (不相等！)') + '</b>');
+                    html(root, '.result', '两数差的绝对值 |a−b|：<br><b style="font-size:24px;">' + d.toExponential(6) + '</b><hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">容差判定 |a−b| ≤ ε ：<b class="' + (d <= e ? 'good' : 'bad') + '" style="font-size:24px;">' + (d <= e ? '成立 (工程判定相等)' : '不成立 (超出容差)') + '</b>');
+                }
+                bind(root, '.mode', 'change', upd);
+                bind(root, '.power', 'input', upd);
+                bind(root, '.power', 'change', upd);
+                $$('.set-m', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.mode').value = b.dataset.m;
+                    upd();
+                }));
+                upd();
+            };
+
+            demos.ascii = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>输入单个 ASCII 字符 <input type="text" maxlength="1" class="ch" value="A" style="width:70px; text-align:center; font-weight:bold; font-size:24px;"></label>'
+                    + '<button type="button" class="set" data-ch="A">&apos;A&apos; (65)</button>'
+                    + '<button type="button" class="set" data-ch="a">&apos;a&apos; (97)</button>'
+                    + '<button type="button" class="set" data-ch="0">&apos;0&apos; (48)</button>'
+                    + '<button type="button" class="set" data-ch="7">&apos;7&apos; (55)</button>'
+                    + '<button type="button" class="set" data-ch="Z">&apos;Z&apos; (90)</button>'
+                    + '<button type="button" class="set" data-ch=" ">空格 (32)</button>'
+                    + '</div>'
+                    + '<div class="screen" style="margin-top:10px;">'
+                    + '<div class="readout char" style="padding:12px 16px; font-size:22px; line-height:1.5;"></div>'
+                    + '<div class="readout convert" style="padding:12px 16px; font-size:22px; line-height:1.5;"></div>'
+                    + '</div>';
+                function upd() {
+                    let ch = val(root, '.ch') || 'A';
+                    ch = ch[0];
+                    let n = ch.charCodeAt(0);
+                    html(root, '.char', '字符：<b>' + (ch === ' ' ? '空格 (0x20)' : safe(ch)) + '</b><hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">十进制编码：<b>' + n + '</b><hr style="margin:8px 0; border:0; border-top:1px dashed #cbd5e1;">8位二进制：<b>' + binary(n) + '</b> · 十六进制：<b>0x' + n.toString(16).toUpperCase() + '</b>');
+                    let detail = n >= 48 && n <= 57
+                        ? "数字字符 '" + ch + "' 转数值：<b>" + n + " − 48 = " + (n - 48) + "</b>（公式：<code>c - '0'</code>）"
+                        : n >= 65 && n <= 90
+                            ? "大写转小写：<b>" + n + " + 32 = " + (n + 32) + " → '" + String.fromCharCode(n + 32) + "'</b>（公式：<code>c + 32</code> 或 <code>c | 0x20</code>）"
+                            : n >= 97 && n <= 122
+                                ? "小写转大写：<b>" + n + " − 32 = " + (n - 32) + " → '" + String.fromCharCode(n - 32) + "'</b>（公式：<code>c - 32</code> 或 <code>c & ~0x20</code>）"
+                                : "普通 ASCII 符号，保持原值";
+                    html(root, '.convert', '<div style="font-size:22px; margin-bottom:8px;">编码运算规律：<br>' + detail + '</div><div class="explain" style="margin-top:8px; font-size:19px;">C 语言中 <code>char</code> 就是 1 字节整数，因此字符与数字之间可以直接进行四则运算与位运算。</div>');
+                }
+                bind(root, '.ch', 'input', upd);
+                bind(root, '.ch', 'change', upd);
+                $$('.set', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.ch').value = b.dataset.ch;
+                    upd();
+                }));
+                upd();
+            };
+
+            demos.division = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label>累计和 <input class="sum" type="number" value="226"></label><label>有效数 <input class="count" type="number" value="3" min="0"></label></div><div class="screen"><div class="readout wrong"></div><div class="readout correct"></div></div>';
+                function upd() { const sum = Math.trunc(+val(root, '.sum')), count = Math.trunc(+val(root, '.count')); if (count === 0) { html(root, '.wrong', '<span class="bad">不能进行除以0的计算</span>'); html(root, '.correct', '<b>先判断 count &gt; 0，再计算平均值</b>'); return; } const integer = Math.trunc(sum / count), frac = sum / count; html(root, '.wrong', 'double a = sum / count;<hr>先算 int/int = <b class="bad">' + integer + '</b><hr>赋给double后：<b>' + integer.toFixed(2) + '</b>'); html(root, '.correct', 'double b = (double)sum / count;<hr>先转换操作数，再除法<hr>结果：<b class="good">' + frac.toFixed(3) + '</b>'); } $$('input', root).forEach(el => el.addEventListener('input', upd)); upd();
+            };
+
+            demos.conversion = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label>整数 a <input class="a" type="number" value="5" step="1"></label><label>实数 b <input class="b" type="number" value="2" step="0.1"></label></div><div class="readout report"></div>';
+                function upd() { let a = Math.trunc(+val(root, '.a')), b = +val(root, '.b'), x = Math.trunc(a / 2), y = a / b, z = Math.trunc(b), result = '<div>① <code>double x = a / 2;</code> → 先整数除法，x = <b>' + x + '.0</b></div><div>② <code>double y = a / b;</code> → 混合运算，y = <b>' + (b === 0 ? '除数为0，请先保护' : y.toPrecision(7)) + '</b></div><div>③ <code>int z = b;</code> → 向零截去小数，z = <b>' + z + '</b></div>'; html(root, '.report', result); } $$('input', root).forEach(x => x.addEventListener('input', upd)); upd();
+            };
+
+            demos.shortcircuit = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label>有效记录数 <input class="cnt" type="number" value="0" min="0"></label><label>累计和 <input class="sum" type="number" value="240"></label><button type="button" class="set" data-v="3">count = 3</button><button type="button" class="set" data-v="0">count = 0</button></div><div class="steps"><span class="left"></span><span>逻辑与 &&</span><span class="right"></span></div><div class="readout result" style="margin-top:12px"></div>';
+                function upd() { const c = +val(root, '.cnt'), s = +val(root, '.sum'), left = c > 0, right = left && s / c >= 80; html(root, '.left', 'count > 0<br><b class="' + (left ? 'good' : 'bad') + '">' + left + '</b>'); html(root, '.right', left ? 'sum/count >= 80<br><b class="' + (right ? 'good' : 'bad') + '">' + right + '</b>' : '右侧未求值'); html(root, '.result', left ? '先判断左侧为真 → 求右侧 → 整体 ' + right : '左侧为假 → 直接得到 false → 不会执行除法'); } $$('input', root).forEach(i => i.addEventListener('input', upd)); $$('.set', root).forEach(b => b.addEventListener('click', () => { root.querySelector('.cnt').value = b.dataset.v; upd(); })); upd();
+            };
+
+            demos.flags = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label><input type="checkbox" class="f0" checked> 已核验</label><label><input type="checkbox" class="f1"> 需复查</label><label><input type="checkbox" class="f2" checked> 已人工审核</label></div><div class="readout"><div class="bits encoded"></div><div class="result"></div></div>';
+                function upd() { let status = (root.querySelector('.f0').checked ? 1 : 0) | (root.querySelector('.f1').checked ? 2 : 0) | (root.querySelector('.f2').checked ? 4 : 0); html(root, '.encoded', bits(binary(status))); html(root, '.result', 'status = <b>' + status + '</b>（二进制 ' + binary(status) + '）<hr><code>status & (1u << 2)</code> → ' + ((status & 4) ? '非0：已人工审核' : '0：尚未人工审核')); } $$('input', root).forEach(i => i.addEventListener('change', upd)); upd();
+            };
+
+            demos.words = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label>输入英文句子 <input class="sentence" type="text" value="  AI   assists C  " style="width:500px"></label><button type="button" class="next">前进一步</button><button type="button" class="all">运行完毕</button><button type="button" class="reset">重置</button></div><div class="readout trace"></div><div class="screen" style="margin-top:10px"><div class="readout state"></div><div class="readout count"></div></div>';
+                let pos = 0; function upd() { let s = val(root, '.sentence'), count = 0, inWord = false; for (let i = 0; i < pos; i++) { const ch = s[i]; if (ch === ' ' || ch === '	') inWord = false; else if (!inWord) { inWord = true; count++; } } const display = Array.from(s).map((ch, i) => '<span style="padding:2px 3px;background:' + (i === pos ? '#F7DCA8' : i < pos ? '#D9EEF2' : 'transparent') + '">' + (ch === ' ' ? '␣' : ch === '	' ? '⇥' : safe(ch)) + '</span>').join(''); html(root, '.trace', '字符流：<span class="mono">' + display + '</span>'); html(root, '.state', '位置 <b>' + pos + '/' + s.length + '</b><hr>inWord = <b>' + (inWord ? 1 : 0) + '</b>'); html(root, '.count', '累计单词：<b>' + count + '</b><hr>' + (pos === s.length ? '处理完成' : '下一步判断字符边界')); } bind(root, '.sentence', 'input', () => { pos = 0; upd(); }); bind(root, '.next', 'click', () => { pos = Math.min(pos + 1, val(root, '.sentence').length); upd(); }); bind(root, '.all', 'click', () => { pos = val(root, '.sentence').length; upd(); }); bind(root, '.reset', 'click', () => { pos = 0; upd(); }); upd();
+            };
+
+            demos.pulse = function (root) {
+                root.innerHTML = '<div class="demo-controls"><label>脉率样本（逗号分隔） <input class="list" type="text" value="30,72,-1,220,250" style="width:455px"></label><button type="button" class="next">处理下一条</button><button type="button" class="all">处理全部</button><button type="button" class="reset">清空状态</button></div><div class="readout items" style="margin-bottom:10px"></div><div class="screen"><div class="readout stat"></div><div class="readout avg"></div></div><div class="explain">30~220是本练习设定的录入校验范围，不是正常脉率或临床诊断阈值。</div>';
+                let pos = 0; function parse() { return val(root, '.list').split(',').map(x => x.trim()).filter(x => x !== '').map(x => ({ raw: x, value: /^[+-]?\d+$/.test(x) ? Number(x) : NaN })); } function upd() { const arr = parse(); pos = Math.min(pos, arr.length); const malformed = arr.find(x => !Number.isSafeInteger(x.value)); if (malformed) { html(root, '.items', '输入中包含无效整数：<b class="bad">' + safe(malformed.raw) + '</b>'); html(root, '.stat', '应提示读取失败，不应悄悄忽略记录。'); html(root, '.avg', '请修改成逗号分隔的整数序列。'); return; } let v = 0, invalid = 0, sum = 0; for (const x of arr.slice(0, pos)) { const n = x.value; if (n >= 30 && n <= 220) { v++; sum += n; } else invalid++; } html(root, '.items', '记录：' + arr.map((x, i) => '<span class="pill ' + (i < pos ? (x.value >= 30 && x.value <= 220 ? 'ok' : 'alert') : '') + '">' + (i === pos ? '→' : '') + x.value + '</span>').join('')); html(root, '.stat', '已处理 <b>' + pos + '/' + arr.length + '</b> · 有效 <b>' + v + '</b> · 无效 <b>' + invalid + '</b> · 累计 <b>' + sum + '</b>'); html(root, '.avg', '平均值：<b>' + (v ? (sum / v).toFixed(1) : '暂无有效数据') + '</b><hr>下一步：' + (pos < arr.length ? '验证 ' + arr[pos].value : '完成')); } bind(root, '.list', 'input', () => { pos = 0; upd(); }); bind(root, '.next', 'click', () => { pos++; upd(); }); bind(root, '.all', 'click', () => { pos = parse().length; upd(); }); bind(root, '.reset', 'click', () => { pos = 0; upd(); }); upd();
+            };
+
+            $$('[data-demo]').forEach(root => {
+                ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'click'].forEach(evt => {
+                    root.addEventListener(evt, e => e.stopPropagation());
+                });
+                const name = root.dataset.demo;
+                try {
+                    demos[name]?.(root);
+                } catch (err) {
+                    root.innerHTML = '<div class="bad">交互加载异常：' + err.message + '</div>';
+                    console.error(name, err);
+                }
+            });
+        })();
+
+        /* 为每个实际展示页加上可定位标签。 */
+        document.querySelectorAll('.slides section').forEach((slide, idx) => {
+            if (slide.querySelector(':scope > section')) return;
+            if (!slide.id) slide.id = `slide-${idx + 1}`;
+            if (!slide.querySelector(':scope > .slide-label')) {
+                const label = document.createElement('div');
+                label.className = 'slide-label';
+                label.setAttribute('data-static', '');
+                label.textContent = `№ ${slide.id}`;
+                slide.prepend(label);
+            }
+        });
+
+        /* 为主要内容插入渐显动画，保证每页视觉阅读顺序统一。 */
+        document.querySelectorAll('.slides section').forEach(slide => {
+            if (slide.querySelector(':scope > section')) return;
+
+            const candidates = slide.querySelectorAll([
+                ':scope#sec-1-1 > *:not(script):not(aside)', ':scope > .card',
+                ':scope > .grid2 > .card', ':scope > .grid3 > .card', ':scope > .grid4 > .card',
+                ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+                ':scope > .bluebox', ':scope > .quote',
+                ':scope > .bigq', ':scope > .rule', ':scope > ul > li', ':scope > ol > li',
+                ':scope > table.compare tr:not(:first-child)', ':scope > .timeline > *',
+                ':scope > .menu', ':scope > .placeholder', ':scope > .prompt',
+                ':scope > pre', ':scope > .modulecover > *:not(aside.notes)', ':scope > img'
+            ].join(','));
+
+            candidates.forEach(el => {
+                const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+                if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+                    el.classList.add('fragment', 'fade-up');
+                }
+            });
+            slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
+
+            /* 流程图的箭头也参与不同步显示。 */
+            slide.querySelectorAll('.flow').forEach(flow => {
+                flow.querySelectorAll('.step,.node').forEach(step => {
+                    step.classList.add('fragment', 'fade-up');
+                    const arrow = step.previousElementSibling;
+                    if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+                });
+            });
+        });
+
+
+
+        /* 离线或 CDN 网络受限时的 LaTeX 兜底渲染保证 */
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (!window.MathJax || !window.MathJax.Hub) {
+                    var slides = document.querySelector('.slides');
+                    if (!slides) return;
+                    var walker = document.createTreeWalker(slides, NodeFilter.SHOW_TEXT, null, false);
+                    var nodes = [];
+                    var n;
+                    while ((n = walker.nextNode())) nodes.push(n);
+                    nodes.forEach(function (node) {
+                        var val = node.nodeValue;
+                        if (val && (val.indexOf('\\(') !== -1 || val.indexOf('\\[') !== -1)) {
+                            var span = document.createElement('span');
+                            var html = val;
+                            html = html.replace(/\\\[(.*?)\\\]/g, function (m, f) {
+                                var clean = f
+                                    .replace(/\\times/g, '×')
+                                    .replace(/\\approx/g, '≈')
+                                    .replace(/\\text\{([^}]+)\}/g, '$1')
+                                    .replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>')
+                                    .replace(/\^([0-9a-zA-Z+-]+)/g, '<sup>$1</sup>')
+                                    .replace(/_\{([^}]+)\}/g, '<sub>$1</sub>')
+                                    .replace(/_([0-9a-zA-Z+-]+)/g, '<sub>$1</sub>');
+                                return '<div class="formula center" style="margin:12px 0;">' + clean + '</div>';
+                            });
+                            html = html.replace(/\\\((.*?)\\\)/g, function (m, f) {
+                                var clean = f
+                                    .replace(/\\approx/g, '≈')
+                                    .replace(/\\times/g, '×')
+                                    .replace(/\\sim/g, '~')
+                                    .replace(/\\pi/g, 'π')
+                                    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2')
+                                    .replace(/\\text\{([^}]+)\}/g, '$1')
+                                    .replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>')
+                                    .replace(/\^([0-9a-zA-Z+-]+)/g, '<sup>$1</sup>')
+                                    .replace(/_\{([^}]+)\}/g, '<sub>$1</sub>')
+                                    .replace(/_([0-9a-zA-Z+-]+)/g, '<sub>$1</sub>')
+                                    .replace(/\\;/g, ' ');
+                                return '<span class="math-fallback" style="font-family:Cambria, Times New Roman, serif; font-style:italic;">' + clean + '</span>';
+                            });
+                            span.innerHTML = html;
+                            node.parentNode.replaceChild(span, node);
+                        }
+                    });
+                }
+            }, 1200);
+        });
+
+        Reveal.initialize({
+            width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+            controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+            keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+            fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+            autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+            previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+            display: 'block', pdfMaxPagesPerSlide: 1,
+            math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>

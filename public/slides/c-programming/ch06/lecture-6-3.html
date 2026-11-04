@@ -1,0 +1,2068 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>程序设计基础：第6次课第3课时 表达式综合应用</title>
+    <meta content="第6次课第3课时：表达式综合应用、逻辑运算与短路求值、条件表达式、位掩码状态管理、字符状态机与慢病数据核验" name="description" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/theme/white.css" id="theme" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" id="highlight" rel="stylesheet" />
+    <style>
+        :root {
+            --blue: #2056a8;
+            --blue2: #2c7be5;
+            --cyan: #eaf4ff;
+            --ink: #1f2937;
+            --muted: #5b6573;
+            --green: #1d7a46;
+            --orange: #a65b00;
+            --red: #b42318;
+            --purple: #6d28d9;
+            --line: #d8e1ec;
+            --soft: #f7f9fc;
+            --teal: #087f5b;
+        }
+
+        .reveal {
+            color: var(--ink);
+            font-size: 28px;
+        }
+
+        .reveal .slides section {
+            box-sizing: border-box;
+            text-align: left;
+            padding: 20px 28px;
+        }
+
+        .reveal .slides section.stack {
+            padding: 0;
+        }
+
+        .reveal h1,
+        .reveal h2,
+        .reveal h3 {
+            color: #163f78;
+            text-transform: none;
+        }
+
+        .reveal h1 {
+            font-size: 72px;
+            line-height: 1.12;
+            margin: .10em 0 .24em;
+        }
+
+        .reveal h2 {
+            font-size: 48px;
+            line-height: 1.16;
+            margin: 0 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dbe7f6;
+        }
+
+        .reveal h3 {
+            font-size: 30px;
+            line-height: 1.22;
+            margin: 0 0 12px;
+        }
+
+        .reveal p {
+            font-size: 26px;
+            line-height: 1.42;
+            margin: 10px 0;
+        }
+
+        .reveal ul,
+        .reveal ol {
+            margin: .25em 0 .25em 1.15em;
+        }
+
+        .reveal li {
+            font-size: 25px;
+            line-height: 1.40;
+            margin: 8px 0;
+        }
+
+        .reveal code,
+        .reveal pre code,
+        .reveal pre code.hljs,
+        .reveal pre .hljs,
+        code,
+        .mono {
+            font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+            font-variant-ligatures: none !important;
+            font-feature-settings: "liga" 0, "calt" 0, "dlig" 0 !important;
+        }
+
+        .reveal :not(pre)>code {
+            font-size: 24px;
+            background: #f3f6fa;
+            padding: 2px 7px;
+            border-radius: 5px;
+            color: #173d70;
+        }
+
+        .reveal pre {
+            width: 96%;
+            box-shadow: none;
+            font-size: 23px;
+            line-height: 1.34;
+            margin: 14px auto;
+        }
+
+        .reveal pre code {
+            max-height: 520px;
+            font-size: 1em;
+            line-height: 1.34;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: #fff !important;
+            color: #1f2937 !important;
+            border: 1px solid #d8e1ec;
+            box-shadow: 0 4px 14px rgba(31, 41, 55, .05);
+        }
+
+        .small {
+            font-size: 22px !important;
+            line-height: 1.38 !important;
+        }
+
+        .tiny {
+            font-size: 19px !important;
+            line-height: 1.34 !important;
+        }
+
+        .large {
+            font-size: 30px !important;
+            line-height: 1.36 !important;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .accent {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        .danger {
+            color: var(--red);
+            font-weight: 700;
+        }
+
+        .good {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .orange {
+            color: var(--orange);
+            font-weight: 700;
+        }
+
+        .purple {
+            color: var(--purple);
+            font-weight: 700;
+        }
+
+        .center {
+            text-align: center !important;
+        }
+
+        .left {
+            text-align: left !important;
+        }
+
+        .lead {
+            max-width: 1350px;
+            margin: 0 auto 20px !important;
+            font-size: 32px !important;
+            line-height: 1.45 !important;
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .card {
+            box-sizing: border-box;
+            height: 100%;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px 22px;
+            box-shadow: 0 6px 18px rgba(31, 41, 55, .06);
+        }
+
+        .card.soft {
+            background: var(--soft);
+        }
+
+        .card.blue {
+            background: #f4f8ff;
+            border-color: #c9d9ef;
+        }
+
+        .card.warn {
+            background: #fff8ed;
+            border-color: #f0d7b4;
+        }
+
+        .card.red {
+            background: #fff5f5;
+            border-color: #efc8c8;
+        }
+
+        .bluebox {
+            background: var(--cyan);
+            border-left: 6px solid var(--blue2);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 24px;
+            line-height: 1.42;
+        }
+
+        .quote {
+            font-size: 26px;
+            line-height: 1.48;
+            padding: 20px 28px;
+            border-left: 6px solid var(--blue2);
+            background: var(--soft);
+            text-align: left;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: #e8eef7;
+            color: #24405f;
+            font-size: 21px;
+            margin: 4px;
+            font-weight: 600;
+        }
+
+        .pill.ok {
+            background: #e6f8ee;
+            color: #177a46;
+        }
+
+        .pill.alert {
+            background: #feeceb;
+            color: #b42318;
+        }
+
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .step {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 14px 8px;
+            border: 1px solid #c6d5e8;
+            border-radius: 12px;
+            background: #fff;
+            font-size: 24px;
+            line-height: 1.22;
+            text-align: center;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(31, 41, 55, .05);
+        }
+
+        .arrow {
+            flex: 0 0 auto;
+            font-size: 28px;
+            color: #6683a6;
+        }
+
+        table.compare {
+            width: 100%;
+            margin: auto;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            border: 1px solid #d7dee8 !important;
+            border-radius: 12px !important;
+            overflow: hidden;
+            font-size: 24px;
+        }
+
+        table.compare th,
+        table.compare td {
+            border-right: 1px solid #d7dee8 !important;
+            border-bottom: 1px solid #d7dee8 !important;
+            border-top: none !important;
+            border-left: none !important;
+            padding: 10px 14px;
+        }
+
+        table.compare th:last-child,
+        table.compare td:last-child {
+            border-right: none !important;
+        }
+
+        table.compare tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        table.compare th {
+            background: #edf4fb;
+            color: #173d70;
+            font-weight: 700;
+        }
+
+        table.spec-table {
+            width: 100%;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            border: 1px solid #d7dee8 !important;
+            border-radius: 10px !important;
+            overflow: hidden;
+            font-size: 19px;
+            line-height: 1.35;
+            background: #ffffff;
+        }
+
+        table.spec-table th,
+        table.spec-table td {
+            border-right: 1px solid #d7dee8 !important;
+            border-bottom: 1px solid #d7dee8 !important;
+            border-top: none !important;
+            border-left: none !important;
+            padding: 5px 10px;
+            vertical-align: middle;
+        }
+
+        table.spec-table th:last-child,
+        table.spec-table td:last-child {
+            border-right: none !important;
+        }
+
+        table.spec-table tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        table.spec-table th {
+            background: #edf4fb;
+            color: #173d70;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        table.spec-table tr:nth-child(even) td {
+            background: #fbfdff;
+        }
+
+        table.spec-table code {
+            font-size: 0.95em;
+        }
+
+        .sectiontag {
+            color: #46709f;
+            font-size: 30px !important;
+            letter-spacing: .08em;
+        }
+
+        .title-meta {
+            font-size: 30px !important;
+            margin-top: 26px !important;
+            color: #48627f;
+        }
+
+        .modulecover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 680px;
+            padding: 48px 60px;
+            background: linear-gradient(135deg, #f7fbff 0%, #eef5ff 55%, #fff 100%);
+            border: 1px solid #dbe7f6;
+            border-radius: 20px;
+            box-shadow: 0 10px 28px rgba(31, 41, 55, .07);
+        }
+
+        .modulecover .cover-kicker {
+            font-size: 24px;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+            color: #5c7da5;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+
+        .modulecover .cover-title {
+            font-size: 56px;
+            line-height: 1.18;
+            color: #163f78;
+            font-weight: 800;
+            margin: 0 0 16px;
+        }
+
+        .modulecover .cover-subtitle {
+            font-size: 28px;
+            color: #48627f;
+            line-height: 1.42;
+            max-width: 1120px;
+        }
+
+        .modulecover .cover-tags {
+            margin-top: 20px;
+        }
+
+        .modulecover .cover-tags .pill {
+            font-size: 24px;
+            background: #ddeafb;
+            color: #214c84;
+        }
+
+        .slide-label {
+            position: absolute;
+            top: 9px;
+            right: 24px;
+            z-index: 50;
+            max-width: 46%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 5px 10px;
+            border: 1px solid #cbd9ec;
+            border-radius: 999px;
+            background: #f4f8ff;
+            color: #375a82;
+            font-family: "Cascadia Code", Consolas, "Courier New", monospace;
+            font-size: 16px !important;
+            line-height: 1.15;
+            opacity: .92;
+            pointer-events: none;
+        }
+
+        /* 语法高亮：白底高对比度 */
+        .hljs {
+            background: #fff !important;
+            color: #1f2937 !important;
+        }
+
+        .hljs-keyword,
+        .hljs-built_in,
+        .hljs-type {
+            color: #2056a8 !important;
+            font-weight: 700 !important;
+        }
+
+        .hljs-meta,
+        .hljs-preprocessor,
+        .hljs-title,
+        .hljs-function .hljs-title,
+        .hljs-name {
+            color: #6d28d9 !important;
+            font-weight: 700 !important;
+        }
+
+        .hljs-string,
+        .hljs-number,
+        .hljs-literal,
+        .hljs-params {
+            color: #a65b00 !important;
+        }
+
+        .hljs-comment {
+            color: #64748b !important;
+            font-style: italic !important;
+        }
+
+        .hljs-symbol,
+        .hljs-operator,
+        .hljs-punctuation {
+            color: #334155 !important;
+        }
+
+        .prompt {
+            background: #fbfcfe;
+            border-left: 5px solid #2056a8;
+            padding: 14px 18px;
+            border-radius: 0 10px 10px 0;
+            font-size: 23px;
+            line-height: 1.48;
+            margin-top: 10px;
+            color: #243853;
+        }
+
+        .qbox {
+            background: #F4FAFC;
+            border: 2px solid #B5D3DF;
+            border-radius: 12px;
+            padding: 18px 22px;
+            font-size: 26px;
+        }
+
+        .qbox .answer {
+            background: white;
+            border-left: 5px solid var(--blue2);
+            padding: 14px 20px;
+            margin-top: 12px;
+            font-size: 23px;
+        }
+
+        .qbox button,
+        .reveal-answer {
+            border: 1.5px solid #8DBAC7;
+            background: #E8F5F7;
+            color: #124D5D;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .qbox button:hover,
+        .reveal-answer:hover {
+            background: #2056a8;
+            color: #fff;
+            border-color: #2056a8;
+        }
+
+        /* === 交互组件与后置说明防重叠优化（与6_1标准一致） === */
+        .interactive {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            clear: both !important;
+            min-height: 0 !important;
+            padding: 12px 18px !important;
+            font-size: 22px !important;
+            margin-bottom: 12px !important;
+            position: relative !important;
+            z-index: 5 !important;
+            overflow: visible !important;
+            background: linear-gradient(#F9FCFD, #FFF);
+            border: 2px solid #BDD6DF;
+            border-radius: 14px;
+        }
+
+        section>.card,
+        .interactive+.card,
+        .interactive+.bluebox,
+        .interactive+.quote,
+        .interactive+.grid2,
+        .interactive+.grid3 {
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            box-sizing: border-box !important;
+            clear: both !important;
+            margin-top: 12px !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        .interactive+.grid2,
+        .interactive+.grid3 {
+            display: grid !important;
+        }
+
+        .interactive+.grid2>.card,
+        .interactive+.grid3>.card {
+            height: 100% !important;
+        }
+
+        .interactive+.card p,
+        .interactive+.bluebox,
+        .interactive+.quote {
+            font-size: 21px !important;
+            line-height: 1.4 !important;
+        }
+
+        .interactive+.card {
+            padding: 12px 18px !important;
+        }
+
+        .interactive+.bluebox {
+            padding: 10px 16px !important;
+        }
+
+        .interactive+.quote {
+            padding: 12px 20px !important;
+        }
+
+        .reveal .interactive .demo-controls,
+        .reveal .interactive .controls,
+        .interactive .demo-controls,
+        .interactive .controls {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 10px 14px !important;
+            align-items: center !important;
+            margin-bottom: 12px !important;
+            font-size: 22px !important;
+            position: static !important;
+            width: 100% !important;
+            pointer-events: auto !important;
+            z-index: 10 !important;
+        }
+
+        .reveal .interactive button,
+        .reveal .interactive .demo-controls button,
+        .reveal .interactive .controls button,
+        .interactive button {
+            display: inline-flex !important;
+            position: static !important;
+            border: 1.5px solid #8DBAC7 !important;
+            background: #E8F5F7 !important;
+            color: #124D5D !important;
+            padding: 6px 14px !important;
+            border-radius: 7px !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            font-family: inherit !important;
+            line-height: 1.3 !important;
+            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .reveal .interactive button:hover,
+        .interactive button:hover {
+            background: #2056a8 !important;
+            color: #ffffff !important;
+            border-color: #2056a8 !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .reveal .interactive button:active,
+        .interactive button:active {
+            transform: translateY(1px) !important;
+        }
+
+        .interactive .demo-controls input,
+        .interactive .demo-controls select,
+        .interactive input,
+        .interactive select {
+            position: static !important;
+            display: inline-block !important;
+            font-family: 'Cascadia Code', Consolas, monospace !important;
+            font-size: 21px !important;
+            border: 1.5px solid #9AB9C7 !important;
+            border-radius: 7px !important;
+            padding: 5px 10px !important;
+            color: var(--ink) !important;
+            background: white !important;
+            pointer-events: auto !important;
+            box-sizing: border-box !important;
+        }
+
+        .interactive .demo-controls label,
+        .interactive label {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-size: 21px !important;
+            font-weight: 500 !important;
+        }
+
+        .interactive .screen {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .interactive .readout {
+            background: white;
+            border: 1px solid #D5E3E9;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 22px;
+            line-height: 1.4;
+        }
+
+        .interactive .readout b {
+            color: var(--teal);
+        }
+
+        .interactive .explain {
+            font-size: 20px;
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .bits {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .bit {
+            min-width: 28px;
+            max-width: 38px;
+            flex: 1;
+            background: #EDF4F8;
+            color: #284257;
+            border: 1px solid #C8D8E2;
+            border-radius: 5px;
+            text-align: center;
+            font: 700 24px Consolas, monospace;
+            padding: 5px 0;
+        }
+
+        .bit.one {
+            background: #CBE8EE;
+            border-color: #67AEBB;
+            color: #07495A;
+        }
+
+        .bad {
+            color: var(--red);
+            font-weight: 700;
+        }
+
+        .formula {
+            font-family: 'Cascadia Code', Consolas, monospace;
+            font-size: 26px;
+            color: #173d70;
+            background: #eef4fb;
+            padding: 6px 14px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 6px 0;
+            font-weight: 700;
+        }
+
+        /* 8位板子高紧凑垂直对齐 */
+        .bit-board {
+            display: grid !important;
+            grid-template-columns: repeat(8, 1fr) !important;
+            gap: 6px !important;
+            margin: 4px 0 2px !important;
+        }
+
+        .bit-col {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            background: #f8fafc !important;
+            border: 1.5px solid #d8e2ec !important;
+            border-radius: 8px !important;
+            padding: 4px 2px !important;
+            user-select: none !important;
+            transition: all 0.15s ease !important;
+        }
+
+        .bit-col .col-pos {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            margin-bottom: 2px !important;
+        }
+
+        .bit-col .bit-btn {
+            width: 38px !important;
+            height: 32px !important;
+            border-radius: 6px !important;
+            font: 700 20px Consolas, monospace !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            border: 1px solid #cbd5e1 !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+
+        .bit-col.active .bit-btn {
+            background: #2056a8 !important;
+            color: #ffffff !important;
+            border-color: #164082 !important;
+            box-shadow: 0 2px 4px rgba(32, 86, 168, 0.25) !important;
+        }
+
+        .bit-col .col-val {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            margin-top: 2px !important;
+            color: #94a3b8 !important;
+            font-family: Consolas, monospace !important;
+        }
+
+        .bit-col.active .col-val {
+            color: #059669 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- ==================== 模块 1：课程导入与核心问题 ==================== -->
+            <section id="sec-1-0">
+                <section id="sec-1-1">
+                    <p class="center sectiontag">程序设计基础 · 第6次课 · 第3课时</p>
+                    <h1 class="center">数据类型与表达式（三）<br />表达式综合应用：逻辑网络、位掩码与状态机</h1>
+                    <p class="center title-meta">从区间连写误诊陷阱到短路熔断保护，融会贯通 C 语言表达式的高级控制威力</p>
+                    <aside class="notes">0:00—1:00。课程定位：前两课我们掌握了数据表示、类型转换与基本求值；本课我们将进阶到真实项目开发中高频使用的逻辑网络、短路防御、位掩码和状态机。</aside>
+                </section>
+                <section id="sec-1-2">
+                    <h2>本课核心问题</h2>
+                    <p class="lead center">为什么写 <code>if (60 &lt;= sbp &lt;= 140)</code> 会造成严重的医学误诊？</p>
+                    <div class="grid3">
+                        <div class="card">
+                            <h3>临床业务背景</h3>
+                            <p class="small">当收缩压高达 <code>220 mmHg</code>（严重高血压危机）时，上述条件竟然被判定为“真”！直接导致重症患者被误判为“正常”！</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>今天核心推进</h3>
+                            <p class="small">分析连续比较在 C 语言中的求值规则，掌握 <code>&&</code>, <code>||</code>, <code>!</code> 的短路特性，构建健壮的区间判断与除数保护逻辑。</p>
+                        </div>
+                        <div class="card">
+                            <h3>关键机制模型</h3>
+                            <p class="small">短路求值熔断机制、位掩码状态多路复用、ASCII 字符数值计算，以及优雅处理连续空格的有限状态自动机（FSM）。</p>
+                        </div>
+                    </div>
+                    <aside class="notes">1:00—3:00。引出数学直觉与 C 语言语法的根本差异。</aside>
+                </section>
+                <section id="sec-1-3">
+                    <h2>第3课时学习目标</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>知识目标</h3>
+                            <ul>
+                                <li>理解数学书写与 C 语言语法的差异，避免使用 <code>a &lt;= x &lt;= b</code> 形式的连续比较</li>
+                                <li>深入理解逻辑与 <code>&&</code>、逻辑或 <code>||</code> 的<strong>短路求值机制</strong>与副作用规避</li>
+                                <li>掌握利用三目运算符 <code>? :</code> 与位掩码 <code>Bitmask</code> 高效管理多重慢病标签</li>
+                                <li>掌握 ASCII 字符数值计算法则及有限状态机（FSM）的字符流边界检测原理</li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3>能力目标</h3>
+                            <ul>
+                                <li>能熟练编写防除零、防越界的防御性单行卫语句</li>
+                                <li>能使用 <code>&amp;</code>, <code>|</code>, <code>~</code>, <code>^</code> 对单个整型变量的指定比特位进行精准开关与检测</li>
+                                <li>能构建面向真实场景的“慢病随访生理数据合规核验管道”</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <aside class="notes">3:00—5:00。本课将从“单一表达式语法”进阶到“面向真实业务的健壮逻辑管道”。</aside>
+                </section>
+                <section id="sec-1-4">
+                    <h2>什么是表达式？C 语言表达式的本质与特征</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>1. 表达式的定义与两大核心属性</h3>
+                            <p class="small">
+                                <strong>定义：</strong>表达式（Expression）是由<strong>操作数</strong>（常量、变量、函数返回值等）与<strong>运算符</strong>按 C 语言语法规则组合而成的计算式。<br />
+                                <strong>核心属性 ① 确定值与类型：</strong>任何表达式求值后，必定产生一个唯一的<strong>数值结果</strong>与确定的<strong>数据类型</strong>。<br />
+                                <strong>核心属性 ② 潜在副作用：</strong>部分表达式（如赋值、自增自减）在产生值的同时，还会<strong>改变变量在内存中的状态</strong>。
+                            </p>
+                        </div>
+                        <div class="card soft">
+                            <h3>2. 表达式（Expression） vs 语句（Statement）</h3>
+                            <p class="small">
+                                <strong>纯表达式：</strong><code>a + b</code>、<code>x = 10</code>、<code>count++</code>（可作为子表达式嵌入他处）。<br />
+                                <strong>表达式语句：</strong>在表达式末尾加上<strong>分号 <code>;</code></strong>，即构成一条独立的语句：
+                            </p>
+                            <pre><code class="language-c" data-trim>x = 10;          /* 赋值表达式语句 */
+count++;         /* 自增表达式语句 */
+printf("Hello"); /* 函数调用表达式语句 */</code></pre>
+                            <p class="small">单独写 <code>a + b;</code> 语法合法，但由于没有副作用，计算结果被直接丢弃。</p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:12px; font-size:20px; padding:10px 16px;">
+                        <strong>学习提示：</strong>C 语言是典型的“表达式驱动语言”。理解每一个表达式的<strong>类型、求值结果</strong>以及是否产生<strong>副作用</strong>，是编写高质量代码的基础。
+                    </div>
+                </section>
+                <section id="sec-1-5">
+                    <h2>C 语言常见表达式全景分类速查</h2>
+                    <table class="spec-table" data-static>
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">表达式类别</th>
+                                <th style="width: 20%;">常用运算符 / 语法形式</th>
+                                <th style="width: 28%;">典型代码示例</th>
+                                <th style="width: 18%;">求值结果与类型</th>
+                                <th style="width: 20%;">核心作用与说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>初等表达式</strong></td>
+                                <td>常量、变量标识符、圆括号 <code>()</code></td>
+                                <td><code>100</code>, <code>sbp</code>, <code>(a + b)</code></td>
+                                <td>操作数自身的值与类型</td>
+                                <td>最基础的原子表达式，括号改变优先级</td>
+                            </tr>
+                            <tr>
+                                <td><strong>算术表达式</strong></td>
+                                <td><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code></td>
+                                <td><code>5 * (c + 32) / 9</code>, <code>14 % 3</code></td>
+                                <td>相应数值类型（如 <code>int</code>/<code>double</code>）</td>
+                                <td>基本四则运算，注意整除向零截断与取模规则</td>
+                            </tr>
+                            <tr>
+                                <td><strong>关系表达式</strong></td>
+                                <td><code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>==</code>, <code>!=</code></td>
+                                <td><code>sbp &gt;= 140</code>, <code>score == 100</code></td>
+                                <td><code>int</code>（<code>1</code> 表示真，<code>0</code> 表示假）</td>
+                                <td>数值大小与相等比较，禁写 <code>a &lt;= x &lt;= b</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>逻辑表达式</strong></td>
+                                <td><code>&amp;&amp;</code> (逻辑与), <code>||</code> (逻辑或), <code>!</code> (逻辑非)</td>
+                                <td><code>(sbp &gt;= 140) || (dbp &gt;= 90)</code></td>
+                                <td><code>int</code>（<code>1</code> 表示真，<code>0</code> 表示假）</td>
+                                <td>条件逻辑网络，具备极其关键的<strong>短路求值特性</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>赋值表达式</strong></td>
+                                <td>简单赋值 <code>=</code>、复合赋值 <code>+=</code>, <code>-=</code>, <code>*=</code> 等</td>
+                                <td><code>total += score</code>, <code>a = b = 10</code></td>
+                                <td>被赋的值（且具修改变量的副作用）</td>
+                                <td>C 中赋值是表达式而非语句，支持链式赋值</td>
+                            </tr>
+                            <tr>
+                                <td><strong>自增自减表达式</strong></td>
+                                <td><code>++</code>, <code>--</code>（前置 / 后置）</td>
+                                <td><code>count++</code>, <code>--attempts</code></td>
+                                <td>增减前（后置）或后（前置）的值</td>
+                                <td>修改变量存储值，禁止同式中对同变量多次自增</td>
+                            </tr>
+                            <tr>
+                                <td><strong>条件表达式</strong></td>
+                                <td><code>? :</code>（三目条件运算符）</td>
+                                <td><code>(score &gt;= 60) ? 'P' : 'F'</code></td>
+                                <td>所选分支子表达式的值与类型</td>
+                                <td>C 语言唯一的三元运算符，精简内联二选一逻辑</td>
+                            </tr>
+                            <tr>
+                                <td><strong>位运算表达式</strong></td>
+                                <td><code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code></td>
+                                <td><code>status |= 0x01</code>, <code>val &gt;&gt; 2</code></td>
+                                <td>整型二进制按位计算结果</td>
+                                <td>对底层比特位进行精确操作与状态掩码压缩</td>
+                            </tr>
+                            <tr>
+                                <td><strong>逗号表达式</strong></td>
+                                <td><code>,</code>（逗号运算符）</td>
+                                <td><code>i = 0, j = 10</code></td>
+                                <td>最右侧子表达式的值与类型</td>
+                                <td>从左向右顺序求值，全 C 语言中优先级最低</td>
+                            </tr>
+                            <tr>
+                                <td><strong>函数调用表达式</strong></td>
+                                <td>函数名 + <code>(实参列表)</code></td>
+                                <td><code>sqrt(16.0)</code>, <code>printf("%d", n)</code></td>
+                                <td>函数返回值类型与具体数值</td>
+                                <td>执行外部功能模块，获取返回结果或触发 I/O</td>
+                            </tr>
+                            <tr>
+                                <td><strong>辅助与复合运算</strong></td>
+                                <td>强制转换 <code>(type)</code>、<code>sizeof</code>、下标 <code>[]</code></td>
+                                <td><code>(double)sum / n</code>, <code>sizeof(int)</code></td>
+                                <td>目标转换类型 / 字节长度 <code>size_t</code></td>
+                                <td>显式类型提升、编译期空间度量、数组元素寻址</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="bluebox" style="margin-top:10px; font-size:19px; padding:6px 16px;">
+                        <strong>本讲路线图：</strong>本课时将依次深入探究：模块 2 逻辑表达式与短路；模块 3 条件、逗号与位运算；模块 4 字符运算与状态机；模块 5 综合实战。
+                    </div>
+                </section>
+                <section id="sec-1-6">
+                    <h2>数据计算与赋值类表达式详解及代码示例</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>1. 算术与自增自减表达式</h3>
+                            <pre><code class="language-c" data-trim>int a = 14, b = 4;
+int div1 = a / b;           /* 整数除法：3 (向零截断) */
+double div2 = (double)a / b; /* 浮点除法：3.5 */
+int mod = a % b;            /* 取模运算：2 (两端必须为整型) */
+
+int i = 5, v1, v2;
+v1 = i++;                   /* 后置自增：先取值 v1=5，后 i 变为 6 */
+v2 = ++i;                   /* 前置自增：先自增 i 变为 7，后取值 v2=7 */</code></pre>
+                            <p class="small"><strong>辨析要点：</strong><code>/</code> 根据操作数类型决定是整数除法还是浮点除法；取模 <code>%</code> 要求操作数必须为整数；前置与后置决定了表达式本身取自增前还是自增后的值。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>2. 简单赋值、复合赋值与辅助表达式</h3>
+                            <pre><code class="language-c" data-trim>int x, y, z;
+x = y = z = 20;             /* 连续赋值：从右至左求值，整体值为 20 */
+x += 5;                     /* 复合赋值：等价于 x = x + 5 */
+
+int val;
+if ((val = check()) > 0)    /* 赋值本身也是表达式，具备值和副作用 */
+
+size_t sz = sizeof(double); /* sizeof 表达式：返回类型字节大小 8 */</code></pre>
+                            <p class="small"><strong>辨析要点：</strong>在 C 语言中，赋值是<strong>表达式</strong>而非独立语句，其求值结果是被赋的值，并产生修改变量的<strong>副作用</strong>；<code>sizeof</code> 是编译期计算运算符。</p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:12px; font-size:20px; padding:10px 16px;">
+                        <strong>执行特征：</strong>这类表达式聚焦于<strong>数值的加工与变量状态的更新</strong>，由 CPU 算术逻辑单元（ALU）完成计算并写回内存。
+                    </div>
+                </section>
+                <section id="sec-1-7">
+                    <h2>判断、控制与特殊类表达式详解及代码示例</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>1. 关系、逻辑与条件表达式</h3>
+                            <pre><code class="language-c" data-trim>int sbp = 150, dbp = 95;
+/* 关系表达式：比较运算，结果为 1 (真) 或 0 (假) */
+int is_high_sbp = (sbp >= 140);  /* 结果: 1 */
+
+/* 逻辑表达式：&& (与), || (或), ! (非)，具短路保护 */
+int is_danger = (sbp >= 140) || (dbp >= 90); /* 结果: 1 */
+
+/* 条件表达式 (三目运算)：二选一内联求值 */
+char level = (sbp >= 140) ? 'H' : 'N';       /* 结果: 'H' */</code></pre>
+                            <p class="small"><strong>辨析要点：</strong>关系与逻辑表达式返回值均为整型 <code>1</code> 或 <code>0</code>；逻辑运算符具备遇到左侧定局即跳过右侧的<strong>短路求值特性</strong>；三目运算符适合精简二选一赋值。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>2. 位运算、逗号与函数调用表达式</h3>
+                            <pre><code class="language-c" data-trim>unsigned char flag = 0x01;
+flag |= 0x02;               /* 按位或：开启第 1 位标记 (置 1) */
+int is_set = flag & 0x01;   /* 按位与：检测第 0 位是否有效 */
+
+/* 逗号表达式：从左到右依次求值，取最末项的值 */
+int i, j;
+for (i = 0, j = 10; i < j; i++, j--) { ... }
+
+/* 函数调用表达式：执行函数并接收其返回值 */
+double dist = sqrt(16.0);   /* 表达式的值为 4.0 */</code></pre>
+                            <p class="small"><strong>辨析要点：</strong>位运算直接操作整型变量的底层二进制比特位；逗号表达式优先级最低，常用于循环头部同时迭代多个变量；函数调用表达式以其返回值参与外层计算。</p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:12px; font-size:20px; padding:10px 16px;">
+                        <strong>执行特征：</strong>这类表达式聚焦于<strong>程序的分支选择、逻辑流转与位级状态管理</strong>，是编写高质量防御性与系统级代码的利器。
+                    </div>
+                </section>
+            </section>
+
+            <!-- ==================== 模块 2：逻辑运算符与短路求值保护 ==================== -->
+            <section id="sec-2-0">
+                <section class="module-cover-slide" id="sec-2-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.3 / 逻辑运算与短路机制</div>
+                        <div class="cover-title">连接条件的逻辑网络：<br />短路求值的双刃剑</div>
+                        <div class="cover-subtitle">逻辑运算符不仅仅是条件的拼接，短路保护是编写防御性代码的核心利器。</div>
+                        <div class="cover-tags">
+                            <span class="pill">连续比较陷阱</span>
+                            <span class="pill">&amp;&amp; || !</span>
+                            <span class="pill">短路求值</span>
+                            <span class="pill">防除零保护</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-2-2">
+                    <h2>一个看似正确的区间判断：剖析连续比较陷阱</h2>
+                    <pre><code class="language-c" data-trim>int sbp = 220;   /* 严重高血压收缩压 */
+
+if (60 <= sbp <= 140) {
+    printf("血压处于正常范围！\n");   /* 此分支会被执行，与预期逻辑不符 */
+}</code></pre>
+                    <div class="grid2" style="margin-top:14px;">
+                        <div class="card warn">
+                            <h3>微观运行步骤推演（左结合）</h3>
+                            <ol class="small">
+                                <li><code>&lt;=</code> 属于左结合运算符：先算 <code>(60 &lt;= sbp)</code></li>
+                                <li><code>60 &lt;= 220</code> 为真，得到整型逻辑值 <strong><code>1</code></strong></li>
+                                <li>原式等价于：<code>1 &lt;= 140</code></li>
+                                <li><code>1 &lt;= 140</code> 恒为真！无论 sbp 是 220 还是 500，条件永远成立！</li>
+                            </ol>
+                        </div>
+                        <div class="card blue">
+                            <h3>C 语言规范写法</h3>
+                            <p class="formula"><code>sbp &gt;= 60 &amp;&amp; sbp &lt;= 140</code></p>
+                            <p class="small">必须将两个独立的二元关系表达式，通过<strong>逻辑与 <code>&amp;&amp;</code></strong> 显式连结在一起！两边同时成立才算正常。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-2-3">
+                    <h2>逻辑与、或、非：真值表与组合规则</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>逻辑运算符</th>
+                            <th>语法形式</th>
+                            <th>真值判定规则</th>
+                            <th>医学随访判定示例</th>
+                        </tr>
+                        <tr>
+                            <td><strong>逻辑与 <code>&amp;&amp;</code></strong></td>
+                            <td><code>A &amp;&amp; B</code></td>
+                            <td>当且仅当 A 与 B <strong>均非零</strong>时为真（1），否则为 0</td>
+                            <td><code>sbp &gt;= 90 &amp;&amp; sbp &lt;= 139</code>（血压正常需两端达标）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>逻辑或 <code>||</code></strong></td>
+                            <td><code>A || B</code></td>
+                            <td>只要 A 或 B 中<strong>至少一个非零</strong>即为真（1），全零为 0</td>
+                            <td><code>sbp &gt;= 140 || dbp &gt;= 90</code>（收缩压或舒张压任一超标即高血压）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>逻辑非 <code>!</code></strong></td>
+                            <td><code>!A</code></td>
+                            <td>单目运算：若 A 为零则为 1；若 A 非零则为 0</td>
+                            <td><code>!isValid</code>（数据不合规时报警）</td>
+                        </tr>
+                    </table>
+                </section>
+                <section id="sec-2-4">
+                    <h2>短路求值：右边有可能根本不执行！</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>逻辑与短路（<code>A &amp;&amp; B</code>）</h3>
+                            <p class="small">如果左侧表达式 <code>A</code> 的值为假（0），则整个逻辑与的结果<strong>注定为假</strong>。C 语言规定：<strong>右侧表达式 <code>B</code> 被立即跳过，绝不执行！</strong></p>
+                        </div>
+                        <div class="card soft">
+                            <h3>逻辑或短路（<code>A || B</code>）</h3>
+                            <p class="small">如果左侧表达式 <code>A</code> 的值为真（非0），则整个逻辑或的结果<strong>注定为真</strong>。C 语言规定：<strong>右侧表达式 <code>B</code> 同样被立即跳过，绝不执行！</strong></p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:14px;">
+                        <strong>警惕副作用：</strong>如果右侧表达式包含 <code>count++</code> 或函数调用，当短路发生时，这些副作用<strong>完全不会发生</strong>！切勿在右侧放置依赖执行的赋值代码。
+                    </div>
+                </section>
+                <section id="sec-2-5">
+                    <h2>交互演示：观察右侧是否被跳过</h2>
+                    <div class="interactive" data-demo="shortcircuit"></div>
+                    <div class="card soft" data-static="" style="margin-top:10px;">
+                        <p class="small">💡 <b>动手实验：</b>点击预设按钮，观察当 <code>count = 0</code> 时，右侧除法 <code>(sum / count) &gt;= 140</code> 是否直接跳过，从而避免了除以 0 引发运行异常。</p>
+                    </div>
+                </section>
+                <section id="sec-2-6">
+                    <h2>短路特性的经典实战：防除零卫语句</h2>
+                    <pre><code class="language-c" data-line-numbers="1|3-6|8" data-trim>int count = 0, sum = 240;
+
+/* 安全优雅的防崩单行判定：*/
+if (count != 0 && (sum / count) > 140) {
+    printf("平均收缩压超标，触发慢病随访预警！\n");
+}
+
+/* 若 count 为 0，左边 count != 0 为假，右边除法根本不会被触发！*/</code></pre>
+                    <div class="quote">利用 <code>&amp;&amp;</code> 短路特性保护右侧危险操作（如除零、数组越界、空指针解引用），是 C 语言防御性编程的核心技巧。</div>
+                </section>
+            </section>
+
+            <!-- ==================== 模块 3：条件运算符、逗号表达式与位运算 ==================== -->
+            <section id="sec-3-0">
+                <section class="module-cover-slide" id="sec-3-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.3 / 条件运算符与位掩码</div>
+                        <div class="cover-title">精简二选一逻辑，<br />用比特位高效存储多元状态</div>
+                        <div class="cover-subtitle">三目运算符使赋值紧凑明晰，位掩码将多个布尔标签压缩进单一整数。</div>
+                        <div class="cover-tags">
+                            <span class="pill">三目运算符 ? :</span>
+                            <span class="pill">逗号表达式</span>
+                            <span class="pill">位运算符</span>
+                            <span class="pill">位掩码 Bitmask</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-2">
+                    <h2>条件表达式：适合简单的二选一</h2>
+                    <div class="grid2">
+                        <div class="card soft">
+                            <h3>常规 if-else 写法（略显繁琐）</h3>
+                            <pre><code class="language-c" data-trim>char level;
+if (sbp >= 140) {
+    level = 'H';   /* High: 偏高 */
+} else {
+    level = 'N';   /* Normal: 正常 */
+}</code></pre>
+                        </div>
+                        <div class="card blue">
+                            <h3>条件运算符 ? : 写法（精炼内联）</h3>
+                            <pre><code class="language-c" data-trim>char level = (sbp >= 140) ? 'H' : 'N';</code></pre>
+                            <p class="small"><strong>语法规则：</strong><code>表达式1 ? 表达式2 : 表达式3</code><br />先判断表达式1，为真取表达式2，为假取表达式3。</p>
+                        </div>
+                    </div>
+                    <div class="bluebox" style="margin-top:14px;">
+                        <strong>规范建议：</strong>条件表达式适合用于简洁的赋值或直接作为 <code>printf</code> 参数；切忌嵌套超过两层，否则严重破坏代码可读性。
+                    </div>
+                </section>
+                <section id="sec-3-3">
+                    <h2>复合赋值和逗号表达式在循环中的位置</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>逗号运算符 <code>,</code></h3>
+                            <p class="formula"><code>表达式1, 表达式2, ..., 表达式n</code></p>
+                            <p class="small">从左到右依次执行求值，整个逗号表达式的值是<strong>最后一个子表达式的值</strong>。其优先级在全 C 语言中<strong>最低</strong>。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>典型应用：多变量控制循环</h3>
+                            <pre><code class="language-c" data-trim>for (i = 0, j = 10; i < j; i++, j--) {
+    /* 头部逗号用于在一行内初始化或迭代多个变量 */
+}</code></pre>
+                            <p class="small">仅建议在 <code>for</code> 循环头部等紧凑场景使用，其他地方滥用容易制造晦涩陷阱。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-4">
+                    <h2>逻辑运算与位运算，符号很像</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>类别</th>
+                            <th>运算符</th>
+                            <th>运算对象</th>
+                            <th>求值特性</th>
+                            <th>返回值</th>
+                        </tr>
+                        <tr>
+                            <td><strong>逻辑运算符</strong></td>
+                            <td><code>&amp;&amp;</code>, <code>||</code>, <code>!</code></td>
+                            <td>真假条件（0 或 非0）</td>
+                            <td><strong>具备短路特性</strong></td>
+                            <td>只能是 <code>0</code> 或 <code>1</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>位运算符</strong></td>
+                            <td><code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code></td>
+                            <td>二进制位串（逐位对齐）</td>
+                            <td><strong>不具备短路特性</strong>，全位运算</td>
+                            <td>位运算后的具体整数</td>
+                        </tr>
+                    </table>
+                    <div class="bluebox" style="margin-top:14px;">
+                        <strong>易错混淆提示：</strong>避免把逻辑与 <code>if (a &amp;&amp; b)</code> 误写成按位与 <code>if (a &amp; b)</code>。按位与不具备短路特性，若 b 包含除零风险，仍会被强制计算。
+                    </div>
+                </section>
+                <section id="sec-3-5">
+                    <h2>实战应用：用一个整数保存多种慢病状态</h2>
+                    <div class="interactive" data-demo="flags"></div>
+                    <div class="grid3" data-static="" style="margin-top:10px;">
+                        <div class="card">
+                            <h3>第 0 位：已核验</h3>
+                            <p class="small"><code>1 &lt;&lt; 0 (0x01)</code><br />标记随访数据是否已通过系统自动校验。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>第 1 位：需随访</h3>
+                            <p class="small"><code>1 &lt;&lt; 1 (0x02)</code><br />标记是否需要家庭医生 2 周内上门复查。</p>
+                        </div>
+                        <div class="card">
+                            <h3>第 2 位：重点慢病</h3>
+                            <p class="small"><code>1 &lt;&lt; 2 (0x04)</code><br />标记是否列入社区高血压/糖尿病重点管理。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-3-6">
+                    <h2>六大位运算符基本规则与状态操作速查</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>运算符</th>
+                            <th>名称与规则</th>
+                            <th>慢病位掩码操作示例</th>
+                            <th>工程用途</th>
+                        </tr>
+                        <tr>
+                            <td><code>&amp;</code></td>
+                            <td>按位与：同 1 为 1</td>
+                            <td><code>status &amp; (1 &lt;&lt; 1)</code></td>
+                            <td><strong>检测</strong>某一位状态是否为 1（开启）</td>
+                        </tr>
+                        <tr>
+                            <td><code>|</code></td>
+                            <td>按位或：有 1 为 1</td>
+                            <td><code>status |= (1 &lt;&lt; 2)</code></td>
+                            <td><strong>设置（开启）</strong>某一位状态为 1</td>
+                        </tr>
+                        <tr>
+                            <td><code>~</code></td>
+                            <td>按位取反：0变1，1变0</td>
+                            <td><code>status &amp;= ~(1 &lt;&lt; 1)</code></td>
+                            <td><strong>清除（重置）</strong>某一位状态为 0</td>
+                        </tr>
+                        <tr>
+                            <td><code>^</code></td>
+                            <td>按位异或：不同为 1，相同为 0</td>
+                            <td><code>status ^= (1 &lt;&lt; 0)</code></td>
+                            <td><strong>翻转</strong>某一位状态（0变1，1变0）</td>
+                        </tr>
+                        <tr>
+                            <td><code>&lt;&lt;</code> / <code>&gt;&gt;</code></td>
+                            <td>左移（乘2）/ 右移（除2）</td>
+                            <td><code>1 &lt;&lt; n</code></td>
+                            <td>快速生成第 n 位的独热掩码（Mask）</td>
+                        </tr>
+                    </table>
+                </section>
+            </section>
+
+            <!-- ==================== 模块 4：字符运算与状态机文本处理 ==================== -->
+            <section id="sec-4-0">
+                <section class="module-cover-slide" id="sec-4-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.3 / 字符运算与有限状态机</div>
+                        <div class="cover-title">字符的数值计算，<br />用状态跳出繁琐条件分支</div>
+                        <div class="cover-subtitle">字符在内存中是整型编码；利用状态转移变量，优雅处理连续与交替输入。</div>
+                        <div class="cover-tags">
+                            <span class="pill">大小写转换</span>
+                            <span class="pill">getchar / putchar</span>
+                            <span class="pill">有限状态机</span>
+                            <span class="pill">单词统计</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-2">
+                    <h2>字符运算：大写字母如何变成小写？</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>ASCII 码间距差值法则</h3>
+                            <p class="formula"><code>'a' - 'A' = 97 - 65 = 32</code></p>
+                            <p class="small">大写与小写字母相隔固定值 <strong>32</strong>（<code>0x20</code>）。加上 32 转小写，减去 32 转大写！利用位运算也可以用 <code>ch | 0x20</code> 瞬间转小写。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>字符转数字真值</h3>
+                            <p class="formula"><code>'5' - '0' = 53 - 48 = 5</code></p>
+                            <p class="small">减去基准字符 <code>'0'</code>，就能立刻把 ASCII 数字字符转化为可直接参与四则运算的真实整数！</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-3">
+                    <h2>保留教材例题：逐个字符改变大小写</h2>
+                    <pre><code class="language-c" data-line-numbers="1|3|5-11|13" data-trim>#include &lt;stdio.h&gt;
+
+int main(void) {
+    char ch;
+    while ((ch = getchar()) != '\n' && ch != EOF) {
+        if (ch >= 'A' && ch <= 'Z') {
+            ch = ch + 32;       /* 大写转小写 */
+        } else if (ch >= 'a' && ch <= 'z') {
+            ch = ch - 32;       /* 小写转大写 */
+        }
+        putchar(ch);
+    }
+    putchar('\n');
+    return 0;
+}</code></pre>
+                    <div class="quote">利用 <code>getchar()</code> 配合循环条件里的赋值表达式，是 C 语言流式读取字符的经典模式。</div>
+                </section>
+                <section id="sec-4-4">
+                    <h2>单词统计：为什么不能只数空格？</h2>
+                    <div class="grid2">
+                        <div class="card warn">
+                            <h3>幼稚做法：简单数空格数</h3>
+                            <p class="small">认为“单词数 = 空格数 + 1”：</p>
+                            <pre><code class="language-c" data-trim>/* 遇到输入 "  AI   assists C  "：*/
+/* 统计出 8 个空格，误判为 9 个单词！*/</code></pre>
+                            <p class="small danger">主要缺陷：当存在连续空格、行首空格或行尾空格时，空格计数无法对应实际单词数。</p>
+                        </div>
+                        <div class="card blue">
+                            <h3>状态机思维：看的是“边界跳变”</h3>
+                            <p class="small">真正决定一个新单词出现的，不是空格本身，而是<strong>从“非单词字符（空格）”跨入“单词字符”的那一瞬间跃迁！</strong></p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-5">
+                    <h2>用状态变化替代繁琐条件</h2>
+                    <div class="flow" style="margin-top:10px; margin-bottom:18px;">
+                        <div class="step">前一字符是空格<br /><code>in_word = 0</code></div>
+                        <div class="arrow">→ 读到非空格字符 →</div>
+                        <div class="step" style="background:#eafaf1; border-color:#287e69;">进入新单词！<br /><code>count++</code>，<code>in_word = 1</code></div>
+                    </div>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>状态定义</h3>
+                            <p class="small">声明一个标志变量 <code>int in_word = 0;</code>：<br /><code>0</code> 表示当前处于单词之外（空格区域）；<br /><code>1</code> 表示当前正位于单词内部。</p>
+                        </div>
+                        <div class="card soft">
+                            <h3>状态转移判定</h3>
+                            <pre><code class="language-c" data-trim>if (ch == ' ') {
+    in_word = 0;
+} else if (in_word == 0) {
+    in_word = 1;
+    wordCount++;
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-4-6">
+                    <h2>逐字符演示：单词计数状态机</h2>
+                    <div class="interactive" data-demo="words"></div>
+                    <div class="bluebox" data-static="" style="margin-top:10px;">
+                        💡 <b>观察重点：</b>点击“前进一步”，观察 <code>in_word</code> 状态指示器在穿梭于连续多空格与字母之间时是如何平稳切换的，行首空格和连续空格不再造成误判！
+                    </div>
+                </section>
+                <section id="sec-4-7">
+                    <h2>单词计数核心代码与循环状态维护</h2>
+                    <pre><code class="language-c" data-line-numbers="1-3|5-14|16" data-trim>int ch, count = 0;
+int in_word = 0;   /* 0: 处于空格状态; 1: 处于单词内部 */
+
+while ((ch = getchar()) != '\n' && ch != EOF) {
+    if (ch == ' ') {
+        in_word = 0;   /* 离开单词，进入空格状态 */
+    } else if (in_word == 0) {
+        /* 从空格状态第一次跃迁进入字母：发现新单词！*/
+        in_word = 1;
+        count++;
+    }
+}
+
+printf("总单词数: %d\n", count);</code></pre>
+                    <div class="quote">这正是计算机科学中最核心的基石模型之一——<strong>有限状态自动机（FSM）</strong>的极简实现。</div>
+                </section>
+            </section>
+
+            <!-- ==================== 模块 5：综合实战：慢病随访生理数据合规核验 ==================== -->
+            <section id="sec-5-0">
+                <section class="module-cover-slide" id="sec-5-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">6.3 / 综合实战：慢病随访核验</div>
+                        <div class="cover-title">综合运用表达式与控制逻辑：<br />构建可靠的慢病生理数据核验流程</div>
+                        <div class="cover-subtitle">结合逻辑短路、条件过滤、防除零保护与边界清洗，打造医学级健壮程序。</div>
+                        <div class="cover-tags">
+                            <span class="pill">多条件核验</span>
+                            <span class="pill">有效区间清洗</span>
+                            <span class="pill">防除零输出</span>
+                            <span class="pill">边界防御</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-2">
+                    <h2>综合实战需求：慢病随访血压数据合规性核验</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>随访数据采集规范</h3>
+                            <ul>
+                                <li>输入一批慢病居民收缩压读数（mmHg）</li>
+                                <li>以哨兵值 <code>-1</code> 作为输入结束标志</li>
+                                <li>临床合理量程约束：<code>30 ~ 240 mmHg</code></li>
+                                <li>超量程数据（如录入失误 280 或负数）视为<strong>异常脏数据</strong>，予以剔除并警示</li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3>系统目标</h3>
+                            <p class="small">统计有效记录总数、异常数据个数，并在<strong>完全规避除零风险的前提下</strong>，计算出合规记录的平均收缩压，评定高血压风险等级。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-5-3">
+                    <h2>模块化分解：设计单一职责的指标判断函数</h2>
+                    <pre><code class="language-c" data-line-numbers="1-7|9-13" data-trim>/* 判断单次收缩压读数是否在合理医学量程范围内 (30~240 mmHg) */
+int isValidSBP(int sbp) {
+    return (sbp >= 30 && sbp <= 240);
+}
+
+/* 判断是否属于高血压警戒线 (>= 140 mmHg) */
+int isHypertension(int sbp) {
+    return (sbp >= 140);
+}</code></pre>
+                    <div class="bluebox">将具体的区间判断公式从主业务循环中抽离成独立谓词函数，极大提升逻辑表达力与可测性。</div>
+                </section>
+                <section id="sec-5-4">
+                    <h2>主程序片段：循环中的多重逻辑与短路过滤</h2>
+                    <pre><code class="language-c" data-line-numbers="1-4|6-14" data-trim>int sbp, sum = 0, validCount = 0, invalidCount = 0;
+
+/* 利用 scanf 状态与非哨兵值双重条件控制循环 */
+while (scanf("%d", &sbp) == 1 && sbp != -1) {
+    if (isValidSBP(sbp)) {
+        sum += sbp;
+        validCount++;
+    } else {
+        invalidCount++;
+        printf("【警告】检测到超量程异常数据: %d mmHg，已自动剔除！\n", sbp);
+    }
+}</code></pre>
+                </section>
+                <section id="sec-5-5">
+                    <h2>健壮输出：短路防除零与综合报表</h2>
+                    <pre><code class="language-c" data-line-numbers="1-8" data-trim>printf("\n=== 慢病随访质量分析报告 ===\n");
+printf("有效随访条数: %d 条 | 异常剔除条数: %d 条\n", validCount, invalidCount);
+
+/* 利用短路安全与条件表达式生成评估：*/
+if (validCount > 0) {
+    double avg = (double)sum / validCount;
+    printf("合规随访平均收缩压: %.2f mmHg (评级: %s)\n",
+           avg, (avg >= 140.0) ? "高血压预警" : "正常随访");
+} else {
+    printf("未采集到任何合规记录，无法计算平均值。\n");
+}</code></pre>
+                </section>
+                <section id="sec-5-6">
+                    <h2>交互追踪：数据经过哪些判断？</h2>
+                    <div class="interactive" data-demo="pulse"></div>
+                    <div class="card soft" data-static="" style="margin-top:10px;">
+                        <p class="small">点击“处理下一条”，单步观察序列 <code>120, 130, 280, -1</code> 中合规数据与超量程脏数据被清洗分流的全过程。</p>
+                    </div>
+                </section>
+                <section id="sec-5-7">
+                    <h2>边界测试：不能只用正常数据测试</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>测试用例类别</th>
+                            <th>测试输入序列</th>
+                            <th>期望有效数</th>
+                            <th>期望异常数</th>
+                            <th>期望平均收缩压</th>
+                            <th>检验核心目的</th>
+                        </tr>
+                        <tr>
+                            <td>全正常数据</td>
+                            <td><code>120 130 135 -1</code></td>
+                            <td>3</td>
+                            <td>0</td>
+                            <td><code>128.33 mmHg</code></td>
+                            <td>验证正常生理指标流程</td>
+                        </tr>
+                        <tr>
+                            <td>包含超量程异常</td>
+                            <td><code>120 280 140 -1</code></td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td><code>130.00 mmHg</code></td>
+                            <td>验证脏数据 280 被精准剔除</td>
+                        </tr>
+                        <tr>
+                            <td>直接输入结束符</td>
+                            <td><code>-1</code></td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td><code>提示无数据</code></td>
+                            <td>检验防除零分支是否安全拦截</td>
+                        </tr>
+                    </table>
+                </section>
+                <section id="sec-5-8">
+                    <h2>🤖 AI 协作任务：让解释经得起验证</h2>
+                    <div class="card blue">
+                        <h3>🤖 课堂实战：让 AI 审查逻辑覆盖率与反向破绽</h3>
+                        <div class="prompt">
+                            我正在设计社区慢病随访血压过滤逻辑：<br />
+                            <code>if (sbp >= 30 && sbp <= 240 && status == 1) { ... }</code><br />
+                            请帮我从软件测试工程的角度进行审查：<br />
+                            ① 这段复合逻辑的【真值组合表】是怎样的？<br />
+                            ② 请帮我设计一组能够全覆盖【条件为真、每个子条件单独为假】的最小测试用例集；<br />
+                            ③ 在什么极端情况下短路求值可能掩盖潜在的未初始化变量错误？
+                        </div>
+                        <p class="small muted" style="margin-top:10px;">💡 <b>课堂互动：</b>学生先自己设计两组反向测试数据，再提问 AI 并对照自己的用例完整性。</p>
+                    </div>
+                </section>
+            </section>
+
+            <!-- ==================== 模块 6：全课总结与第6章全景收官 ==================== -->
+            <section id="sec-6-0">
+                <section class="module-cover-slide" id="sec-6-1">
+                    <div class="modulecover">
+                        <div class="cover-kicker">第3课时总结 / 第6章全景收官</div>
+                        <div class="cover-title">从表达式走向程序质量：<br />为后续复合数据结构奠基</div>
+                        <div class="cover-subtitle">基本类型与表达式是编程的细胞。细胞健康，系统才能坚固长青。</div>
+                        <div class="cover-tags">
+                            <span class="pill">第6章全景图</span>
+                            <span class="pill">课堂综合检验</span>
+                            <span class="pill">第7章数组先导</span>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-2">
+                    <h2>第3课时总结：从表达式走向程序质量</h2>
+                    <div class="grid3">
+                        <div class="card">
+                            <h3 class="accent">1. 逻辑与短路</h3>
+                            <ul>
+                                <li>禁止 <code>a &lt;= x &lt;= b</code> 连续比较</li>
+                                <li>必须用 <code>&amp;&amp;</code> 显式拼接条件</li>
+                                <li>利用短路特性优雅实现防除零卫语句</li>
+                                <li>警惕短路时跳过右侧自增副作用</li>
+                            </ul>
+                        </div>
+                        <div class="card soft">
+                            <h3 class="purple">2. 运算符与位掩码</h3>
+                            <ul>
+                                <li>条件表达式 <code>? :</code> 保持简单清晰</li>
+                                <li>分清逻辑运算 <code>&amp;&amp;</code> 与位运算 <code>&amp;</code></li>
+                                <li>位掩码用单个整数高效记录多种状态</li>
+                                <li>利用 <code>&amp;</code>, <code>|</code>, <code>~</code> 灵活按位检测与开关</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <h3 class="good">3. 状态机模型</h3>
+                            <ul>
+                                <li>字符本质也是 ASCII 整数</li>
+                                <li>字符与数字互转：<code>'5'-'0'=5</code></li>
+                                <li>用状态变量 <code>in_word</code> 解决空格跳变</li>
+                                <li>状态机模型是解决流式处理的利器</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-3">
+                    <h2>第6章全景知识图谱：类型、转换、优先级与表达式</h2>
+                    <table class="compare">
+                        <tr>
+                            <th>教学课时</th>
+                            <th>核心概念范畴</th>
+                            <th>必须掌握的底层机制</th>
+                            <th>常见易错点与注意事项</th>
+                        </tr>
+                        <tr>
+                            <td><strong>第1课时：数据表示与存储</strong></td>
+                            <td>进位制、原反补码、IEEE 754 浮点、ASCII</td>
+                            <td>按权展开、补码加法溢出、阶码移码偏置</td>
+                            <td>补码不对称区间（-128）、浮点无法精确表示0.1、禁止直接用 == 比较浮点</td>
+                        </tr>
+                        <tr>
+                            <td><strong>第2课时：类型转换与求值</strong></td>
+                            <td>整数除法、强制转换、自动提升、优先级、自增</td>
+                            <td>除法操作数判定、两阶段转换模型、时序细节</td>
+                            <td>括号错位 <code>(double)(a/b)</code>、scanf 漏写 <code>&amp;</code>、前置++与后置++返回值不同</td>
+                        </tr>
+                        <tr>
+                            <td><strong>第3课时：表达式综合应用</strong></td>
+                            <td>逻辑运算符、短路保护、三目运算、位掩码、状态机</td>
+                            <td>短路保护屏障、位级掩码操作、状态转移自动机</td>
+                            <td>连续比较恒真陷阱、逻辑运算与位运算符号混淆、未处理多连续空格</td>
+                        </tr>
+                    </table>
+                </section>
+                <section id="sec-6-4">
+                    <h2>Exit Ticket · 综合检验</h2>
+                    <div class="qbox">
+                        <div class="prompt">
+                            <b>【综合诊断题】</b><br />
+                            ① 若 <code>int sbp = 160;</code>，表达式 <code>60 &lt;= sbp &lt;= 140</code> 的最终计算值是 0 还是 1？为什么？<br />
+                            ② 在 <code>int count = 0; if (count != 0 &amp;&amp; (100 / count &gt; 5))</code> 中，除法是否会被执行？为什么？<br />
+                            ③ 假设 <code>status</code> 的第 1 位代表高血压标记，如何用一行 C 语言位运算语句将其开启置 1？
+                        </div>
+                        <button class="reveal-answer" style="margin-top:14px;">显示答案与解析</button>
+                        <div class="answer" hidden="" style="margin-top:14px; background:#f4f8ff; padding:18px; border-radius:12px; border:1px solid #c9d9ef;">
+                            <p class="small"><b>① 答案：1（为真）。</b> 左结合先算 <code>60 &lt;= 160</code> 得到 1；再算 <code>1 &lt;= 140</code> 恒为 1！正确写法必须为 <code>sbp &gt;= 60 &amp;&amp; sbp &lt;= 140</code>。</p>
+                            <p class="small"><b>② 答案：不会执行。</b> 触发逻辑与 <code>&amp;&amp;</code> 短路求值。左侧 <code>count != 0</code> 判定为假，右侧除法表达式被立即跳过，避免了除以 0 引发异常。</p>
+                            <p class="small"><b>③ 答案：<code>status |= (1 &lt;&lt; 1);</code>。</b> 利用按位或 <code>|</code> 与左移掩码，将目标位置 1，其余位保持不变。</p>
+                        </div>
+                    </div>
+                </section>
+                <section id="sec-6-5">
+                    <h2>全章结语与后续章节展望</h2>
+                    <div class="grid2">
+                        <div class="card">
+                            <h3>第6章思想升华</h3>
+                            <p class="small">
+                                数据类型不是冷冰冰的名词，而是约束计算机如何解释内存中每一个比特的<strong>契约</strong>；<br />
+                                表达式不是公式的随意堆叠，而是驱动硬件状态精确流变的<strong>逻辑管道</strong>。
+                            </p>
+                        </div>
+                        <div class="card soft">
+                            <h3>第7章先导：从单变量到数组</h3>
+                            <p class="small">
+                                目前我们只能一次处理一个居民的收缩压；<br />
+                                如果社区随访有 <strong>1000 位居民</strong>，难道要定义 1000 个变量吗？<br />
+                                下一章我们将打开连续内存的大门——<strong>第7章：数组与批量数据处理！</strong>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/markdown/markdown.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script>
+        /* 交互组件驱动脚本（规范与 6_1 统一） */
+        (function () {
+            const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+            const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+            const safe = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const binary = (v, width = 8) => ((v >>> 0).toString(2).padStart(width, '0')).slice(-width);
+            const bits = (value, cls = '', hot = -1) => Array.from(value).map((ch, i) => '<span class="bit ' + (ch === '1' ? 'one ' : '') + cls + (i === hot ? ' hot' : '') + '">' + ch + '</span>').join('');
+            const bind = (root, sel, type, listener) => root.querySelector(sel)?.addEventListener(type, listener);
+            const html = (root, sel, content) => { const el = root.querySelector(sel); if (el) el.innerHTML = content; };
+            const val = (root, sel) => root.querySelector(sel)?.value;
+
+            $$('.reveal-answer').forEach(b => b.addEventListener('click', () => {
+                const a = b.parentElement.querySelector('.answer');
+                a.hidden = !a.hidden;
+                b.textContent = a.hidden ? '显示答案与解析' : '收起答案与解析';
+            }));
+
+            const demos = {};
+
+            /* 1. 短路求值演示 */
+            demos.shortcircuit = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>随访记录数 count = <input class="cnt" type="number" value="0" min="0" style="width:80px;"></label>'
+                    + '<label>累计总和 sum = <input class="sum" type="number" value="450" style="width:100px;"></label>'
+                    + '<button type="button" class="preset" data-c="0" data-s="240">防除零触发 (count=0)</button>'
+                    + '<button type="button" class="preset" data-c="3" data-s="450">正常超标 (count=3, sum=450)</button>'
+                    + '<button type="button" class="preset" data-c="3" data-s="360">正常达标 (count=3, sum=360)</button>'
+                    + '</div>'
+                    + '<div class="screen" style="margin-top:8px;">'
+                    + '<div class="readout left-cond" style="font-size:22px; line-height:1.4;"></div>'
+                    + '<div class="readout right-cond" style="font-size:22px; line-height:1.4;"></div>'
+                    + '</div>'
+                    + '<div class="readout final-result" style="margin-top:8px; font-size:22px;"></div>'
+                    + '<div class="explain" style="margin-top:6px;">短路特性就像电路中的保险丝：左侧为假，整路断开，右侧表达式绝不会被 CPU 调度执行！</div>';
+
+                function upd() {
+                    const c = Math.trunc(+val(root, '.cnt')) || 0;
+                    const s = Math.trunc(+val(root, '.sum')) || 0;
+                    const leftOk = c > 0;
+
+                    html(root, '.left-cond', '<b>左侧条件：<code>count &gt; 0</code></b>'
+                        + '<hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                        + '当前值：<code>' + c + ' &gt; 0</code> → <b class="' + (leftOk ? 'good' : 'bad') + '">' + (leftOk ? '真 (true)' : '假 (false)') + '</b>');
+
+                    if (leftOk) {
+                        const avg = (s / c);
+                        const rightOk = avg >= 140;
+                        html(root, '.right-cond', '<b>右侧条件：<code>(sum / count) &gt;= 140</code></b>'
+                            + '<hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                            + '计算求值：<code>' + s + ' / ' + c + ' = ' + avg.toFixed(1) + '</code> → <b class="' + (rightOk ? 'danger' : 'good') + '">' + (rightOk ? '超标 (true)' : '正常 (false)') + '</b>');
+                        html(root, '.final-result', '总体判定：<code>left &amp;&amp; right</code> → 结果为 <b class="' + (rightOk ? 'danger' : 'good') + '">' + (rightOk ? '1 (预警)' : '0 (正常)') + '</b>。两边均完成求值。');
+                    } else {
+                        html(root, '.right-cond', '<b>右侧条件：<code>(sum / count) &gt;= 140</code></b>'
+                            + '<hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                            + '<span style="color:#94a3b8; font-weight:bold;">⚡ 触发短路跳过！未被求值</span><br>'
+                            + '<span class="good" style="font-size:18px;">成功避免了 <code>sum / 0</code> 除以 0 引发异常。</span>');
+                        html(root, '.final-result', '总体判定：左侧判定为假，逻辑与整场结果<strong>直接锁定为 0</strong>。右侧被安全熔断跳过！');
+                    }
+                }
+
+                $$('input', root).forEach(i => i.addEventListener('input', upd));
+                $$('.preset', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.cnt').value = b.dataset.c;
+                    root.querySelector('.sum').value = b.dataset.s;
+                    upd();
+                }));
+                upd();
+            };
+
+            /* 2. 位掩码状态管理演示 */
+            demos.flags = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label><input type="checkbox" class="f0" checked> Bit 0: 已核验 (1&lt;&lt;0=1)</label>'
+                    + '<label><input type="checkbox" class="f1"> Bit 1: 需随访 (1&lt;&lt;1=2)</label>'
+                    + '<label><input type="checkbox" class="f2" checked> Bit 2: 重点慢病 (1&lt;&lt;2=4)</label>'
+                    + '<label><input type="checkbox" class="f3"> Bit 3: 已服药 (1&lt;&lt;3=8)</label>'
+                    + '<button type="button" class="btn-clear">清空 (0)</button>'
+                    + '<button type="button" class="btn-all">全开 (15)</button>'
+                    + '</div>'
+                    + '<div class="screen" style="margin-top:8px;">'
+                    + '<div class="readout bit-panel"></div>'
+                    + '<div class="readout code-panel"></div>'
+                    + '</div>'
+                    + '<div class="explain" style="margin-top:6px;">位掩码技术：用一个无符号整数即可紧凑记录多达 8~32 种医学状态标签，极大节约存储与传输带宽。</div>';
+
+                function upd() {
+                    const f0 = root.querySelector('.f0').checked ? 1 : 0;
+                    const f1 = root.querySelector('.f1').checked ? 2 : 0;
+                    const f2 = root.querySelector('.f2').checked ? 4 : 0;
+                    const f3 = root.querySelector('.f3').checked ? 8 : 0;
+                    const status = f0 | f1 | f2 | f3;
+                    const binStr = binary(status, 8);
+
+                    let boardHtml = '<div class="bit-board">';
+                    for (let i = 0; i < 8; i++) {
+                        const bitVal = binStr[i];
+                        const pos = 7 - i;
+                        const isActive = bitVal === '1';
+                        boardHtml += '<div class="bit-col ' + (isActive ? 'active' : '') + '">'
+                            + '<div class="col-pos">B' + pos + '</div>'
+                            + '<div class="bit-btn">' + bitVal + '</div>'
+                            + '<div class="col-val">' + (1 << pos) + '</div>'
+                            + '</div>';
+                    }
+                    boardHtml += '</div>';
+
+                    html(root, '.bit-panel', '<b>底层 8 位存储状态：</b>' + boardHtml
+                        + '<div style="margin-top:6px; font-size:20px;">status 变量值：十进制 <b>' + status + '</b> · 十六进制 <b>0x0' + status.toString(16).toUpperCase() + '</b></div>');
+
+                    const tagCheck = (status & 4) !== 0;
+                    html(root, '.code-panel', '<b>C 语言位操作代码镜像：</b><hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                        + '① 检测重点慢病：<code>if (status & (1 &lt;&lt; 2))</code> → <b class="' + (tagCheck ? 'good' : 'muted') + '">' + (tagCheck ? '已标记重点慢病' : '未标记') + '</b><br>'
+                        + '② 开启某标记：<code>status |= (1 &lt;&lt; 1);</code><br>'
+                        + '③ 清除某标记：<code>status &= ~(1 &lt;&lt; 1);</code>');
+                }
+
+                $$('input[type=checkbox]', root).forEach(i => i.addEventListener('change', upd));
+                bind(root, '.btn-clear', 'click', () => {
+                    $$('input[type=checkbox]', root).forEach(i => i.checked = false);
+                    upd();
+                });
+                bind(root, '.btn-all', 'click', () => {
+                    $$('input[type=checkbox]', root).forEach(i => i.checked = true);
+                    upd();
+                });
+                upd();
+            };
+
+            /* 3. 单词计数状态机演示 */
+            demos.words = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>输入文本 <input class="sentence" type="text" value="  AI   assists C  " style="width:320px;"></label>'
+                    + '<button type="button" class="btn-step">前进一步</button>'
+                    + '<button type="button" class="btn-all">直接跑完</button>'
+                    + '<button type="button" class="btn-reset">重置</button>'
+                    + '<button type="button" class="preset" data-s="Hello   World!">示例2</button>'
+                    + '<button type="button" class="preset" data-s="  C  Language   Course ">示例3</button>'
+                    + '</div>'
+                    + '<div class="readout trace" style="margin-top:8px; font-size:22px;"></div>'
+                    + '<div class="screen" style="margin-top:8px;">'
+                    + '<div class="readout state" style="font-size:22px; line-height:1.4;"></div>'
+                    + '<div class="readout count" style="font-size:22px; line-height:1.4;"></div>'
+                    + '</div>'
+                    + '<div class="explain" style="margin-top:6px;">黄色高亮为当前扫描指针；浅蓝为已扫描区域。状态机只有在从“空格”跨入“非空格”的那一瞬才令 count++。</div>';
+
+                let pos = 0;
+                function upd() {
+                    const s = val(root, '.sentence') || '';
+                    let count = 0;
+                    let inWord = false;
+
+                    for (let i = 0; i < pos; i++) {
+                        const ch = s[i];
+                        if (ch === ' ' || ch === '\t') {
+                            inWord = false;
+                        } else if (!inWord) {
+                            inWord = true;
+                            count++;
+                        }
+                    }
+
+                    const display = Array.from(s).map((ch, i) => {
+                        let bg = (i === pos) ? '#fed7aa' : (i < pos) ? '#e0f2fe' : 'transparent';
+                        let border = (i === pos) ? '2px solid #ea580c' : '1px solid transparent';
+                        return '<span style="display:inline-block; padding:2px 6px; margin:1px; background:' + bg + '; border:' + border + '; border-radius:4px;">'
+                            + (ch === ' ' ? '␣' : ch === '\t' ? '⇥' : safe(ch)) + '</span>';
+                    }).join('');
+
+                    html(root, '.trace', '<b>字符流扫描进度：</b><br><span class="mono" style="font-size:24px;">' + display + '</span>');
+                    html(root, '.state', '<b>状态机当前指标：</b><hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                        + '指针位置：<b>' + pos + ' / ' + s.length + '</b><br>'
+                        + '内部状态：<code>in_word = <b class="' + (inWord ? 'good' : 'muted') + '">' + (inWord ? '1 (单词内部)' : '0 (空格之外)') + '</b></code>');
+                    html(root, '.count', '<b>累计统计单词数：</b><hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                        + '累计单词数：<b class="accent" style="font-size:30px;">' + count + '</b><br>'
+                        + (pos === s.length ? '<span class="good">扫描完成！结果完全准确。</span>' : '下一步：处理字符 <code>' + (s[pos] === ' ' ? '空格' : s[pos]) + '</code>'));
+                }
+
+                bind(root, '.sentence', 'input', () => { pos = 0; upd(); });
+                bind(root, '.btn-step', 'click', () => { pos = Math.min(pos + 1, (val(root, '.sentence') || '').length); upd(); });
+                bind(root, '.btn-all', 'click', () => { pos = (val(root, '.sentence') || '').length; upd(); });
+                bind(root, '.btn-reset', 'click', () => { pos = 0; upd(); });
+                $$('.preset', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.sentence').value = b.dataset.s;
+                    pos = 0;
+                    upd();
+                }));
+                upd();
+            };
+
+            /* 4. 慢病随访血压数据合规性核验演示 */
+            demos.pulse = function (root) {
+                root.innerHTML = '<div class="demo-controls">'
+                    + '<label>收缩压数据流: <input class="list" type="text" value="120, 130, 280, -1" style="width:260px;"></label>'
+                    + '<button type="button" class="btn-step">处理下一条</button>'
+                    + '<button type="button" class="btn-all">处理全部</button>'
+                    + '<button type="button" class="btn-reset">重置</button>'
+                    + '<button type="button" class="preset" data-v="120, 130, 135, -1">全合规示例</button>'
+                    + '<button type="button" class="preset" data-v="-1">防除零示例 (-1)</button>'
+                    + '</div>'
+                    + '<div class="readout items-view" style="margin-top:8px; font-size:22px;"></div>'
+                    + '<div class="screen" style="margin-top:8px;">'
+                    + '<div class="readout stat-view" style="font-size:22px; line-height:1.4;"></div>'
+                    + '<div class="readout avg-view" style="font-size:22px; line-height:1.4;"></div>'
+                    + '</div>'
+                    + '<div class="explain" style="margin-top:6px;">临床合理量程设定为 30~240 mmHg；超出者视为输入失误或异常脏数据，直接告警剔除，保护均值计算的可靠性。</div>';
+
+                let pos = 0;
+                function parse() {
+                    return (val(root, '.list') || '').split(',')
+                        .map(x => x.trim())
+                        .filter(x => x !== '')
+                        .map(x => ({ raw: x, val: /^[+-]?\d+$/.test(x) ? Number(x) : NaN }));
+                }
+
+                function upd() {
+                    const arr = parse();
+                    pos = Math.min(pos, arr.length);
+
+                    let valid = 0, invalid = 0, sum = 0, ended = false;
+                    for (let i = 0; i < pos; i++) {
+                        const v = arr[i].val;
+                        if (v === -1) {
+                            ended = true;
+                            break;
+                        }
+                        if (v >= 30 && v <= 240) {
+                            valid++;
+                            sum += v;
+                        } else {
+                            invalid++;
+                        }
+                    }
+
+                    const itemsHtml = arr.map((x, i) => {
+                        let isCur = (i === pos - 1);
+                        let cls = '';
+                        if (i < pos) {
+                            if (x.val === -1) cls = 'pill';
+                            else if (x.val >= 30 && x.val <= 240) cls = 'pill ok';
+                            else cls = 'pill alert';
+                        } else {
+                            cls = 'pill';
+                        }
+                        return '<span class="' + cls + '" style="' + (isCur ? 'box-shadow:0 0 0 2px #2056a8;' : '') + '">'
+                            + (isCur ? '👉 ' : '') + x.raw + (x.val === -1 ? ' (哨兵)' : '') + '</span>';
+                    }).join(' ');
+
+                    html(root, '.items-view', '<b>随访序列通道：</b><br>' + itemsHtml);
+                    html(root, '.stat-view', '<b>数据清洗统计：</b><hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">'
+                        + '已处理进度：<b>' + pos + ' / ' + arr.length + '</b><br>'
+                        + '合规采纳：<b class="good">' + valid + '</b> 条 · 异常剔除：<b class="danger">' + invalid + '</b> 条<br>'
+                        + '合规收缩压累计：<b>' + sum + ' mmHg</b>');
+
+                    let avgText = '';
+                    if (valid > 0) {
+                        const avg = (sum / valid);
+                        avgText = '合规平均收缩压：<b class="accent" style="font-size:28px;">' + avg.toFixed(2) + ' mmHg</b><br>'
+                            + '状态判定：<b class="' + (avg >= 140 ? 'danger' : 'good') + '">' + (avg >= 140 ? '高血压预警' : '正常随访') + '</b>';
+                    } else {
+                        avgText = '<span class="muted">暂无有效数据（触发 validCount &gt; 0 卫语句保护，避免除以 0）</span>';
+                    }
+                    html(root, '.avg-view', '<b>随访质量分析结果：</b><hr style="margin:6px 0; border:0; border-top:1px dashed #cbd5e1;">' + avgText);
+                }
+
+                bind(root, '.list', 'input', () => { pos = 0; upd(); });
+                bind(root, '.btn-step', 'click', () => { pos++; upd(); });
+                bind(root, '.btn-all', 'click', () => { pos = parse().length; upd(); });
+                bind(root, '.btn-reset', 'click', () => { pos = 0; upd(); });
+                $$('.preset', root).forEach(b => b.addEventListener('click', () => {
+                    root.querySelector('.list').value = b.dataset.v;
+                    pos = 0;
+                    upd();
+                }));
+                upd();
+            };
+
+            /* 初始化所有 demo，并拦截事件冒泡以防止 Reveal.js 快捷键冲突 */
+            $$('[data-demo]').forEach(root => {
+                ['keydown', 'keyup', 'keypress', 'mousedown', 'mouseup', 'pointerdown', 'pointerup', 'touchstart', 'touchend', 'click'].forEach(evt => {
+                    root.addEventListener(evt, e => e.stopPropagation());
+                });
+                const name = root.dataset.demo;
+                try {
+                    demos[name]?.(root);
+                } catch (err) {
+                    root.innerHTML = '<div class="bad">交互加载异常：' + err.message + '</div>';
+                    console.error(name, err);
+                }
+            });
+        })();
+
+        /* 为展示页添加编号标签 */
+        document.querySelectorAll('.slides section').forEach((slide, idx) => {
+            if (slide.querySelector(':scope > section')) return;
+            if (!slide.id) slide.id = `slide-${idx + 1}`;
+            if (!slide.querySelector(':scope > .slide-label')) {
+                const label = document.createElement('div');
+                label.className = 'slide-label';
+                label.setAttribute('data-static', '');
+                label.textContent = `№ ${slide.id}`;
+                slide.prepend(label);
+            }
+        });
+
+        /* 为核心内容插入渐显动画 */
+        document.querySelectorAll('.slides section').forEach(slide => {
+            if (slide.querySelector(':scope > section')) return;
+
+            const candidates = slide.querySelectorAll([
+                ':scope#sec-1-1 > *:not(script):not(aside)', ':scope > .card',
+                ':scope > .grid2 > .card', ':scope > .grid3 > .card',
+                ':scope > .grid2 > div:not(.card)', ':scope > .grid3 > div:not(.card)',
+                ':scope > .bluebox', ':scope > .quote',
+                ':scope > ul > li', ':scope > ol > li',
+                ':scope > table.compare tr:not(:first-child)',
+                ':scope > pre', ':scope > .modulecover > *:not(aside.notes)'
+            ].join(','));
+
+            candidates.forEach(el => {
+                const parentFragment = el.parentElement && el.parentElement.closest('.fragment');
+                if (!el.hasAttribute('data-static') && !parentFragment && !el.querySelector('.fragment')) {
+                    el.classList.add('fragment', 'fade-up');
+                }
+            });
+            slide.querySelectorAll('.fragment').forEach(el => el.classList.add('fade-up'));
+
+            slide.querySelectorAll('.flow').forEach(flow => {
+                flow.querySelectorAll('.step').forEach(step => {
+                    step.classList.add('fragment', 'fade-up');
+                    const arrow = step.previousElementSibling;
+                    if (arrow && arrow.classList.contains('arrow')) arrow.classList.add('fragment');
+                });
+            });
+        });
+
+        /* 离线 LaTeX 备用渲染支持 */
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (!window.MathJax || !window.MathJax.Hub) {
+                    var slides = document.querySelector('.slides');
+                    if (!slides) return;
+                    var walker = document.createTreeWalker(slides, NodeFilter.SHOW_TEXT, null, false);
+                    var nodes = [];
+                    var n;
+                    while ((n = walker.nextNode())) nodes.push(n);
+                    nodes.forEach(function (node) {
+                        var val = node.nodeValue;
+                        if (val && (val.indexOf('\\(') !== -1 || val.indexOf('\\[') !== -1)) {
+                            var span = document.createElement('span');
+                            var html = val;
+                            html = html.replace(/\\\[(.*?)\\\]/g, function (m, f) {
+                                var clean = f.replace(/\\times/g, '×').replace(/\\approx/g, '≈').replace(/\\text\{([^}]+)\}/g, '$1');
+                                return '<div class="formula center" style="margin:12px 0;">' + clean + '</div>';
+                            });
+                            html = html.replace(/\\\((.*?)\\\)/g, function (m, f) {
+                                var clean = f.replace(/\\approx/g, '≈').replace(/\\times/g, '×').replace(/\\text\{([^}]+)\}/g, '$1');
+                                return '<span class="math-fallback" style="font-family:Cambria,serif;font-style:italic;">' + clean + '</span>';
+                            });
+                            span.innerHTML = html;
+                            node.parentNode.replaceChild(span, node);
+                        }
+                    });
+                }
+            }, 1200);
+        });
+
+        Reveal.initialize({
+            width: 1600, height: 900, margin: 0.035, minScale: 0.2, maxScale: 1.5,
+            controls: true, progress: true, defaultTiming: 120, slideNumber: true, history: false,
+            keyboard: true, overview: true, center: true, touch: true, loop: false, rtl: false, shuffle: false,
+            fragment: true, embedded: false, help: true, showNotes: false, autoPlayMedia: null, autoSlide: 0,
+            autoSlideStoppable: true, autoSlideMethod: Reveal.navigateNext, mouseWheel: false, hideAddressBar: true,
+            previewLinks: false, transition: 'slide', transitionSpeed: 'default', backgroundTransition: 'fade', viewDistance: 3,
+            display: 'block', pdfMaxPagesPerSlide: 1,
+            math: { mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js', config: 'TeX-AMS_HTML-full' },
+            plugins: [RevealZoom, RevealNotes, RevealSearch, RevealMarkdown, RevealHighlight, RevealMath]
+        });
+    </script>
+</body>
+
+</html>
