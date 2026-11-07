@@ -1,0 +1,3745 @@
+<!doctype html>
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      name="viewport"
+    />
+    <title>Lecture 6-4 · 从多边形到平滑着色</title>
+    <link href="/vendor/reveal/reset.css" rel="stylesheet" />
+    <link href="/vendor/reveal/reveal.css" rel="stylesheet" />
+    <link href="/vendor/reveal/highlight/monokai.css" rel="stylesheet" />
+    <!-- 显式引入 KaTeX CSS 样式，杜绝延迟加载与公式白块/错位 -->
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --panel: #ffffff;
+        --panel2: #f2f6fb;
+        --text: #203044;
+        --muted: #5f7186;
+        --cyan: #157db8;
+        --blue: #2f64c8;
+        --amber: #9a5d00;
+        --green: #1e8a64;
+        --red: #c74b5a;
+        --line: rgba(30, 56, 96, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+      }
+
+      /* KaTeX 渲染优化与消除白色底框修复 */
+      .katex-html + .get-mathml,
+      .katex .katex-mathml,
+      .katex-mathml {
+        display: none !important;
+        position: absolute !important;
+        padding: 0 !important;
+        border: 0 !important;
+        height: 1px !important;
+        width: 1px !important;
+        overflow: hidden !important;
+        clip: rect(1px, 1px, 1px, 1px) !important;
+      }
+
+      /* 隔离 KaTeX 公式容器，防止 reveal.js / question-card 样式污染产生白底框，同时保护内部公式线条 */
+      .reveal .katex,
+      .reveal .katex-display,
+      .reveal .slides span.katex,
+      .reveal .slides .question-card .answers span.katex,
+      .reveal .slides .question-card .answers span.katex * {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+      }
+
+      .reveal .slides .question-card .answers span.katex,
+      .reveal .slides .question-card .answers span.katex * {
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+      }
+
+      .reveal .katex {
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+
+      /* 明确恢复并保障所有 KaTeX 分数线、除法线与横线正常显示（杜绝被 border:none 或零高度抹除） */
+      .reveal .katex .frac-line,
+      .reveal .katex span.frac-line,
+      .reveal .slides .katex .frac-line {
+        display: inline-block !important;
+        width: 100% !important;
+        min-height: 1.5px !important;
+        height: 0.05em !important;
+        border-bottom: 0.05em solid currentColor !important;
+        border-bottom-style: solid !important;
+        border-bottom-width: max(1.5px, 0.05em) !important;
+        border-bottom-color: currentColor !important;
+        background-color: currentColor !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+
+      .reveal .katex .rule {
+        display: inline-block !important;
+        border-bottom-style: solid !important;
+        border-bottom-color: currentColor !important;
+        background-color: currentColor !important;
+      }
+
+      .reveal .katex .sqrt-line {
+        border-top-style: solid !important;
+        border-top-color: currentColor !important;
+      }
+
+      .reveal {
+        font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      .reveal .slides {
+        text-align: left;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.025em;
+        color: var(--text);
+        font-weight: 750;
+      }
+
+      .reveal h1 {
+        font-size: 2.2em;
+        line-height: 1.08;
+        margin: 0.12em 0 0.25em;
+      }
+
+      .reveal h2 {
+        font-size: 1.55em;
+        line-height: 1.15;
+        margin: 0.1em 0 0.4em;
+      }
+
+      .reveal h3 {
+        font-size: 1.08em;
+        color: var(--cyan);
+        margin: 0.2em 0 0.45em;
+      }
+
+      .reveal p,
+      .reveal li {
+        font-size: 0.78em;
+        line-height: 1.55;
+      }
+
+      .reveal ul {
+        margin: 0.25em 0 0.25em 1.05em;
+      }
+
+      .reveal li {
+        margin: 0.22em 0;
+      }
+
+      .reveal strong {
+        color: #14345e;
+      }
+
+      .reveal a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      .reveal pre {
+        width: 100%;
+        font-size: 0.78em;
+        border-radius: 16px;
+        box-shadow: none;
+        border: 1px solid var(--line);
+      }
+
+      .reveal code {
+        max-height: 520px;
+      }
+
+      .reveal section img {
+        border: 0;
+        box-shadow: none;
+        max-height: 560px;
+        object-fit: contain;
+      }
+
+      .reveal table {
+        font-size: 0.62em;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+      }
+
+      .reveal th {
+        background: #dfeaf5;
+        color: var(--text);
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .reveal td {
+        padding: 0.55em 0.7em;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .slide-no {
+        position: absolute;
+        right: 0;
+        top: -5px;
+        font-size: 0.28em;
+        color: #8a97aa;
+        letter-spacing: 0.12em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.38em;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.75em;
+      }
+
+      .eyebrow::before {
+        content: '';
+        width: 28px;
+        height: 3px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+
+      .lead {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .muted {
+        color: var(--muted) !important;
+      }
+
+      .reveal .accent {
+        color: var(--cyan);
+      }
+
+      .reveal .amber,
+      .reveal .warn {
+        color: var(--amber);
+      }
+
+      .reveal .green,
+      .reveal .check {
+        color: var(--green);
+      }
+
+      .reveal .red {
+        color: var(--red);
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 26px 28px;
+        box-shadow: 0 12px 28px rgba(31, 56, 88, 0.08);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .kpi {
+        font-size: 1.5em;
+        font-weight: 800;
+        color: #14345e;
+        line-height: 1;
+      }
+
+      .kicker {
+        font-size: 0.42em;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-weight: 700;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 0.28em 0.65em;
+        border-radius: 999px;
+        background: rgba(21, 125, 184, 0.08);
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        font-size: 0.42em;
+        color: var(--cyan);
+        font-weight: 700;
+      }
+
+      .activity {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(21, 125, 184, 0.08), rgba(47, 100, 200, 0.04));
+        border: 1px solid rgba(21, 125, 184, 0.22);
+        border-left: 7px solid var(--cyan);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .activity.ai {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+        border-color: rgba(30, 138, 100, 0.22);
+        border-left-color: var(--green);
+      }
+
+      .activity .tag {
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+
+      .activity.ai .tag {
+        color: var(--green);
+      }
+
+      .activity p {
+        margin: 0.25em 0 0;
+        font-size: 0.58em;
+      }
+
+      .timer {
+        float: right;
+        font-size: 0.88em;
+        color: var(--amber);
+        font-weight: 800;
+      }
+
+      .flow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .vertical-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px 0 10px;
+      }
+
+      .vertical-flow .node {
+        width: 100%;
+        max-width: 320px;
+        min-width: unset;
+        padding: 12px 18px;
+        text-align: center;
+      }
+
+      .vertical-flow .arrow {
+        font-size: 1.1em;
+        line-height: 1;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      .node {
+        min-width: 180px;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 56, 96, 0.14);
+        text-align: center;
+        font-size: 0.58em;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+      }
+
+      .node.primary {
+        background: linear-gradient(180deg, #edf7fc, #e8f0ff);
+        border-color: rgba(21, 125, 184, 0.28);
+      }
+
+      .node.ai {
+        background: linear-gradient(180deg, #eefaf5, #eef8fb);
+        border-color: rgba(30, 138, 100, 0.24);
+      }
+
+      .arrow {
+        font-size: 0.85em;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      /* sec-5-1 各卡片与内部元素精密对齐 */
+      .course-map.ch2-core-map {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin: 36px auto 20px;
+      }
+
+      .course-map.ch2-core-map .course-block {
+        flex: 1 1 0;
+        min-height: 230px;
+        padding: 24px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .course-map.ch2-core-map .course-block span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        min-width: 48px;
+        align-self: flex-start;
+        padding: 4px 14px;
+        height: 34px;
+        border-radius: 10px;
+        background: #eaf5ff;
+        color: var(--cyan);
+        font-size: 0.44em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        box-sizing: border-box;
+      }
+
+      .course-map.ch2-core-map .course-block strong {
+        display: block;
+        font-size: 0.78em;
+        line-height: 1.28;
+        color: #14345e;
+        margin-bottom: 10px;
+        min-height: 2.6em;
+      }
+
+      .course-map.ch2-core-map .course-block small {
+        display: block;
+        font-size: 0.48em;
+        line-height: 1.45;
+        color: var(--muted);
+        margin-top: auto;
+      }
+
+      .course-map.ch2-core-map .course-arrow {
+        flex: 0 0 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cyan);
+        font-size: 1.2em;
+        font-weight: 900;
+      }
+
+      .media-shell {
+        height: 470px;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+      }
+
+      .media-shell img,
+      .media-shell video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+
+      .media-shell.cover img,
+      .media-shell.cover video {
+        object-fit: cover;
+      }
+
+      .dual-image-shell {
+        padding: 16px;
+      }
+
+      .dual-image-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+      }
+
+      .dual-image-grid img {
+        width: 100%;
+        height: 100%;
+        max-height: 430px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .media-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 42px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder .icon {
+        font-size: 2em;
+        margin-bottom: 0.2em;
+      }
+
+      .media-placeholder strong {
+        font-size: 0.58em;
+        color: #14345e;
+      }
+
+      .media-placeholder small {
+        display: block;
+        max-width: 800px;
+        margin-top: 0.8em;
+        font-size: 0.33em;
+        line-height: 1.5;
+        color: #7a8899;
+      }
+
+      .quote {
+        font-size: 1.05em !important;
+        line-height: 1.48 !important;
+        padding: 24px 30px;
+        border-left: 6px solid var(--cyan);
+        background: rgba(21, 125, 184, 0.06);
+        border-radius: 0 16px 16px 0;
+      }
+
+      .title-slide {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .title-slide::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .title-mark {
+        font-size: 0.38em;
+        color: var(--muted);
+        margin-top: 1.2em;
+      }
+
+      .question {
+        font-size: 1.32em !important;
+        line-height: 1.32 !important;
+        font-weight: 780;
+        max-width: 1250px;
+      }
+
+      .big {
+        font-size: 1.22em !important;
+      }
+
+      .micro {
+        font-size: 0.38em !important;
+        color: var(--muted);
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .vs {
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 900;
+        color: var(--amber);
+      }
+
+      .check {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--amber);
+      }
+
+      .footer-src {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.22em !important;
+        color: #8d98a8 !important;
+        max-width: 1450px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 12px 20px;
+        align-items: center;
+      }
+
+      .time {
+        font-size: 0.52em;
+        font-weight: 800;
+        color: var(--amber);
+        text-align: right;
+      }
+
+      .event {
+        padding: 15px 20px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        font-size: 0.55em;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .dotline {
+        position: absolute;
+        left: 151px;
+        top: 172px;
+        bottom: 95px;
+        border-left: 2px dashed rgba(154, 93, 0, 0.18);
+        z-index: -1;
+      }
+
+      .badge-new {
+        display: inline-block;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.22);
+        color: var(--green);
+        font-size: 0.3em;
+        font-weight: 800;
+        padding: 0.35em 0.55em;
+        border-radius: 7px;
+        vertical-align: middle;
+        letter-spacing: 0.06em;
+      }
+
+      /* 医工交叉融合内容专用样式：保留内容标识，与新版课堂字体样式协同 */
+      .med-tag {
+        display: inline-block;
+        padding: 0.32em 0.72em;
+        border-radius: 999px;
+        background: rgba(30, 138, 100, 0.08);
+        border: 1px solid rgba(30, 138, 100, 0.24);
+        color: var(--green);
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.7em;
+      }
+
+      .med-strip {
+        margin-top: 22px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: linear-gradient(90deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.04));
+        border: 1px solid rgba(30, 138, 100, 0.2);
+        font-size: 0.56em;
+        line-height: 1.5;
+      }
+
+      .med-strip strong {
+        color: var(--green);
+      }
+
+      /* Chapter 3 compatibility styles: keep the Chapter 2 visual language while supporting generated layouts */
+      .reveal .slides section {
+        padding: 0 6px;
+      }
+
+      #titlepage {
+        height: 760px;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      #titlepage::after {
+        content: '';
+        position: absolute;
+        inset: -80px -160px;
+        background:
+          radial-gradient(circle at 80% 30%, rgba(21, 125, 184, 0.08), transparent 33%),
+          radial-gradient(circle at 15% 80%, rgba(47, 100, 200, 0.06), transparent 28%);
+        z-index: -1;
+      }
+
+      .subtitle {
+        font-size: 0.92em !important;
+        line-height: 1.45 !important;
+        color: var(--text);
+        max-width: 1350px;
+      }
+
+      .state-diagram,
+      .pipeline,
+      .stack {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 22px 0;
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr auto 1fr;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .state-diagram .node {
+        min-height: 105px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .two-col,
+      .wide-left,
+      .wide-right {
+        display: grid;
+        gap: 26px;
+        align-items: stretch;
+      }
+
+      .two-col {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .wide-left {
+        grid-template-columns: 1.18fr 0.82fr;
+      }
+
+      .wide-right {
+        grid-template-columns: 0.82fr 1.18fr;
+      }
+
+      .small {
+        font-size: 0.48em !important;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .mathbox {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.78em;
+        font-weight: 800;
+        color: #14345e;
+        text-align: center;
+      }
+
+      .exit-ticket {
+        margin-top: 28px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+        border-radius: 18px;
+        padding: 20px 24px;
+      }
+
+      .exit-ticket h3,
+      .activity h3,
+      .card h3 {
+        margin-top: 0;
+      }
+
+      .activity ol,
+      .activity ul,
+      .card ol,
+      .card ul {
+        margin-top: 0.35em;
+      }
+
+      .activity h3::before {
+        content: 'ACTIVITY';
+        display: block;
+        font-size: 0.34em;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: 0.35em;
+      }
+
+      .demo-link,
+      .demo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0 34px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        color: #fff !important;
+        font-size: 0.64em;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(21, 125, 184, 0.18);
+      }
+
+      .demo-link:hover,
+      .demo-btn:hover {
+        filter: brightness(0.96);
+      }
+
+      .media-placeholder {
+        width: 100%;
+        min-height: 260px;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        color: var(--muted);
+      }
+
+      .media-placeholder b,
+      .media-placeholder strong {
+        color: #14345e;
+      }
+
+      .media-placeholder span,
+      .media-placeholder small {
+        font-size: 0.44em;
+        line-height: 1.55;
+        color: #7a8899;
+      }
+
+      .prompt-note {
+        display: block;
+        margin-top: 0.8em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 0.36em;
+        line-height: 1.55;
+        color: #5f7186;
+      }
+
+      .reveal pre code {
+        padding: 16px 18px;
+        border-radius: 16px;
+        line-height: 1.22;
+      }
+
+      .reveal .node code,
+      .reveal p code,
+      .reveal li code {
+        color: #14345e;
+        background: rgba(21, 125, 184, 0.08);
+        padding: 0.06em 0.25em;
+        border-radius: 6px;
+        font-size: 0.88em;
+      }
+
+      .kicker {
+        margin-bottom: 0.45em;
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #ffffff, #f7fafe);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.56em;
+        line-height: 1.45;
+      }
+
+      .quiz-card strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-right: 10px;
+        border-radius: 10px;
+        background: rgba(21, 125, 184, 0.08);
+        color: var(--cyan);
+        font-size: 0.78em;
+      }
+
+      .quiz-answer {
+        margin-top: 18px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        border-left: 6px solid var(--green);
+        background: rgba(30, 138, 100, 0.08);
+        font-size: 0.58em;
+        line-height: 1.55;
+      }
+
+      @media (max-width: 900px) {
+        .two-col,
+        .wide-left,
+        .wide-right,
+        .compare,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 4 refactor: resource placeholders and geometry-specific layouts */
+      .reveal h4 {
+        font-size: 0.82em;
+        line-height: 1.24;
+        color: var(--blue);
+        margin: 0.15em 0 0.45em;
+        font-weight: 780;
+      }
+
+      .lead {
+        max-width: 1350px !important;
+      }
+
+      .sublead {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+        color: var(--muted);
+        max-width: 1350px;
+      }
+
+      .title-flow {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+      }
+
+      .title-flow .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5em 0.78em;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.06);
+        color: #14345e;
+        font-size: 0.5em;
+        font-weight: 800;
+      }
+
+      .media-shell.tight {
+        height: 360px;
+      }
+
+      .media-shell.tall {
+        height: 520px;
+      }
+
+      .media-shell .media-placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        border-radius: 22px;
+        border: 1px dashed rgba(21, 125, 184, 0.35);
+        padding: 38px;
+        background:
+          radial-gradient(circle at 50% 10%, rgba(21, 125, 184, 0.08), transparent 45%), #f2f6fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .asset-id {
+        color: var(--cyan);
+        font-size: 0.42em;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .asset-title {
+        color: #14345e;
+        font-size: 0.74em;
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .asset-note {
+        max-width: 920px;
+        color: #7a8899;
+        font-size: 0.46em;
+        line-height: 1.5;
+      }
+
+      .demo-shell {
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 10px 24px rgba(31, 56, 88, 0.06);
+        padding: 16px;
+      }
+
+      .demo-placeholder {
+        min-height: 440px;
+        border-radius: 20px;
+        border: 1px dashed rgba(30, 138, 100, 0.24);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(30, 138, 100, 0.08), transparent 45%), #eefaf5;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .demo-visual,
+      .demo-panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+      }
+
+      .demo-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .demo-panel {
+        padding: 22px 24px;
+      }
+
+      .demo-panel h4 {
+        color: var(--green);
+      }
+
+      .formula {
+        margin: 14px 0;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(31, 56, 88, 0.05);
+        font-size: 0.82em !important;
+        font-weight: 850;
+        color: #14345e;
+        text-align: center;
+        line-height: 1.42 !important;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .question .q {
+        display: block;
+        color: var(--amber);
+        font-size: 0.68em;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35em;
+      }
+
+      .question {
+        margin-top: 24px;
+        padding: 22px 26px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(154, 93, 0, 0.08), rgba(21, 125, 184, 0.03));
+        border: 1px solid rgba(154, 93, 0, 0.22);
+        border-left: 7px solid var(--amber);
+      }
+
+      .activity.card {
+        box-shadow: none;
+      }
+
+      .activity.ai.card {
+        background: linear-gradient(135deg, rgba(30, 138, 100, 0.08), rgba(21, 125, 184, 0.03));
+      }
+
+      .tag-red {
+        color: var(--red) !important;
+      }
+
+      .tag-green {
+        color: var(--green) !important;
+      }
+
+      .tag-amber {
+        color: var(--amber) !important;
+      }
+
+      .tag-blue {
+        color: var(--blue) !important;
+      }
+
+      .right {
+        text-align: right !important;
+      }
+
+      .center {
+        text-align: center !important;
+      }
+
+      .two-col-lean {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 26px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .two-col-lean,
+        .demo-placeholder {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Chapter 5 additions: all new pages retain the Chapter 4 design tokens. */
+      .reveal .slides section {
+        box-sizing: border-box;
+      }
+
+      .reveal .slides section:not(.stack) {
+        text-align: left;
+      }
+
+      .reveal .slides section > .eyebrow,
+      .reveal .slides section > h2 {
+        flex-shrink: 0;
+      }
+
+      .reveal .slides section h2 {
+        font-size: 1.43em;
+        line-height: 1.19;
+        margin: 0.06em 0 0.34em;
+      }
+
+      .reveal .slides .lead {
+        max-width: 1350px !important;
+      }
+
+      .reveal .slides .sublead {
+        font-size: 0.67em !important;
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .card {
+        padding: 22px 25px;
+      }
+
+      .reveal .slides .card p,
+      .reveal .slides .card li {
+        font-size: 0.61em;
+        line-height: 1.45;
+        margin: 0.12em 0;
+      }
+
+      .reveal .slides .card .mini {
+        font-size: 0.51em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .card h3 {
+        font-size: 0.82em;
+        margin: 0 0 0.3em;
+      }
+
+      .reveal .slides .flow {
+        margin: 15px 0 8px;
+        gap: 9px;
+      }
+
+      .reveal .slides .flow .node {
+        font-size: 0.55em;
+        padding: 15px 18px;
+        min-width: 150px;
+      }
+
+      .reveal .slides .flow .arrow {
+        font-size: 0.75em;
+      }
+
+      .reveal .slides .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .reveal .slides .three-col {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .compact-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .reveal .slides .stack-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .reveal .slides .stage {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        padding: 13px 20px;
+        text-align: center;
+        font-size: 0.57em;
+      }
+
+      .reveal .slides .stage strong {
+        display: block;
+        color: var(--cyan);
+      }
+
+      .reveal .slides .formula {
+        background: #eef5fb;
+        border-left: 6px solid var(--blue);
+        border-radius: 15px;
+        padding: 19px 26px;
+        font-size: 0.93em;
+        text-align: center;
+        letter-spacing: 0.02em;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .formula small {
+        display: block;
+        font-size: 0.54em;
+        margin-top: 6px;
+        color: var(--muted);
+        letter-spacing: 0;
+      }
+
+      .reveal .slides .note-strip {
+        background: #f0f6fc;
+        border: 1px solid rgba(21, 125, 184, 0.2);
+        border-radius: 16px;
+        padding: 14px 20px;
+        font-size: 0.59em;
+        line-height: 1.5;
+        margin-top: 15px;
+      }
+
+      .reveal .slides .note-strip.warn {
+        background: #fff8ee;
+        border-color: rgba(154, 93, 0, 0.25);
+      }
+
+      .reveal .slides .note-strip.ok {
+        background: #eef9f4;
+        border-color: rgba(30, 138, 100, 0.23);
+      }
+
+      .reveal .slides .item-list {
+        display: grid;
+        gap: 12px;
+        margin: 12px 0;
+      }
+
+      .reveal .slides .item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: white;
+        border: 1px solid var(--line);
+        padding: 13px 19px;
+        border-radius: 15px;
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .item .number {
+        background: #e9f3fb;
+        color: #176ea7;
+        font-weight: 800;
+        border-radius: 12px;
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .reveal .slides .item b {
+        color: var(--cyan);
+      }
+
+      .reveal .slides .item span.desc {
+        font-size: 0.85em;
+        color: var(--muted);
+      }
+
+      .reveal .slides .media-placeholder {
+        width: 100%;
+        min-height: 290px;
+        background: repeating-linear-gradient(
+          135deg,
+          #f2f6fb,
+          #f2f6fb 14px,
+          #edf3f9 14px,
+          #edf3f9 28px
+        );
+        border: 2px dashed rgba(21, 125, 184, 0.4);
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 11px;
+        padding: 26px 30px;
+        margin: 14px auto;
+      }
+
+      .reveal .slides .media-placeholder.compact {
+        min-height: 230px;
+      }
+
+      .reveal .slides .media-placeholder .media-id {
+        background: #dfeef9;
+        border: 1px solid #bedbed;
+        border-radius: 999px;
+        color: #165d8c;
+        font-size: 0.43em;
+        padding: 7px 18px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+
+      .reveal .slides .media-placeholder .media-title {
+        font-size: 0.89em;
+        font-weight: 780;
+        color: #173b63;
+      }
+
+      .reveal .slides .media-placeholder .media-description {
+        max-width: 1100px;
+        font-size: 0.56em;
+        color: #5e7287;
+        line-height: 1.45;
+      }
+
+      .reveal .slides .media-placeholder.demo {
+        background: linear-gradient(135deg, #eff8fc, #ecf3fc);
+        border-color: #2f89b9;
+      }
+
+      .reveal .slides .media-placeholder.demo .media-id {
+        background: #d5eefa;
+      }
+
+      .reveal .slides .media-placeholder .link-hint {
+        color: #1975ae;
+        font-size: 0.48em;
+        font-weight: 700;
+      }
+
+      .reveal .slides pre {
+        box-shadow: none;
+        margin: 15px auto;
+        width: 100%;
+        background: #172d46;
+        color: #f5f8ff;
+        border-radius: 18px;
+        padding: 20px 24px;
+        border: 1px solid #35506b;
+        font-size: 0.55em;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+
+      .reveal .slides pre code {
+        background: transparent;
+        color: inherit;
+        font-size: 1em;
+        line-height: 1.5;
+        max-height: none;
+        padding: 0;
+      }
+
+      .reveal .slides table {
+        font-size: 0.56em;
+      }
+
+      .reveal .slides th,
+      .reveal .slides td {
+        padding: 0.5em 0.6em;
+      }
+
+      .reveal .slides .question-card {
+        border: 2px solid rgba(47, 100, 200, 0.23);
+        border-left: 8px solid var(--blue);
+        background: #f6f9ff;
+        padding: 20px 24px;
+        border-radius: 18px;
+        font-size: 0.72em;
+        line-height: 1.48;
+      }
+
+      .reveal .slides .question-card .answers {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 0.83em;
+      }
+
+      .reveal .slides .question-card .answers > span {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 9px 13px;
+      }
+
+      /* 交互式课堂测验增强样式 */
+      .reveal .slides .question-card.interactive-quiz {
+        border: 2px solid rgba(47, 100, 200, 0.28);
+        border-left: 8px solid var(--cyan);
+        background: #f8fafc;
+        box-shadow: 0 10px 24px rgba(21, 54, 83, 0.06);
+      }
+
+      .reveal .slides .question-card .answers .option-item {
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9em;
+        line-height: 1.45;
+        color: #1e293b;
+        transition: all 0.18s ease;
+        user-select: none;
+      }
+
+      .reveal .slides .question-card .answers .option-item:hover {
+        background: #f0f9ff;
+        border-color: #0284c7;
+        transform: translateX(4px);
+      }
+
+      .reveal .slides .question-card .answers .option-item .opt-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #e2e8f0;
+        color: #1e293b;
+        font-weight: 800;
+        font-size: 0.9em;
+        flex-shrink: 0;
+        transition: all 0.18s ease;
+      }
+
+      .reveal .slides .question-card .answers .option-item.correct {
+        background: #ecfdf5 !important;
+        border-color: #10b981 !important;
+        color: #065f46 !important;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+      }
+
+      .reveal .slides .question-card .answers .option-item.correct .opt-badge {
+        background: #10b981 !important;
+        color: #ffffff !important;
+      }
+
+      .reveal .slides .question-card .answers .option-item.wrong {
+        background: #fef2f2 !important;
+        border-color: #ef4444 !important;
+        color: #991b1b !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+      }
+
+      .reveal .slides .question-card .answers .option-item.wrong .opt-badge {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+      }
+
+      .reveal .slides .quiz-feedback {
+        margin-top: 14px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: #ffffff;
+        border-left: 5px solid #10b981;
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+        font-size: 0.88em;
+        line-height: 1.55;
+        display: none;
+      }
+
+      .reveal .slides .quiz-feedback.show {
+        display: block;
+        animation: fadeIn 0.25s ease;
+      }
+
+      .toggle-answer-btn {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        padding: 5px 14px;
+        border-radius: 8px;
+        font-size: 0.8em;
+        font-weight: 650;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .toggle-answer-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+      }
+
+      .reveal .slides .tiny {
+        font-size: 0.51em !important;
+        color: var(--muted);
+        line-height: 1.4 !important;
+      }
+
+      .reveal .slides .summary-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .reveal .slides .summary-list .item {
+        padding: 14px 19px;
+      }
+
+      .reveal .slides .title-slide .eyebrow {
+        font-size: 0.45em;
+      }
+
+      .reveal .slides .title-slide h1 {
+        font-size: 2.05em;
+      }
+
+      .reveal .slides .title-slide .lead {
+        font-size: 0.87em !important;
+      }
+
+      .reveal .slides .title-flow .chip {
+        font-size: 0.5em;
+      }
+
+      .reveal .slides .activity {
+        padding: 16px 22px;
+        margin-top: 16px;
+      }
+
+      .reveal .slides .activity p {
+        font-size: 0.62em;
+      }
+
+      .reveal .slides .slide-no {
+        right: 6px;
+        top: 0;
+      }
+
+      .reveal .slides section.present > .eyebrow:not(.fragment),
+      .reveal .slides section.active-slide > .eyebrow:not(.fragment) {
+        animation: chapter5Fade 0.3s both;
+      }
+
+      .reveal .slides section.present > h2:not(.fragment),
+      .reveal .slides section.active-slide > h2:not(.fragment) {
+        animation: chapter5Fade 0.45s 0.08s both;
+      }
+
+      @keyframes chapter5Fade {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .reveal .slides .flow-marker {
+        display: inline-block;
+        font-weight: 800;
+        font-size: 0.8em;
+        color: var(--cyan);
+        padding: 0 8px;
+      }
+
+      .reveal .slides .two-col .media-placeholder {
+        min-height: 240px;
+      }
+
+      .reveal .slides .grid3 .card {
+        padding: 18px 20px;
+      }
+    </style>
+    <link href="../shared/classroom-large.css?v=20261107" rel="stylesheet" />
+    <style>
+      /* 全局标题与文字层级优化：消除标题过大与视口压迫感 */
+      .reveal h1 {
+        font-size: 1.65em !important;
+        line-height: 1.15 !important;
+        margin: 0.12em 0 0.28em !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      .reveal h2 {
+        font-size: 1.18em !important;
+        line-height: 1.22 !important;
+        margin: 0.06em 0 0.3em !important;
+        letter-spacing: -0.02em !important;
+        color: #14345e !important;
+      }
+
+      .reveal h3 {
+        font-size: 0.85em !important;
+        line-height: 1.25 !important;
+        margin: 0.12em 0 0.32em !important;
+      }
+
+      .reveal h4 {
+        font-size: 0.7em !important;
+        line-height: 1.28 !important;
+        margin: 0.1em 0 0.28em !important;
+        color: var(--blue) !important;
+      }
+
+      .reveal .lead {
+        font-size: 0.62em !important;
+        line-height: 1.48 !important;
+        color: #475569 !important;
+        margin-bottom: 12px !important;
+        max-width: 1350px !important;
+      }
+
+      .reveal .sublead {
+        font-size: 0.52em !important;
+        line-height: 1.42 !important;
+        color: var(--muted) !important;
+      }
+
+      .reveal .eyebrow {
+        font-size: 0.38em !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        color: var(--cyan) !important;
+        margin-bottom: 0.25em !important;
+      }
+
+      .reveal .quote {
+        font-size: 0.64em !important;
+        line-height: 1.42 !important;
+      }
+
+      /* 上标与下标定位修复（避免 reset.css baseline 抹平） */
+      .reveal sub,
+      .reveal sup {
+        font-size: 0.72em !important;
+        line-height: 0 !important;
+        position: relative !important;
+        vertical-align: baseline !important;
+      }
+
+      .reveal sup {
+        top: -0.48em !important;
+        margin-left: 1px;
+      }
+
+      .reveal sub {
+        bottom: -0.22em !important;
+        margin-left: 1px;
+      }
+
+      /* 代码块与行号视觉增强：大教室投影清晰字号(~32px)、行距1.68、行号分割线与精致卡片质感 */
+      .reveal pre {
+        width: 100% !important;
+        font-size: 0.72em !important;
+        /* 基准44px下为 31.7px，80人教室清晰可辨 */
+        line-height: 1.68 !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(30, 56, 96, 0.18) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 26px rgba(31, 56, 88, 0.08) !important;
+        margin: 16px auto !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .reveal pre code {
+        display: block !important;
+        padding: 18px 24px !important;
+        overflow-x: auto !important;
+        background: #ffffff !important;
+        color: #1e293b !important;
+        font-family:
+          'Fira Code', 'JetBrains Mono', 'SF Mono', 'Consolas', 'Menlo', monospace !important;
+        font-size: 1em !important;
+        /* 与 pre 字号严格一致，杜绝嵌套复合缩小 */
+        line-height: 1.68 !important;
+        tab-size: 2 !important;
+      }
+
+      /* 内部表格、单元格、行号与代码行全部继承统一字号，防止多层 em 嵌套缩减 */
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln,
+      .reveal pre code tr,
+      .reveal pre code td,
+      .reveal pre code .hljs-ln-code,
+      .reveal pre code .hljs-ln-numbers,
+      .reveal pre code .hljs-ln-line,
+      .reveal pre code span {
+        font-family: inherit !important;
+        font-size: 1em !important;
+        line-height: 1.68 !important;
+      }
+
+      .reveal pre code table,
+      .reveal pre code table.hljs-ln {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+
+      .reveal pre code table.hljs-ln td {
+        border: 0 !important;
+        padding: 2px 0 !important;
+        vertical-align: middle !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code table.hljs-ln td.hljs-ln-numbers,
+      .reveal pre code td.hljs-ln-numbers,
+      .reveal pre code .hljs-ln-numbers {
+        width: 42px !important;
+        min-width: 42px !important;
+        padding: 2px 1ch 2px 0 !important;
+        margin-right: 0 !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        text-align: right !important;
+        border-right: 2px solid rgba(21, 125, 184, 0.25) !important;
+        user-select: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code table.hljs-ln td.hljs-ln-code,
+      .reveal pre code td.hljs-ln-code,
+      .reveal pre code .hljs-ln-code {
+        padding: 2px 0 2px 1ch !important; /* 行号与行的内容之间留一个空格 (1ch 等宽字符宽度) */
+        white-space: pre !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+      }
+
+      .reveal pre code tr:hover td {
+        background: rgba(21, 125, 184, 0.05) !important;
+      }
+
+      .media-shell {
+        height: 440px !important;
+        margin-top: 10px !important;
+      }
+
+      .card {
+        padding: 16px 20px !important;
+      }
+
+      .card p,
+      .card li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .activity p,
+      .activity li {
+        font-size: 0.6em !important;
+        line-height: 1.45 !important;
+      }
+
+      .question p {
+        font-size: 0.72em !important;
+        line-height: 1.45 !important;
+      }
+
+      /* 第六章只增补教学内容组件；其余样式沿用第五章原课件。 */
+      .reveal .lesson-list {
+        max-width: 1290px;
+        margin: 16px auto;
+      }
+
+      .reveal .lesson-list li {
+        font-size: 0.62em;
+        line-height: 1.45;
+        margin: 10px 0;
+      }
+
+      .reveal .lesson-formula {
+        margin: 18px auto;
+        width: max-content;
+        max-width: 94%;
+        padding: 19px 38px;
+        font-size: 0.79em;
+        font-weight: 650;
+        color: #153653;
+        background: #eef8fa;
+        border: 2px solid #c8e4e9;
+        border-radius: 15px;
+        text-align: center;
+      }
+
+      .reveal .lesson-demo {
+        margin: 16px auto;
+        padding: 25px 34px;
+        max-width: 1190px;
+        border: 2px dashed #11879b;
+        background: #f4fbfc;
+        border-radius: 17px;
+        text-align: center;
+      }
+
+      .reveal .lesson-demo h3 {
+        color: #153653;
+        font-size: 0.88em !important;
+      }
+
+      .reveal .lesson-demo p {
+        color: #475569;
+        font-size: 0.57em;
+      }
+
+      .reveal .lesson-demo-link {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        background: #153653;
+        color: white !important;
+        font-size: 0.47em;
+        text-decoration: none;
+      }
+
+      .reveal .lesson-compare {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 20px;
+        max-width: 1320px;
+        margin: 12px auto;
+      }
+
+      .reveal .lesson-compare-item {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .reveal .lesson-compare-item .media-shell {
+        height: 305px !important;
+        margin-top: 0 !important;
+      }
+
+      .reveal .lesson-compare-item p {
+        font-size: 0.48em;
+        text-align: center;
+        margin: 8px 0;
+      }
+
+      .reveal .lesson-compare .media-placeholder {
+        padding: 20px;
+      }
+
+      .course-logo-placeholder {
+        position: fixed;
+        top: 10px;
+        right: 18px;
+        z-index: 18;
+        color: #7c93a6;
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px dashed #b1c4d1;
+        border-radius: 7px;
+        padding: 5px 11px;
+        font:
+          600 12px/1.2 'Microsoft YaHei',
+          sans-serif;
+      }
+
+      @media print {
+        .course-logo-placeholder {
+          display: none !important;
+        }
+
+        .reveal .title-slide h1 {
+          max-width: 86% !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="course-logo-placeholder">学院 LOGO · 占位</div>
+    <div class="reveal">
+      <div class="slides">
+        <section id="sec-1">
+          <span class="slide-no">#sec-1</span>
+          <div class="title-slide">
+            <div class="eyebrow">Computer Graphics · Chapter 6 · 04</div>
+            <h1>从多边形到平滑着色</h1>
+            <p class="lead fragment fade-up">同样的三角形网格，为什么会呈现完全不同的表面效果？</p>
+            <div class="title-flow">
+              <span class="chip fragment fade-up">三角网格</span
+              ><span class="chip fragment fade-up">面/顶点法向量</span
+              ><span class="chip fragment fade-up">Flat</span
+              ><span class="chip fragment fade-up">Gouraud</span
+              ><span class="chip fragment fade-up">Phong</span>
+            </div>
+            <!--div class="note-strip fragment fade-up">第6章 · 光照与着色　｜　第二次课 · 主题二：从模型到可运行的着色效果　｜　<span
+              class="current-date">YYYY-MM-DD</span>　｜　40分钟</div-->
+          </div>
+          <aside class="notes">
+            第6章第4课时，独立40分钟教学单元；顺序按问题→预测→概念→图示或Demo→解释→迁移→Exit
+            Ticket展开。
+          </aside>
+        </section>
+        <section id="sec-2">
+          <section id="sec-2-1" data-timing="lesson">
+            <span class="slide-no">#sec-2-1</span>
+            <div class="eyebrow">Bridge-in · Mesh vs Shading</div>
+            <h2>这是同一个三维对象，为什么一个有棱角？</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="
+                height: 460px !important;
+                margin: 8px auto !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                border-radius: 18px !important;
+                border: 1px solid var(--line);
+                position: relative;
+                background: #ffffff;
+              "
+            >
+              <iframe
+                src="./Chap_demos/chap6/D06-03_球体着色方式对比.html"
+                style="width: 100%; height: 100%; border: none; display: block; background: #ffffff"
+                title="D06-03 · 三维模型着色方式对比交互实验台"
+              ></iframe>
+            </div>
+            <div class="note-strip fragment fade-up" style="margin-top: 6px !important">
+              所有效果都来自同一几何模型与光照：差别在于计算位置（面心/顶点/片元）与插值对象，几何轮廓保持不变。
+            </div>
+            <div
+              class="fragment fade-up"
+              style="margin-top: 8px; display: flex; justify-content: center"
+            >
+              <a
+                class="demo-btn"
+                href="./Chap_demos/chap6/D06-03_球体着色方式对比.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="
+                  min-height: 44px;
+                  padding: 0 26px;
+                  font-size: 0.56em;
+                  font-weight: 800;
+                  border-radius: 12px;
+                  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.22);
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <span>▶ 全屏新窗口打开 Demo：D06-03 · 三维模型着色方式对比实验台</span>
+                <span style="font-size: 0.85em; opacity: 0.85">↗</span>
+              </a>
+            </div>
+            <aside class="notes">
+              【本组时间建议】Bridge-in
+              同一几何的不同外观：约4分钟，包含本组2页；注意严格控制课堂节奏。 【D06-03
+              交互演示指导】本页将原先三张静态效果图整合成统一 WebGL2 四视口交互
+              Demo（线框模型、Flat平面着色、Gouraud着色、Phong着色）： 1. 支持切换经典三维模型（球体
+              Sphere、环面结 Torus Knot、犹他茶壶 Teapot）及多种材质颜色。 2.
+              演示鼠标拖拽旋转：模型在同一个 Canvas
+              中完全同步旋转，直接打破“光滑是因为网格面数变多”的误区。 3.
+              调节细分级别（0~4级）与高光指数：直观发现 Flat 的面片感阶跃、Gouraud
+              在低细分下的高光畸变/丢失，以及 Phong 的逐片元真实高光。 4.
+              重点点拨：观察模型外边缘轮廓——Phong着色虽然表面明暗光滑，但几何边界折线完全相同，证明逐片元着色不改变几何多边形轮廓！
+            </aside>
+          </section>
+          <section id="sec-2-2" data-timing="lesson">
+            <span class="slide-no">#sec-2-2</span>
+            <div class="eyebrow">Predict · Where to compute</div>
+            <h2>预测：着色发生在顶点，还是面内每一处？</h2>
+            <div class="question-card fragment fade-up">
+              <div class="q">如果只在三角形三个顶点计算光照，面内出现的高光一定准确吗？</div>
+              <div class="answers">
+                <span>A. 一定</span><span>B. 不一定；面内强高光可能未出现在顶点上</span>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】Bridge-in
+              同一几何的不同外观：约4分钟，包含本组2页；注意严格控制课堂节奏。
+              【课堂题参考答案】B；顶点结果插值不能自动重现所有非线性高光变化。。先让学生判断并解释，再由教师揭示。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-3">
+          <section id="sec-3-1" data-timing="lesson">
+            <span class="slide-no">#sec-3-1</span>
+            <div class="eyebrow">Normals · Face</div>
+            <h2>三角面片：整个面有一个几何法向量</h2>
+            <div class="media-shell fragment fade-up" style="height: 385px !important">
+              <img
+                src="./images/chap06/ch06-face-vs-vertex-normal.jpg"
+                alt="R06-15a · 面法向量与顶点法向量（旧素材）"
+                data-fallback="R06-15a · 面法向量与顶点法向量（旧素材）"
+                data-purpose="去年课件素材路径已保留，可手动替换图片"
+                data-prompt="复用去年课件素材；请检查原路径是否可访问。"
+                loading="lazy"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              平面三角形的几何朝向固定，面法向量可由两条边的叉积求得。
+            </div>
+            <aside class="notes">
+              【本组时间建议】面与顶点的法向量：约8分钟，包含本组3页；注意严格控制课堂节奏。
+              【复用素材
+              R06-15a】面法向量与顶点法向量（旧素材）。沿用去年课件原始src：./images/chap05/ch05-face-vs-vertex-normal.jpg。未随本次HTML附带图片文件；若未显示，请按原路径补齐或手动调整。
+            </aside>
+          </section>
+          <section id="sec-3-2" data-timing="lesson">
+            <span class="slide-no">#sec-3-2</span>
+            <div class="eyebrow">Normals · Vertex Normal Averaging</div>
+            <h2>顶点法向量：相邻面法向量的平均与归一化</h2>
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.88fr 1.32fr;
+                gap: 20px;
+                margin-top: 10px;
+                align-items: stretch;
+              "
+            >
+              <!-- 左侧：教学图解卡片 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 12px 14px;
+                  border-radius: 18px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="./images/chap06/ch06-normal-interp.png"
+                  alt="R06-15b · 相邻面法向量平均构造顶点法向量示意图"
+                  style="max-height: 270px; max-width: 100%; object-fit: contain"
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.48em;
+                    color: var(--muted);
+                    margin-top: 8px;
+                    text-align: center;
+                    line-height: 1.35;
+                  "
+                >
+                  <strong>图解对应：</strong>黑色顶点被 4 个相邻面共享，各面法向分别为
+                  \(\mathbf{n}_1, \mathbf{n}_2, \mathbf{n}_3,
+                  \mathbf{n}_4\)，中心复合向量为平滑顶点法向 \(\mathbf{n}\)。
+                </div>
+              </div>
+
+              <!-- 右侧：数学公式与计算步骤 -->
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 10px;
+                "
+              >
+                <!-- 核心数学公式卡片 -->
+                <div
+                  class="lesson-formula fragment fade-up"
+                  style="
+                    margin: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    padding: 12px 18px !important;
+                    text-align: left !important;
+                    font-size: 0.7em !important;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 0.74em;
+                      color: var(--cyan);
+                      font-weight: 750;
+                      margin-bottom: 4px;
+                    "
+                  >
+                    📐 图示 4 个相邻面的具体计算公式：
+                  </div>
+                  \[\mathbf{n} = \frac{\mathbf{n}_1 + \mathbf{n}_2 + \mathbf{n}_3 +
+                  \mathbf{n}_4}{\|\mathbf{n}_1 + \mathbf{n}_2 + \mathbf{n}_3 + \mathbf{n}_4\|}\]
+                  <div
+                    style="
+                      font-size: 0.74em;
+                      color: var(--cyan);
+                      font-weight: 750;
+                      margin: 6px 0 2px;
+                    "
+                  >
+                    🌐 通用网格计算公式（设有 \(k\) 个共顶点相邻面）：
+                  </div>
+                  \[\mathbf{n} = \frac{\sum_{i=1}^{k} \mathbf{n}_i}{\left\|\sum_{i=1}^{k}
+                  \mathbf{n}_i\right\|} \quad \left(\text{加权形式：} \mathbf{n} = \frac{\sum w_i
+                  \mathbf{n}_i}{\|\sum w_i \mathbf{n}_i\|}\right)\]
+                </div>
+
+                <!-- 核心原理与工程考量卡片 -->
+                <div
+                  class="card fragment fade-up"
+                  style="
+                    padding: 12px 18px;
+                    border-radius: 14px;
+                    background: #ffffff;
+                    font-size: 0.56em;
+                    line-height: 1.55;
+                  "
+                >
+                  <div
+                    style="font-weight: 750; color: #14345e; margin-bottom: 4px; font-size: 1.05em"
+                  >
+                    计算要点与工程考量：
+                  </div>
+                  <div>
+                    ① <strong>累加平均</strong>：遍历共享该顶点的所有相邻面，累加各面的几何法向量
+                    \(\mathbf{n}_i\)；
+                  </div>
+                  <div>
+                    ② <strong>强制归一化</strong>：多个向量直接相加后的长度通常不为
+                    1，必须除以模长以保证为单位向量；
+                  </div>
+                  <div>
+                    ③
+                    <strong>折痕控制（Crease Angle）</strong
+                    >：对机械硬边（夹角过大），不能无条件平均，需拆分顶点保留硬棱外观。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="note-strip fragment fade-up" style="margin-top: 10px !important">
+              <strong>核心价值：</strong
+              >顶点法向量平滑处理是曲面网格着色（Gouraud/Phong）消除楞线棱角、获得连续视觉过渡的数学基础。
+            </div>
+            <aside class="notes">
+              【本组时间建议】面与顶点的法向量：约8分钟，包含本组3页；注意严格控制课堂节奏。
+              【图解与公式讲授重点】 1.
+              引导学生看图：图中有4个相邻面共用中心黑色顶点，每个面各自拥有面法向量 n1~n4。 2.
+              公式剖析：为什么公式分母必须是向量求和后的模长？因为我们要得到单位方向向量供光照点乘计算。
+              3. 加权拓展：面积加权（大三角形贡献更大）或夹角加权（顶角大贡献大）。 4.
+              工业折痕：提醒尖锐棱边（如立方体的棱）如果无条件平均，会变成难看的泥塑倒角，此时需要法线断开（Hard
+              Edge / Smooth Group）。
+            </aside>
+          </section>
+          <section id="sec-3-3" data-timing="lesson">
+            <span class="slide-no">#sec-3-3</span>
+            <div class="eyebrow">WebGL2 · Attribute</div>
+            <h2>法向量属于顶点属性，位置坐标不是法向量</h2>
+            <pre
+              class="fragment fade-up"
+            ><code class="language-glsl" data-trim="" data-line-numbers="">#version 300 es
+in vec4 aPosition;  // 顶点位置
+in vec3 aNormal;    // 顶点法向量</code></pre>
+            <div class="note-strip fragment fade-up">
+              球心在原点的单位球面，可以用归一化顶点位置构造法向量；一般网格不能照搬。
+            </div>
+            <aside class="notes">
+              【本组时间建议】面与顶点的法向量：约8分钟，包含本组3页；注意严格控制课堂节奏。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-4">
+          <section id="sec-4-1" data-timing="lesson">
+            <span class="slide-no">#sec-4-1</span>
+            <div class="eyebrow">Shading Methods · Overview</div>
+            <h2>三大多边形着色方法：核心定义与关键对比</h2>
+
+            <!-- 上部：三大着色方法的核心定义（大字号、精炼卡片） -->
+            <div class="three-col" style="gap: 18px; margin-top: 12px">
+              <div
+                class="card fragment fade-up"
+                style="border-top: 5px solid #f59e0b; padding: 16px 18px; background: #ffffff"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.92em; color: #14345e">平面着色 Flat</h3>
+                  <span
+                    style="
+                      font-size: 0.6em;
+                      background: #fef3c7;
+                      color: #92400e;
+                      padding: 3px 10px;
+                      border-radius: 10px;
+                      font-weight: 750;
+                    "
+                    >逐面计算</span
+                  >
+                </div>
+                <p
+                  style="
+                    font-size: 0.72em !important;
+                    line-height: 1.45 !important;
+                    color: #1e293b;
+                    margin: 0;
+                    font-weight: 600;
+                  "
+                >
+                  每个面计算一次光照，面内片元恒定赋同色。
+                </p>
+                <div style="margin-top: 12px; font-size: 0.64em; color: #64748b">
+                  <strong>特征：</strong>面法向 \(\mathbf{n}_f\) ｜ 无插值 ｜ 面片棱角
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="border-top: 5px solid #0284c7; padding: 16px 18px; background: #ffffff"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.92em; color: #14345e">高洛德 Gouraud</h3>
+                  <span
+                    style="
+                      font-size: 0.6em;
+                      background: #e0f2fe;
+                      color: #0369a1;
+                      padding: 3px 10px;
+                      border-radius: 10px;
+                      font-weight: 750;
+                    "
+                    >逐顶点</span
+                  >
+                </div>
+                <p
+                  style="
+                    font-size: 0.72em !important;
+                    line-height: 1.45 !important;
+                    color: #1e293b;
+                    margin: 0;
+                    font-weight: 600;
+                  "
+                >
+                  顶点计算光照颜色，面内片元插值颜色。
+                </p>
+                <div style="margin-top: 12px; font-size: 0.64em; color: #64748b">
+                  <strong>特征：</strong>顶点法向 \(\mathbf{n}_v\) ｜ 插值颜色 ｜ 高光易失
+                </div>
+              </div>
+
+              <div
+                class="card fragment fade-up"
+                style="border-top: 5px solid #10b981; padding: 16px 18px; background: #ffffff"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.92em; color: #14345e">冯氏着色 Phong</h3>
+                  <span
+                    style="
+                      font-size: 0.6em;
+                      background: #d1fae5;
+                      color: #065f46;
+                      padding: 3px 10px;
+                      border-radius: 10px;
+                      font-weight: 750;
+                    "
+                    >逐片元</span
+                  >
+                </div>
+                <p
+                  style="
+                    font-size: 0.72em !important;
+                    line-height: 1.45 !important;
+                    color: #1e293b;
+                    margin: 0;
+                    font-weight: 600;
+                  "
+                >
+                  面内插值法向量，逐片元独立计算光照。
+                </p>
+                <div style="margin-top: 12px; font-size: 0.64em; color: #64748b">
+                  <strong>特征：</strong>插值法向 \(\mathbf{n}\) ｜ 重新归一化 ｜ 高光精准
+                </div>
+              </div>
+            </div>
+
+            <!-- 中部：相同点 vs 核心差异（大字号、聚焦核心） -->
+            <div class="two-col fragment fade-up" style="gap: 18px; margin-top: 14px">
+              <div
+                class="card"
+                style="padding: 14px 20px; background: #f8fafc; border-left: 5px solid #64748b"
+              >
+                <div
+                  style="font-weight: 750; color: #1e293b; font-size: 0.76em; margin-bottom: 8px"
+                >
+                  ⚖️ 相同点（共享基础）：
+                </div>
+                <div style="font-size: 0.68em; line-height: 1.6; color: #475569">
+                  <div>• <strong>同一几何网格：</strong>顶点与拓扑完全一致，几何轮廓不变</div>
+                  <div>• <strong>同一光照模型：</strong>均采用环境光 + 漫反射 + 镜面高光公式</div>
+                </div>
+              </div>
+
+              <div
+                class="card"
+                style="padding: 14px 20px; background: #f8fafc; border-left: 5px solid var(--cyan)"
+              >
+                <div
+                  style="font-weight: 750; color: #1e293b; font-size: 0.76em; margin-bottom: 8px"
+                >
+                  🔍 核心差异（本质不同）：
+                </div>
+                <div style="font-size: 0.68em; line-height: 1.6; color: #475569">
+                  <div>
+                    • <strong>计算阶段：</strong>逐面（单次） \(\rightarrow\) 顶点着色器 (VS)
+                    \(\rightarrow\) 片元着色器 (FS)
+                  </div>
+                  <div>
+                    • <strong>插值对象：</strong>无插值 \(\rightarrow\)
+                    <strong>插值颜色</strong> \(\rightarrow\) <strong>插值法向量</strong>
+                  </div>
+                  <div>
+                    • <strong>光影品质：</strong>面片棱角（马赫带） \(\rightarrow\) 平滑但高光失真
+                    \(\rightarrow\) <strong>精准高光与平滑曲面</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 底部：一句话核心规律 -->
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 14px !important;
+                font-size: 0.68em !important;
+                line-height: 1.5 !important;
+              "
+            >
+              <strong>核心规律：</strong>光照计算越靠后（面 \(\rightarrow\) 顶点 \(\rightarrow\)
+              片元），曲面高光与明暗越平滑真实，计算开销越大。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【讲授要点】 1.
+              概念先导：告诉学生，多边形网格着色解决的是“离散三角形如何看起来像光滑曲面”的核心问题。
+              2.
+              抓住主线：牢记两个核心问题——“光照在哪一步计算？”（面/顶点/片元）以及“光栅化阶段插值什么？”（不插值/颜色/法向量）。
+              3.
+              认知铺垫：强调相同点（同一模型、同一光源、同一公式），排除其他变量干扰，再带入后文的单项对比。
+            </aside>
+          </section>
+          <section id="sec-4-2" data-timing="lesson">
+            <span class="slide-no">#sec-4-2</span>
+            <div class="eyebrow">Shading · Flat Shading</div>
+            <h2>平面着色：逐面单次计算与面片效应</h2>
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.85fr 1.15fr;
+                gap: 20px;
+                margin-top: 10px;
+                align-items: stretch;
+              "
+            >
+              <!-- 左侧：真实渲染示例图 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 14px 16px;
+                  border-radius: 18px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="./images/chap06/ch06-shanding-flat.png"
+                  alt="Flat着色球面渲染效果"
+                  style="
+                    max-height: 260px;
+                    max-width: 100%;
+                    object-fit: contain;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+                  "
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.62em;
+                    color: var(--muted);
+                    margin-top: 10px;
+                    text-align: center;
+                    line-height: 1.4;
+                  "
+                >
+                  <strong>视觉特征：</strong>整面明暗均一，面边界亮度跳变，多面体棱角分明。
+                </div>
+              </div>
+
+              <!-- 右侧：原理流程与优缺点 -->
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 12px;
+                "
+              >
+                <!-- 原理与流程 -->
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 14px 18px; border-radius: 14px; background: #ffffff"
+                >
+                  <div
+                    style="font-weight: 750; color: #14345e; font-size: 0.76em; margin-bottom: 6px"
+                  >
+                    📌 计算原理与流程
+                  </div>
+                  <div
+                    style="font-size: 0.68em; line-height: 1.5; color: #1e293b; font-weight: 600"
+                  >
+                    整面共用同一面法向 \(\mathbf{n}_f\)，在中心点计算一次光照，全片元赋予相同颜色。
+                  </div>
+                  <div class="flow" style="margin: 10px 0 2px; gap: 8px">
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >面顶点</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >面法向 \(\mathbf{n}_f\)</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >单次光照计算</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >整面赋同色</span
+                    >
+                  </div>
+                </div>
+
+                <!-- 优缺点对比 -->
+                <div class="two-col fragment fade-up" style="gap: 12px; margin: 0">
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #f0fdf4; border-top: 4px solid #22c55e"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #15803d;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ✅ 核心优点
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #166534">
+                      <div>• <strong>计算极快：</strong>逐面单次计算，无插值开销</div>
+                      <div>• <strong>真实硬表面：</strong>天然契合立方体与多面体</div>
+                      <div>• <strong>风格鲜明：</strong>Low-Poly 极简复古艺术风格</div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #fef2f2; border-top: 4px solid #ef4444"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #b91c1c;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ❌ 主要缺点
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #991b1b">
+                      <div>• <strong>面片效应：</strong>曲面被割裂为平面碎块</div>
+                      <div>• <strong>马赫带伪影：</strong>视网膜侧抑制诱发虚假亮边</div>
+                      <div>• <strong>缺失高光：</strong>面内无法表达细腻局部高光</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 12px !important;
+                font-size: 0.68em !important;
+                line-height: 1.5 !important;
+              "
+            >
+              <strong>马赫带效应（Mach Banding）：</strong
+              >人眼视觉对亮度的一阶导数极度敏感，两面明暗突变边界处会产生虚假的过度对比亮暗边缘。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【讲授要点】 1.
+              图例引导：引导学生看左图，虽然球面网格很密，但面与面之间的折棱一清二楚。 2.
+              解释马赫带：强调这不是渲染程序的 Bug，而是人类生理视觉神经的侧抑制机制放大了明暗跳变。
+              3. WebGL实现方式：在现代 WebGL 中可通过 flat
+              限定符传递变量，或使用非共享顶点的几何数组实现。
+            </aside>
+          </section>
+          <section id="sec-4-3" data-timing="lesson">
+            <span class="slide-no">#sec-4-3</span>
+            <div class="eyebrow">Shading · Gouraud Shading</div>
+            <h2>Gouraud着色：先算顶点颜色，再在面内插值</h2>
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.85fr 1.15fr;
+                gap: 20px;
+                margin-top: 10px;
+                align-items: stretch;
+              "
+            >
+              <!-- 左侧：真实渲染示例图 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 14px 16px;
+                  border-radius: 18px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="./images/chap06/ch06-shading-gouraud.png"
+                  alt="Gouraud着色球面渲染效果"
+                  style="
+                    max-height: 260px;
+                    max-width: 100%;
+                    object-fit: contain;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+                  "
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.62em;
+                    color: var(--muted);
+                    margin-top: 10px;
+                    text-align: center;
+                    line-height: 1.4;
+                  "
+                >
+                  <strong>视觉特征：</strong
+                  >曲面明暗连续平滑，消除了面片棱角；但高光变平钝，易出现畸变。
+                </div>
+              </div>
+
+              <!-- 右侧：原理流程与优缺点 -->
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 12px;
+                "
+              >
+                <!-- 原理与流程 -->
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 14px 18px; border-radius: 14px; background: #ffffff"
+                >
+                  <div
+                    style="font-weight: 750; color: #14345e; font-size: 0.76em; margin-bottom: 6px"
+                  >
+                    📌 计算原理与流程
+                  </div>
+                  <div
+                    style="font-size: 0.68em; line-height: 1.5; color: #1e293b; font-weight: 600"
+                  >
+                    顶点着色器计算各顶点的完整光照颜色，光栅化在三角面内双线性插值颜色。
+                  </div>
+                  <div class="flow" style="margin: 10px 0 2px; gap: 8px">
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >顶点法向 \(\mathbf{n}_v\)</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >VS算顶点颜色 \(C_v\)</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >光栅化插值颜色</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >片元直接输出</span
+                    >
+                  </div>
+                </div>
+
+                <!-- 优缺点对比 -->
+                <div class="two-col fragment fade-up" style="gap: 12px; margin: 0">
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #f0fdf4; border-top: 4px solid #22c55e"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #15803d;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ✅ 核心优点
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #166534">
+                      <div>• <strong>平滑连续：</strong>消除面片明暗跳变与马赫带</div>
+                      <div>• <strong>性能优异：</strong>计算量取决于顶点数，远少于像素数</div>
+                      <div>• <strong>硬件经典：</strong>早期固定管线（OpenGL 1.x）标准</div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #fef2f2; border-top: 4px solid #ef4444"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #b91c1c;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ❌ 主要缺点
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #991b1b">
+                      <div>• <strong>高光丢失：</strong>高光落在面内未覆盖顶点时完全消失</div>
+                      <div>• <strong>非线性畸变：</strong>线性颜色插值无法拟合高次方高光</div>
+                      <div>• <strong>光影生硬：</strong>高光形状易被三角形网格拉伸扭曲</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 12px !important;
+                font-size: 0.68em !important;
+                line-height: 1.5 !important;
+              "
+            >
+              <strong>高光丢失根源：</strong
+              >高光指数运算是非线性的陡峭峰值；若三顶点均未对准高光区，线性颜色插值只能得到全暗结果。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【讲授要点】 1. 启发思考：抛出思考题——“如果三角形中间很亮，但三个顶点都不亮，Gouraud
+              能画出高光吗？”（学生顿悟高光丢失）。 2. 解释非线性：光照模型中的 (R·V)^n
+              是高阶幂函数，极度陡峭；而三角形光栅化插值是线性的（一阶平直），线性拟合高阶非线性必然产生严重失真。
+              3. 性能权衡：告诉学生，在 1990 年代和早期移动端，由于像素着色器算力极其昂贵，Gouraud
+              曾是兼顾平滑与性能的最优选择。
+            </aside>
+          </section>
+          <section id="sec-4-4" data-timing="lesson">
+            <span class="slide-no">#sec-4-4</span>
+            <div class="eyebrow">Shading · Phong Shading</div>
+            <h2>Phong着色：插值法向量，逐片元计算光照</h2>
+            <div
+              class="two-col"
+              style="
+                grid-template-columns: 0.85fr 1.15fr;
+                gap: 20px;
+                margin-top: 10px;
+                align-items: stretch;
+              "
+            >
+              <!-- 左侧：真实渲染示例图 -->
+              <div
+                class="card fragment fade-up"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 14px 16px;
+                  border-radius: 18px;
+                  background: #ffffff;
+                "
+              >
+                <img
+                  src="./images/chap06/ch06-shading-phong.png"
+                  alt="Phong着色球面渲染效果"
+                  style="
+                    max-height: 260px;
+                    max-width: 100%;
+                    object-fit: contain;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+                  "
+                  loading="lazy"
+                />
+                <div
+                  style="
+                    font-size: 0.62em;
+                    color: var(--muted);
+                    margin-top: 10px;
+                    text-align: center;
+                    line-height: 1.4;
+                  "
+                >
+                  <strong>视觉特征：</strong>高光亮斑圆润精确，表面逼真；注意外边缘剪影仍为折线。
+                </div>
+              </div>
+
+              <!-- 右侧：原理流程与优缺点 -->
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: space-between;
+                  gap: 12px;
+                "
+              >
+                <!-- 原理与流程 -->
+                <div
+                  class="card fragment fade-up"
+                  style="padding: 14px 18px; border-radius: 14px; background: #ffffff"
+                >
+                  <div
+                    style="font-weight: 750; color: #14345e; font-size: 0.76em; margin-bottom: 6px"
+                  >
+                    📌 计算原理与流程
+                  </div>
+                  <div
+                    style="font-size: 0.68em; line-height: 1.5; color: #1e293b; font-weight: 600"
+                  >
+                    面内插值法向量，片元着色器重新归一化后，逐像素独立计算光照。
+                  </div>
+                  <div class="flow" style="margin: 10px 0 2px; gap: 8px">
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >顶点法向 \(\mathbf{n}_v\)</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >插值法向 \(\mathbf{n}_{\text{interp}}\)</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >FS重新归一化</span
+                    >
+                    <span class="arrow" style="font-size: 0.85em">→</span>
+                    <span
+                      class="node"
+                      style="
+                        font-size: 0.58em;
+                        padding: 8px 12px;
+                        min-width: auto;
+                        min-height: auto;
+                      "
+                      >逐片元独立算光照</span
+                    >
+                  </div>
+                </div>
+
+                <!-- 优缺点对比 -->
+                <div class="two-col fragment fade-up" style="gap: 12px; margin: 0">
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #f0fdf4; border-top: 4px solid #22c55e"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #15803d;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ✅ 核心优点
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #166534">
+                      <div>• <strong>高光精准：</strong>小高光亮斑精确定位，杜绝丢失</div>
+                      <div>• <strong>画质真实：</strong>表面极其光滑细腻，无面片伪影</div>
+                      <div>• <strong>工业标准：</strong>现代可编程 GPU 与 PBR 渲染基石</div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="card"
+                    style="padding: 12px 16px; background: #fef2f2; border-top: 4px solid #ef4444"
+                  >
+                    <div
+                      style="
+                        font-weight: 750;
+                        color: #b91c1c;
+                        font-size: 0.72em;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      ❌ 主要局限
+                    </div>
+                    <div style="font-size: 0.64em; line-height: 1.5; color: #991b1b">
+                      <div>• <strong>算力开销大：</strong>逐片元归一化与幂次计算，正比于像素数</div>
+                      <div>• <strong>不改几何轮廓：</strong>多边形边缘剪影仍为折线锯齿</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 12px !important;
+                font-size: 0.68em !important;
+                line-height: 1.5 !important;
+              "
+            >
+              <strong>为什么必须重新归一化？</strong>单位向量线性插值后长度必然小于
+              1，片元着色器必须执行 <code>normalize()</code>，否则漫反射与高光会虚假变暗。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【讲授要点】 1. 为什么归一化必不可少：在片元着色器中，normalize(vNormal)
+              是初学者最容易漏掉的代码行，漏掉会导致光照变暗。 2.
+              几何与着色的界限：特别提醒学生看左图球体轮廓边缘——Phong
+              着色再逼真，球体的边缘依然是锯齿折线！要改变轮廓必须增加多边形几何细分（Tessellation）。
+            </aside>
+          </section>
+          <section id="sec-4-5" data-timing="lesson">
+            <span class="slide-no">#sec-4-5</span>
+            <div class="eyebrow">Pipeline Comparison · Gouraud vs Phong</div>
+            <h2>实践路径对比：Gouraud 与 Phong 在渲染管线上的分流</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="
+                height: 365px !important;
+                margin: 6px auto 10px !important;
+                padding: 4px !important;
+                background: #ffffff !important;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <img
+                src="./images/chap06/ch06-gouraudvsphong.png"
+                alt="Gouraud 与 Phong 两种着色方法在实践路径上的差异流程图"
+                style="width: 100%; height: 100%; object-fit: contain"
+                loading="lazy"
+              />
+            </div>
+            <div class="two-col fragment fade-up" style="gap: 16px; margin: 0 0 10px">
+              <div
+                class="card"
+                style="
+                  padding: 10px 16px;
+                  background: #f0fdf4;
+                  border-top: 3px solid #22c55e;
+                  font-size: 0.62em;
+                  line-height: 1.45;
+                "
+              >
+                <strong style="color: #15803d; font-size: 1.05em"
+                  >Gouraud着色（顶点算颜色 → 面内插值颜色）</strong
+                >
+                <div>
+                  •
+                  <strong>计算前置：</strong
+                  >光照计算在<strong>顶点着色器</strong>完成，片元阶段只做颜色传递，片元开销极低。
+                </div>
+                <div>
+                  •
+                  <strong>实践局限：</strong
+                  >高光峰值落在三角形内部未覆盖顶点时，面内线性插值导致<strong>高光遗漏或钝化</strong>。
+                </div>
+              </div>
+              <div
+                class="card"
+                style="
+                  padding: 10px 16px;
+                  background: #eff6ff;
+                  border-top: 3px solid #0284c7;
+                  font-size: 0.62em;
+                  line-height: 1.45;
+                "
+              >
+                <strong style="color: #0369a1; font-size: 1.05em"
+                  >Phong着色（面内插值法线 → 片元逐像素算光照）</strong
+                >
+                <div>
+                  •
+                  <strong>计算后置：</strong
+                  >面内插值法向量，在<strong>片元着色器</strong>重新归一化并逐像素计算完整光照方程。
+                </div>
+                <div>
+                  •
+                  <strong>画质优势：</strong
+                  >高光圆润集中、定位精确，<strong>高光更准确</strong>；算力开销正比于屏幕像素数。
+                </div>
+              </div>
+            </div>
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 0 !important;
+                font-size: 0.66em !important;
+                line-height: 1.4 !important;
+              "
+            >
+              <strong>管线分水岭：</strong>Gouraud 与 Phong
+              的本质分歧在于<strong>光照计算发生在光栅化之前还是之后</strong>；Phong
+              必须在片元着色器中执行 <code>normalize(vNormal)</code>。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【图解流程讲授要点】 1. 引导学生横向对比图中的五大阶段（输入 → 顶点着色器 →
+              光栅化/插值 → 片元着色器 → 结果）。 2. 抓核心差异：指出黄色“光照”标签所在位置！Gouraud
+              在 VS，Phong 在 FS。 3. 点出插值对象：Gouraud 插值的是颜色（RGB），Phong
+              插值的是几何法向量（Normal）。 4. 解释结果对比：为什么 Gouraud 会“高光可能遗漏”而
+              Phong“高光更准确”——因为高光是高阶幂函数，在线性插值颜色时无法凭空出现中间的波峰。
+            </aside>
+          </section>
+          <section id="sec-4-6" data-timing="lesson">
+            <span class="slide-no">#sec-4-6</span>
+            <div class="eyebrow">Critical distinction · Model vs Algorithm</div>
+            <h2>两个“Phong”回答图形学中完全不同的问题</h2>
+            <div class="two-col" style="gap: 24px; margin-top: 16px; align-items: stretch">
+              <!-- 左侧：Phong 光照模型 -->
+              <div
+                class="card fragment fade-up"
+                style="border-top: 5px solid #0284c7; padding: 20px 24px; background: #ffffff"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.92em; color: #14345e">
+                    ① Phong 光照模型 (Model)
+                  </h3>
+                  <span
+                    style="
+                      font-size: 0.6em;
+                      background: #e0f2fe;
+                      color: #0369a1;
+                      padding: 3px 12px;
+                      border-radius: 10px;
+                      font-weight: 750;
+                    "
+                    >物理公式维度</span
+                  >
+                </div>
+                <div style="font-size: 0.72em; line-height: 1.55; color: #1e293b">
+                  <p style="margin: 0 0 10px; font-weight: 600">
+                    <strong>核心问题：</strong>“空间中某一点的颜色依据什么公式计算？”
+                  </p>
+                  <div
+                    style="
+                      background: #f8fafc;
+                      border: 1px solid #e2e8f0;
+                      border-radius: 12px;
+                      padding: 12px;
+                      font-size: 1.05em;
+                      text-align: center;
+                      color: #153653;
+                      font-weight: 750;
+                      margin: 10px 0;
+                    "
+                  >
+                    \[I = I_a k_a + I_d k_d (\mathbf{l}\cdot\mathbf{n}) + I_s k_s
+                    (\mathbf{r}\cdot\mathbf{v})^s\]
+                  </div>
+                  <div style="margin-top: 10px; font-size: 0.9em; color: #64748b">
+                    <strong>本质：</strong>经验着色方程（环境光 + 漫反射 +
+                    镜面高光）。与执行阶段解耦，CPU、VS、FS 均可计算。
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右侧：Phong 着色算法 -->
+              <div
+                class="card fragment fade-up"
+                style="border-top: 5px solid #10b981; padding: 20px 24px; background: #ffffff"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <h3 style="margin: 0; font-size: 0.92em; color: #14345e">
+                    ② Phong 着色算法 (Algorithm)
+                  </h3>
+                  <span
+                    style="
+                      font-size: 0.6em;
+                      background: #d1fae5;
+                      color: #065f46;
+                      padding: 3px 12px;
+                      border-radius: 10px;
+                      font-weight: 750;
+                    "
+                    >管线策略维度</span
+                  >
+                </div>
+                <div style="font-size: 0.72em; line-height: 1.55; color: #1e293b">
+                  <p style="margin: 0 0 10px; font-weight: 600">
+                    <strong>核心问题：</strong>“多边形面内片元何时获得法向并执行光照计算？”
+                  </p>
+                  <div
+                    style="
+                      background: #f8fafc;
+                      border: 1px solid #e2e8f0;
+                      border-radius: 12px;
+                      padding: 12px;
+                      font-size: 0.95em;
+                      text-align: center;
+                      color: #065f46;
+                      font-weight: 750;
+                      margin: 10px 0;
+                    "
+                  >
+                    顶点法向 \(\mathbf{n}_v \xrightarrow[\text{插值}]{\text{光栅化}}
+                    \mathbf{n}_{\text{interp}} \xrightarrow[\text{归一化}]{\text{FS}}
+                    \mathbf{n}_{\text{frag}} \rightarrow \text{逐像素光照}\)
+                  </div>
+                  <div style="margin-top: 10px; font-size: 0.9em; color: #64748b">
+                    <strong>本质：</strong>管线插值与执行策略。其内部不仅能用 Phong 公式，也能用
+                    Blinn-Phong 或 PBR 公式。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="note-strip fragment fade-up"
+              style="
+                margin-top: 16px !important;
+                font-size: 0.68em !important;
+                line-height: 1.5 !important;
+              "
+            >
+              <strong>正交解耦关系：</strong
+              >光照模型是“计算公式”，着色策略是“执行位置与插值策略”；两者相互独立、正交组合。
+            </div>
+            <aside class="notes">
+              【本组时间建议】三种着色方法：约12分钟，包含本组6页；注意严格控制课堂节奏。
+              【常见学生困惑点】 学生经常会把“Phong 模型”和“Phong 着色”混淆为一个概念。
+              教师可用一个类比澄清：光照模型是“做菜的菜谱配方（环境+漫反+高光）”，而着色策略是“中央厨房提前做好分发（Gouraud）还是在餐桌上现场烹饪（Phong）”。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-5">
+          <section id="sec-5-1" data-timing="lesson">
+            <span class="slide-no">#sec-5-1</span>
+            <div class="eyebrow">Experiment · Controlled comparison</div>
+            <h2>D06-C · 三种着色算法对比显微镜</h2>
+            <div class="lesson-demo fragment fade-up">
+              <div class="eyebrow">Interactive Demo · D06-C</div>
+              <h3>同一模型、同一光源、同一材质下切换三种着色策略</h3>
+              <p>预设观察条件：固定低面数球体与高光指数，轮流选择Flat、Gouraud、Phong。</p>
+              <div class="note-strip">
+                <strong>带着问题操作：</strong>哪些地方出现面片边界？高光是否出现在三个顶点之间？
+              </div>
+              <a
+                class="lesson-demo-link"
+                href="./Chap_demos/chap6/D06-03_球体着色方式对比.html"
+                target="_blank"
+                rel="noopener"
+                >▶ 打开独立 Demo：D06-03 · 三维模型着色方式对比实验台 ↗</a
+              >
+            </div>
+            <aside class="notes">
+              【本组时间建议】对比实验：约10分钟，包含本组4页；注意严格控制课堂节奏。 【D06-03
+              Demo复用指导】复用本课创建的 D06-03 WebGL2 实验台（线框、Flat、Gouraud、Phong
+              同屏四视口对比），重点切换“观察面片差异”与“观察高光差异”预设，核验变量控制。
+            </aside>
+          </section>
+          <section id="sec-5-2" data-timing="lesson">
+            <span class="slide-no">#sec-5-2</span>
+            <div class="eyebrow">Experiment · One-factor</div>
+            <h2>控制变量：比较才有解释力</h2>
+            <ul class="lesson-list">
+              <li class="fragment fade-up">① 固定网格层级，只改变着色策略。</li>
+              <li class="fragment fade-up">② 固定着色策略，只增加三角形数量。</li>
+              <li class="fragment fade-up">③ 固定网格与策略，只移动光源或改变高光指数。</li>
+            </ul>
+            <div class="note-strip fragment fade-up">
+              不要同时改变网格精度、光源和着色方式后再归因。
+            </div>
+            <aside class="notes">
+              【本组时间建议】对比实验：约10分钟，包含本组4页；注意严格控制课堂节奏。
+            </aside>
+          </section>
+          <section id="sec-5-3" data-timing="lesson">
+            <span class="slide-no">#sec-5-3</span>
+            <div class="eyebrow">Experiment · Geometry vs Shading</div>
+            <h2>更密的三角形是否等于更好的着色？</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="
+                height: 385px !important;
+                background: #ffffff !important;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 6px !important;
+              "
+            >
+              <img
+                src="./images/chap06/ch06-R06-17.png"
+                alt="R06-17 · 同一球面不同细分层级"
+                loading="lazy"
+                style="width: 100%; height: 100%; object-fit: contain"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              几何细分改善轮廓与曲率近似；法向量和插值策略改善光照的平滑表现，二者作用不同。
+            </div>
+            <aside class="notes">
+              【本组时间建议】对比实验：约10分钟，包含本组4页；注意严格控制课堂节奏。 【素材 R06-17
+              导学要点】 1. 观察上半球（线框网格）：从 80 面、320 面到 1280
+              面，随着几何细分提升，多边形离散面片对理想连续球面的逼近程度显著提高。 2.
+              观察下半球（着色与边缘）：在同一光源、同一材质、同一着色策略下，网格越密，外轮廓折角越小，边缘越接近真正的平滑圆弧。
+              3.
+              核心分界点：着色插值算法只能改善内部明暗过渡，要真正消除外边缘锯齿折角、改善几何剪影轮廓，必须依靠多边形几何细分（Tessellation）。
+            </aside>
+          </section>
+          <section id="sec-5-4" data-timing="lesson">
+            <span class="slide-no">#sec-5-4</span>
+            <div class="eyebrow">Reason · Highlight missed</div>
+            <h2>Gouraud为什么可能错过面内高光？</h2>
+            <div
+              class="media-shell fragment fade-up"
+              style="
+                height: 385px !important;
+                background: #ffffff !important;
+                border: 1px solid var(--line);
+                border-radius: 16px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 6px !important;
+              "
+            >
+              <img
+                src="./images/chap06/ch06-R06-18.png"
+                alt="R06-18 · 三角形内部高光峰值示意"
+                loading="lazy"
+                style="width: 100%; height: 100%; object-fit: contain"
+              />
+            </div>
+            <div class="note-strip fragment fade-up">
+              这是着色计算位置与非线性高光函数共同造成的结果，不是“GPU忘了插值”。
+            </div>
+            <aside class="notes">
+              【本组时间建议】对比实验：约10分钟，包含本组4页；注意严格控制课堂节奏。 【素材 R06-18
+              导学要点】 1. 观察左图（Gouraud）：三角形三个顶点 A、B、C
+              处的法线均未与反射光矢量对齐，导致三个顶点计算出的高光均为零（顶点较暗）。面内做双线性颜色插值只能得到全暗结果，理论上存在于面内
+              P 点的高光峰值被彻底遗漏！ 2. 观察右图（Phong）：在光栅化阶段插值的是法向量，P
+              点获得正确的插值法向量后，在片元着色器中独立计算高光公式，成功捕获并渲染出亮丽的高光亮斑。
+              3. 认知跃迁：强调“顶点较暗不代表面内没有高光”，高光是高阶幂函数
+              (r·v)^n，非线性的极值无法通过线性颜色插值产生。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-6">
+          <section id="sec-6-1" data-timing="lesson">
+            <span class="slide-no">#sec-6-1</span>
+            <div class="eyebrow">Comparison</div>
+            <h2>三种方法：输入、插值与成本</h2>
+            <div class="three-col">
+              <div class="card fragment fade-up">
+                <h3>Flat</h3>
+                <p>面常量近似；保留明显棱角。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Gouraud</h3>
+                <p>顶点计算颜色；片元插值。</p>
+              </div>
+              <div class="card fragment fade-up">
+                <h3>Phong</h3>
+                <p>插值法向量；逐片元求光照。</p>
+              </div>
+            </div>
+            <div class="note-strip fragment fade-up">
+              视觉质量与计算量有权衡；不同网格密度与场景会改变实际差异。
+            </div>
+            <aside class="notes">
+              【本组时间建议】策略选择与应用：约8分钟，包含本组5页；注意严格控制课堂节奏。
+            </aside>
+          </section>
+          <section id="sec-6-2" data-timing="lesson">
+            <span class="slide-no">#sec-6-2</span>
+            <div class="eyebrow">Interactive Quiz · Curvature & Visual Quality</div>
+            <h2>课堂测验 ① · 高曲率表面的视觉平滑度与剪影特征</h2>
+            <div class="question-card interactive-quiz fragment fade-up" style="margin-top: 10px">
+              <div
+                class="q"
+                style="font-weight: 700; color: #14345e; font-size: 1.02em; margin-bottom: 12px"
+              >
+                Q1. 在处理高曲率物体表面（如强弯曲管道、茶壶流线部位）时，比较 Gouraud 着色与 Phong
+                着色的视觉表现，下列哪项判断最准确？
+              </div>
+              <div class="answers">
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">A</span>
+                  <span
+                    >Gouraud
+                    着色因计算量小，能自动消除高曲率表面的剪影边（Silhouette）锯齿，使整个模型几何轮廓平滑</span
+                  >
+                </div>
+                <div class="option-item" data-correct="true">
+                  <span class="opt-badge">B</span>
+                  <span
+                    >Phong 着色因逐片元插值法向量使曲面看起来更平滑；而 Gouraud
+                    易产生明暗突变与折棱，且两者均不能把几何网格折线剪影变成平滑曲线</span
+                  >
+                </div>
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">C</span>
+                  <span
+                    >高曲率表面上 Phong
+                    着色的光照计算会发散，产生强烈的马赫带明暗阶跃，平滑度反而劣于 Gouraud</span
+                  >
+                </div>
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">D</span>
+                  <span
+                    >两者在高曲率表面的高光分布完全相同，差异仅体现在漫反射背景颜色微弱差异上</span
+                  >
+                </div>
+              </div>
+              <div class="quiz-feedback">
+                <div
+                  style="font-weight: 750; color: #065f46; font-size: 1.05em; margin-bottom: 6px"
+                >
+                  ✓ 正确答案：B
+                </div>
+                <div style="color: #1e293b; font-size: 0.92em; line-height: 1.55">
+                  <div>
+                    • <strong>法向量插值优势：</strong>高曲率表面法向剧烈偏转，Phong
+                    着色对法向量逐片元插值并归一化，能精准跟踪表面弯曲，保持高光和明暗圆润平滑；Gouraud
+                    仅线性插值顶点颜色，易出现明暗突变与折棱。
+                  </div>
+                  <div>
+                    •
+                    <strong>着色与几何的本质界限：</strong
+                    >逐片元着色改善的是表面内部明暗，<strong>多边形外边缘剪影（Silhouette）始终由几何三角形网格决定</strong>，要消除外轮廓折线必须增加网格细分。
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; display: flex; justify-content: flex-end">
+                <button type="button" class="toggle-answer-btn">💡 点击显示/隐藏答案与解析</button>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】策略选择与应用：约8分钟，包含本组5页；注意严格控制课堂节奏。
+              【课堂测验 ① 导学要点】 1. 启发学生结合 D06-03 演示台中的 Torus Knot（环面结）和
+              Teapot（茶壶）：引导学生看弯曲管道处的明暗与高光。 2. 核心考点：Phong
+              着色为什么在高曲率处更光滑（片元归一化法向量）；Gouraud
+              为什么易产生剪影棱角伪影（顶点颜色欠采样）。 3. 特别强调陷阱选项
+              A：区分“曲面内部明暗光滑”与“几何外轮廓剪影边（Silhouette）”。
+            </aside>
+          </section>
+          <section id="sec-6-3" data-timing="lesson">
+            <span class="slide-no">#sec-6-3</span>
+            <div class="eyebrow">Interactive Quiz · Computation & Real-time Feasibility</div>
+            <h2>课堂测验 ② · 管线计算量分布与现代实时性</h2>
+            <div class="question-card interactive-quiz fragment fade-up" style="margin-top: 10px">
+              <div
+                class="q"
+                style="font-weight: 700; color: #14345e; font-size: 1.02em; margin-bottom: 12px"
+              >
+                Q2. 从 GPU 渲染管线的计算阶段与计算开销来看，关于 Gouraud 着色与 Phong
+                着色的计算量及实时渲染性能，下列说法正确的是？
+              </div>
+              <div class="answers">
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">A</span>
+                  <span
+                    >Gouraud 着色计算量大于 Phong 着色，因为光栅化插值 RGB
+                    颜色的浮点开销高于法向量归一化</span
+                  >
+                </div>
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">B</span>
+                  <span
+                    >Phong 着色主要在顶点着色器（Vertex
+                    Shader）中完成，计算开销与屏幕分辨率无关</span
+                  >
+                </div>
+                <div class="option-item" data-correct="true">
+                  <span class="opt-badge">C</span>
+                  <span
+                    >Phong 着色主要在片元着色器（Fragment Shader）逐像素求解完整光照，计算量显著大于
+                    Gouraud，但在现代可编程 GPU 算力下完全可进行实时计算</span
+                  >
+                </div>
+                <div class="option-item" data-correct="false">
+                  <span class="opt-badge">D</span>
+                  <span
+                    >Phong
+                    着色因包含高阶幂指数运算开销过大，目前只能用于离线渲染农场，完全无法在浏览器或游戏中实时交互</span
+                  >
+                </div>
+              </div>
+              <div class="quiz-feedback">
+                <div
+                  style="font-weight: 750; color: #065f46; font-size: 1.05em; margin-bottom: 6px"
+                >
+                  ✓ 正确答案：C
+                </div>
+                <div style="color: #1e293b; font-size: 0.92em; line-height: 1.55">
+                  <div>
+                    • <strong>计算量阶段分布：</strong>Gouraud
+                    的光照计算发生在顶点着色器（正比于顶点数 \(V\)）；Phong
+                    的光照计算发生在片元着色器（正比于屏幕片元数
+                    \(F\)）。因典型场景中覆盖像素数远超顶点数（\(F \gg
+                    V\)），且片元着色器需逐点归一化和计算高光幂次，<strong
+                      >Phong 计算量显著大于 Gouraud</strong
+                    >。
+                  </div>
+                  <div>
+                    • <strong>现代 GPU 实时性：</strong>现代 GPU 拥有上千个 SIMD
+                    并行片元处理单元，即使在高分辨率下执行逐片元光照计算也能轻松达到 60~120+
+                    FPS，Phong 着色早已是实时三维交互的通用工业基石。
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; display: flex; justify-content: flex-end">
+                <button type="button" class="toggle-answer-btn">💡 点击显示/隐藏答案与解析</button>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】策略选择与应用：约8分钟，包含本组5页；注意严格控制课堂节奏。
+              【课堂测验 ② 导学要点】 1. 考查学生对 GPU 管线工作负荷分配的理解：顶点少 vs
+              像素多（全高清 1080p 有 200 万像素点）。 2. 澄清历史认知偏差：20 世纪 70~80 年代 Phong
+              曾被认为是慢速算法，但现代 GPU 并行架构彻底打破了算力瓶颈。 3. 点题：为下一节 WebGL2
+              代码编写（在 Fragment Shader 中实现光照）做好理论与算力信心的铺垫。
+            </aside>
+          </section>
+          <section id="sec-6-4" data-timing="lesson">
+            <span class="slide-no">#sec-6-4</span>
+            <div class="eyebrow">Transfer · MED × CG</div>
+            <h2>医学器械的平面与球面，是否应相同处理？</h2>
+            <p class="lead fragment fade-up">
+              在带尖锐边缘的器械和平滑骨骼表面中，法向量设计与着色策略未必相同。
+            </p>
+            <div class="question-card fragment fade-up">
+              <div class="q">硬质器械的明显折线边缘，是否应该把两侧面的法向量无条件平均？</div>
+              <div class="answers">
+                <span>A. 应该，越平滑越好</span><span>B. 不应该，否则可能掩盖真实尖锐边缘</span>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】策略选择与应用：约8分钟，包含本组5页；注意严格控制课堂节奏。
+              【课堂题参考答案】B；尖锐边缘可保留分离的法向量。。先让学生判断并解释，再由教师揭示。
+            </aside>
+          </section>
+          <section id="sec-6-5" data-timing="lesson">
+            <span class="slide-no">#sec-6-5</span>
+            <div class="eyebrow">Connection · Next lesson</div>
+            <h2>WebGL2流水线：颜色在哪一段被计算？</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">顶点输入</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">顶点着色器</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">光栅化插值</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">片元着色器</span>
+            </div>
+            <div class="note-strip fragment fade-up">
+              下课时把三种方法落到真正的GLSL ES 3.00代码和参数传递上。
+            </div>
+            <aside class="notes">
+              【本组时间建议】策略选择与应用：约8分钟，包含本组5页；注意严格控制课堂节奏。
+            </aside>
+          </section>
+        </section>
+        <section id="sec-7">
+          <section id="sec-7-1" data-timing="lesson">
+            <span class="slide-no">#sec-7-1</span>
+            <div class="eyebrow">Summary</div>
+            <h2>本课小结：什么决定网格的明暗过渡？</h2>
+            <div class="flow">
+              <span class="node fragment fade-up">网格与法向量</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">光照计算位置</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">插值对象</span
+              ><span class="arrow fragment fade-up">→</span
+              ><span class="node fragment fade-up">片元颜色</span>
+            </div>
+            <aside class="notes">
+              【本组时间建议】总结与Exit Ticket：约3分钟，包含本组2页；注意严格控制课堂节奏。
+            </aside>
+          </section>
+          <section id="sec-7-2" data-timing="lesson">
+            <span class="slide-no">#sec-7-2</span>
+            <div class="eyebrow">Check for Understanding</div>
+            <h2>Exit Ticket · 判别着色策略</h2>
+            <div class="question-card fragment fade-up">
+              <div class="q">哪种方法是“插值法向量，再逐片元计算光照”？</div>
+              <div class="answers">
+                <span>A. Flat</span><span>B. Gouraud</span><span>C. Phong shading</span>
+              </div>
+            </div>
+            <aside class="notes">
+              【本组时间建议】总结与Exit Ticket：约3分钟，包含本组2页；注意严格控制课堂节奏。
+              【课堂题参考答案】C。。先让学生判断并解释，再由教师揭示。
+            </aside>
+          </section>
+        </section>
+      </div>
+    </div>
+    <script src="/vendor/reveal/reveal.js"></script>
+    <script src="/vendor/reveal/zoom/zoom.js"></script>
+    <script src="/vendor/reveal/notes/notes.js"></script>
+    <script src="/vendor/reveal/search/search.js"></script>
+    <script src="/vendor/reveal/highlight/highlight.js"></script>
+    <script src="/vendor/reveal/math/math.js"></script>
+    <script>
+      function fallbackMedia(el) {
+        const prompt = el.dataset.prompt || '请替换为与本页主题一致的高清教学插图。';
+        const title = el.dataset.fallback || '素材占位';
+        const purpose = el.dataset.purpose || '';
+        const shell = el.closest('.media-shell') || el.parentElement;
+        shell.innerHTML = `<div class="media-placeholder"><div class="icon">◫</div><strong>${title}</strong><small>${purpose}</small><small>生成/替换提示词：${prompt}</small></div>`;
+      }
+      document.querySelectorAll('img[data-fallback],video[data-fallback]').forEach((el) => {
+        el.addEventListener('error', () => fallbackMedia(el), { once: true });
+        if (el.complete && el.naturalWidth === 0) fallbackMedia(el);
+      });
+      document.querySelectorAll('.current-date').forEach((el) => {
+        el.textContent = new Date().toLocaleDateString('sv-SE');
+      });
+
+      // 课堂交互式测验选项点击与解析折叠
+      document.querySelectorAll('.interactive-quiz').forEach((quiz) => {
+        const options = quiz.querySelectorAll('.option-item');
+        const feedback = quiz.querySelector('.quiz-feedback');
+        const toggleBtn = quiz.querySelector('.toggle-answer-btn');
+
+        options.forEach((opt) => {
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCorrect = opt.dataset.correct === 'true';
+            options.forEach((o) => o.classList.remove('correct', 'wrong'));
+            if (isCorrect) {
+              opt.classList.add('correct');
+            } else {
+              opt.classList.add('wrong');
+              const correctOpt = quiz.querySelector('.option-item[data-correct="true"]');
+              if (correctOpt) correctOpt.classList.add('correct');
+            }
+            if (feedback) feedback.classList.add('show');
+          });
+        });
+
+        if (toggleBtn) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (feedback) {
+              feedback.classList.toggle('show');
+              const correctOpt = quiz.querySelector('.option-item[data-correct="true"]');
+              if (feedback.classList.contains('show') && correctOpt) {
+                correctOpt.classList.add('correct');
+              }
+            }
+          });
+        }
+      });
+      Reveal.initialize({
+        width: 1600,
+        height: 900,
+        margin: 0.055,
+        minScale: 0.2,
+        maxScale: 1.5,
+        defaultTiming: 120,
+        totalTime: 2400,
+        controls: true,
+        progress: true,
+        slideNumber: 'c/t',
+        center: true,
+        transition: 'fade',
+        backgroundTransition: 'fade',
+        hash: false,
+        plugins: [RevealZoom, RevealNotes, RevealSearch, RevealHighlight, RevealMath.KaTeX],
+        katex: {
+          version: 'latest',
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true },
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        },
+      });
+    </script>
+  </body>
+</html>

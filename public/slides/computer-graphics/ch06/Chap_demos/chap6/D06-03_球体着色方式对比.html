@@ -1,0 +1,2051 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D06-03 · 三维模型着色方式对比实验台 (Wireframe / Flat / Gouraud / Phong)</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --navy: #153653;
+        --cyan: #287f9b;
+        --cyan-wire: #1e556e;
+        --slate: #597083;
+        --line: #dce7ee;
+        --panel-bg: #f8fafc;
+        --card-border: rgba(21, 54, 83, 0.12);
+        --accent: #0284c7;
+        --accent-light: #e0f2fe;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        color: var(--navy);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+          'Noto Sans SC', sans-serif;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+      }
+
+      html {
+        position: relative;
+        overflow: hidden;
+      }
+
+      body {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: center center;
+      }
+
+      /* 顶部标题与说明区 */
+      header {
+        flex-shrink: 0;
+        padding: 10px 24px 8px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-main h1 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--navy);
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .header-main h1 .badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--cyan);
+        background: var(--accent-light);
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(2, 132, 199, 0.25);
+      }
+
+      .header-main p {
+        font-size: 0.8rem;
+        color: var(--slate);
+        margin-top: 2px;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .hint-chip {
+        font-size: 0.76rem;
+        color: var(--slate);
+        background: #f1f5f9;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+      }
+
+      /* 中间四列视口标题栏与Canvas容器 */
+      .viewport-headers {
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .v-header-col {
+        padding: 10px 14px;
+        text-align: center;
+        border-right: 1px solid var(--line);
+        position: relative;
+      }
+
+      .v-header-col:last-child {
+        border-right: none;
+      }
+
+      .v-header-col h2 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--navy);
+        margin-bottom: 3px;
+        letter-spacing: 0.2px;
+      }
+
+      .v-header-col p {
+        font-size: 0.84rem;
+        color: var(--slate);
+        line-height: 1.35;
+      }
+
+      /* 渲染舞台 */
+      .stage-container {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      canvas#glCanvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+      }
+
+      canvas#glCanvas:active {
+        cursor: grabbing;
+      }
+
+      /* 四个区域的视觉分割虚线 */
+      .viewport-dividers {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        pointer-events: none;
+      }
+
+      .v-divider-col {
+        border-right: 1px solid rgba(220, 231, 238, 0.75);
+        height: 100%;
+      }
+
+      .v-divider-col:last-child {
+        border-right: none;
+      }
+
+      /* 底部共享控制栏 */
+      footer {
+        flex-shrink: 0;
+        background: var(--panel-bg);
+        border-top: 1px solid var(--line);
+        padding: 10px 24px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .controls-grid {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 20px;
+        justify-content: space-between;
+      }
+
+      .ctrl-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: var(--navy);
+      }
+
+      .ctrl-group label {
+        font-weight: 600;
+        white-space: nowrap;
+        color: var(--navy);
+      }
+
+      .ctrl-val {
+        font-family: Consolas, monospace;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--cyan);
+        min-width: 32px;
+      }
+
+      .form-select {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        font-weight: 650;
+        color: var(--navy);
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.15s ease;
+      }
+
+      .form-select:hover,
+      .form-select:focus {
+        border-color: var(--cyan);
+        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+      }
+
+      .color-picker-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      input[type='color'] {
+        -webkit-appearance: none;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        background: none;
+        padding: 0;
+      }
+
+      input[type='color']::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      input[type='color']::-webkit-color-swatch {
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      }
+
+      .color-presets {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .color-swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        padding: 0;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .color-swatch:hover {
+        transform: scale(1.15);
+      }
+
+      .color-swatch.active {
+        box-shadow: 0 0 0 2px var(--cyan);
+        transform: scale(1.1);
+      }
+
+      input[type='range'] {
+        width: 90px;
+        height: 6px;
+        background: #cbd5e1;
+        border-radius: 4px;
+        outline: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+      }
+
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--cyan);
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
+
+      /* 单选标签组 */
+      .btn-group {
+        display: inline-flex;
+        background: #e2e8f0;
+        padding: 2px;
+        border-radius: 8px;
+        gap: 2px;
+      }
+
+      .btn-group button {
+        border: none;
+        background: transparent;
+        padding: 4px 9px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: var(--slate);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-group button.active {
+        background: #ffffff;
+        color: var(--navy);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 快捷预设按钮 */
+      .preset-btn {
+        border: 1px solid rgba(2, 132, 199, 0.3);
+        background: #ffffff;
+        color: var(--navy);
+        padding: 4px 10px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 650;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.15s ease;
+      }
+
+      .preset-btn:hover {
+        background: var(--accent-light);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn-reset {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: var(--slate);
+        padding: 4px 10px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .btn-reset:hover {
+        background: #f1f5f9;
+        color: var(--navy);
+      }
+
+      /* 底部教学提示条 */
+      .teach-tips {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px dashed var(--line);
+        padding-top: 6px;
+        font-size: 0.74rem;
+        color: var(--slate);
+      }
+
+      .teach-tips .tip-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .teach-tips .tip-item strong {
+        color: var(--navy);
+      }
+
+      /* 错误提示 */
+      #errorModal {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.95);
+        z-index: 100;
+        padding: 40px;
+        text-align: center;
+      }
+
+      #errorModal h2 {
+        color: #b91c1c;
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+      }
+
+      #errorModal p {
+        color: #475569;
+        font-size: 0.95rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 顶部标题栏 -->
+    <header>
+      <div class="header-main">
+        <h1>
+          三维模型着色方式对比实验台
+          <span class="badge">同一模型 · 同一光照 · 四种着色策略</span>
+        </h1>
+        <p>
+          控制变量法：四区域共享相同几何顶点、法线、相机与光源参数，精确呈现不同着色插值算法的视觉表现
+        </p>
+      </div>
+      <div class="header-actions">
+        <span class="hint-chip">🖱️ 在任意区域左键拖拽旋转模型 ｜ 滚轮微调缩放</span>
+      </div>
+    </header>
+
+    <!-- 四列视口标题栏 -->
+    <div class="viewport-headers">
+      <div class="v-header-col">
+        <h2>1. 线框模型</h2>
+        <p>显示三角形网格结构（拓扑骨架）</p>
+      </div>
+      <div class="v-header-col">
+        <h2>2. 平面着色 (Flat)</h2>
+        <p>每个面计算一次颜色，面内保持一致</p>
+      </div>
+      <div class="v-header-col">
+        <h2>3. Gouraud着色</h2>
+        <p>顶点计算颜色，片元插值颜色</p>
+      </div>
+      <div class="v-header-col">
+        <h2>4. Phong着色</h2>
+        <p>插值法线，逐片元计算颜色</p>
+      </div>
+    </div>
+
+    <!-- 核心渲染舞台 -->
+    <div class="stage-container" id="stageContainer">
+      <canvas id="glCanvas"></canvas>
+      <div class="viewport-dividers">
+        <div class="v-divider-col"></div>
+        <div class="v-divider-col"></div>
+        <div class="v-divider-col"></div>
+        <div class="v-divider-col"></div>
+      </div>
+      <div id="errorModal">
+        <h2>⚠️ WebGL2 初始化失败</h2>
+        <p>
+          您的浏览器或显卡驱动暂不支持原生 WebGL2。请使用最新版 Microsoft Edge、Google Chrome 或
+          Firefox 运行本教学实验台。
+        </p>
+      </div>
+    </div>
+
+    <!-- 底部共享交互控制区 -->
+    <footer>
+      <div class="controls-grid">
+        <!-- 模型选择 -->
+        <div class="ctrl-group">
+          <label for="modelSelect">三维模型:</label>
+          <select id="modelSelect" class="form-select">
+            <option value="sphere" selected>Sphere (球体)</option>
+            <option value="torusKnot">Torus Knot (环面结)</option>
+            <option value="teapot">Teapot (犹他茶壶)</option>
+          </select>
+        </div>
+
+        <!-- 材质颜色 -->
+        <div class="ctrl-group">
+          <label for="colorPicker">材质颜色:</label>
+          <div class="color-picker-wrap">
+            <input type="color" id="colorPicker" value="#287f9b" title="自定义颜色" />
+            <div class="color-presets">
+              <button
+                type="button"
+                class="color-swatch active"
+                data-color="#287f9b"
+                title="青蓝 (默认)"
+                style="background: #287f9b"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch"
+                data-color="#c05638"
+                title="陶土红"
+                style="background: #c05638"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch"
+                data-color="#1e824c"
+                title="翡翠绿"
+                style="background: #1e824c"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch"
+                data-color="#c68a1e"
+                title="琥珀金"
+                style="background: #c68a1e"
+              ></button>
+              <button
+                type="button"
+                class="color-swatch"
+                data-color="#8a9ba8"
+                title="珍珠灰"
+                style="background: #8a9ba8"
+              ></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 细分控制 -->
+        <div class="ctrl-group">
+          <label for="subdivSlider">网格细分:</label>
+          <input type="range" id="subdivSlider" min="0" max="4" step="1" value="2" />
+          <span class="ctrl-val" id="subdivLabel">2级 (320面 / 162顶)</span>
+        </div>
+
+        <!-- 光源方位角 -->
+        <div class="ctrl-group">
+          <label for="azimuthSlider">光源方位:</label>
+          <input type="range" id="azimuthSlider" min="-180" max="180" step="5" value="-35" />
+          <span class="ctrl-val" id="azimuthLabel">-35°</span>
+        </div>
+
+        <!-- 光源仰角 -->
+        <div class="ctrl-group">
+          <label for="elevationSlider">光源仰角:</label>
+          <input type="range" id="elevationSlider" min="-90" max="90" step="5" value="40" />
+          <span class="ctrl-val" id="elevationLabel">40°</span>
+        </div>
+
+        <!-- 高光指数 -->
+        <div class="ctrl-group">
+          <label for="shininessSlider">高光指数 n:</label>
+          <input type="range" id="shininessSlider" min="8" max="128" step="4" value="64" />
+          <span class="ctrl-val" id="shininessLabel">64</span>
+        </div>
+
+        <!-- 镜面强度 -->
+        <div class="ctrl-group">
+          <label for="ksSlider">镜面强度 ks:</label>
+          <input type="range" id="ksSlider" min="0.0" max="1.0" step="0.05" value="0.65" />
+          <span class="ctrl-val" id="ksLabel">0.65</span>
+        </div>
+
+        <!-- 光照分量模式 -->
+        <div class="ctrl-group">
+          <label>显示分量:</label>
+          <div class="btn-group" id="displayModeGroup">
+            <button type="button" class="active" data-mode="0">完整光照</button>
+            <button type="button" data-mode="1">仅漫反射</button>
+            <button type="button" data-mode="2">仅镜面反射</button>
+          </div>
+        </div>
+
+        <!-- 自动旋转与重置 -->
+        <div class="ctrl-group">
+          <label style="display: flex; align-items: center; gap: 5px; cursor: pointer">
+            <input type="checkbox" id="autoRotateCheck" />
+            <span>自动旋转</span>
+          </label>
+        </div>
+
+        <!-- 教学预设 -->
+        <div class="ctrl-group" style="gap: 8px">
+          <button type="button" class="preset-btn" id="presetFacet">🔍 观察面片差异</button>
+          <button type="button" class="preset-btn" id="presetSpecular">✨ 观察高光差异</button>
+          <button type="button" class="btn-reset" id="resetBtn">↺ 重置参数</button>
+        </div>
+      </div>
+
+      <!-- 底部教学指导提示 -->
+      <div class="teach-tips">
+        <div class="tip-item">
+          <span>💡</span>
+          <span
+            ><strong>教学核心：</strong
+            >同一模型、同一光照：差别在于计算位置（面心/顶点/片元）与插值对象（法线/颜色）。</span
+          >
+        </div>
+        <div class="tip-item">
+          <span>⚠️</span>
+          <span
+            ><strong>几何本质：</strong
+            >细分越高差异越小；逐片元着色改善的是表面明暗过渡与高光质量，<strong>绝不改变几何多边形轮廓</strong>。</span
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // ==========================================
+      // 1. WebGL2 上下文与矩阵数学工具
+      // ==========================================
+      const canvas = document.getElementById('glCanvas');
+      const gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+
+      if (!gl) {
+        document.getElementById('errorModal').style.display = 'block';
+        throw new Error('WebGL2 not supported');
+      }
+
+      // 4x4 矩阵基础计算
+      const mat4 = {
+        create() {
+          return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        },
+        identity(out) {
+          out.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+          return out;
+        },
+        perspective(out, fovyRad, aspect, near, far) {
+          const f = 1.0 / Math.tan(fovyRad / 2);
+          const nf = 1 / (near - far);
+          out[0] = f / aspect;
+          out[1] = 0;
+          out[2] = 0;
+          out[3] = 0;
+          out[4] = 0;
+          out[5] = f;
+          out[6] = 0;
+          out[7] = 0;
+          out[8] = 0;
+          out[9] = 0;
+          out[10] = (far + near) * nf;
+          out[11] = -1;
+          out[12] = 0;
+          out[13] = 0;
+          out[14] = 2 * far * near * nf;
+          out[15] = 0;
+          return out;
+        },
+        lookAt(out, eye, center, up) {
+          let x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+          let eyex = eye[0],
+            eyey = eye[1],
+            eyez = eye[2];
+          let upx = up[0],
+            upy = up[1],
+            upz = up[2];
+          let centerx = center[0],
+            centery = center[1],
+            centerz = center[2];
+
+          z0 = eyex - centerx;
+          z1 = eyey - centery;
+          z2 = eyez - centerz;
+          len = 1 / Math.hypot(z0, z1, z2);
+          z0 *= len;
+          z1 *= len;
+          z2 *= len;
+
+          x0 = upy * z2 - upz * z1;
+          x1 = upz * z0 - upx * z2;
+          x2 = upx * z1 - upy * z0;
+          len = Math.hypot(x0, x1, x2);
+          if (!len) {
+            x0 = 0;
+            x1 = 0;
+            x2 = 0;
+          } else {
+            len = 1 / len;
+            x0 *= len;
+            x1 *= len;
+            x2 *= len;
+          }
+
+          y0 = z1 * x2 - z2 * x1;
+          y1 = z2 * x0 - z0 * x2;
+          y2 = z0 * x1 - z1 * x0;
+          len = Math.hypot(y0, y1, y2);
+          if (!len) {
+            y0 = 0;
+            y1 = 0;
+            y2 = 0;
+          } else {
+            len = 1 / len;
+            y0 *= len;
+            y1 *= len;
+            y2 *= len;
+          }
+
+          out[0] = x0;
+          out[1] = y0;
+          out[2] = z0;
+          out[3] = 0;
+          out[4] = x1;
+          out[5] = y1;
+          out[6] = z1;
+          out[7] = 0;
+          out[8] = x2;
+          out[9] = y2;
+          out[10] = z2;
+          out[11] = 0;
+          out[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+          out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+          out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+          out[15] = 1;
+          return out;
+        },
+        fromEuler(out, pitch, yaw) {
+          const cp = Math.cos(pitch),
+            sp = Math.sin(pitch);
+          const cy = Math.cos(yaw),
+            sy = Math.sin(yaw);
+          out[0] = cy;
+          out[1] = sp * sy;
+          out[2] = -cp * sy;
+          out[3] = 0;
+
+          out[4] = 0;
+          out[5] = cp;
+          out[6] = sp;
+          out[7] = 0;
+
+          out[8] = sy;
+          out[9] = -sp * cy;
+          out[10] = cp * cy;
+          out[11] = 0;
+
+          out[12] = 0;
+          out[13] = 0;
+          out[14] = 0;
+          out[15] = 1;
+          return out;
+        },
+      };
+
+      // ==========================================
+      // 2. WebGL2 编译连接辅助工具
+      // ==========================================
+      function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source.trim());
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          const err = gl.getShaderInfoLog(shader);
+          gl.deleteShader(shader);
+          console.error('Shader compile error:', err, source);
+          throw new Error('Shader compilation failed: ' + err);
+        }
+        return shader;
+      }
+
+      function createProgram(gl, vsSource, fsSource) {
+        const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+        const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          const err = gl.getProgramInfoLog(prog);
+          gl.deleteProgram(prog);
+          console.error('Program link error:', err);
+          throw new Error('Program link failed: ' + err);
+        }
+        return prog;
+      }
+
+      // ==========================================
+      // 3. 四种教学着色模式的 GLSL ES 3.00 着色器
+      // ==========================================
+
+      // A. 线框模型
+      const wireVS = `#version 300 es
+    layout(location = 0) in vec3 aPosition;
+    uniform mat4 uModel;
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+    void main() {
+      gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
+    }`;
+
+      const wireFS = `#version 300 es
+    precision highp float;
+    uniform vec4 uColor;
+    out vec4 fragColor;
+    void main() {
+      fragColor = uColor;
+    }`;
+
+      // B. 平面着色 (Flat Shading)
+      const flatVS = `#version 300 es
+    layout(location = 0) in vec3 aPosition;
+    layout(location = 1) in vec3 aFaceNormal;
+    layout(location = 2) in vec3 aFaceCenter;
+
+    uniform mat4 uModel;
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+
+    uniform vec3 uLightDir;
+    uniform vec3 uViewPos;
+    uniform vec3 uBaseColor;
+    uniform float uKa;
+    uniform float uKd;
+    uniform float uKs;
+    uniform float uShininess;
+    uniform int uDisplayMode;
+
+    flat out vec3 vColor;
+
+    void main() {
+      vec4 worldPos = uModel * vec4(aPosition, 1.0);
+      vec4 centerWorld = uModel * vec4(aFaceCenter, 1.0);
+      vec3 N = normalize(mat3(uModel) * aFaceNormal);
+
+      vec3 L = normalize(uLightDir);
+      vec3 V = normalize(uViewPos - centerWorld.xyz);
+
+      vec3 ambient = uKa * uBaseColor;
+      float NdotL = max(dot(N, L), 0.0);
+      vec3 diffuse = vec3(0.0);
+      vec3 specular = vec3(0.0);
+
+      if (NdotL > 0.0) {
+        diffuse = uKd * uBaseColor * NdotL;
+        vec3 R = reflect(-L, N);
+        float RdotV = max(dot(R, V), 0.0);
+        specular = vec3(uKs * pow(RdotV, uShininess));
+      }
+
+      if (uDisplayMode == 0) {
+        vColor = ambient + diffuse + specular;
+      } else if (uDisplayMode == 1) {
+        vColor = ambient + diffuse;
+      } else if (uDisplayMode == 2) {
+        vColor = specular;
+      }
+
+      gl_Position = uProjection * uView * worldPos;
+    }`;
+
+      const flatFS = `#version 300 es
+    precision highp float;
+    flat in vec3 vColor;
+    out vec4 fragColor;
+    void main() {
+      fragColor = vec4(vColor, 1.0);
+    }`;
+
+      // C. Gouraud 着色
+      const gouraudVS = `#version 300 es
+    layout(location = 0) in vec3 aPosition;
+    layout(location = 1) in vec3 aNormal;
+
+    uniform mat4 uModel;
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+
+    uniform vec3 uLightDir;
+    uniform vec3 uViewPos;
+    uniform vec3 uBaseColor;
+    uniform float uKa;
+    uniform float uKd;
+    uniform float uKs;
+    uniform float uShininess;
+    uniform int uDisplayMode;
+
+    out vec3 vColor;
+
+    void main() {
+      vec4 worldPos = uModel * vec4(aPosition, 1.0);
+      vec3 N = normalize(mat3(uModel) * aNormal);
+
+      vec3 L = normalize(uLightDir);
+      vec3 V = normalize(uViewPos - worldPos.xyz);
+
+      vec3 ambient = uKa * uBaseColor;
+      float NdotL = max(dot(N, L), 0.0);
+      vec3 diffuse = vec3(0.0);
+      vec3 specular = vec3(0.0);
+
+      if (NdotL > 0.0) {
+        diffuse = uKd * uBaseColor * NdotL;
+        vec3 R = reflect(-L, N);
+        float RdotV = max(dot(R, V), 0.0);
+        specular = vec3(uKs * pow(RdotV, uShininess));
+      }
+
+      if (uDisplayMode == 0) {
+        vColor = ambient + diffuse + specular;
+      } else if (uDisplayMode == 1) {
+        vColor = ambient + diffuse;
+      } else if (uDisplayMode == 2) {
+        vColor = specular;
+      }
+
+      gl_Position = uProjection * uView * worldPos;
+    }`;
+
+      const gouraudFS = `#version 300 es
+    precision highp float;
+    in vec3 vColor;
+    out vec4 fragColor;
+    void main() {
+      fragColor = vec4(vColor, 1.0);
+    }`;
+
+      // D. Phong 着色
+      const phongVS = `#version 300 es
+    layout(location = 0) in vec3 aPosition;
+    layout(location = 1) in vec3 aNormal;
+
+    uniform mat4 uModel;
+    uniform mat4 uView;
+    uniform mat4 uProjection;
+
+    out vec3 vWorldPos;
+    out vec3 vNormal;
+
+    void main() {
+      vec4 worldPos = uModel * vec4(aPosition, 1.0);
+      vWorldPos = worldPos.xyz;
+      vNormal = mat3(uModel) * aNormal;
+      gl_Position = uProjection * uView * worldPos;
+    }`;
+
+      const phongFS = `#version 300 es
+    precision highp float;
+    in vec3 vWorldPos;
+    in vec3 vNormal;
+
+    uniform vec3 uLightDir;
+    uniform vec3 uViewPos;
+    uniform vec3 uBaseColor;
+    uniform float uKa;
+    uniform float uKd;
+    uniform float uKs;
+    uniform float uShininess;
+    uniform int uDisplayMode;
+
+    out vec4 fragColor;
+
+    void main() {
+      vec3 N = normalize(vNormal);
+      vec3 L = normalize(uLightDir);
+      vec3 V = normalize(uViewPos - vWorldPos);
+
+      vec3 ambient = uKa * uBaseColor;
+      float NdotL = max(dot(N, L), 0.0);
+      vec3 diffuse = vec3(0.0);
+      vec3 specular = vec3(0.0);
+
+      if (NdotL > 0.0) {
+        diffuse = uKd * uBaseColor * NdotL;
+        vec3 R = reflect(-L, N);
+        float RdotV = max(dot(R, V), 0.0);
+        specular = vec3(uKs * pow(RdotV, uShininess));
+      }
+
+      vec3 col = vec3(0.0);
+      if (uDisplayMode == 0) {
+        col = ambient + diffuse + specular;
+      } else if (uDisplayMode == 1) {
+        col = ambient + diffuse;
+      } else if (uDisplayMode == 2) {
+        col = specular;
+      }
+
+      fragColor = vec4(col, 1.0);
+    }`;
+
+      // 创建着色器程序
+      const programWire = createProgram(gl, wireVS, wireFS);
+      const programFlat = createProgram(gl, flatVS, flatFS);
+      const programGouraud = createProgram(gl, gouraudVS, gouraudFS);
+      const programPhong = createProgram(gl, phongVS, phongFS);
+
+      // ==========================================
+      // 4. 几何网格通用组装器与三维模型数据
+      // ==========================================
+      const TEAPOT_PATCHES = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 3, 16, 17, 18, 7, 19, 20, 21, 11, 22,
+        23, 24, 15, 25, 26, 27, 18, 28, 29, 30, 21, 31, 32, 33, 24, 34, 35, 36, 27, 37, 38, 39, 30,
+        40, 41, 0, 33, 42, 43, 4, 36, 44, 45, 8, 39, 46, 47, 12, 12, 13, 14, 15, 48, 49, 50, 51, 52,
+        53, 54, 55, 56, 57, 58, 59, 15, 25, 26, 27, 51, 60, 61, 62, 55, 63, 64, 65, 59, 66, 67, 68,
+        27, 37, 38, 39, 62, 69, 70, 71, 65, 72, 73, 74, 68, 75, 76, 77, 39, 46, 47, 12, 71, 78, 79,
+        48, 74, 80, 81, 52, 77, 82, 83, 56, 56, 57, 58, 59, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
+        94, 95, 59, 66, 67, 68, 87, 96, 97, 98, 91, 99, 100, 101, 95, 102, 103, 104, 68, 75, 76, 77,
+        98, 105, 106, 107, 101, 108, 109, 110, 104, 111, 112, 113, 77, 82, 83, 56, 107, 114, 115,
+        84, 110, 116, 117, 88, 113, 118, 119, 92, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+        130, 131, 132, 133, 134, 135, 123, 136, 137, 120, 127, 138, 139, 124, 131, 140, 141, 128,
+        135, 142, 143, 132, 132, 133, 134, 135, 144, 145, 146, 147, 148, 149, 150, 151, 68, 152,
+        153, 154, 135, 142, 143, 132, 147, 155, 156, 144, 151, 157, 158, 148, 154, 159, 160, 68,
+        161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 164, 177,
+        178, 161, 168, 179, 180, 165, 172, 181, 182, 169, 176, 183, 184, 173, 173, 174, 175, 176,
+        185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 176, 183, 184, 173, 188, 197,
+        198, 185, 192, 199, 200, 189, 196, 201, 202, 193, 203, 203, 203, 203, 204, 205, 206, 207,
+        208, 208, 208, 208, 209, 210, 211, 212, 203, 203, 203, 203, 207, 213, 214, 215, 208, 208,
+        208, 208, 212, 216, 217, 218, 203, 203, 203, 203, 215, 219, 220, 221, 208, 208, 208, 208,
+        218, 222, 223, 224, 203, 203, 203, 203, 221, 225, 226, 204, 208, 208, 208, 208, 224, 227,
+        228, 209, 209, 210, 211, 212, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
+        212, 216, 217, 218, 232, 241, 242, 243, 236, 244, 245, 246, 240, 247, 248, 249, 218, 222,
+        223, 224, 243, 250, 251, 252, 246, 253, 254, 255, 249, 256, 257, 258, 224, 227, 228, 209,
+        252, 259, 260, 229, 255, 261, 262, 233, 258, 263, 264, 237, 265, 265, 265, 265, 266, 267,
+        268, 269, 270, 271, 272, 273, 92, 119, 118, 113, 265, 265, 265, 265, 269, 274, 275, 276,
+        273, 277, 278, 279, 113, 112, 111, 104, 265, 265, 265, 265, 276, 280, 281, 282, 279, 283,
+        284, 285, 104, 103, 102, 95, 265, 265, 265, 265, 282, 286, 287, 266, 285, 288, 289, 270, 95,
+        94, 93, 92,
+      ];
+      const TEAPOT_VERTICES = [
+        1.4, 0, 2.4, 1.4, -0.784, 2.4, 0.784, -1.4, 2.4, 0, -1.4, 2.4, 1.337, 0, 2.531, 1.337,
+        -0.749, 2.531, 0.749, -1.337, 2.531, 0, -1.337, 2.531, 1.438, 0, 2.531, 1.438, -0.805,
+        2.531, 0.805, -1.438, 2.531, 0, -1.438, 2.531, 1.5, 0, 2.4, 1.5, -0.84, 2.4, 0.84, -1.5,
+        2.4, 0, -1.5, 2.4, -0.784, -1.4, 2.4, -1.4, -0.784, 2.4, -1.4, 0, 2.4, -0.749, -1.337,
+        2.531, -1.337, -0.749, 2.531, -1.337, 0, 2.531, -0.805, -1.438, 2.531, -1.438, -0.805,
+        2.531, -1.438, 0, 2.531, -0.84, -1.5, 2.4, -1.5, -0.84, 2.4, -1.5, 0, 2.4, -1.4, 0.784, 2.4,
+        -0.784, 1.4, 2.4, 0, 1.4, 2.4, -1.337, 0.749, 2.531, -0.749, 1.337, 2.531, 0, 1.337, 2.531,
+        -1.438, 0.805, 2.531, -0.805, 1.438, 2.531, 0, 1.438, 2.531, -1.5, 0.84, 2.4, -0.84, 1.5,
+        2.4, 0, 1.5, 2.4, 0.784, 1.4, 2.4, 1.4, 0.784, 2.4, 0.749, 1.337, 2.531, 1.337, 0.749,
+        2.531, 0.805, 1.438, 2.531, 1.438, 0.805, 2.531, 0.84, 1.5, 2.4, 1.5, 0.84, 2.4, 1.75, 0,
+        1.875, 1.75, -0.98, 1.875, 0.98, -1.75, 1.875, 0, -1.75, 1.875, 2, 0, 1.35, 2, -1.12, 1.35,
+        1.12, -2, 1.35, 0, -2, 1.35, 2, 0, 0.9, 2, -1.12, 0.9, 1.12, -2, 0.9, 0, -2, 0.9, -0.98,
+        -1.75, 1.875, -1.75, -0.98, 1.875, -1.75, 0, 1.875, -1.12, -2, 1.35, -2, -1.12, 1.35, -2, 0,
+        1.35, -1.12, -2, 0.9, -2, -1.12, 0.9, -2, 0, 0.9, -1.75, 0.98, 1.875, -0.98, 1.75, 1.875, 0,
+        1.75, 1.875, -2, 1.12, 1.35, -1.12, 2, 1.35, 0, 2, 1.35, -2, 1.12, 0.9, -1.12, 2, 0.9, 0, 2,
+        0.9, 0.98, 1.75, 1.875, 1.75, 0.98, 1.875, 1.12, 2, 1.35, 2, 1.12, 1.35, 1.12, 2, 0.9, 2,
+        1.12, 0.9, 2, 0, 0.45, 2, -1.12, 0.45, 1.12, -2, 0.45, 0, -2, 0.45, 1.5, 0, 0.225, 1.5,
+        -0.84, 0.225, 0.84, -1.5, 0.225, 0, -1.5, 0.225, 1.5, 0, 0.15, 1.5, -0.84, 0.15, 0.84, -1.5,
+        0.15, 0, -1.5, 0.15, -1.12, -2, 0.45, -2, -1.12, 0.45, -2, 0, 0.45, -0.84, -1.5, 0.225,
+        -1.5, -0.84, 0.225, -1.5, 0, 0.225, -0.84, -1.5, 0.15, -1.5, -0.84, 0.15, -1.5, 0, 0.15, -2,
+        1.12, 0.45, -1.12, 2, 0.45, 0, 2, 0.45, -1.5, 0.84, 0.225, -0.84, 1.5, 0.225, 0, 1.5, 0.225,
+        -1.5, 0.84, 0.15, -0.84, 1.5, 0.15, 0, 1.5, 0.15, 1.12, 2, 0.45, 2, 1.12, 0.45, 0.84, 1.5,
+        0.225, 1.5, 0.84, 0.225, 0.84, 1.5, 0.15, 1.5, 0.84, 0.15, -1.6, 0, 2.025, -1.6, -0.3,
+        2.025, -1.5, -0.3, 2.25, -1.5, 0, 2.25, -2.3, 0, 2.025, -2.3, -0.3, 2.025, -2.5, -0.3, 2.25,
+        -2.5, 0, 2.25, -2.7, 0, 2.025, -2.7, -0.3, 2.025, -3, -0.3, 2.25, -3, 0, 2.25, -2.7, 0, 1.8,
+        -2.7, -0.3, 1.8, -3, -0.3, 1.8, -3, 0, 1.8, -1.5, 0.3, 2.25, -1.6, 0.3, 2.025, -2.5, 0.3,
+        2.25, -2.3, 0.3, 2.025, -3, 0.3, 2.25, -2.7, 0.3, 2.025, -3, 0.3, 1.8, -2.7, 0.3, 1.8, -2.7,
+        0, 1.575, -2.7, -0.3, 1.575, -3, -0.3, 1.35, -3, 0, 1.35, -2.5, 0, 1.125, -2.5, -0.3, 1.125,
+        -2.65, -0.3, 0.9375, -2.65, 0, 0.9375, -2, -0.3, 0.9, -1.9, -0.3, 0.6, -1.9, 0, 0.6, -3,
+        0.3, 1.35, -2.7, 0.3, 1.575, -2.65, 0.3, 0.9375, -2.5, 0.3, 1.125, -1.9, 0.3, 0.6, -2, 0.3,
+        0.9, 1.7, 0, 1.425, 1.7, -0.66, 1.425, 1.7, -0.66, 0.6, 1.7, 0, 0.6, 2.6, 0, 1.425, 2.6,
+        -0.66, 1.425, 3.1, -0.66, 0.825, 3.1, 0, 0.825, 2.3, 0, 2.1, 2.3, -0.25, 2.1, 2.4, -0.25,
+        2.025, 2.4, 0, 2.025, 2.7, 0, 2.4, 2.7, -0.25, 2.4, 3.3, -0.25, 2.4, 3.3, 0, 2.4, 1.7, 0.66,
+        0.6, 1.7, 0.66, 1.425, 3.1, 0.66, 0.825, 2.6, 0.66, 1.425, 2.4, 0.25, 2.025, 2.3, 0.25, 2.1,
+        3.3, 0.25, 2.4, 2.7, 0.25, 2.4, 2.8, 0, 2.475, 2.8, -0.25, 2.475, 3.525, -0.25, 2.494,
+        3.525, 0, 2.494, 2.9, 0, 2.475, 2.9, -0.15, 2.475, 3.45, -0.15, 2.513, 3.45, 0, 2.513, 2.8,
+        0, 2.4, 2.8, -0.15, 2.4, 3.2, -0.15, 2.4, 3.2, 0, 2.4, 3.525, 0.25, 2.494, 2.8, 0.25, 2.475,
+        3.45, 0.15, 2.513, 2.9, 0.15, 2.475, 3.2, 0.15, 2.4, 2.8, 0.15, 2.4, 0, 0, 3.15, 0.8, 0,
+        3.15, 0.8, -0.45, 3.15, 0.45, -0.8, 3.15, 0, -0.8, 3.15, 0, 0, 2.85, 0.2, 0, 2.7, 0.2,
+        -0.112, 2.7, 0.112, -0.2, 2.7, 0, -0.2, 2.7, -0.45, -0.8, 3.15, -0.8, -0.45, 3.15, -0.8, 0,
+        3.15, -0.112, -0.2, 2.7, -0.2, -0.112, 2.7, -0.2, 0, 2.7, -0.8, 0.45, 3.15, -0.45, 0.8,
+        3.15, 0, 0.8, 3.15, -0.2, 0.112, 2.7, -0.112, 0.2, 2.7, 0, 0.2, 2.7, 0.45, 0.8, 3.15, 0.8,
+        0.45, 3.15, 0.112, 0.2, 2.7, 0.2, 0.112, 2.7, 0.4, 0, 2.55, 0.4, -0.224, 2.55, 0.224, -0.4,
+        2.55, 0, -0.4, 2.55, 1.3, 0, 2.55, 1.3, -0.728, 2.55, 0.728, -1.3, 2.55, 0, -1.3, 2.55, 1.3,
+        0, 2.4, 1.3, -0.728, 2.4, 0.728, -1.3, 2.4, 0, -1.3, 2.4, -0.224, -0.4, 2.55, -0.4, -0.224,
+        2.55, -0.4, 0, 2.55, -0.728, -1.3, 2.55, -1.3, -0.728, 2.55, -1.3, 0, 2.55, -0.728, -1.3,
+        2.4, -1.3, -0.728, 2.4, -1.3, 0, 2.4, -0.4, 0.224, 2.55, -0.224, 0.4, 2.55, 0, 0.4, 2.55,
+        -1.3, 0.728, 2.55, -0.728, 1.3, 2.55, 0, 1.3, 2.55, -1.3, 0.728, 2.4, -0.728, 1.3, 2.4, 0,
+        1.3, 2.4, 0.224, 0.4, 2.55, 0.4, 0.224, 2.55, 0.728, 1.3, 2.55, 1.3, 0.728, 2.55, 0.728,
+        1.3, 2.4, 1.3, 0.728, 2.4, 0, 0, 0, 1.425, 0, 0, 1.425, 0.798, 0, 0.798, 1.425, 0, 0, 1.425,
+        0, 1.5, 0, 0.075, 1.5, 0.84, 0.075, 0.84, 1.5, 0.075, 0, 1.5, 0.075, -0.798, 1.425, 0,
+        -1.425, 0.798, 0, -1.425, 0, 0, -0.84, 1.5, 0.075, -1.5, 0.84, 0.075, -1.5, 0, 0.075,
+        -1.425, -0.798, 0, -0.798, -1.425, 0, 0, -1.425, 0, -1.5, -0.84, 0.075, -0.84, -1.5, 0.075,
+        0, -1.5, 0.075, 0.798, -1.425, 0, 1.425, -0.798, 0, 0.84, -1.5, 0.075, 1.5, -0.84, 0.075,
+      ];
+
+      function buildMeshData(verts, normals, faces) {
+        const vertexCount = verts.length;
+        const faceCount = faces.length;
+
+        const smoothPositions = new Float32Array(vertexCount * 3);
+        const smoothNormals = new Float32Array(vertexCount * 3);
+        for (let i = 0; i < vertexCount; i++) {
+          smoothPositions[i * 3] = verts[i][0];
+          smoothPositions[i * 3 + 1] = verts[i][1];
+          smoothPositions[i * 3 + 2] = verts[i][2];
+          smoothNormals[i * 3] = normals[i][0];
+          smoothNormals[i * 3 + 1] = normals[i][1];
+          smoothNormals[i * 3 + 2] = normals[i][2];
+        }
+
+        const smoothIndices = new Uint32Array(faceCount * 3);
+        for (let i = 0; i < faceCount; i++) {
+          smoothIndices[i * 3] = faces[i][0];
+          smoothIndices[i * 3 + 1] = faces[i][1];
+          smoothIndices[i * 3 + 2] = faces[i][2];
+        }
+
+        // 线框去重边
+        const edgeSet = new Set();
+        const lineIndicesArr = [];
+        for (let i = 0; i < faceCount; i++) {
+          const f = faces[i];
+          const edges = [
+            Math.min(f[0], f[1]) + '_' + Math.max(f[0], f[1]),
+            Math.min(f[1], f[2]) + '_' + Math.max(f[1], f[2]),
+            Math.min(f[2], f[0]) + '_' + Math.max(f[2], f[0]),
+          ];
+          const pairs = [
+            [f[0], f[1]],
+            [f[1], f[2]],
+            [f[2], f[0]],
+          ];
+          for (let k = 0; k < 3; k++) {
+            if (!edgeSet.has(edges[k])) {
+              edgeSet.add(edges[k]);
+              lineIndicesArr.push(pairs[k][0], pairs[k][1]);
+            }
+          }
+        }
+        const lineIndices = new Uint32Array(lineIndicesArr);
+
+        // Flat Shading 展开面片数据（3个独立顶点/面，严格共享几何面法线和面中心）
+        const flatPos = new Float32Array(faceCount * 9);
+        const flatNorm = new Float32Array(faceCount * 9);
+        const flatCenters = new Float32Array(faceCount * 9);
+
+        for (let i = 0; i < faceCount; i++) {
+          const f = faces[i];
+          const p0 = verts[f[0]],
+            p1 = verts[f[1]],
+            p2 = verts[f[2]];
+
+          const cx = (p0[0] + p1[0] + p2[0]) / 3.0;
+          const cy = (p0[1] + p1[1] + p2[1]) / 3.0;
+          const cz = (p0[2] + p1[2] + p2[2]) / 3.0;
+
+          const ax = p1[0] - p0[0],
+            ay = p1[1] - p0[1],
+            az = p1[2] - p0[2];
+          const bx = p2[0] - p0[0],
+            by = p2[1] - p0[1],
+            bz = p2[2] - p0[2];
+          let nx = ay * bz - az * by;
+          let ny = az * bx - ax * bz;
+          let nz = ax * by - ay * bx;
+          const nlen = Math.hypot(nx, ny, nz) || 1.0;
+          nx /= nlen;
+          ny /= nlen;
+          nz /= nlen;
+
+          const o = i * 9;
+          flatPos[o] = p0[0];
+          flatPos[o + 1] = p0[1];
+          flatPos[o + 2] = p0[2];
+          flatPos[o + 3] = p1[0];
+          flatPos[o + 4] = p1[1];
+          flatPos[o + 5] = p1[2];
+          flatPos[o + 6] = p2[0];
+          flatPos[o + 7] = p2[1];
+          flatPos[o + 8] = p2[2];
+
+          flatNorm[o] = nx;
+          flatNorm[o + 1] = ny;
+          flatNorm[o + 2] = nz;
+          flatNorm[o + 3] = nx;
+          flatNorm[o + 4] = ny;
+          flatNorm[o + 5] = nz;
+          flatNorm[o + 6] = nx;
+          flatNorm[o + 7] = ny;
+          flatNorm[o + 8] = nz;
+
+          flatCenters[o] = cx;
+          flatCenters[o + 1] = cy;
+          flatCenters[o + 2] = cz;
+          flatCenters[o + 3] = cx;
+          flatCenters[o + 4] = cy;
+          flatCenters[o + 5] = cz;
+          flatCenters[o + 6] = cx;
+          flatCenters[o + 7] = cy;
+          flatCenters[o + 8] = cz;
+        }
+
+        return {
+          vertexCount,
+          faceCount,
+          edgeCount: edgeSet.size,
+          smooth: {
+            positions: smoothPositions,
+            normals: smoothNormals,
+            indices: smoothIndices,
+            lineIndices: lineIndices,
+          },
+          flat: {
+            positions: flatPos,
+            normals: flatNorm,
+            centers: flatCenters,
+          },
+        };
+      }
+
+      // 1. 球体 (Icosphere 可分级细分)
+      function createSphere(subdivisions) {
+        const phi = (1.0 + Math.sqrt(5.0)) / 2.0;
+        let rawVerts = [
+          [-1, phi, 0],
+          [1, phi, 0],
+          [-1, -phi, 0],
+          [1, -phi, 0],
+          [0, -1, phi],
+          [0, 1, phi],
+          [0, -1, -phi],
+          [0, 1, -phi],
+          [phi, 0, -1],
+          [phi, 0, 1],
+          [-phi, 0, -1],
+          [-phi, 0, 1],
+        ];
+        let verts = rawVerts.map((v) => {
+          const len = Math.hypot(v[0], v[1], v[2]);
+          return [v[0] / len, v[1] / len, v[2] / len];
+        });
+
+        let faces = [
+          [0, 11, 5],
+          [0, 5, 1],
+          [0, 1, 7],
+          [0, 7, 10],
+          [0, 10, 11],
+          [1, 5, 9],
+          [5, 11, 4],
+          [11, 10, 2],
+          [10, 7, 6],
+          [7, 1, 8],
+          [3, 9, 4],
+          [3, 4, 2],
+          [3, 2, 6],
+          [3, 6, 8],
+          [3, 8, 9],
+          [4, 9, 5],
+          [2, 4, 11],
+          [6, 2, 10],
+          [8, 6, 7],
+          [9, 8, 1],
+        ];
+
+        const midpointCache = new Map();
+        function getMidpoint(i1, i2) {
+          const key = Math.min(i1, i2) + '_' + Math.max(i1, i2);
+          if (midpointCache.has(key)) return midpointCache.get(key);
+          const p1 = verts[i1],
+            p2 = verts[i2];
+          const mx = (p1[0] + p2[0]) * 0.5;
+          const my = (p1[1] + p2[1]) * 0.5;
+          const mz = (p1[2] + p2[2]) * 0.5;
+          const len = Math.hypot(mx, my, mz);
+          verts.push([mx / len, my / len, mz / len]);
+          const idx = verts.length - 1;
+          midpointCache.set(key, idx);
+          return idx;
+        }
+
+        for (let s = 0; s < subdivisions; s++) {
+          const nextFaces = [];
+          for (let i = 0; i < faces.length; i++) {
+            const tri = faces[i];
+            const a = getMidpoint(tri[0], tri[1]);
+            const b = getMidpoint(tri[1], tri[2]);
+            const c = getMidpoint(tri[2], tri[0]);
+            nextFaces.push([tri[0], a, c]);
+            nextFaces.push([tri[1], b, a]);
+            nextFaces.push([tri[2], c, b]);
+            nextFaces.push([a, b, c]);
+          }
+          faces = nextFaces;
+        }
+
+        return buildMeshData(verts, verts, faces);
+      }
+
+      // 2. 环面结 (Torus Knot, 3D复杂曲率管道)
+      function createTorusKnot(subdivisions) {
+        const segMap = [
+          [32, 8],
+          [54, 12],
+          [88, 16],
+          [144, 22],
+          [220, 28],
+        ];
+        const [tubular, radial] = segMap[Math.min(4, Math.max(0, subdivisions))];
+        const tubeRadius = 0.28;
+        const scale = 0.72;
+
+        const curvePts = [];
+        const curveTans = [];
+        for (let i = 0; i < tubular; i++) {
+          const u = (i * 2.0 * Math.PI) / tubular;
+          const r = 0.5 * (2.0 + Math.cos(3.0 * u));
+          const cx = r * Math.cos(2.0 * u) * scale;
+          const cy = r * Math.sin(2.0 * u) * scale;
+          const cz = -0.5 * Math.sin(3.0 * u) * scale;
+
+          const du = 0.001;
+          const u2 = u + du;
+          const r2 = 0.5 * (2.0 + Math.cos(3.0 * u2));
+          const cx2 = r2 * Math.cos(2.0 * u2) * scale;
+          const cy2 = r2 * Math.sin(2.0 * u2) * scale;
+          const cz2 = -0.5 * Math.sin(3.0 * u2) * scale;
+
+          const tx = (cx2 - cx) / du;
+          const ty = (cy2 - cy) / du;
+          const tz = (cz2 - cz) / du;
+          const tlen = Math.hypot(tx, ty, tz) || 1.0;
+          curvePts.push([cx, cy, cz]);
+          curveTans.push([tx / tlen, ty / tlen, tz / tlen]);
+        }
+
+        // Parallel transport frame (Bishop 标架)
+        const t0 = curveTans[0];
+        let up = [0.0, 0.0, 1.0];
+        if (Math.abs(t0[2]) > 0.9) up = [0.0, 1.0, 0.0];
+        let nx = t0[1] * up[2] - t0[2] * up[1];
+        let ny = t0[2] * up[0] - t0[0] * up[2];
+        let nz = t0[0] * up[1] - t0[1] * up[0];
+        const nlen = Math.hypot(nx, ny, nz) || 1.0;
+        nx /= nlen;
+        ny /= nlen;
+        nz /= nlen;
+
+        const frames = [];
+        let bx = t0[1] * nz - t0[2] * ny;
+        let by = t0[2] * nx - t0[0] * nz;
+        let bz = t0[0] * ny - t0[1] * nx;
+        frames.push([
+          [nx, ny, nz],
+          [bx, by, bz],
+        ]);
+
+        let curN = [nx, ny, nz];
+        for (let i = 0; i < tubular - 1; i++) {
+          const tA = curveTans[i];
+          const tB = curveTans[i + 1];
+          let ax = tA[1] * tB[2] - tA[2] * tB[1];
+          let ay = tA[2] * tB[0] - tA[0] * tB[2];
+          let az = tA[0] * tB[1] - tA[1] * tB[0];
+          const alen = Math.hypot(ax, ay, az);
+          const dot = Math.max(-1.0, Math.min(1.0, tA[0] * tB[0] + tA[1] * tB[1] + tA[2] * tB[2]));
+          const ang = Math.atan2(alen, dot);
+          if (alen > 1e-6) {
+            ax /= alen;
+            ay /= alen;
+            az /= alen;
+            const cosA = Math.cos(ang);
+            const sinA = Math.sin(ang);
+            const crossX = ay * curN[2] - az * curN[1];
+            const crossY = az * curN[0] - ax * curN[2];
+            const crossZ = ax * curN[1] - ay * curN[0];
+            const adotv = ax * curN[0] + ay * curN[1] + az * curN[2];
+            curN = [
+              curN[0] * cosA + crossX * sinA + ax * adotv * (1.0 - cosA),
+              curN[1] * cosA + crossY * sinA + ay * adotv * (1.0 - cosA),
+              curN[2] * cosA + crossZ * sinA + az * adotv * (1.0 - cosA),
+            ];
+          }
+          bx = tB[1] * curN[2] - tB[2] * curN[1];
+          by = tB[2] * curN[0] - tB[0] * curN[2];
+          bz = tB[0] * curN[1] - tB[1] * curN[0];
+          frames.push([curN, [bx, by, bz]]);
+        }
+
+        const allVerts = [];
+        const allNorms = [];
+        const rTube = tubeRadius * scale;
+        for (let i = 0; i < tubular; i++) {
+          const cp = curvePts[i];
+          const [fn, fb] = frames[i];
+          for (let j = 0; j < radial; j++) {
+            const v = (j * 2.0 * Math.PI) / radial;
+            const cv = Math.cos(v);
+            const sv = Math.sin(v);
+            const normX = cv * fn[0] + sv * fb[0];
+            const normY = cv * fn[1] + sv * fb[1];
+            const normZ = cv * fn[2] + sv * fb[2];
+            allVerts.push([cp[0] + rTube * normX, cp[1] + rTube * normY, cp[2] + rTube * normZ]);
+            allNorms.push([normX, normY, normZ]);
+          }
+        }
+
+        const allFaces = [];
+        for (let i = 0; i < tubular; i++) {
+          const iNext = (i + 1) % tubular;
+          for (let j = 0; j < radial; j++) {
+            const jNext = (j + 1) % radial;
+            const v0 = i * radial + j;
+            const v1 = iNext * radial + j;
+            const v2 = iNext * radial + jNext;
+            const v3 = i * radial + jNext;
+            allFaces.push([v0, v1, v2]);
+            allFaces.push([v0, v2, v3]);
+          }
+        }
+
+        return buildMeshData(allVerts, allNorms, allFaces);
+      }
+
+      // 3. 犹他茶壶 (Utah Teapot, 32块双三次贝塞尔曲面片动态细分)
+      function createTeapot(subdivisions) {
+        const segMap = [1, 2, 3, 5, 8];
+        const segments = segMap[Math.min(4, Math.max(0, subdivisions))];
+
+        function bernstein(t) {
+          const it = 1.0 - t;
+          const it2 = it * it;
+          const it3 = it2 * it;
+          const t2 = t * t;
+          const t3 = t2 * t;
+          const b = [it3, 3.0 * t * it2, 3.0 * t2 * it, t3];
+          const db = [-3.0 * it2, 3.0 * it2 - 6.0 * t * it, 6.0 * t * it - 3.0 * t2, 3.0 * t2];
+          return [b, db];
+        }
+
+        function notDegenerate(p1, p2, p3) {
+          const d1 = Math.hypot(p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]);
+          const d2 = Math.hypot(p1[0] - p3[0], p1[1] - p3[1], p1[2] - p3[2]);
+          const d3 = Math.hypot(p2[0] - p3[0], p2[1] - p3[1], p2[2] - p3[2]);
+          return d1 > 1e-4 && d2 > 1e-4 && d3 > 1e-4;
+        }
+
+        const allVerts = [];
+        const allNorms = [];
+        const allFaces = [];
+        const scale = 0.38;
+        const maxH2 = 1.575;
+
+        for (let surf = 0; surf < 32; surf++) {
+          const cp = [];
+          for (let r = 0; r < 4; r++) {
+            const row = [];
+            for (let c = 0; c < 4; c++) {
+              const idx = TEAPOT_PATCHES[surf * 16 + r * 4 + c];
+              row.push([
+                TEAPOT_VERTICES[idx * 3],
+                TEAPOT_VERTICES[idx * 3 + 1],
+                TEAPOT_VERTICES[idx * 3 + 2],
+              ]);
+            }
+            cp.push(row);
+          }
+
+          const startV = allVerts.length;
+          const nPts = segments + 1;
+
+          for (let sstep = 0; sstep <= segments; sstep++) {
+            const s = sstep / segments;
+            const [bs, dbs] = bernstein(s);
+            for (let tstep = 0; tstep <= segments; tstep++) {
+              const t = tstep / segments;
+              const [bt, dbt] = bernstein(t);
+
+              let px = 0,
+                py = 0,
+                pz = 0;
+              let sdir = [0, 0, 0];
+              let tdir = [0, 0, 0];
+
+              for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                  const pt = cp[r][c];
+                  const w = bs[r] * bt[c];
+                  px += pt[0] * w;
+                  py += pt[1] * w;
+                  pz += pt[2] * w;
+
+                  const ws = dbs[r] * bt[c];
+                  sdir[0] += pt[0] * ws;
+                  sdir[1] += pt[1] * ws;
+                  sdir[2] += pt[2] * ws;
+
+                  const wt = bs[r] * dbt[c];
+                  tdir[0] += pt[0] * wt;
+                  tdir[1] += pt[1] * wt;
+                  tdir[2] += pt[2] * wt;
+                }
+              }
+
+              let nx = tdir[1] * sdir[2] - tdir[2] * sdir[1];
+              let ny = tdir[2] * sdir[0] - tdir[0] * sdir[2];
+              let nz = tdir[0] * sdir[1] - tdir[1] * sdir[0];
+              const nlen = Math.hypot(nx, ny, nz);
+              if (nlen < 1e-6) {
+                nx = 0.0;
+                ny = pz > maxH2 ? 1.0 : -1.0;
+                nz = 0.0;
+              } else {
+                nx /= nlen;
+                ny /= nlen;
+                nz /= nlen;
+              }
+
+              allVerts.push([scale * px, scale * (pz - maxH2), -scale * py]);
+              allNorms.push([nx, nz, -ny]);
+            }
+          }
+
+          for (let sstep = 0; sstep < segments; sstep++) {
+            for (let tstep = 0; tstep < segments; tstep++) {
+              const v1 = startV + sstep * nPts + tstep;
+              const v2 = v1 + 1;
+              const v3 = v2 + nPts;
+              const v4 = v1 + nPts;
+
+              const p1 = allVerts[v1],
+                p2 = allVerts[v2],
+                p3 = allVerts[v3],
+                p4 = allVerts[v4];
+              if (notDegenerate(p1, p2, p3)) {
+                allFaces.push([v1, v2, v3]);
+              }
+              if (notDegenerate(p1, p3, p4)) {
+                allFaces.push([v1, v3, v4]);
+              }
+            }
+          }
+        }
+
+        return buildMeshData(allVerts, allNorms, allFaces);
+      }
+
+      // 统一模型分发
+      function generateModel(type, subdivisions) {
+        if (type === 'torusKnot') return createTorusKnot(subdivisions);
+        if (type === 'teapot') return createTeapot(subdivisions);
+        return createSphere(subdivisions);
+      }
+
+      // ==========================================
+      // 5. GPU 缓冲管理
+      // ==========================================
+      let currentMesh = null;
+      const buffers = {
+        smoothPos: gl.createBuffer(),
+        smoothNorm: gl.createBuffer(),
+        smoothIdx: gl.createBuffer(),
+        wireIdx: gl.createBuffer(),
+        flatPos: gl.createBuffer(),
+        flatNorm: gl.createBuffer(),
+        flatCenter: gl.createBuffer(),
+      };
+
+      function uploadMesh(meshData) {
+        currentMesh = meshData;
+
+        // 平滑顶点与法线
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothPos);
+        gl.bufferData(gl.ARRAY_BUFFER, meshData.smooth.positions, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothNorm);
+        gl.bufferData(gl.ARRAY_BUFFER, meshData.smooth.normals, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.smoothIdx);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, meshData.smooth.indices, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.wireIdx);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, meshData.smooth.lineIndices, gl.STATIC_DRAW);
+
+        // Flat 展开缓冲
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatPos);
+        gl.bufferData(gl.ARRAY_BUFFER, meshData.flat.positions, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatNorm);
+        gl.bufferData(gl.ARRAY_BUFFER, meshData.flat.normals, gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatCenter);
+        gl.bufferData(gl.ARRAY_BUFFER, meshData.flat.centers, gl.STATIC_DRAW);
+      }
+
+      // ==========================================
+      // 6. 统一教学共享状态与交互绑定
+      // ==========================================
+      const state = {
+        modelType: 'sphere',
+        subdivision: 2,
+        azimuthDeg: -35,
+        elevationDeg: 40,
+        shininess: 64,
+        ks: 0.65,
+        ka: 0.25,
+        kd: 0.75,
+        baseColor: [0.157, 0.498, 0.608], // #287F9B
+        wireColor: [0.118, 0.333, 0.431, 1.0], // #1e556e 高对比青蓝黑
+        displayMode: 0,
+        autoRotate: false,
+        pitch: 0.2,
+        yaw: 0.4,
+      };
+
+      // DOM 元素引用
+      const modelSelect = document.getElementById('modelSelect');
+      const colorPicker = document.getElementById('colorPicker');
+      const colorSwatches = document.querySelectorAll('.color-swatch');
+      const subdivSlider = document.getElementById('subdivSlider');
+      const subdivLabel = document.getElementById('subdivLabel');
+      const azimuthSlider = document.getElementById('azimuthSlider');
+      const azimuthLabel = document.getElementById('azimuthLabel');
+      const elevationSlider = document.getElementById('elevationSlider');
+      const elevationLabel = document.getElementById('elevationLabel');
+      const shininessSlider = document.getElementById('shininessSlider');
+      const shininessLabel = document.getElementById('shininessLabel');
+      const ksSlider = document.getElementById('ksSlider');
+      const ksLabel = document.getElementById('ksLabel');
+      const autoRotateCheck = document.getElementById('autoRotateCheck');
+      const displayModeBtns = document.querySelectorAll('#displayModeGroup button');
+
+      function hexToRgb(hex) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) {
+          hex = hex
+            .split('')
+            .map((c) => c + c)
+            .join('');
+        }
+        const num = parseInt(hex, 16);
+        return [((num >> 16) & 255) / 255.0, ((num >> 8) & 255) / 255.0, (num & 255) / 255.0];
+      }
+
+      function setBaseColor(hex) {
+        state.baseColor = hexToRgb(hex);
+        colorPicker.value = hex;
+        colorSwatches.forEach((s) => {
+          s.classList.toggle('active', s.dataset.color.toLowerCase() === hex.toLowerCase());
+        });
+      }
+
+      function rebuildMesh() {
+        const mesh = generateModel(state.modelType, state.subdivision);
+        uploadMesh(mesh);
+        subdivLabel.textContent = `${state.subdivision}级 (${mesh.faceCount}面 / ${mesh.vertexCount}顶)`;
+      }
+
+      // 事件绑定
+      modelSelect.addEventListener('change', (e) => {
+        state.modelType = e.target.value;
+        rebuildMesh();
+      });
+
+      colorPicker.addEventListener('input', (e) => {
+        setBaseColor(e.target.value);
+      });
+
+      colorSwatches.forEach((swatch) => {
+        swatch.addEventListener('click', () => {
+          setBaseColor(swatch.dataset.color);
+        });
+      });
+
+      subdivSlider.addEventListener('input', (e) => {
+        state.subdivision = parseInt(e.target.value, 10);
+        rebuildMesh();
+      });
+
+      azimuthSlider.addEventListener('input', (e) => {
+        state.azimuthDeg = parseFloat(e.target.value);
+        azimuthLabel.textContent = `${state.azimuthDeg}°`;
+      });
+
+      elevationSlider.addEventListener('input', (e) => {
+        state.elevationDeg = parseFloat(e.target.value);
+        elevationLabel.textContent = `${state.elevationDeg}°`;
+      });
+
+      shininessSlider.addEventListener('input', (e) => {
+        state.shininess = parseFloat(e.target.value);
+        shininessLabel.textContent = state.shininess;
+      });
+
+      ksSlider.addEventListener('input', (e) => {
+        state.ks = parseFloat(e.target.value);
+        ksLabel.textContent = state.ks.toFixed(2);
+      });
+
+      autoRotateCheck.addEventListener('change', (e) => {
+        state.autoRotate = e.target.checked;
+      });
+
+      displayModeBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          displayModeBtns.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.displayMode = parseInt(btn.dataset.mode, 10);
+        });
+      });
+
+      // 快捷教学预设：1. 观察面片差异 (低细分 + 无高光)
+      document.getElementById('presetFacet').addEventListener('click', () => {
+        state.subdivision = 1;
+        subdivSlider.value = 1;
+        state.ks = 0.0;
+        ksSlider.value = 0.0;
+        ksLabel.textContent = '0.00';
+        state.shininess = 64;
+        shininessSlider.value = 64;
+        shininessLabel.textContent = '64';
+        state.displayMode = 0;
+        updateDisplayModeUI(0);
+        state.autoRotate = false;
+        autoRotateCheck.checked = false;
+        state.pitch = 0.15;
+        state.yaw = 0.35;
+        rebuildMesh();
+      });
+
+      // 快捷教学预设：2. 观察高光差异 (中细分 + 强高光)
+      document.getElementById('presetSpecular').addEventListener('click', () => {
+        state.subdivision = 2;
+        subdivSlider.value = 2;
+        state.ks = 0.95;
+        ksSlider.value = 0.95;
+        ksLabel.textContent = '0.95';
+        state.shininess = 96;
+        shininessSlider.value = 96;
+        shininessLabel.textContent = '96';
+        state.displayMode = 0;
+        updateDisplayModeUI(0);
+        state.azimuthDeg = -25;
+        azimuthSlider.value = -25;
+        azimuthLabel.textContent = '-25°';
+        state.elevationDeg = 30;
+        elevationSlider.value = 30;
+        elevationLabel.textContent = '30°';
+        state.autoRotate = false;
+        autoRotateCheck.checked = false;
+        state.pitch = 0.12;
+        state.yaw = 0.28;
+        rebuildMesh();
+      });
+
+      // 重置所有参数
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        state.modelType = 'sphere';
+        modelSelect.value = 'sphere';
+        setBaseColor('#287f9b');
+        state.subdivision = 2;
+        subdivSlider.value = 2;
+        state.azimuthDeg = -35;
+        azimuthSlider.value = -35;
+        azimuthLabel.textContent = '-35°';
+        state.elevationDeg = 40;
+        elevationSlider.value = 40;
+        elevationLabel.textContent = '40°';
+        state.shininess = 64;
+        shininessSlider.value = 64;
+        shininessLabel.textContent = '64';
+        state.ks = 0.65;
+        ksSlider.value = 0.65;
+        ksLabel.textContent = '0.65';
+        state.displayMode = 0;
+        updateDisplayModeUI(0);
+        state.autoRotate = false;
+        autoRotateCheck.checked = false;
+        state.pitch = 0.2;
+        state.yaw = 0.4;
+        cameraPos[2] = 3.8;
+        rebuildMesh();
+      });
+
+      function updateDisplayModeUI(mode) {
+        displayModeBtns.forEach((b) => {
+          b.classList.toggle('active', parseInt(b.dataset.mode, 10) === mode);
+        });
+      }
+
+      // 鼠标滚轮缩放控制
+      canvas.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          cameraPos[2] += e.deltaY * 0.0025;
+          cameraPos[2] = Math.max(2.4, Math.min(6.5, cameraPos[2]));
+        },
+        { passive: false },
+      );
+
+      // 鼠标全局拖拽同步旋转
+      let isDragging = false;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
+
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+
+        state.yaw += dx * 0.007;
+        state.pitch += dy * 0.007;
+        state.pitch = Math.max(-Math.PI / 2 + 0.02, Math.min(Math.PI / 2 - 0.02, state.pitch));
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // 触摸屏支持
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          if (e.touches.length === 1) {
+            isDragging = true;
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+          }
+        },
+        { passive: true },
+      );
+
+      window.addEventListener(
+        'touchmove',
+        (e) => {
+          if (!isDragging || e.touches.length !== 1) return;
+          const dx = e.touches[0].clientX - lastMouseX;
+          const dy = e.touches[0].clientY - lastMouseY;
+          lastMouseX = e.touches[0].clientX;
+          lastMouseY = e.touches[0].clientY;
+
+          state.yaw += dx * 0.007;
+          state.pitch += dy * 0.007;
+          state.pitch = Math.max(-Math.PI / 2 + 0.02, Math.min(Math.PI / 2 - 0.02, state.pitch));
+        },
+        { passive: true },
+      );
+
+      window.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+
+      // ==========================================
+      // 7. 渲染主循环（四 Viewport 单画布渲染）
+      // ==========================================
+      const matModel = mat4.create();
+      const matView = mat4.create();
+      const matProj = mat4.create();
+      const cameraPos = [0, 0, 3.8];
+
+      // 初始化网格
+      rebuildMesh();
+
+      function render() {
+        if (state.autoRotate) {
+          state.yaw += 0.006;
+        }
+
+        const dpr = window.devicePixelRatio || 1;
+        const displayWidth = Math.round(canvas.clientWidth * dpr);
+        const displayHeight = Math.round(canvas.clientHeight * dpr);
+
+        if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+          canvas.width = displayWidth;
+          canvas.height = displayHeight;
+        }
+
+        // 准备模型与观察矩阵（四个区域严格共享！）
+        mat4.fromEuler(matModel, state.pitch, state.yaw);
+        mat4.lookAt(matView, cameraPos, [0, 0, 0], [0, 1, 0]);
+
+        // 计算平行光源世界方向向量（指向光源）
+        const azRad = state.azimuthDeg * (Math.PI / 180);
+        const elRad = state.elevationDeg * (Math.PI / 180);
+        const lightDir = [
+          Math.cos(elRad) * Math.sin(azRad),
+          Math.sin(elRad),
+          Math.cos(elRad) * Math.cos(azRad),
+        ];
+        const lLen = Math.hypot(lightDir[0], lightDir[1], lightDir[2]) || 1.0;
+        lightDir[0] /= lLen;
+        lightDir[1] /= lLen;
+        lightDir[2] /= lLen;
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.SCISSOR_TEST);
+
+        // 清除整个背景为纯白
+        gl.scissor(0, 0, canvas.width, canvas.height);
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // 4个等宽子视口
+        const totalW = canvas.width;
+        const totalH = canvas.height;
+
+        for (let i = 0; i < 4; i++) {
+          const vx = Math.floor((i * totalW) / 4);
+          const vw = Math.floor(((i + 1) * totalW) / 4) - vx;
+          const vy = 0;
+          const vh = totalH;
+
+          gl.viewport(vx, vy, vw, vh);
+          gl.scissor(vx, vy, vw, vh);
+
+          // 自适应透视投影
+          const aspect = vw / vh;
+          const baseFovy = 40.0 * (Math.PI / 180);
+          let effFovy = baseFovy;
+          if (aspect < 1.0) {
+            effFovy = 2.0 * Math.atan(Math.tan(baseFovy / 2.0) / aspect);
+          }
+          mat4.perspective(matProj, effFovy, aspect, 0.1, 20.0);
+
+          if (i === 0) {
+            // ----------------------------------------
+            // 1. 线框模型渲染 (Wireframe)
+            // ----------------------------------------
+            gl.useProgram(programWire);
+            const uM = gl.getUniformLocation(programWire, 'uModel');
+            const uV = gl.getUniformLocation(programWire, 'uView');
+            const uP = gl.getUniformLocation(programWire, 'uProjection');
+            const uC = gl.getUniformLocation(programWire, 'uColor');
+
+            gl.uniformMatrix4fv(uM, false, matModel);
+            gl.uniformMatrix4fv(uV, false, matView);
+            gl.uniformMatrix4fv(uP, false, matProj);
+
+            // 步骤 1.1：纯白多边形填充深度缓冲（裁切背面线条）
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothPos);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.smoothIdx);
+            gl.enable(gl.POLYGON_OFFSET_FILL);
+            gl.polygonOffset(1.0, 1.0);
+            gl.uniform4f(uC, 1.0, 1.0, 1.0, 1.0);
+            gl.drawElements(gl.TRIANGLES, currentMesh.smooth.indices.length, gl.UNSIGNED_INT, 0);
+            gl.disable(gl.POLYGON_OFFSET_FILL);
+
+            // 步骤 1.2：绘制去重后的网格边线
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.wireIdx);
+            gl.uniform4fv(uC, state.wireColor);
+            gl.drawElements(gl.LINES, currentMesh.smooth.lineIndices.length, gl.UNSIGNED_INT, 0);
+          } else if (i === 1) {
+            // ----------------------------------------
+            // 2. 平面着色 (Flat Shading)
+            // ----------------------------------------
+            gl.useProgram(programFlat);
+            setCommonUniforms(programFlat, matModel, matView, matProj, lightDir, cameraPos);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatPos);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatNorm);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.flatCenter);
+            gl.enableVertexAttribArray(2);
+            gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
+
+            gl.drawArrays(gl.TRIANGLES, 0, currentMesh.flat.positions.length / 3);
+            gl.disableVertexAttribArray(2);
+          } else if (i === 2) {
+            // ----------------------------------------
+            // 3. Gouraud 着色
+            // ----------------------------------------
+            gl.useProgram(programGouraud);
+            setCommonUniforms(programGouraud, matModel, matView, matProj, lightDir, cameraPos);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothPos);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothNorm);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.smoothIdx);
+            gl.drawElements(gl.TRIANGLES, currentMesh.smooth.indices.length, gl.UNSIGNED_INT, 0);
+          } else if (i === 3) {
+            // ----------------------------------------
+            // 4. Phong 着色
+            // ----------------------------------------
+            gl.useProgram(programPhong);
+            setCommonUniforms(programPhong, matModel, matView, matProj, lightDir, cameraPos);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothPos);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffers.smoothNorm);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.smoothIdx);
+            gl.drawElements(gl.TRIANGLES, currentMesh.smooth.indices.length, gl.UNSIGNED_INT, 0);
+          }
+        }
+
+        requestAnimationFrame(render);
+      }
+
+      // 设置公共光照与材质参数
+      function setCommonUniforms(prog, m, v, p, lDir, camPos) {
+        gl.uniformMatrix4fv(gl.getUniformLocation(prog, 'uModel'), false, m);
+        gl.uniformMatrix4fv(gl.getUniformLocation(prog, 'uView'), false, v);
+        gl.uniformMatrix4fv(gl.getUniformLocation(prog, 'uProjection'), false, p);
+        gl.uniform3fv(gl.getUniformLocation(prog, 'uLightDir'), lDir);
+        gl.uniform3fv(gl.getUniformLocation(prog, 'uViewPos'), camPos);
+        gl.uniform3fv(gl.getUniformLocation(prog, 'uBaseColor'), state.baseColor);
+        gl.uniform1f(gl.getUniformLocation(prog, 'uKa'), state.ka);
+        gl.uniform1f(gl.getUniformLocation(prog, 'uKd'), state.kd);
+        gl.uniform1f(gl.getUniformLocation(prog, 'uKs'), state.ks);
+        gl.uniform1f(gl.getUniformLocation(prog, 'uShininess'), state.shininess);
+        gl.uniform1i(gl.getUniformLocation(prog, 'uDisplayMode'), state.displayMode);
+      }
+
+      // 启动渲染循环
+      requestAnimationFrame(render);
+    </script>
+    <script>
+      function fitStage() {
+        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        document.body.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      }
+
+      fitStage();
+      window.addEventListener('resize', fitStage);
+    </script>
+  </body>
+</html>

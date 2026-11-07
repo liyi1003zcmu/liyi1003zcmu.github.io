@@ -1,0 +1,2525 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>计算机图形学：Gouraud 与 Phong 着色流水线交互对比教学 Demo</title>
+    <style>
+      :root {
+        --bg-main: #ffffff;
+        --navy-title: #153653;
+        --slate-muted: #597083;
+        --cyan-accent: #11879b;
+        --cyan-dark: #0d6978;
+        --cyan-light: #e6f4f7;
+        --green-normal: #10b981;
+        --green-bg: #ecfdf5;
+        --amber-color: #d97706;
+        --amber-bg: #fffbeb;
+        --border-color: #dce7ee;
+        --panel-bg: #f8fafc;
+        --panel-subtle: #f1f5f9;
+        --code-bg: #1e293b;
+        --code-line-hi: rgba(17, 135, 155, 0.25);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: var(--bg-main);
+        color: var(--navy-title);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      html {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1920px;
+        height: 1080px;
+        min-height: 1080px;
+        transform-origin: center center;
+      }
+
+      /* 顶部标题与通栏说明 */
+      header {
+        background: #ffffff;
+        border-bottom: 1px solid var(--border-color);
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .header-title-box h1 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--navy-title);
+        letter-spacing: 0.5px;
+      }
+
+      .header-title-box p {
+        font-size: 0.8rem;
+        color: var(--slate-muted);
+        margin-top: 2px;
+      }
+
+      .banner-statement {
+        background: var(--cyan-light);
+        border: 1px solid rgba(17, 135, 155, 0.25);
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--cyan-dark);
+        text-align: right;
+      }
+
+      /* 共享参数控制区 */
+      #controls-toolbar {
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 10px 20px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 18px;
+        font-size: 0.82rem;
+      }
+
+      .ctrl-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+      }
+
+      .ctrl-item label {
+        white-space: nowrap;
+        color: var(--navy-title);
+      }
+
+      .val-display {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.78rem;
+        color: var(--slate-muted);
+        min-width: 32px;
+      }
+
+      select,
+      button,
+      input[type='range'],
+      input[type='number'] {
+        font-family: inherit;
+        font-size: 0.82rem;
+        padding: 4px 8px;
+        border-radius: 5px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        color: var(--navy-title);
+        outline: none;
+        transition: all 0.15s ease;
+      }
+
+      select:hover,
+      button:hover {
+        border-color: var(--cyan-accent);
+      }
+
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 80px;
+        height: 4px;
+        background: #cbd5e1;
+        border: none;
+        padding: 0;
+      }
+
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--cyan-accent);
+        cursor: pointer;
+      }
+
+      button.btn-primary {
+        background: var(--cyan-accent);
+        color: #ffffff;
+        border-color: var(--cyan-accent);
+        font-weight: 600;
+      }
+
+      button.btn-primary:hover {
+        background: var(--cyan-dark);
+      }
+
+      button.btn-preset {
+        background: #ffffff;
+        border: 1px solid var(--cyan-accent);
+        color: var(--cyan-dark);
+        font-weight: 600;
+      }
+
+      button.btn-preset:hover {
+        background: var(--cyan-light);
+      }
+
+      .divider-v {
+        width: 1px;
+        height: 22px;
+        background: var(--border-color);
+      }
+
+      /* 核心对照与画布容器 */
+      #main-split-container {
+        display: flex;
+        flex: 1;
+        min-height: 460px;
+        position: relative;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      /* 单一 WebGL2 Canvas 覆盖全区 */
+      #canvas-container {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        min-height: 460px;
+        display: flex;
+      }
+
+      canvas#glcanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      canvas#glcanvas:active {
+        cursor: grabbing;
+      }
+
+      /* 上层流水线卡片与状态信息覆盖层（鼠标事件穿透以保证拖拽） */
+      .pipeline-overlays {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .overlay-col {
+        padding: 12px 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+      }
+
+      .overlay-col:first-child {
+        border-right: 1px solid var(--border-color);
+      }
+
+      /* 流水线阶段流程条 */
+      .pipeline-flow {
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 4px 12px rgba(21, 54, 83, 0.05);
+        margin-bottom: 8px;
+      }
+
+      .pipeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+      }
+
+      .pipeline-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--navy-title);
+      }
+
+      .pipeline-tag {
+        font-size: 0.76rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .pipeline-steps {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        flex-wrap: wrap;
+      }
+
+      .step-node {
+        padding: 4px 7px;
+        border-radius: 5px;
+        border: 1px solid var(--border-color);
+        background: var(--panel-subtle);
+        color: var(--navy-title);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .step-node:hover {
+        border-color: var(--cyan-accent);
+        background: #ffffff;
+      }
+
+      .step-node.active-highlight {
+        border-color: var(--cyan-accent);
+        background: var(--cyan-light);
+        color: var(--cyan-dark);
+        font-weight: 700;
+        box-shadow: 0 0 0 2px rgba(17, 135, 155, 0.2);
+      }
+
+      .step-arrow {
+        color: var(--slate-muted);
+        font-size: 0.75rem;
+        font-weight: bold;
+      }
+
+      .step-interp-gouraud {
+        border-color: var(--amber-color);
+        background: var(--amber-bg);
+        color: var(--amber-color);
+        font-weight: 600;
+      }
+
+      .step-interp-phong {
+        border-color: var(--green-normal);
+        background: var(--green-bg);
+        color: #065f46;
+        font-weight: 600;
+      }
+
+      /* 视图底部状态说明条 */
+      .view-info-footer {
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+
+      .mesh-stats {
+        font-family: ui-monospace, SFMono-Regular, monospace;
+        color: var(--slate-muted);
+      }
+
+      .diag-legend-badge {
+        font-size: 0.72rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: var(--panel-subtle);
+        border: 1px solid var(--border-color);
+        color: var(--navy-title);
+      }
+
+      /* 代码与流水线深度对比面板 (底部) */
+      #code-comparison-section {
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        max-height: 400px;
+        transition: max-height 0.25s ease;
+        border-top: 2px solid var(--border-color);
+      }
+
+      #code-comparison-section.collapsed {
+        max-height: 42px;
+        overflow: hidden;
+      }
+
+      #code-comparison-section.expanded-full {
+        max-height: 650px;
+      }
+
+      .code-panel-bar {
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 8px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .code-tab-group {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .code-tab-btn {
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        border-radius: 5px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        cursor: pointer;
+      }
+
+      .code-tab-btn.active {
+        background: var(--navy-title);
+        color: #ffffff;
+        border-color: var(--navy-title);
+      }
+
+      .code-viewers-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        flex: 1;
+        height: 350px;
+        min-height: 240px;
+        overflow: hidden;
+      }
+
+      #code-comparison-section.expanded-full .code-viewers-grid {
+        height: 540px;
+      }
+
+      .code-viewers-grid.layout-quad {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .code-column {
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        background: #ffffff; /* 教室投影高对比白底设计 */
+        color: #1e293b;
+      }
+
+      .code-column:last-child {
+        border-right: none;
+      }
+
+      .code-col-title {
+        background: #f8fafc;
+        padding: 7px 14px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--navy-title);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+
+      .code-scroll-box {
+        flex: 1;
+        min-height: 0;
+        overflow-y: scroll !important; /* 强制显示垂直滚动条，方便比较上下滑动 */
+        overflow-x: auto;
+        padding: 10px 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.82rem; /* 投影适配清晰大字号 */
+        line-height: 1.55;
+        background: #ffffff;
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+      }
+
+      /* 教室投影白底高可见度滚动条样式 */
+      .code-scroll-box::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .code-scroll-box::-webkit-scrollbar-track {
+        background: #f8fafc;
+        border-left: 1px solid #e2e8f0;
+      }
+      .code-scroll-box::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 5px;
+        border: 2px solid #f8fafc;
+      }
+      .code-scroll-box::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      pre.code-content {
+        margin: 0;
+        padding: 0 14px;
+        white-space: pre;
+        background: #ffffff;
+      }
+
+      .code-line {
+        display: block;
+        position: relative;
+      }
+
+      .code-line.highlight-calc {
+        background: #e0f2fe;
+        border-left: 3px solid #0284c7;
+        padding-left: 4px;
+        color: #0369a1;
+        font-weight: bold;
+      }
+
+      .code-line.highlight-interp {
+        background: #fef3c7;
+        border-left: 3px solid #d97706;
+        padding-left: 4px;
+        color: #92400e;
+        font-weight: 600;
+      }
+
+      .code-line.highlight-normal {
+        background: #dcfce7;
+        border-left: 3px solid #16a34a;
+        padding-left: 4px;
+        color: #15803d;
+        font-weight: 600;
+      }
+
+      /* 语法高亮：白底教室投影高对比度配色 */
+      .c-kw {
+        color: #be123c; /* 鲜明深红：layout, in, out, uniform, void */
+        font-weight: 600;
+      }
+
+      .c-type {
+        color: #0369a1; /* 鲜明深青蓝：vec3, vec4, mat3, mat4, float */
+        font-weight: 600;
+      }
+
+      .c-fn {
+        color: #7c3aed; /* 鲜明深紫：evaluateLighting, normalize, dot, reflect */
+        font-weight: 600;
+      }
+
+      .c-var {
+        color: #b45309; /* 暖深琥珀：vColor, vPosition, vNormal */
+        font-weight: 500;
+      }
+
+      .c-num {
+        color: #9333ea; /* 数字常量 */
+      }
+
+      .c-cmt {
+        color: #64748b; /* 注释灰 */
+        font-style: italic;
+      }
+
+      /* 底部核心教学提示与运行警告 */
+      footer {
+        background: #ffffff;
+        border-top: 1px solid var(--border-color);
+        padding: 8px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        color: var(--slate-muted);
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .core-axioms {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .core-axioms strong {
+        color: var(--navy-title);
+      }
+
+      /* WebGL2 异常遮罩 */
+      #fallback-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #ffffff;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        z-index: 9999;
+      }
+
+      #fallback-overlay h2 {
+        font-size: 1.4rem;
+        color: #dc2626;
+        margin-bottom: 12px;
+      }
+
+      #fallback-overlay p {
+        font-size: 0.9rem;
+        color: var(--slate-muted);
+        max-width: 600px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- WebGL2 故障提示遮罩 -->
+    <div id="fallback-overlay">
+      <h2>⚠️ WebGL 2.0 环境初始化失败</h2>
+      <p id="fallback-desc">
+        当前运行环境不支持 WebGL2 或由于安全策略拦截。请使用最新版本的 Google Chrome、Microsoft Edge
+        或 Firefox，并确认在系统/浏览器设置中启用了“硬件加速”。
+      </p>
+    </div>
+
+    <!-- 顶部标题与原则 -->
+    <header>
+      <div class="header-title-box">
+        <h1>计算机图形学：Gouraud 与 Phong 着色流水线交互对比</h1>
+        <p>
+          同几何细分 · 同点光源 (无距离衰减) · 同世界空间 Phong 局部光照函数 · 同单次 sRGB 显示转换
+        </p>
+      </div>
+      <div class="banner-statement">📌 同样的几何／光照／材质，只改变光照计算位置与插值对象</div>
+    </header>
+
+    <!-- 顶部共享参数控制区 -->
+    <nav id="controls-toolbar">
+      <div class="ctrl-item">
+        <label for="sel-model">几何模型:</label>
+        <select id="sel-model">
+          <option value="sphere" selected>Sphere (球体)</option>
+          <option value="teapot">Utah Teapot (犹他茶壶)</option>
+          <option value="torusKnot">Torus Knot (环面结)</option>
+        </select>
+      </div>
+
+      <div class="ctrl-item">
+        <label for="sel-subdiv">细分层级 (1~5):</label>
+        <select id="sel-subdiv">
+          <option value="1">1 (极低面数 - 80面)</option>
+          <option value="2" selected>2 (低面数 - 320面/典型)</option>
+          <option value="3">3 (中面数 - 1280面)</option>
+          <option value="4">4 (高面数 - 5120面)</option>
+          <option value="5">5 (极细密 - 20480面)</option>
+        </select>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <div class="ctrl-item">
+        <label>点光源位置 (X, Y, Z):</label>
+        <input type="range" id="light-x" min="-4" max="4" step="0.2" value="-1.2" />
+        <span class="val-display" id="val-lx">-1.2</span>
+        <input type="range" id="light-y" min="-4" max="4" step="0.2" value="1.8" />
+        <span class="val-display" id="val-ly">1.8</span>
+        <input type="range" id="light-z" min="0.5" max="5" step="0.2" value="2.2" />
+        <span class="val-display" id="val-lz">2.2</span>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <div class="ctrl-item">
+        <label for="range-shininess">高光指数 n:</label>
+        <input type="range" id="range-shininess" min="8" max="256" step="4" value="64" />
+        <span class="val-display" id="val-shininess">64</span>
+      </div>
+
+      <div class="ctrl-item">
+        <label for="range-ks">镜面强度 ks:</label>
+        <input type="range" id="range-ks" min="0" max="1" step="0.05" value="0.8" />
+        <span class="val-display" id="val-ks">0.80</span>
+      </div>
+
+      <div class="ctrl-item">
+        <label for="sel-light-term">光照分量:</label>
+        <select id="sel-light-term">
+          <option value="0" selected>完整光照 (Ka+Kd+Ks)</option>
+          <option value="1">仅漫反射 (Ka+Kd)</option>
+          <option value="2">仅镜面反射 (Ks)</option>
+        </select>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <div class="ctrl-item">
+        <label for="sel-diag-mode">阶段诊断:</label>
+        <select id="sel-diag-mode">
+          <option value="final" selected>片元 / 最终渲染结果</option>
+          <option value="vertex">顶点输出诊断 (点与采样值)</option>
+          <option value="interp">插值数据诊断 (插值颜色 / 法线编码)</option>
+        </select>
+      </div>
+
+      <div class="ctrl-item">
+        <label><input type="checkbox" id="chk-wireframe" /> 线框</label>
+        <label><input type="checkbox" id="chk-normals" /> 顶点法线</label>
+        <label><input type="checkbox" id="chk-rotate" /> 自动旋转</label>
+      </div>
+
+      <div class="divider-v"></div>
+
+      <!-- 相机视距与视角调整 -->
+      <div class="ctrl-item">
+        <label for="range-cam-dist">📷 相机视距:</label>
+        <input type="range" id="range-cam-dist" min="2.4" max="7.0" step="0.1" value="3.8" />
+        <span class="val-display" id="val-cam-dist">3.8</span>
+      </div>
+
+      <div class="ctrl-item">
+        <label>视角:</label>
+        <button
+          class="btn-preset"
+          id="btn-view-default"
+          style="padding: 2px 7px; font-size: 0.75rem"
+        >
+          默认(45°)
+        </button>
+        <button class="btn-preset" id="btn-view-front" style="padding: 2px 7px; font-size: 0.75rem">
+          正面
+        </button>
+        <button class="btn-preset" id="btn-view-top" style="padding: 2px 7px; font-size: 0.75rem">
+          俯视
+        </button>
+        <span
+          style="font-size: 0.72rem; color: var(--text-secondary); margin-left: 3px"
+          title="画布操作：左键拖拽旋转模型，滚轮前后缩放，右键拖拽调整视距"
+          >🖱️左键旋转/滚轮缩放</span
+        >
+      </div>
+
+      <div class="divider-v"></div>
+
+      <!-- 教学一键预设与重置 -->
+      <div class="ctrl-item">
+        <button class="btn-preset" id="btn-preset-loss">🎯 预设: 观察高光丢失</button>
+        <button class="btn-preset" id="btn-preset-contour">📐 预设: 观察网格与轮廓</button>
+        <button id="btn-reset">重置</button>
+      </div>
+    </nav>
+
+    <!-- 中部：左右同步对照视图 -->
+    <main id="main-split-container">
+      <div id="canvas-container">
+        <canvas id="glcanvas"></canvas>
+
+        <!-- 流水线交互节点与说明覆盖卡片 -->
+        <div class="pipeline-overlays">
+          <!-- 左侧 Gouraud 流水线 -->
+          <div class="overlay-col">
+            <div class="pipeline-flow">
+              <div class="pipeline-header">
+                <span class="pipeline-name">Gouraud 着色流水线</span>
+                <span class="pipeline-tag" style="background: #e6f4f7; color: #0d6978"
+                  >顶点级光照 (Per-Vertex)</span
+                >
+              </div>
+              <div class="pipeline-steps">
+                <div class="step-node" data-target="gouraud-in">顶点输入 (aPos, aNorm)</div>
+                <span class="step-arrow">→</span>
+                <div
+                  class="step-node active-highlight"
+                  data-target="gouraud-vs"
+                  title="核心差异：光照在此计算"
+                >
+                  ★ 顶点着色器 (算光照)
+                </div>
+                <span class="step-arrow">→</span>
+                <div
+                  class="step-node step-interp-gouraud"
+                  data-target="gouraud-raster"
+                  title="GPU固定硬件执行透视矫正插值"
+                >
+                  光栅化 (插值 vColor)
+                </div>
+                <span class="step-arrow">→</span>
+                <div class="step-node" data-target="gouraud-fs">片元着色器 (显色输出)</div>
+              </div>
+            </div>
+
+            <div class="view-info-footer">
+              <span class="mesh-stats" id="stats-gouraud">顶点: - | 三角形: -</span>
+              <span class="diag-legend-badge" id="badge-gouraud">模式: 最终渲染</span>
+            </div>
+          </div>
+
+          <!-- 右侧 Phong 流水线 -->
+          <div class="overlay-col">
+            <div class="pipeline-flow">
+              <div class="pipeline-header">
+                <span class="pipeline-name">Phong 着色流水线</span>
+                <span class="pipeline-tag" style="background: #ecfdf5; color: #065f46"
+                  >逐片元光照 (Per-Fragment)</span
+                >
+              </div>
+              <div class="pipeline-steps">
+                <div class="step-node" data-target="phong-in">顶点输入 (aPos, aNorm)</div>
+                <span class="step-arrow">→</span>
+                <div class="step-node" data-target="phong-vs">顶点着色器 (变换几何)</div>
+                <span class="step-arrow">→</span>
+                <div
+                  class="step-node step-interp-phong"
+                  data-target="phong-raster"
+                  title="GPU硬件插值世界空间位置与法线"
+                >
+                  光栅化 (插值 vPos, vNorm)
+                </div>
+                <span class="step-arrow">→</span>
+                <div
+                  class="step-node active-highlight"
+                  data-target="phong-fs"
+                  title="核心差异：重归一化法线并计算光照"
+                >
+                  ★ 片元着色器 (重算光照)
+                </div>
+              </div>
+            </div>
+
+            <div class="view-info-footer">
+              <span class="mesh-stats" id="stats-phong">顶点: - | 三角形: -</span>
+              <span class="diag-legend-badge" id="badge-phong">模式: 最终渲染</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 底部：真实着色器代码对照与查看器 -->
+    <section id="code-comparison-section">
+      <div class="code-panel-bar">
+        <div class="code-tab-group">
+          <strong style="font-size: 0.84rem; margin-right: 8px; color: var(--navy-title)"
+            >真实编译源码对照:</strong
+          >
+          <button class="code-tab-btn active" id="tab-vs">顶点着色器 (VS 对照)</button>
+          <button class="code-tab-btn" id="tab-fs">片元着色器 (FS 对照)</button>
+          <button class="code-tab-btn" id="tab-quad">四面板同屏 (VS + FS)</button>
+          <button class="code-tab-btn" id="btn-copy-code">📋 复制代码</button>
+          <label
+            style="
+              font-size: 0.78rem;
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              margin-left: 12px;
+              cursor: pointer;
+              color: var(--navy-title);
+              font-weight: 600;
+              user-select: none;
+            "
+            title="勾选后滚动任一着色器窗口，其他窗口同步上下滚动"
+          >
+            <input type="checkbox" id="chk-sync-scroll" checked />
+            <span>🔗 同步滚动代码</span>
+          </label>
+        </div>
+        <div>
+          <button class="code-tab-btn" id="btn-toggle-code-size">展开/收起代码区</button>
+        </div>
+      </div>
+
+      <div class="code-viewers-grid" id="code-grid">
+        <!-- 动态注入代码列 -->
+        <div class="code-column" id="col-code-left">
+          <div class="code-col-title">
+            <span id="title-code-left">Gouraud 顶点着色器 (gl.shaderSource 原始文本)</span>
+            <span style="color: #b45309; font-weight: 600">计算位置：顶点</span>
+          </div>
+          <div class="code-scroll-box">
+            <pre class="code-content"><code id="code-left"></code></pre>
+          </div>
+        </div>
+
+        <div class="code-column" id="col-code-right">
+          <div class="code-col-title">
+            <span id="title-code-right">Phong 顶点着色器 (gl.shaderSource 原始文本)</span>
+            <span style="color: #15803d; font-weight: 600">计算位置：片元</span>
+          </div>
+          <div class="code-scroll-box">
+            <pre class="code-content"><code id="code-right"></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部核心教学提示 -->
+    <footer>
+      <div class="core-axioms">
+        <span>💡 <strong>Gouraud：</strong>顶点算光照，插值颜色。</span>
+        <span>💡 <strong>Phong：</strong>插值位置与法线，片元算光照。</span>
+        <span
+          >⚠️
+          <strong>教学关键：</strong
+          >顶点较暗，不代表面内没有高光；逐片元着色改善面内明暗，不增加几何细分，也不改变多边形轮廓。</span
+        >
+      </div>
+      <div>点光源，未启用距离衰减 | WebGL 2.0 (GLSL ES 3.00)</div>
+    </footer>
+
+    <!-- 脚本区：包含数学库、几何生成算法、Shader源码及渲染逻辑 -->
+    <script>
+      /**
+       * 3D 数学辅助函数 (4x4 矩阵与三维向量计算)
+       */
+      const Mat4 = {
+        perspective(fovyRad, aspect, near, far) {
+          const out = new Float32Array(16);
+          const f = 1.0 / Math.tan(fovyRad / 2);
+          out[0] = f / aspect;
+          out[5] = f;
+          out[11] = -1;
+          out[10] = (far + near) / (near - far);
+          out[14] = (2 * far * near) / (near - far);
+          return out;
+        },
+        lookAt(eye, target, up) {
+          const out = new Float32Array(16);
+          let z0 = eye[0] - target[0],
+            z1 = eye[1] - target[1],
+            z2 = eye[2] - target[2];
+          let len = 1 / Math.hypot(z0, z1, z2);
+          z0 *= len;
+          z1 *= len;
+          z2 *= len;
+
+          let x0 = up[1] * z2 - up[2] * z1;
+          let x1 = up[2] * z0 - up[0] * z2;
+          let x2 = up[0] * z1 - up[1] * z0;
+          len = Math.hypot(x0, x1, x2);
+          if (len) {
+            len = 1 / len;
+            x0 *= len;
+            x1 *= len;
+            x2 *= len;
+          }
+
+          let y0 = z1 * x2 - z2 * x1;
+          let y1 = z2 * x0 - z0 * x2;
+          let y2 = z0 * x1 - z1 * x0;
+
+          out[0] = x0;
+          out[1] = y0;
+          out[2] = z0;
+          out[3] = 0;
+          out[4] = x1;
+          out[5] = y1;
+          out[6] = z1;
+          out[7] = 0;
+          out[8] = x2;
+          out[9] = y2;
+          out[10] = z2;
+          out[11] = 0;
+          out[12] = -(x0 * eye[0] + x1 * eye[1] + x2 * eye[2]);
+          out[13] = -(y0 * eye[0] + y1 * eye[1] + y2 * eye[2]);
+          out[14] = -(z0 * eye[0] + z1 * eye[1] + z2 * eye[2]);
+          out[15] = 1;
+          return out;
+        },
+        fromRotationXY(rotX, rotY) {
+          const cx = Math.cos(rotX),
+            sx = Math.sin(rotX);
+          const cy = Math.cos(rotY),
+            sy = Math.sin(rotY);
+          const out = new Float32Array(16);
+          out[0] = cy;
+          out[1] = sx * sy;
+          out[2] = -cx * sy;
+          out[3] = 0;
+          out[4] = 0;
+          out[5] = cx;
+          out[6] = sx;
+          out[7] = 0;
+          out[8] = sy;
+          out[9] = -sx * cy;
+          out[10] = cx * cy;
+          out[11] = 0;
+          out[15] = 1;
+          return out;
+        },
+        normalMatrix3x3(m) {
+          // 列主序 4x4 矩阵的左上 3x3 元素：
+          // 第0列: a00=m[0], a10=m[1], a20=m[2]
+          // 第1列: a01=m[4], a11=m[5], a21=m[6]
+          // 第2列: a02=m[8], a12=m[9], a22=m[10]
+          const a00 = m[0],
+            a10 = m[1],
+            a20 = m[2];
+          const a01 = m[4],
+            a11 = m[5],
+            a21 = m[6];
+          const a02 = m[8],
+            a12 = m[9],
+            a22 = m[10];
+
+          // 伴随矩阵各余子式 (代数余子式矩阵 C)
+          const c00 = a11 * a22 - a12 * a21;
+          const c01 = -(a10 * a22 - a12 * a20);
+          const c02 = a10 * a21 - a11 * a20;
+
+          const c10 = -(a01 * a22 - a02 * a21);
+          const c11 = a00 * a22 - a02 * a20;
+          const c12 = -(a00 * a21 - a01 * a20);
+
+          const c20 = a01 * a12 - a02 * a11;
+          const c21 = -(a00 * a12 - a02 * a10);
+          const c22 = a00 * a11 - a01 * a10;
+
+          const det = a00 * c00 + a01 * c01 + a02 * c02;
+          if (Math.abs(det) < 1e-12) return new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+          const invDet = 1.0 / det;
+
+          // 输出为 WebGL uniformMatrix3fv 列主序 3x3 矩阵 (逆转置矩阵)
+          const out = new Float32Array(9);
+          out[0] = c00 * invDet;
+          out[1] = c10 * invDet;
+          out[2] = c20 * invDet;
+
+          out[3] = c01 * invDet;
+          out[4] = c11 * invDet;
+          out[5] = c21 * invDet;
+
+          out[6] = c02 * invDet;
+          out[7] = c12 * invDet;
+          out[8] = c22 * invDet;
+          return out;
+        },
+      };
+
+      /**
+       * 1. 球体几何生成：Icosphere 递归细分 (细分层级 1~5 -> 递归 0~4)
+       */
+      function generateIcosphere(subdivLevel) {
+        const recur = Math.max(0, Math.min(4, subdivLevel - 1));
+        const t = (1.0 + Math.sqrt(5.0)) / 2.0;
+        let verts = [
+          -1,
+          t,
+          0,
+          1,
+          t,
+          0,
+          -1,
+          -t,
+          0,
+          1,
+          -t,
+          0,
+          0,
+          -1,
+          t,
+          0,
+          1,
+          t,
+          0,
+          -1,
+          -t,
+          0,
+          1,
+          -t,
+          t,
+          0,
+          -1,
+          t,
+          0,
+          1,
+          -t,
+          0,
+          -1,
+          -t,
+          0,
+          1,
+        ];
+
+        for (let i = 0; i < verts.length; i += 3) {
+          const len = Math.hypot(verts[i], verts[i + 1], verts[i + 2]);
+          verts[i] /= len;
+          verts[i + 1] /= len;
+          verts[i + 2] /= len;
+        }
+
+        let faces = [
+          0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6,
+          7, 1, 8, 3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6,
+          7, 9, 8, 1,
+        ];
+
+        const midCache = new Map();
+        function getMidpoint(p1, p2) {
+          const key = p1 < p2 ? `${p1}_${p2}` : `${p2}_${p1}`;
+          if (midCache.has(key)) return midCache.get(key);
+          const x = (verts[p1 * 3] + verts[p2 * 3]) * 0.5;
+          const y = (verts[p1 * 3 + 1] + verts[p2 * 3 + 1]) * 0.5;
+          const z = (verts[p1 * 3 + 2] + verts[p2 * 3 + 2]) * 0.5;
+          const len = Math.hypot(x, y, z);
+          const idx = verts.length / 3;
+          verts.push(x / len, y / len, z / len);
+          midCache.set(key, idx);
+          return idx;
+        }
+
+        for (let s = 0; s < recur; s++) {
+          const nextFaces = [];
+          for (let i = 0; i < faces.length; i += 3) {
+            const v0 = faces[i],
+              v1 = faces[i + 1],
+              v2 = faces[i + 2];
+            const a = getMidpoint(v0, v1);
+            const b = getMidpoint(v1, v2);
+            const c = getMidpoint(v2, v0);
+            nextFaces.push(v0, a, c, v1, b, a, v2, c, b, a, b, c);
+          }
+          faces = nextFaces;
+        }
+
+        const positions = new Float32Array(verts);
+        const normals = new Float32Array(verts); // 球心为原点，位置即法线
+        const indices = new Uint32Array(faces);
+
+        // 生成去重线框边
+        const edgeSet = new Set();
+        const wireEdges = [];
+        for (let i = 0; i < faces.length; i += 3) {
+          const i0 = faces[i],
+            i1 = faces[i + 1],
+            i2 = faces[i + 2];
+          const pushEdge = (a, b) => {
+            const k = a < b ? `${a}_${b}` : `${b}_${a}`;
+            if (!edgeSet.has(k)) {
+              edgeSet.add(k);
+              wireEdges.push(a, b);
+            }
+          };
+          pushEdge(i0, i1);
+          pushEdge(i1, i2);
+          pushEdge(i2, i0);
+        }
+
+        return {
+          positions,
+          normals,
+          indices,
+          wireIndices: new Uint32Array(wireEdges),
+          vertexCount: positions.length / 3,
+          triangleCount: indices.length / 3,
+        };
+      }
+
+      /**
+       * 2. 真实双三次 Bézier 曲面 Utah Teapot 与高曲率 Torus Knot 几何生成器
+       */
+      function buildMeshFromFaces(verts, norms, faces) {
+        const vCount = verts.length;
+        const fCount = faces.length;
+        const positions = new Float32Array(vCount * 3);
+        const normals = new Float32Array(vCount * 3);
+        for (let i = 0; i < vCount; i++) {
+          positions[i * 3] = verts[i][0];
+          positions[i * 3 + 1] = verts[i][1];
+          positions[i * 3 + 2] = verts[i][2];
+          normals[i * 3] = norms[i][0];
+          normals[i * 3 + 1] = norms[i][1];
+          normals[i * 3 + 2] = norms[i][2];
+        }
+
+        const indices = new Uint32Array(fCount * 3);
+        const edgeSet = new Set();
+        const wireEdges = [];
+        for (let i = 0; i < fCount; i++) {
+          const i0 = faces[i][0],
+            i1 = faces[i][1],
+            i2 = faces[i][2];
+          indices[i * 3] = i0;
+          indices[i * 3 + 1] = i1;
+          indices[i * 3 + 2] = i2;
+
+          const pushEdge = (a, b) => {
+            const k = a < b ? `${a}_${b}` : `${b}_${a}`;
+            if (!edgeSet.has(k)) {
+              edgeSet.add(k);
+              wireEdges.push(a, b);
+            }
+          };
+          pushEdge(i0, i1);
+          pushEdge(i1, i2);
+          pushEdge(i2, i0);
+        }
+
+        return {
+          positions,
+          normals,
+          indices,
+          wireIndices: new Uint32Array(wireEdges),
+          vertexCount: vCount,
+          triangleCount: fCount,
+        };
+      }
+
+      const TEAPOT_VERTICES = [
+        1.4, 0, 2.4, 1.4, -0.784, 2.4, 0.784, -1.4, 2.4, 0, -1.4, 2.4, 1.337, 0, 2.531, 1.337,
+        -0.749, 2.531, 0.749, -1.337, 2.531, 0, -1.337, 2.531, 1.438, 0, 2.531, 1.438, -0.805,
+        2.531, 0.805, -1.438, 2.531, 0, -1.438, 2.531, 1.5, 0, 2.4, 1.5, -0.84, 2.4, 0.84, -1.5,
+        2.4, 0, -1.5, 2.4, -0.784, -1.4, 2.4, -1.4, -0.784, 2.4, -1.4, 0, 2.4, -0.749, -1.337,
+        2.531, -1.337, -0.749, 2.531, -1.337, 0, 2.531, -0.805, -1.438, 2.531, -1.438, -0.805,
+        2.531, -1.438, 0, 2.531, -0.84, -1.5, 2.4, -1.5, -0.84, 2.4, -1.5, 0, 2.4, -1.4, 0.784, 2.4,
+        -0.784, 1.4, 2.4, 0, 1.4, 2.4, -1.337, 0.749, 2.531, -0.749, 1.337, 2.531, 0, 1.337, 2.531,
+        -1.438, 0.805, 2.531, -0.805, 1.438, 2.531, 0, 1.438, 2.531, -1.5, 0.84, 2.4, -0.84, 1.5,
+        2.4, 0, 1.5, 2.4, 0.784, 1.4, 2.4, 1.4, 0.784, 2.4, 0.749, 1.337, 2.531, 1.337, 0.749,
+        2.531, 0.805, 1.438, 2.531, 1.438, 0.805, 2.531, 0.84, 1.5, 2.4, 1.5, 0.84, 2.4, 1.75, 0,
+        1.875, 1.75, -0.98, 1.875, 0.98, -1.75, 1.875, 0, -1.75, 1.875, 2, 0, 1.35, 2, -1.12, 1.35,
+        1.12, -2, 1.35, 0, -2, 1.35, 2, 0, 0.9, 2, -1.12, 0.9, 1.12, -2, 0.9, 0, -2, 0.9, -0.98,
+        -1.75, 1.875, -1.75, -0.98, 1.875, -1.75, 0, 1.875, -1.12, -2, 1.35, -2, -1.12, 1.35, -2, 0,
+        1.35, -1.12, -2, 0.9, -2, -1.12, 0.9, -2, 0, 0.9, -1.75, 0.98, 1.875, -0.98, 1.75, 1.875, 0,
+        1.75, 1.875, -2, 1.12, 1.35, -1.12, 2, 1.35, 0, 2, 1.35, -2, 1.12, 0.9, -1.12, 2, 0.9, 0, 2,
+        0.9, 0.98, 1.75, 1.875, 1.75, 0.98, 1.875, 1.12, 2, 1.35, 2, 1.12, 1.35, 1.12, 2, 0.9, 2,
+        1.12, 0.9, 2, 0, 0.45, 2, -1.12, 0.45, 1.12, -2, 0.45, 0, -2, 0.45, 1.5, 0, 0.225, 1.5,
+        -0.84, 0.225, 0.84, -1.5, 0.225, 0, -1.5, 0.225, 1.5, 0, 0.15, 1.5, -0.84, 0.15, 0.84, -1.5,
+        0.15, 0, -1.5, 0.15, -1.12, -2, 0.45, -2, -1.12, 0.45, -2, 0, 0.45, -0.84, -1.5, 0.225,
+        -1.5, -0.84, 0.225, -1.5, 0, 0.225, -0.84, -1.5, 0.15, -1.5, -0.84, 0.15, -1.5, 0, 0.15, -2,
+        1.12, 0.45, -1.12, 2, 0.45, 0, 2, 0.45, -1.5, 0.84, 0.225, -0.84, 1.5, 0.225, 0, 1.5, 0.225,
+        -1.5, 0.84, 0.15, -0.84, 1.5, 0.15, 0, 1.5, 0.15, 1.12, 2, 0.45, 2, 1.12, 0.45, 0.84, 1.5,
+        0.225, 1.5, 0.84, 0.225, 0.84, 1.5, 0.15, 1.5, 0.84, 0.15, -1.6, 0, 2.025, -1.6, -0.3,
+        2.025, -1.5, -0.3, 2.25, -1.5, 0, 2.25, -2.3, 0, 2.025, -2.3, -0.3, 2.025, -2.5, -0.3, 2.25,
+        -2.5, 0, 2.25, -2.7, 0, 2.025, -2.7, -0.3, 2.025, -3, -0.3, 2.25, -3, 0, 2.25, -2.7, 0, 1.8,
+        -2.7, -0.3, 1.8, -3, -0.3, 1.8, -3, 0, 1.8, -1.5, 0.3, 2.25, -1.6, 0.3, 2.025, -2.5, 0.3,
+        2.25, -2.3, 0.3, 2.025, -3, 0.3, 2.25, -2.7, 0.3, 2.025, -3, 0.3, 1.8, -2.7, 0.3, 1.8, -2.7,
+        0, 1.575, -2.7, -0.3, 1.575, -3, -0.3, 1.35, -3, 0, 1.35, -2.5, 0, 1.125, -2.5, -0.3, 1.125,
+        -2.65, -0.3, 0.9375, -2.65, 0, 0.9375, -2, -0.3, 0.9, -1.9, -0.3, 0.6, -1.9, 0, 0.6, -3,
+        0.3, 1.35, -2.7, 0.3, 1.575, -2.65, 0.3, 0.9375, -2.5, 0.3, 1.125, -1.9, 0.3, 0.6, -2, 0.3,
+        0.9, 1.7, 0, 1.425, 1.7, -0.66, 1.425, 1.7, -0.66, 0.6, 1.7, 0, 0.6, 2.6, 0, 1.425, 2.6,
+        -0.66, 1.425, 3.1, -0.66, 0.825, 3.1, 0, 0.825, 2.3, 0, 2.1, 2.3, -0.25, 2.1, 2.4, -0.25,
+        2.025, 2.4, 0, 2.025, 2.7, 0, 2.4, 2.7, -0.25, 2.4, 3.3, -0.25, 2.4, 3.3, 0, 2.4, 1.7, 0.66,
+        0.6, 1.7, 0.66, 1.425, 3.1, 0.66, 0.825, 2.6, 0.66, 1.425, 2.4, 0.25, 2.025, 2.3, 0.25, 2.1,
+        3.3, 0.25, 2.4, 2.7, 0.25, 2.4, 2.8, 0, 2.475, 2.8, -0.25, 2.475, 3.525, -0.25, 2.494,
+        3.525, 0, 2.494, 2.9, 0, 2.475, 2.9, -0.15, 2.475, 3.45, -0.15, 2.513, 3.45, 0, 2.513, 2.8,
+        0, 2.4, 2.8, -0.15, 2.4, 3.2, -0.15, 2.4, 3.2, 0, 2.4, 3.525, 0.25, 2.494, 2.8, 0.25, 2.475,
+        3.45, 0.15, 2.513, 2.9, 0.15, 2.475, 3.2, 0.15, 2.4, 2.8, 0.15, 2.4, 0, 0, 3.15, 0.8, 0,
+        3.15, 0.8, -0.45, 3.15, 0.45, -0.8, 3.15, 0, -0.8, 3.15, 0, 0, 2.85, 0.2, 0, 2.7, 0.2,
+        -0.112, 2.7, 0.112, -0.2, 2.7, 0, -0.2, 2.7, -0.45, -0.8, 3.15, -0.8, -0.45, 3.15, -0.8, 0,
+        3.15, -0.112, -0.2, 2.7, -0.2, -0.112, 2.7, -0.2, 0, 2.7, -0.8, 0.45, 3.15, -0.45, 0.8,
+        3.15, 0, 0.8, 3.15, -0.2, 0.112, 2.7, -0.112, 0.2, 2.7, 0, 0.2, 2.7, 0.45, 0.8, 3.15, 0.8,
+        0.45, 3.15, 0.112, 0.2, 2.7, 0.2, 0.112, 2.7, 0.4, 0, 2.55, 0.4, -0.224, 2.55, 0.224, -0.4,
+        2.55, 0, -0.4, 2.55, 1.3, 0, 2.55, 1.3, -0.728, 2.55, 0.728, -1.3, 2.55, 0, -1.3, 2.55, 1.3,
+        0, 2.4, 1.3, -0.728, 2.4, 0.728, -1.3, 2.4, 0, -1.3, 2.4, -0.224, -0.4, 2.55, -0.4, -0.224,
+        2.55, -0.4, 0, 2.55, -0.728, -1.3, 2.55, -1.3, -0.728, 2.55, -1.3, 0, 2.55, -0.728, -1.3,
+        2.4, -1.3, -0.728, 2.4, -1.3, 0, 2.4, -0.4, 0.224, 2.55, -0.224, 0.4, 2.55, 0, 0.4, 2.55,
+        -1.3, 0.728, 2.55, -0.728, 1.3, 2.55, 0, 1.3, 2.55, -1.3, 0.728, 2.4, -0.728, 1.3, 2.4, 0,
+        1.3, 2.4, 0.224, 0.4, 2.55, 0.4, 0.224, 2.55, 0.728, 1.3, 2.55, 1.3, 0.728, 2.55, 0.728,
+        1.3, 2.4, 1.3, 0.728, 2.4, 0, 0, 0, 1.425, 0, 0, 1.425, 0.798, 0, 0.798, 1.425, 0, 0, 1.425,
+        0, 1.5, 0, 0.075, 1.5, 0.84, 0.075, 0.84, 1.5, 0.075, 0, 1.5, 0.075, -0.798, 1.425, 0,
+        -1.425, 0.798, 0, -1.425, 0, 0, -0.84, 1.5, 0.075, -1.5, 0.84, 0.075, -1.5, 0, 0.075,
+        -1.425, -0.798, 0, -0.798, -1.425, 0, 0, -1.425, 0, -1.5, -0.84, 0.075, -0.84, -1.5, 0.075,
+        0, -1.5, 0.075, 0.798, -1.425, 0, 1.425, -0.798, 0, 0.84, -1.5, 0.075, 1.5, -0.84, 0.075,
+      ];
+
+      const TEAPOT_PATCHES = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 3, 16, 17, 18, 7, 19, 20, 21, 11, 22,
+        23, 24, 15, 25, 26, 27, 18, 28, 29, 30, 21, 31, 32, 33, 24, 34, 35, 36, 27, 37, 38, 39, 30,
+        40, 41, 0, 33, 42, 43, 4, 36, 44, 45, 8, 39, 46, 47, 12, 12, 13, 14, 15, 48, 49, 50, 51, 52,
+        53, 54, 55, 56, 57, 58, 59, 15, 25, 26, 27, 51, 60, 61, 62, 55, 63, 64, 65, 59, 66, 67, 68,
+        27, 37, 38, 39, 62, 69, 70, 71, 65, 72, 73, 74, 68, 75, 76, 77, 39, 46, 47, 12, 71, 78, 79,
+        48, 74, 80, 81, 52, 77, 82, 83, 56, 56, 57, 58, 59, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
+        94, 95, 59, 66, 67, 68, 87, 96, 97, 98, 91, 99, 100, 101, 95, 102, 103, 104, 68, 75, 76, 77,
+        98, 105, 106, 107, 101, 108, 109, 110, 104, 111, 112, 113, 77, 82, 83, 56, 107, 114, 115,
+        84, 110, 116, 117, 88, 113, 118, 119, 92, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+        130, 131, 132, 133, 134, 135, 123, 136, 137, 120, 127, 138, 139, 124, 131, 140, 141, 128,
+        135, 142, 143, 132, 132, 133, 134, 135, 144, 145, 146, 147, 148, 149, 150, 151, 68, 152,
+        153, 154, 135, 142, 143, 132, 147, 155, 156, 144, 151, 157, 158, 148, 154, 159, 160, 68,
+        161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 164, 177,
+        178, 161, 168, 179, 180, 165, 172, 181, 182, 169, 176, 183, 184, 173, 173, 174, 175, 176,
+        185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 176, 183, 184, 173, 188, 197,
+        198, 185, 192, 199, 200, 189, 196, 201, 202, 193, 203, 203, 203, 203, 204, 205, 206, 207,
+        208, 208, 208, 208, 209, 210, 211, 212, 203, 203, 203, 203, 207, 213, 214, 215, 208, 208,
+        208, 208, 212, 216, 217, 218, 203, 203, 203, 203, 215, 219, 220, 221, 208, 208, 208, 208,
+        218, 222, 223, 224, 203, 203, 203, 203, 221, 225, 226, 204, 208, 208, 208, 208, 224, 227,
+        228, 209, 209, 210, 211, 212, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
+        212, 216, 217, 218, 232, 241, 242, 243, 236, 244, 245, 246, 240, 247, 248, 249, 218, 222,
+        223, 224, 243, 250, 251, 252, 246, 253, 254, 255, 249, 256, 257, 258, 224, 227, 228, 209,
+        252, 259, 260, 229, 255, 261, 262, 233, 258, 263, 264, 237, 265, 265, 265, 265, 266, 267,
+        268, 269, 270, 271, 272, 273, 92, 119, 118, 113, 265, 265, 265, 265, 269, 274, 275, 276,
+        273, 277, 278, 279, 113, 112, 111, 104, 265, 265, 265, 265, 276, 280, 281, 282, 279, 283,
+        284, 285, 104, 103, 102, 95, 265, 265, 265, 265, 282, 286, 287, 266, 285, 288, 289, 270, 95,
+        94, 93, 92,
+      ];
+
+      /**
+       * 犹他茶壶 (Utah Teapot, 32块双三次贝塞尔曲面片动态细分，严密闭合无孔洞)
+       */
+      function generateTeapot(subdivisions) {
+        const segMap = [1, 2, 3, 5, 8];
+        const segments = segMap[Math.min(4, Math.max(0, subdivisions - 1))];
+
+        function bernstein(t) {
+          const it = 1.0 - t;
+          const it2 = it * it;
+          const it3 = it2 * it;
+          const t2 = t * t;
+          const t3 = t2 * t;
+          const b = [it3, 3.0 * t * it2, 3.0 * t2 * it, t3];
+          const db = [-3.0 * it2, 3.0 * it2 - 6.0 * t * it, 6.0 * t * it - 3.0 * t2, 3.0 * t2];
+          return [b, db];
+        }
+
+        function notDegenerate(p1, p2, p3) {
+          const d1 = Math.hypot(p1[0] - p2[0], p1[1] - p2[1], p1[2] - p2[2]);
+          const d2 = Math.hypot(p1[0] - p3[0], p1[1] - p3[1], p1[2] - p3[2]);
+          const d3 = Math.hypot(p2[0] - p3[0], p2[1] - p3[1], p2[2] - p3[2]);
+          return d1 > 1e-4 && d2 > 1e-4 && d3 > 1e-4;
+        }
+
+        const allVerts = [];
+        const allNorms = [];
+        const allFaces = [];
+        const scale = 0.38;
+        const maxH2 = 1.575;
+
+        for (let surf = 0; surf < 32; surf++) {
+          const cp = [];
+          for (let r = 0; r < 4; r++) {
+            const row = [];
+            for (let c = 0; c < 4; c++) {
+              const idx = TEAPOT_PATCHES[surf * 16 + r * 4 + c];
+              row.push([
+                TEAPOT_VERTICES[idx * 3],
+                TEAPOT_VERTICES[idx * 3 + 1],
+                TEAPOT_VERTICES[idx * 3 + 2],
+              ]);
+            }
+            cp.push(row);
+          }
+
+          const startV = allVerts.length;
+          const nPts = segments + 1;
+
+          for (let sstep = 0; sstep <= segments; sstep++) {
+            const s = sstep / segments;
+            const [bs, dbs] = bernstein(s);
+            for (let tstep = 0; tstep <= segments; tstep++) {
+              const t = tstep / segments;
+              const [bt, dbt] = bernstein(t);
+
+              let px = 0,
+                py = 0,
+                pz = 0;
+              let sdir = [0, 0, 0];
+              let tdir = [0, 0, 0];
+
+              for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 4; c++) {
+                  const pt = cp[r][c];
+                  const w = bs[r] * bt[c];
+                  px += pt[0] * w;
+                  py += pt[1] * w;
+                  pz += pt[2] * w;
+
+                  const ws = dbs[r] * bt[c];
+                  sdir[0] += pt[0] * ws;
+                  sdir[1] += pt[1] * ws;
+                  sdir[2] += pt[2] * ws;
+
+                  const wt = bs[r] * dbt[c];
+                  tdir[0] += pt[0] * wt;
+                  tdir[1] += pt[1] * wt;
+                  tdir[2] += pt[2] * wt;
+                }
+              }
+
+              let nx = tdir[1] * sdir[2] - tdir[2] * sdir[1];
+              let ny = tdir[2] * sdir[0] - tdir[0] * sdir[2];
+              let nz = tdir[0] * sdir[1] - tdir[1] * sdir[0];
+              const nlen = Math.hypot(nx, ny, nz);
+              if (nlen < 1e-6) {
+                nx = 0.0;
+                ny = pz > maxH2 ? 1.0 : -1.0;
+                nz = 0.0;
+              } else {
+                nx /= nlen;
+                ny /= nlen;
+                nz /= nlen;
+              }
+
+              allVerts.push([scale * px, scale * (pz - maxH2), -scale * py]);
+              allNorms.push([nx, nz, -ny]);
+            }
+          }
+
+          for (let sstep = 0; sstep < segments; sstep++) {
+            for (let tstep = 0; tstep < segments; tstep++) {
+              const v1 = startV + sstep * nPts + tstep;
+              const v2 = v1 + 1;
+              const v3 = v2 + nPts;
+              const v4 = v1 + nPts;
+
+              const p1 = allVerts[v1],
+                p2 = allVerts[v2],
+                p3 = allVerts[v3],
+                p4 = allVerts[v4];
+              if (notDegenerate(p1, p2, p3)) {
+                allFaces.push([v1, v2, v3]);
+              }
+              if (notDegenerate(p1, p3, p4)) {
+                allFaces.push([v1, v3, v4]);
+              }
+            }
+          }
+        }
+
+        return buildMeshFromFaces(allVerts, allNorms, allFaces);
+      }
+
+      /**
+       * 3. 环面结 (Torus Knot, 复杂连续高曲率管道表面)
+       */
+      function generateTorusKnot(subdivisions) {
+        const segMap = [
+          [32, 8],
+          [54, 12],
+          [88, 16],
+          [144, 22],
+          [220, 28],
+        ];
+        const [tubular, radial] = segMap[Math.min(4, Math.max(0, subdivisions - 1))];
+        const tubeRadius = 0.28;
+        const scale = 0.72;
+
+        const curvePts = [];
+        const curveTans = [];
+        for (let i = 0; i < tubular; i++) {
+          const u = (i * 2.0 * Math.PI) / tubular;
+          const r = 0.5 * (2.0 + Math.cos(3.0 * u));
+          const cx = r * Math.cos(2.0 * u) * scale;
+          const cy = r * Math.sin(2.0 * u) * scale;
+          const cz = -0.5 * Math.sin(3.0 * u) * scale;
+
+          const du = 0.001;
+          const u2 = u + du;
+          const r2 = 0.5 * (2.0 + Math.cos(3.0 * u2));
+          const cx2 = r2 * Math.cos(2.0 * u2) * scale;
+          const cy2 = r2 * Math.sin(2.0 * u2) * scale;
+          const cz2 = -0.5 * Math.sin(3.0 * u2) * scale;
+
+          const tx = (cx2 - cx) / du;
+          const ty = (cy2 - cy) / du;
+          const tz = (cz2 - cz) / du;
+          const tlen = Math.hypot(tx, ty, tz) || 1.0;
+          curvePts.push([cx, cy, cz]);
+          curveTans.push([tx / tlen, ty / tlen, tz / tlen]);
+        }
+
+        // Parallel transport frame (Bishop 标架)
+        const t0 = curveTans[0];
+        let up = [0.0, 0.0, 1.0];
+        if (Math.abs(t0[2]) > 0.9) up = [0.0, 1.0, 0.0];
+        let nx = t0[1] * up[2] - t0[2] * up[1];
+        let ny = t0[2] * up[0] - t0[0] * up[2];
+        let nz = t0[0] * up[1] - t0[1] * up[0];
+        const nlen = Math.hypot(nx, ny, nz) || 1.0;
+        nx /= nlen;
+        ny /= nlen;
+        nz /= nlen;
+
+        const frames = [];
+        let bx = t0[1] * nz - t0[2] * ny;
+        let by = t0[2] * nx - t0[0] * nz;
+        let bz = t0[0] * ny - t0[1] * nx;
+        frames.push([
+          [nx, ny, nz],
+          [bx, by, bz],
+        ]);
+
+        let curN = [nx, ny, nz];
+        for (let i = 0; i < tubular - 1; i++) {
+          const tA = curveTans[i];
+          const tB = curveTans[i + 1];
+          let ax = tA[1] * tB[2] - tA[2] * tB[1];
+          let ay = tA[2] * tB[0] - tA[0] * tB[2];
+          let az = tA[0] * tB[1] - tA[1] * tB[0];
+          const alen = Math.hypot(ax, ay, az);
+          const dot = Math.max(-1.0, Math.min(1.0, tA[0] * tB[0] + tA[1] * tB[1] + tA[2] * tB[2]));
+          const ang = Math.atan2(alen, dot);
+          if (alen > 1e-6) {
+            ax /= alen;
+            ay /= alen;
+            az /= alen;
+            const cosA = Math.cos(ang);
+            const sinA = Math.sin(ang);
+            const crossX = ay * curN[2] - az * curN[1];
+            const crossY = az * curN[0] - ax * curN[2];
+            const crossZ = ax * curN[1] - ay * curN[0];
+            const adotv = ax * curN[0] + ay * curN[1] + az * curN[2];
+            curN = [
+              curN[0] * cosA + crossX * sinA + ax * adotv * (1.0 - cosA),
+              curN[1] * cosA + crossY * sinA + ay * adotv * (1.0 - cosA),
+              curN[2] * cosA + crossZ * sinA + az * adotv * (1.0 - cosA),
+            ];
+          }
+          bx = tB[1] * curN[2] - tB[2] * curN[1];
+          by = tB[2] * curN[0] - tB[0] * curN[2];
+          bz = tB[0] * curN[1] - tB[1] * curN[0];
+          frames.push([curN, [bx, by, bz]]);
+        }
+
+        const allVerts = [];
+        const allNorms = [];
+        const rTube = tubeRadius * scale;
+        for (let i = 0; i < tubular; i++) {
+          const cp = curvePts[i];
+          const [fn, fb] = frames[i];
+          for (let j = 0; j < radial; j++) {
+            const v = (j * 2.0 * Math.PI) / radial;
+            const cv = Math.cos(v);
+            const sv = Math.sin(v);
+            const normX = cv * fn[0] + sv * fb[0];
+            const normY = cv * fn[1] + sv * fb[1];
+            const normZ = cv * fn[2] + sv * fb[2];
+            allVerts.push([cp[0] + rTube * normX, cp[1] + rTube * normY, cp[2] + rTube * normZ]);
+            allNorms.push([normX, normY, normZ]);
+          }
+        }
+
+        const allFaces = [];
+        for (let i = 0; i < tubular; i++) {
+          const iNext = (i + 1) % tubular;
+          for (let j = 0; j < radial; j++) {
+            const jNext = (j + 1) % radial;
+            const v0 = i * radial + j;
+            const v1 = iNext * radial + j;
+            const v2 = iNext * radial + jNext;
+            const v3 = i * radial + jNext;
+            allFaces.push([v0, v1, v2]);
+            allFaces.push([v0, v2, v3]);
+          }
+        }
+
+        return buildMeshFromFaces(allVerts, allNorms, allFaces);
+      }
+
+      /**
+       * GLSL ES 3.00 规范着色器源码定义
+       * 统一公共函数 evaluateLighting，完全一致的局部光照计算
+       */
+      const COMMON_GLSL_LIGHTING = `
+// 共享世界空间经典 Phong 局部光照求值函数
+vec3 evaluateLighting(vec3 positionWorld, vec3 normalWorld) {
+    vec3 N = normalize(normalWorld);
+    vec3 L = normalize(uLightPosition - positionWorld);
+    vec3 V = normalize(uCameraPosition - positionWorld);
+
+    // 1. 环境光分量 Ca = Ka * Cbase * La
+    vec3 ambient = uKa * uBaseColor;
+
+    // 2. 漫反射分量 Cd = Kd * Cbase * max(0, N·L)
+    float nDotL = max(dot(N, L), 0.0);
+    vec3 diffuse = uKd * uBaseColor * nDotL;
+
+    // 3. 镜面高光分量 Cs = Ks * [max(0, R·V)]^n
+    vec3 specular = vec3(0.0);
+    if (nDotL > 0.0) {
+        vec3 R = reflect(-L, N);
+        float rDotV = max(dot(R, V), 0.0);
+        specular = vec3(uKs) * pow(rDotV, uShininess);
+    }
+
+    // 根据诊断/显示分量选项合成最终线性颜色
+    if (uLightComponent == 1) return ambient + diffuse; // 仅漫反射
+    if (uLightComponent == 2) return specular;         // 仅镜面高光
+    return ambient + diffuse + specular;               // 完整光照
+}
+`;
+
+      // 1. Gouraud 顶点着色器 (顶点计算光照，向片元输出线性颜色)
+      const GOURAUD_VS_SOURCE = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
+
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProjection;
+uniform mat3 uNormalMatrix;
+
+uniform vec3 uCameraPosition;
+uniform vec3 uLightPosition;
+uniform vec3 uBaseColor;
+uniform float uKa;
+uniform float uKd;
+uniform float uKs;
+uniform float uShininess;
+uniform int uLightComponent;
+
+out vec3 vColor; // ★ 核心输出：向光栅化阶段传递在顶点处求得的光照颜色
+${COMMON_GLSL_LIGHTING}
+void main() {
+    vec4 worldPos = uModel * vec4(aPosition, 1.0);
+    vec3 worldNorm = uNormalMatrix * aNormal;
+
+    // ★ Gouraud 核心实现：在顶点着色器调用通用光照求值函数
+    vColor = evaluateLighting(worldPos.xyz, worldNorm);
+
+    gl_Position = uProjection * uView * worldPos;
+    gl_PointSize = 6.0;
+}
+`;
+
+      // 2. Gouraud 片元着色器 (读取插值颜色，仅做单次 sRGB 显示转换，不重新计算光照)
+      const GOURAUD_FS_SOURCE = `#version 300 es
+precision highp float;
+
+in vec3 vColor; // ★ 接收由 GPU 固定硬件在三角形面内插值得到的光照颜色
+layout(location = 0) out vec4 outColor;
+
+uniform int uDiagMode; // 0: 最终, 1: 顶点诊断, 2: 插值诊断
+
+void main() {
+    // 保护性截断，避免负值产生 NaN
+    vec3 linearColor = max(vColor, vec3(0.0));
+
+    // 单次严格的线性 RGB -> sRGB 伽马校正 (Gamma = 2.2)
+    vec3 srgbColor = pow(linearColor, vec3(1.0 / 2.2));
+    outColor = vec4(srgbColor, 1.0);
+}
+`;
+
+      // 3. Phong 顶点着色器 (不计算光照，仅变换并输出世界空间几何与法线)
+      const PHONG_VS_SOURCE = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+layout(location = 1) in vec3 aNormal;
+
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProjection;
+uniform mat3 uNormalMatrix;
+
+out vec3 vPosition; // ★ 输出世界坐标供光栅化插值
+out vec3 vNormal;   // ★ 输出世界法线供光栅化插值
+
+void main() {
+    vec4 worldPos = uModel * vec4(aPosition, 1.0);
+    vPosition = worldPos.xyz;
+    vNormal = uNormalMatrix * aNormal; // 顶点不进行完整光照求值
+
+    gl_Position = uProjection * uView * worldPos;
+    gl_PointSize = 6.0;
+}
+`;
+
+      // 4. Phong 片元着色器 (插值法线重归一化，逐片元调用光照求值函数)
+      const PHONG_FS_SOURCE = `#version 300 es
+precision highp float;
+
+in vec3 vPosition; // 插值后的世界坐标
+in vec3 vNormal;   // 插值后的法线 (注意：插值会导致向量长度缩短，非严格单位向量)
+
+uniform mat4 uModel;
+uniform vec3 uCameraPosition;
+uniform vec3 uLightPosition;
+uniform vec3 uBaseColor;
+uniform float uKa;
+uniform float uKd;
+uniform float uKs;
+uniform float uShininess;
+uniform int uLightComponent;
+uniform int uDiagMode; // 0: 最终, 1: 顶点诊断, 2: 插值诊断
+
+layout(location = 0) out vec4 outColor;
+${COMMON_GLSL_LIGHTING}
+void main() {
+    // 插值数据诊断分支：直接将法线方向编码为颜色可视化 (Normal -> RGB)
+    if (uDiagMode == 2) {
+        vec3 normVis = normalize(vNormal) * 0.5 + 0.5;
+        outColor = vec4(normVis, 1.0);
+        return;
+    }
+
+    // ★ Phong 核心实现：在片元重新归一化法线，并逐片元重新计算局部光照
+    vec3 N = normalize(vNormal);
+    vec3 linearColor = evaluateLighting(vPosition, N);
+
+    // 单次严格的线性 RGB -> sRGB 伽马校正
+    vec3 srgbColor = pow(max(linearColor, vec3(0.0)), vec3(1.0 / 2.2));
+    outColor = vec4(srgbColor, 1.0);
+}
+`;
+
+      // 辅助着色器：线框与法线向量可视化
+      const WIRE_VS = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+uniform mat4 uModel; uniform mat4 uView; uniform mat4 uProjection;
+void main() { gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0); }
+`;
+      const WIRE_FS = `#version 300 es
+precision highp float;
+uniform vec3 uColor;
+out vec4 outColor;
+void main() { outColor = vec4(uColor, 1.0); }
+`;
+
+      // 法线发束 (Normal Hairline) 绘制着色器
+      const NORMAL_LINE_VS = `#version 300 es
+layout(location = 0) in vec3 aPosition;
+uniform mat4 uModel; uniform mat4 uView; uniform mat4 uProjection;
+void main() { gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0); }
+`;
+
+      /**
+       * WebGL2 编译辅助函数
+       */
+      function createShader(gl, type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          const err = gl.getShaderInfoLog(s);
+          gl.deleteShader(s);
+          throw new Error('着色器编译失败: ' + err);
+        }
+        return s;
+      }
+
+      function createProgram(gl, vsSrc, fsSrc) {
+        const vs = createShader(gl, gl.VERTEX_SHADER, vsSrc);
+        const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          const err = gl.getProgramInfoLog(prog);
+          gl.deleteProgram(prog);
+          throw new Error('着色程序链接失败: ' + err);
+        }
+        return prog;
+      }
+
+      /**
+       * 主应用程序控制器
+       */
+      window.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('glcanvas');
+        const gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
+
+        if (!gl) {
+          document.getElementById('fallback-overlay').style.display = 'flex';
+          return;
+        }
+
+        // 编译所有管道 Shader
+        let gouraudProg, phongProg, wireProg;
+        try {
+          gouraudProg = createProgram(gl, GOURAUD_VS_SOURCE, GOURAUD_FS_SOURCE);
+          phongProg = createProgram(gl, PHONG_VS_SOURCE, PHONG_FS_SOURCE);
+          wireProg = createProgram(gl, WIRE_VS, WIRE_FS);
+        } catch (e) {
+          document.getElementById('fallback-desc').textContent = e.message;
+          document.getElementById('fallback-overlay').style.display = 'flex';
+          return;
+        }
+
+        function getUniforms(prog, list) {
+          const map = {};
+          for (const name of list) map[name] = gl.getUniformLocation(prog, name);
+          return map;
+        }
+
+        const commonUniforms = [
+          'uModel',
+          'uView',
+          'uProjection',
+          'uNormalMatrix',
+          'uCameraPosition',
+          'uLightPosition',
+          'uBaseColor',
+          'uKa',
+          'uKd',
+          'uKs',
+          'uShininess',
+          'uLightComponent',
+          'uDiagMode',
+        ];
+        const gouraudLocs = getUniforms(gouraudProg, commonUniforms);
+        const phongLocs = getUniforms(phongProg, commonUniforms);
+        const wireLocs = getUniforms(wireProg, ['uModel', 'uView', 'uProjection', 'uColor']);
+
+        // 共享状态与材质参数规范 (青蓝中等明度材质 #11879B -> 转换为线性 RGB)
+        // sRGB #11879B => [17, 135, 155] / 255 => [0.0667, 0.5294, 0.6078]
+        // 线性转换: Math.pow(c, 2.2) => [0.0026, 0.2458, 0.3345]
+        const srgbBase = [17 / 255, 135 / 255, 155 / 255];
+        const linearBaseColor = srgbBase.map((c) => Math.pow(c, 2.2));
+
+        const state = {
+          modelType: 'sphere',
+          subdivision: 2,
+          lightPos: [-1.2, 1.8, 2.2],
+          shininess: 64,
+          ks: 0.8,
+          ka: 0.2,
+          kd: 0.75,
+          lightComponent: 0, // 0: 完整, 1: 仅漫反射, 2: 仅高光
+          diagMode: 'final', // 'final', 'vertex', 'interp'
+          showWireframe: false,
+          showNormals: false,
+          autoRotate: false,
+          rotX: 0.25,
+          rotY: -0.45,
+          cameraDist: 3.8, // 视距设置为3.8并启用宽高比自适应FOV，确保茶壶壶嘴壶身完整入镜不被裁切
+          cameraPos: [0, 0, 3.8],
+        };
+
+        // 网格缓冲管理与 GPU 资源按需销毁释放
+        const meshCache = new Map();
+        let currentMeshEntry = null;
+
+        function getMeshKey(type, subdiv) {
+          return `${type}_${subdiv}`;
+        }
+
+        function loadMesh(type, subdiv) {
+          const key = getMeshKey(type, subdiv);
+          if (meshCache.has(key)) {
+            return meshCache.get(key);
+          }
+
+          // 生成真实数据
+          let data;
+          if (type === 'teapot') {
+            data = generateTeapot(subdiv);
+          } else if (type === 'torusKnot') {
+            data = generateTorusKnot(subdiv);
+          } else {
+            data = generateIcosphere(subdiv);
+          }
+
+          // 1. 实体面 VAO
+          const vao = gl.createVertexArray();
+          gl.bindVertexArray(vao);
+
+          const posVbo = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, posVbo);
+          gl.bufferData(gl.ARRAY_BUFFER, data.positions, gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(0);
+          gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+          const normVbo = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, normVbo);
+          gl.bufferData(gl.ARRAY_BUFFER, data.normals, gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(1);
+          gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+
+          const ebo = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.indices, gl.STATIC_DRAW);
+
+          // 2. 线框 VAO
+          const wireVao = gl.createVertexArray();
+          gl.bindVertexArray(wireVao);
+          gl.bindBuffer(gl.ARRAY_BUFFER, posVbo);
+          gl.enableVertexAttribArray(0);
+          gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+          const wireEbo = gl.createBuffer();
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, wireEbo);
+          gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.wireIndices, gl.STATIC_DRAW);
+
+          // 3. 法线发束向量 VAO (为避免密集杂乱，抽样生成代表性绿色法线线段)
+          const normalLines = [];
+          const step = Math.max(1, Math.floor(data.vertexCount / 350));
+          const lineLen = type === 'sphere' ? 0.12 : 0.08;
+          for (let i = 0; i < data.vertexCount; i += step) {
+            const px = data.positions[i * 3],
+              py = data.positions[i * 3 + 1],
+              pz = data.positions[i * 3 + 2];
+            const nx = data.normals[i * 3],
+              ny = data.normals[i * 3 + 1],
+              nz = data.normals[i * 3 + 2];
+            normalLines.push(px, py, pz);
+            normalLines.push(px + nx * lineLen, py + ny * lineLen, pz + nz * lineLen);
+          }
+          const normalVao = gl.createVertexArray();
+          gl.bindVertexArray(normalVao);
+          const normLineVbo = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, normLineVbo);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalLines), gl.STATIC_DRAW);
+          gl.enableVertexAttribArray(0);
+          gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+          gl.bindVertexArray(null);
+
+          const entry = {
+            vao,
+            wireVao,
+            normalVao,
+            indexCount: data.indices.length,
+            wireIndexCount: data.wireIndices.length,
+            normalLineCount: normalLines.length / 3,
+            vertexCount: data.vertexCount,
+            triangleCount: data.triangleCount,
+          };
+          meshCache.set(key, entry);
+          return entry;
+        }
+
+        function updateActiveMesh() {
+          currentMeshEntry = loadMesh(state.modelType, state.subdivision);
+          const statStr = `顶点: ${currentMeshEntry.vertexCount.toLocaleString()} | 三角形: ${currentMeshEntry.triangleCount.toLocaleString()}`;
+          document.getElementById('stats-gouraud').textContent = statStr;
+          document.getElementById('stats-phong').textContent = statStr;
+        }
+
+        // UI 绑定与实时同步
+        const selModel = document.getElementById('sel-model');
+        const selSubdiv = document.getElementById('sel-subdiv');
+        const lightX = document.getElementById('light-x');
+        const lightY = document.getElementById('light-y');
+        const lightZ = document.getElementById('light-z');
+        const valLx = document.getElementById('val-lx');
+        const valLy = document.getElementById('val-ly');
+        const valLz = document.getElementById('val-lz');
+        const rangeShininess = document.getElementById('range-shininess');
+        const rangeKs = document.getElementById('range-ks');
+        const valShininess = document.getElementById('val-shininess');
+        const valKs = document.getElementById('val-ks');
+        const selLightTerm = document.getElementById('sel-light-term');
+        const selDiagMode = document.getElementById('sel-diag-mode');
+        const chkWireframe = document.getElementById('chk-wireframe');
+        const chkNormals = document.getElementById('chk-normals');
+        const chkRotate = document.getElementById('chk-rotate');
+        const btnReset = document.getElementById('btn-reset');
+        const btnPresetLoss = document.getElementById('btn-preset-loss');
+        const btnPresetContour = document.getElementById('btn-preset-contour');
+
+        const rangeCamDist = document.getElementById('range-cam-dist');
+        const valCamDist = document.getElementById('val-cam-dist');
+        const btnViewDefault = document.getElementById('btn-view-default');
+        const btnViewFront = document.getElementById('btn-view-front');
+        const btnViewTop = document.getElementById('btn-view-top');
+
+        const badgeGouraud = document.getElementById('badge-gouraud');
+        const badgePhong = document.getElementById('badge-phong');
+
+        function syncUI() {
+          selModel.value = state.modelType;
+          selSubdiv.value = state.subdivision;
+          lightX.value = state.lightPos[0];
+          valLx.textContent = Number(state.lightPos[0]).toFixed(1);
+          lightY.value = state.lightPos[1];
+          valLy.textContent = Number(state.lightPos[1]).toFixed(1);
+          lightZ.value = state.lightPos[2];
+          valLz.textContent = Number(state.lightPos[2]).toFixed(1);
+          rangeShininess.value = state.shininess;
+          valShininess.textContent = state.shininess;
+          rangeKs.value = state.ks;
+          valKs.textContent = Number(state.ks).toFixed(2);
+          selLightTerm.value = state.lightComponent;
+          selDiagMode.value = state.diagMode;
+          chkWireframe.checked = state.showWireframe;
+          chkNormals.checked = state.showNormals;
+          chkRotate.checked = state.autoRotate;
+          if (rangeCamDist) {
+            rangeCamDist.value = state.cameraDist;
+            valCamDist.textContent = Number(state.cameraDist).toFixed(1);
+          }
+
+          if (state.diagMode === 'final') {
+            badgeGouraud.textContent = '模式: 最终渲染 (面内插值颜色)';
+            badgePhong.textContent = '模式: 最终渲染 (逐片元求值)';
+          } else if (state.diagMode === 'vertex') {
+            badgeGouraud.textContent = '模式: 顶点诊断 (点采样光照色)';
+            badgePhong.textContent = '模式: 顶点诊断 (点法线方向编码)';
+          } else if (state.diagMode === 'interp') {
+            badgeGouraud.textContent = '模式: 插值数据 (vColor 真实过渡)';
+            badgePhong.textContent = '模式: 插值数据 (插值法线 RGB 编码)';
+          }
+          updateActiveMesh();
+        }
+
+        selModel.addEventListener('change', (e) => {
+          state.modelType = e.target.value;
+          updateActiveMesh();
+        });
+        selSubdiv.addEventListener('change', (e) => {
+          state.subdivision = parseInt(e.target.value);
+          updateActiveMesh();
+        });
+        lightX.addEventListener('input', (e) => {
+          state.lightPos[0] = parseFloat(e.target.value);
+          valLx.textContent = state.lightPos[0].toFixed(1);
+        });
+        lightY.addEventListener('input', (e) => {
+          state.lightPos[1] = parseFloat(e.target.value);
+          valLy.textContent = state.lightPos[1].toFixed(1);
+        });
+        lightZ.addEventListener('input', (e) => {
+          state.lightPos[2] = parseFloat(e.target.value);
+          valLz.textContent = state.lightPos[2].toFixed(1);
+        });
+        rangeShininess.addEventListener('input', (e) => {
+          state.shininess = parseFloat(e.target.value);
+          valShininess.textContent = state.shininess;
+        });
+        rangeKs.addEventListener('input', (e) => {
+          state.ks = parseFloat(e.target.value);
+          valKs.textContent = state.ks.toFixed(2);
+        });
+        selLightTerm.addEventListener('change', (e) => {
+          state.lightComponent = parseInt(e.target.value);
+        });
+        selDiagMode.addEventListener('change', (e) => {
+          state.diagMode = e.target.value;
+          syncUI();
+        });
+        chkWireframe.addEventListener('change', (e) => {
+          state.showWireframe = e.target.checked;
+        });
+        chkNormals.addEventListener('change', (e) => {
+          state.showNormals = e.target.checked;
+        });
+        chkRotate.addEventListener('change', (e) => {
+          state.autoRotate = e.target.checked;
+        });
+
+        if (rangeCamDist) {
+          rangeCamDist.addEventListener('input', (e) => {
+            state.cameraDist = parseFloat(e.target.value);
+            state.cameraPos[2] = state.cameraDist;
+            valCamDist.textContent = state.cameraDist.toFixed(1);
+          });
+        }
+        if (btnViewDefault) {
+          btnViewDefault.addEventListener('click', () => {
+            state.rotX = 0.25;
+            state.rotY = -0.45;
+            state.cameraDist = 3.8;
+            state.cameraPos[2] = 3.8;
+            syncUI();
+          });
+        }
+        if (btnViewFront) {
+          btnViewFront.addEventListener('click', () => {
+            state.rotX = 0.0;
+            state.rotY = 0.0;
+            state.cameraDist = 3.8;
+            state.cameraPos[2] = 3.8;
+            syncUI();
+          });
+        }
+        if (btnViewTop) {
+          btnViewTop.addEventListener('click', () => {
+            state.rotX = 1.15;
+            state.rotY = 0.0;
+            state.cameraDist = 4.0;
+            state.cameraPos[2] = 4.0;
+            syncUI();
+          });
+        }
+
+        btnReset.addEventListener('click', () => {
+          state.modelType = 'sphere';
+          state.subdivision = 2;
+          state.lightPos = [-1.2, 1.8, 2.2];
+          state.shininess = 64;
+          state.ks = 0.8;
+          state.lightComponent = 0;
+          state.diagMode = 'final';
+          state.showWireframe = false;
+          state.showNormals = false;
+          state.autoRotate = false;
+          state.rotX = 0.25;
+          state.rotY = -0.45;
+          state.cameraDist = 3.8;
+          state.cameraPos = [0, 0, 3.8];
+          syncUI();
+        });
+
+        // 预设 1：观察高光丢失 (低细分球体、高高光指数、镜面主导、光源角度精确定位在面内)
+        btnPresetLoss.addEventListener('click', () => {
+          state.modelType = 'sphere';
+          state.subdivision = 1; // 极低细分 (80 面)
+          state.shininess = 160; // 极锐利高光
+          state.ks = 1.0;
+          state.lightComponent = 2; // 仅镜面反射，强化对比
+          state.lightPos = [-0.6, 0.8, 2.0];
+          state.rotX = 0.12;
+          state.rotY = -0.38;
+          state.showWireframe = true;
+          state.diagMode = 'final';
+          syncUI();
+          highlightCodePipeline('gouraud-vs');
+        });
+
+        // 预设 2：观察网格与轮廓 (低面数、适中镜面项、开启线框，看清逐片元着色不能改变多边形多面体外轮廓)
+        btnPresetContour.addEventListener('click', () => {
+          state.modelType = 'teapot';
+          state.subdivision = 1; // 粗网格
+          state.shininess = 48;
+          state.ks = 0.75;
+          state.lightComponent = 0;
+          state.showWireframe = true;
+          state.showNormals = false;
+          state.diagMode = 'final';
+          state.rotX = 0.28;
+          state.rotY = -0.55;
+          state.cameraDist = 3.8;
+          state.cameraPos = [0, 0, 3.8];
+          syncUI();
+        });
+
+        // 鼠标滚轮缩放控制相机视距
+        canvas.addEventListener(
+          'wheel',
+          (e) => {
+            e.preventDefault();
+            state.cameraDist += e.deltaY * 0.003;
+            state.cameraDist = Math.max(2.4, Math.min(8.0, state.cameraDist));
+            state.cameraPos[2] = state.cameraDist;
+            if (rangeCamDist) {
+              rangeCamDist.value = state.cameraDist;
+              valCamDist.textContent = state.cameraDist.toFixed(1);
+            }
+          },
+          { passive: false },
+        );
+
+        // 鼠标/触控拖拽交互：左键旋转模型，右键/Shift拖拽调视距
+        let isDragging = false;
+        let isPanning = false;
+        let lastX = 0,
+          lastY = 0;
+        canvas.addEventListener('pointerdown', (e) => {
+          if (e.button === 2 || e.shiftKey) {
+            isPanning = true;
+          } else {
+            isDragging = true;
+          }
+          lastX = e.clientX;
+          lastY = e.clientY;
+          canvas.setPointerCapture(e.pointerId);
+        });
+        canvas.addEventListener('pointermove', (e) => {
+          if (!isDragging && !isPanning) return;
+          const dx = e.clientX - lastX;
+          const dy = e.clientY - lastY;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          if (isDragging) {
+            state.rotY += dx * 0.007;
+            state.rotX += dy * 0.007;
+            state.rotX = Math.max(-1.5, Math.min(1.5, state.rotX));
+          } else if (isPanning) {
+            state.cameraDist += dy * 0.01;
+            state.cameraDist = Math.max(2.4, Math.min(8.0, state.cameraDist));
+            state.cameraPos[2] = state.cameraDist;
+            if (rangeCamDist) {
+              rangeCamDist.value = state.cameraDist;
+              valCamDist.textContent = state.cameraDist.toFixed(1);
+            }
+          }
+        });
+        const endDrag = (e) => {
+          if (isDragging || isPanning) {
+            isDragging = false;
+            isPanning = false;
+            try {
+              canvas.releasePointerCapture(e.pointerId);
+            } catch (_) {}
+          }
+        };
+        canvas.addEventListener('pointerup', endDrag);
+        canvas.addEventListener('pointercancel', endDrag);
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // 代码查看器与流水线节点互动逻辑
+        let currentCodeTab = 'vs'; // 'vs', 'fs', 'quad'
+        const codeLeft = document.getElementById('code-left');
+        const codeRight = document.getElementById('code-right');
+        const titleCodeLeft = document.getElementById('title-code-left');
+        const titleCodeRight = document.getElementById('title-code-right');
+        const codeGrid = document.getElementById('code-grid');
+        const tabVs = document.getElementById('tab-vs');
+        const tabFs = document.getElementById('tab-fs');
+        const tabQuad = document.getElementById('tab-quad');
+        const btnCopyCode = document.getElementById('btn-copy-code');
+        const btnToggleCodeSize = document.getElementById('btn-toggle-code-size');
+        const codeSec = document.getElementById('code-comparison-section');
+
+        // 渲染高亮 GLSL 代码行
+        function renderGlsl(source, highlightRules = []) {
+          const lines = source.split('\n');
+          return lines
+            .map((line, idx) => {
+              let lineClass = 'code-line';
+              for (const rule of highlightRules) {
+                if (rule.pattern.test(line)) {
+                  lineClass += ' ' + rule.cssClass;
+                  break;
+                }
+              }
+              // 极简关键词着色
+              const escaped = line
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(
+                  /\b(layout|location|in|out|uniform|void|float|int|vec3|vec4|mat3|mat4|precision|highp)\b/g,
+                  '<span class="c-kw">$1</span>',
+                )
+                .replace(
+                  /\b(evaluateLighting|normalize|max|dot|reflect|pow)\b/g,
+                  '<span class="c-fn">$1</span>',
+                )
+                .replace(
+                  /\b(vColor|vPosition|vNormal|aPosition|aNormal)\b/g,
+                  '<span class="c-var">$1</span>',
+                )
+                .replace(/(\/\/.*)/g, '<span class="c-cmt">$1</span>');
+              return `<span class="${lineClass}">${escaped}</span>`;
+            })
+            .join('');
+        }
+
+        function updateCodeViewer() {
+          if (currentCodeTab === 'vs') {
+            codeGrid.classList.remove('layout-quad');
+            codeGrid.innerHTML = `
+            <div class="code-column">
+              <div class="code-col-title"><span>Gouraud 顶点着色器 (GLSL ES 3.00)</span><span style="color:#B45309; font-weight:600;">计算：在顶点执行 evaluateLighting</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(
+                GOURAUD_VS_SOURCE,
+                [
+                  { pattern: /vColor = evaluateLighting/, cssClass: 'highlight-calc' },
+                  { pattern: /out vec3 vColor/, cssClass: 'highlight-interp' },
+                ],
+              )}</code></pre></div>
+            </div>
+            <div class="code-column">
+              <div class="code-col-title"><span>Phong 顶点着色器 (GLSL ES 3.00)</span><span style="color:#15803D; font-weight:600;">计算：仅变换几何，传递插值变量</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(
+                PHONG_VS_SOURCE,
+                [{ pattern: /out vec3 vPosition|out vec3 vNormal/, cssClass: 'highlight-normal' }],
+              )}</code></pre></div>
+            </div>
+          `;
+          } else if (currentCodeTab === 'fs') {
+            codeGrid.classList.remove('layout-quad');
+            codeGrid.innerHTML = `
+            <div class="code-column">
+              <div class="code-col-title"><span>Gouraud 片元着色器 (GLSL ES 3.00)</span><span style="color:#B45309; font-weight:600;">片元：直接读取插值颜色并做单次 sRGB 校正</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(
+                GOURAUD_FS_SOURCE,
+                [{ pattern: /in vec3 vColor/, cssClass: 'highlight-interp' }],
+              )}</code></pre></div>
+            </div>
+            <div class="code-column">
+              <div class="code-col-title"><span>Phong 片元着色器 (GLSL ES 3.00)</span><span style="color:#15803D; font-weight:600;">片元：重归一化法线并执行 evaluateLighting</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(
+                PHONG_FS_SOURCE,
+                [
+                  { pattern: /evaluateLighting\(vPosition, N\)/, cssClass: 'highlight-calc' },
+                  { pattern: /vec3 N = normalize\(vNormal\)/, cssClass: 'highlight-normal' },
+                ],
+              )}</code></pre></div>
+            </div>
+          `;
+          } else {
+            // 四面板并排模式
+            codeGrid.classList.add('layout-quad');
+            codeGrid.innerHTML = `
+            <div class="code-column">
+              <div class="code-col-title"><span>Gouraud VS</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(GOURAUD_VS_SOURCE, [{ pattern: /vColor = evaluateLighting/, cssClass: 'highlight-calc' }])}</code></pre></div>
+            </div>
+            <div class="code-column">
+              <div class="code-col-title"><span>Gouraud FS</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(GOURAUD_FS_SOURCE, [{ pattern: /in vec3 vColor/, cssClass: 'highlight-interp' }])}</code></pre></div>
+            </div>
+            <div class="code-column">
+              <div class="code-col-title"><span>Phong VS</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(PHONG_VS_SOURCE, [{ pattern: /out vec3 vNormal/, cssClass: 'highlight-normal' }])}</code></pre></div>
+            </div>
+            <div class="code-column">
+              <div class="code-col-title"><span>Phong FS</span></div>
+              <div class="code-scroll-box"><pre class="code-content"><code>${renderGlsl(PHONG_FS_SOURCE, [{ pattern: /evaluateLighting/, cssClass: 'highlight-calc' }])}</code></pre></div>
+            </div>
+          `;
+          }
+
+          // 绑定代码查看器滚动条同步联动
+          bindSyncScroll();
+        }
+
+        function bindSyncScroll() {
+          const scrollBoxes = codeGrid.querySelectorAll('.code-scroll-box');
+          let isSyncing = false;
+          scrollBoxes.forEach((box) => {
+            box.addEventListener('scroll', () => {
+              const chkSync = document.getElementById('chk-sync-scroll');
+              if (!chkSync || !chkSync.checked || isSyncing) return;
+              isSyncing = true;
+              const top = box.scrollTop;
+              scrollBoxes.forEach((other) => {
+                if (other !== box) other.scrollTop = top;
+              });
+              requestAnimationFrame(() => {
+                isSyncing = false;
+              });
+            });
+          });
+        }
+
+        tabVs.addEventListener('click', () => {
+          currentCodeTab = 'vs';
+          [tabVs, tabFs, tabQuad].forEach((b) => b.classList.remove('active'));
+          tabVs.classList.add('active');
+          updateCodeViewer();
+        });
+        tabFs.addEventListener('click', () => {
+          currentCodeTab = 'fs';
+          [tabVs, tabFs, tabQuad].forEach((b) => b.classList.remove('active'));
+          tabFs.classList.add('active');
+          updateCodeViewer();
+        });
+        tabQuad.addEventListener('click', () => {
+          currentCodeTab = 'quad';
+          [tabVs, tabFs, tabQuad].forEach((b) => b.classList.remove('active'));
+          tabQuad.classList.add('active');
+          updateCodeViewer();
+        });
+
+        btnToggleCodeSize.addEventListener('click', () => {
+          if (codeSec.classList.contains('collapsed')) {
+            codeSec.classList.remove('collapsed');
+            codeSec.classList.add('expanded-full');
+          } else if (codeSec.classList.contains('expanded-full')) {
+            codeSec.classList.remove('expanded-full');
+          } else {
+            codeSec.classList.add('collapsed');
+          }
+        });
+
+        btnCopyCode.addEventListener('click', () => {
+          const fullSourceDump = `/* Gouraud VS */\n${GOURAUD_VS_SOURCE}\n\n/* Gouraud FS */\n${GOURAUD_FS_SOURCE}\n\n/* Phong VS */\n${PHONG_VS_SOURCE}\n\n/* Phong FS */\n${PHONG_FS_SOURCE}`;
+          const tempTextarea = document.createElement('textarea');
+          tempTextarea.value = fullSourceDump;
+          document.body.appendChild(tempTextarea);
+          tempTextarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(tempTextarea);
+          btnCopyCode.textContent = '✓ 已复制全部Shader源码';
+          setTimeout(() => {
+            btnCopyCode.textContent = '📋 复制代码';
+          }, 1800);
+        });
+
+        // 点击流程图节点高亮对应着色器代码阶段
+        function highlightCodePipeline(targetId) {
+          if (targetId.includes('vs') || targetId.includes('in')) {
+            tabVs.click();
+          } else {
+            tabFs.click();
+          }
+        }
+        document.querySelectorAll('.step-node').forEach((node) => {
+          node.addEventListener('click', () => {
+            const t = node.getAttribute('data-target');
+            highlightCodePipeline(t);
+          });
+        });
+
+        // 初始化显示代码
+        updateCodeViewer();
+        syncUI();
+
+        // 视口自适应处理
+        function checkCanvasResize() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const w = Math.floor(canvas.clientWidth * dpr);
+          const h = Math.floor(canvas.clientHeight * dpr);
+          if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w;
+            canvas.height = h;
+            return true;
+          }
+          return false;
+        }
+
+        // 绑定共享 Uniform 参数
+        function bindSharedUniforms(gl, locs, modelMat, normMat, projMat, viewMat) {
+          gl.uniformMatrix4fv(locs.uModel, false, modelMat);
+          gl.uniformMatrix4fv(locs.uView, false, viewMat);
+          gl.uniformMatrix4fv(locs.uProjection, false, projMat);
+          gl.uniformMatrix3fv(locs.uNormalMatrix, false, normMat);
+          gl.uniform3fv(locs.uCameraPosition, state.cameraPos);
+          gl.uniform3fv(locs.uLightPosition, state.lightPos);
+          gl.uniform3fv(locs.uBaseColor, linearBaseColor);
+          gl.uniform1f(locs.uKa, state.ka);
+          gl.uniform1f(locs.uKd, state.kd);
+          gl.uniform1f(locs.uKs, state.ks);
+          gl.uniform1f(locs.uShininess, state.shininess);
+          gl.uniform1i(locs.uLightComponent, state.lightComponent);
+          gl.uniform1i(
+            locs.uDiagMode,
+            state.diagMode === 'interp' ? 2 : state.diagMode === 'vertex' ? 1 : 0,
+          );
+        }
+
+        // 主渲染帧循环
+        let lastTime = performance.now();
+        function renderLoop(time) {
+          const dt = (time - lastTime) * 0.001;
+          lastTime = time;
+
+          if (state.autoRotate) {
+            state.rotY += dt * 0.45;
+          }
+
+          checkCanvasResize();
+
+          const fullW = canvas.width;
+          const fullH = canvas.height;
+
+          gl.clearColor(1.0, 1.0, 1.0, 1.0);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+          if (!currentMeshEntry) return requestAnimationFrame(renderLoop);
+
+          state.cameraPos[0] = 0;
+          state.cameraPos[1] = 0;
+          state.cameraPos[2] = state.cameraDist;
+          const modelMat = Mat4.fromRotationXY(state.rotX, state.rotY);
+          const normMat = Mat4.normalMatrix3x3(modelMat);
+          const viewMat = Mat4.lookAt(state.cameraPos, [0, 0, 0], [0, 1, 0]);
+
+          // 两个并排等宽 Viewport：左侧 Gouraud，右侧 Phong
+          const halfW = Math.floor(fullW / 2);
+
+          for (let col = 0; col < 2; col++) {
+            const vpX = col * halfW;
+            const vpW = col === 1 ? fullW - vpX : halfW;
+            const vpH = fullH;
+
+            gl.viewport(vpX, 0, vpW, vpH);
+            gl.scissor(vpX, 0, vpW, vpH);
+            gl.enable(gl.SCISSOR_TEST);
+            gl.enable(gl.DEPTH_TEST);
+
+            // 自适应 FOV：当单视口宽高比 aspect < 1 时动态扩大垂直视角，保持水平视野恒定，确保物体完整呈现无裁剪
+            const aspect = vpW / vpH;
+            const baseFovy = (38 * Math.PI) / 180;
+            let effFovy = baseFovy;
+            if (aspect < 1.0) {
+              effFovy = 2.0 * Math.atan(Math.tan(baseFovy / 2.0) / aspect);
+            }
+            const projMat = Mat4.perspective(effFovy, aspect, 0.1, 100.0);
+
+            const isGouraud = col === 0;
+            const prog = isGouraud ? gouraudProg : phongProg;
+            const locs = isGouraud ? gouraudLocs : phongLocs;
+
+            gl.useProgram(prog);
+            bindSharedUniforms(gl, locs, modelMat, normMat, projMat, viewMat);
+            gl.bindVertexArray(currentMeshEntry.vao);
+
+            if (state.diagMode === 'vertex') {
+              // 顶点诊断模式：绘制点图元，观察在顶点上求得的离散光照/法线采样点
+              gl.drawElements(gl.POINTS, currentMeshEntry.indexCount, gl.UNSIGNED_INT, 0);
+            } else {
+              // 最终渲染与插值数据诊断模式：绘制三角形面片
+              gl.drawElements(gl.TRIANGLES, currentMeshEntry.indexCount, gl.UNSIGNED_INT, 0);
+            }
+
+            // 叠加淡青蓝线框 (使用 polygonOffset 彻底消除 Z-fighting 深度闪烁)
+            if (state.showWireframe) {
+              gl.enable(gl.POLYGON_OFFSET_FILL);
+              gl.polygonOffset(1.0, 1.0);
+              gl.useProgram(wireProg);
+              gl.uniformMatrix4fv(wireLocs.uModel, false, modelMat);
+              gl.uniformMatrix4fv(wireLocs.uView, false, viewMat);
+              gl.uniformMatrix4fv(wireLocs.uProjection, false, projMat);
+              gl.uniform3fv(wireLocs.uColor, [0.08, 0.45, 0.55]);
+
+              gl.bindVertexArray(currentMeshEntry.wireVao);
+              gl.drawElements(gl.LINES, currentMeshEntry.wireIndexCount, gl.UNSIGNED_INT, 0);
+              gl.disable(gl.POLYGON_OFFSET_FILL);
+            }
+
+            // 叠加抽样顶点法线发束向量 (绿色)
+            if (state.showNormals) {
+              gl.useProgram(wireProg);
+              gl.uniformMatrix4fv(wireLocs.uModel, false, modelMat);
+              gl.uniformMatrix4fv(wireLocs.uView, false, viewMat);
+              gl.uniformMatrix4fv(wireLocs.uProjection, false, projMat);
+              gl.uniform3fv(wireLocs.uColor, [0.06, 0.72, 0.5]);
+
+              gl.bindVertexArray(currentMeshEntry.normalVao);
+              gl.drawArrays(gl.LINES, 0, currentMeshEntry.normalLineCount);
+            }
+          }
+
+          gl.disable(gl.SCISSOR_TEST);
+          gl.bindVertexArray(null);
+
+          requestAnimationFrame(renderLoop);
+        }
+
+        requestAnimationFrame(renderLoop);
+      });
+    </script>
+    <script>
+      function fitStage() {
+        const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+        document.body.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      }
+
+      fitStage();
+      window.addEventListener('resize', fitStage);
+    </script>
+  </body>
+</html>

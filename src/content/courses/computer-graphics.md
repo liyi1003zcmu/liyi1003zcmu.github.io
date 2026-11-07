@@ -29,7 +29,7 @@ objectives:
   ]
 prerequisites: [程序设计基础, 线性代数基础, 基础数据结构]
 teachers: [lameduck]
-updatedDate: 2026-11-01
+updatedDate: 2026-11-07
 ---
 
 ## 课程简介
@@ -82,10 +82,12 @@ updatedDate: 2026-11-01
 5. **观察**：相机定位、观察矩阵、平行与透视投影、规范化视见体
    - [第一讲：虚拟相机与观察变换](/slides/computer-graphics/ch05/lecture-5-1.html)
    - [第二讲：投影、视见体与成像](/slides/computer-graphics/ch05/lecture-5-2.html)
-6. **光照和着色**：Phong 光照模型、材质、光源、法向量与片元着色
+6. **光照和着色**：光源与材质、Phong 光照模型、法向量、平面/Gouraud/Phong 着色及 WebGL2 实现
    - [第一讲：光照、光源与材质](/slides/computer-graphics/ch06/lecture-6-1.html)
    - [第二讲：法向量与两大反射定律](/slides/computer-graphics/ch06/lecture-6-2.html)
    - [第三讲：Phong 与 Blinn-Phong 局部光照模型](/slides/computer-graphics/ch06/lecture-6-3.html)
+   - [第四讲：从多边形到平滑着色](/slides/computer-graphics/ch06/lecture-6-4.html)
+   - [第五讲：WebGL2 光照与着色器实现](/slides/computer-graphics/ch06/lecture-6-5.html)
 7. **纹理映射**：纹理坐标、采样与滤波、环境映射与凹凸贴图
 8. **使用帧缓存（介绍）**：Alpha 混合、FBO 离屏渲染、图像后处理与拾取
 9. **层级建模方法（介绍）**：实例变换、树结构、递归遍历与场景图
@@ -160,7 +162,7 @@ updatedDate: 2026-11-01
 - 眼坐标系球体光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-8.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphereEyeSpace.js)
 - 对象坐标系球体光照：[运行 Demo](/slides/computer-graphics/code-demos/chap6/chap6-demo-9.html) · [查看源码](/slides/computer-graphics/code-demos/js/ch06/shadedSphereObjectSpace.js)
 
-光源与材质参数、法向量与漫反射两个互动显微镜保留在第六章对应课件中直接启动。
+光源与材质参数、法向量与漫反射、三维模型着色方式对比以及 Gouraud/Phong 着色器代码实现比较四个互动实验保留在第六章对应课件中直接启动。
 
 ## 实验任务
 
@@ -184,6 +186,7 @@ updatedDate: 2026-11-01
 
 ## 更新记录
 
+- 2026-11-07：发布第六章第四、五讲，补充三种模型着色方式与 Gouraud/Phong 着色器实现对比实验及配套图片。
 - 2026-11-01：补充第五章 4 个正交与透视投影 WebGL 示例及配套源码。
 - 2026-11-01：发布第六章三份在线课件、光照与法向量互动实验、配套图片及 9 个 WebGL 光照代码示例。
 - 2026-10-25：发布第五章两份在线课件、观察与投影互动实验、配套图片及正交/透视投影 WebGL 示例代码。
